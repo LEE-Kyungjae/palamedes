@@ -1,6 +1,6 @@
-# Deep Planning
+# Deep Plan
 
-Deep Planning is an experimental plan-state kernel for agentic workflows. It treats plans as structured, revisionable state rather than disposable text, so agents, tools, and humans can operate against the same planning surface over time. DeepPlan includes explicit conflict handling, restore flows, contract introspection, and fixture-backed conformance checks. It is currently alpha-stage and intended for early adopters exploring more reliable planning infrastructure across execution surfaces and runtimes.
+Deep Plan is an experimental plan-state kernel for agentic workflows. It treats plans as structured, revisionable state rather than disposable text, so agents, tools, and humans can operate against the same planning surface over time. DeepPlan includes explicit conflict handling, restore flows, contract introspection, and fixture-backed conformance checks. It is currently alpha-stage and intended for early adopters exploring more reliable planning infrastructure across execution surfaces and runtimes.
 
 ## Current Status
 
