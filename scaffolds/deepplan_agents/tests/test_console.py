@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from typing import Any, Dict
+from unittest.mock import patch
 
 
 SCAFFOLD_ROOT = Path(__file__).resolve().parent.parent
@@ -164,6 +165,15 @@ class DeepPlanAgentsConsoleTests(unittest.TestCase):
         self.assertIn("overall_score", schema["required"])
         self.assertIn("next_actions", schema["required"])
 
+    def test_provider_health_reports_readiness(self):
+        with patch(
+            "deepplan_agents.console.openai_provider_health",
+            return_value={"status": "ok", "issues": [], "sdk_available": True, "api_key_set": True},
+        ):
+            code, payload = run_console(["provider-health"])
+        self.assertEqual(code, 0)
+        self.assertTrue(payload["ok"])
+
     def test_prompt_builds_creative_directions_bundle(self):
         with DeepPlanStateIsolation():
             code, payload = run_console(["prompt", "--action", "generate_creative_directions"])
@@ -172,6 +182,108 @@ class DeepPlanAgentsConsoleTests(unittest.TestCase):
         self.assertTrue(payload["ok"])
         self.assertIn("generate_creative_directions", payload["bundle"]["messages"][1]["content"])
         self.assertIn("mid_project", payload["bundle"]["messages"][1]["content"])
+
+    def test_retrieve_exposes_reference_quality_gate_without_provider(self):
+        corpus = [
+            {
+                "reference_id": "success-1",
+                "source": "Success case",
+                "source_url": "https://example.com/success",
+                "source_type": "success_case",
+                "problem": "generic product direction",
+                "mechanism": "product strategy gate",
+            },
+            {
+                "reference_id": "failure-1",
+                "source": "Failure case",
+                "source_type": "failure_case",
+                "problem": "generic product direction",
+                "mechanism": "dashboard advice without evidence",
+            },
+        ]
+        code, payload = run_console(
+            [
+                "retrieve",
+                "--payload-json",
+                json.dumps({"idea": "generic product direction", "reference_corpus": corpus}),
+            ]
+        )
+
+        self.assertEqual(code, 0)
+        self.assertEqual(payload["type"], "reference_retrieval")
+        self.assertEqual(payload["retrieval"]["quality_gate"]["status"], "sufficient")
+
+    def test_reference_store_cli_ingests_lists_and_retrieves(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            database = root / "references.sqlite3"
+            input_path = root / "references.json"
+            input_path.write_text(
+                json.dumps(
+                    [
+                        {
+                            "reference_id": "stored-success",
+                            "source": "Stored success",
+                            "source_url": "https://example.com/stored-success",
+                            "source_type": "success_case",
+                            "problem": "generic product direction",
+                            "mechanism": "strategy gate",
+                        },
+                        {
+                            "reference_id": "stored-failure",
+                            "source": "Stored failure",
+                            "source_type": "failure_case",
+                            "problem": "generic product direction",
+                            "mechanism": "dashboard without evidence",
+                        },
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            code, ingested = run_console(
+                ["--reference-db", str(database), "reference-ingest", "--input-file", str(input_path)]
+            )
+            self.assertEqual(code, 0)
+            self.assertEqual(ingested["counts"]["created"], 2)
+
+            code, listed = run_console(["--reference-db", str(database), "reference-list"])
+            self.assertEqual(code, 0)
+            self.assertEqual(listed["count"], 2)
+
+            code, health = run_console(["--reference-db", str(database), "reference-health"])
+            self.assertEqual(code, 0)
+            self.assertEqual(health["health"]["reference_count"], 2)
+
+            code, retrieved = run_console(
+                [
+                    "--reference-db",
+                    str(database),
+                    "retrieve",
+                    "--payload-json",
+                    json.dumps({"idea": "generic product direction"}),
+                ]
+            )
+            self.assertEqual(code, 0)
+            self.assertEqual(retrieved["retrieval"]["corpus_size"], 2)
+
+    def test_reference_eval_cli_runs_checked_in_baseline(self):
+        dataset = SCAFFOLD_ROOT / "evals" / "reference-retrieval.json"
+        code, payload = run_console(["reference-eval", "--dataset-file", str(dataset)])
+        self.assertEqual(code, 0)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["metrics"]["gate_accuracy"], 1.0)
+
+    def test_insight_apply_cli_persists_report_into_plan_state(self):
+        with tempfile.TemporaryDirectory() as directory, DeepPlanStateIsolation():
+            report_path = Path(directory) / "strategy-report.json"
+            report_path.write_text(json.dumps(VALID_REPORT), encoding="utf-8")
+            code, payload = run_console(["--allow-unhealthy-writes", "insight-apply", "--report-file", str(report_path)])
+
+            self.assertEqual(code, 0)
+            self.assertEqual(payload["applied_count"], 1)
+            plan = payload["post_cycle"]["plan"]
+            self.assertIn(VALID_REPORT["reference_insights"][0]["transferable_principle"], plan["insights"])
+            self.assertEqual(plan["evidence"][-1]["evidence_type"], "reference_extraction")
 
     def test_llm_runs_static_strategy_provider(self):
         with DeepPlanStateIsolation():

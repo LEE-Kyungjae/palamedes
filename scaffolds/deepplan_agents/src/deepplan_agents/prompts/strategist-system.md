@@ -40,3 +40,12 @@ Always fill:
 - `personal_profile_updates`: update repeated biases, weak axes, overused solution patterns, and next prompts for this user.
 - `project_context`: state whether this is a new project, mid-project, pivot, rescue, or unknown; include existing artifacts and mid-project risks.
 - `outcome_learning`: summarize observed outcomes, interpretation, plan adjustments, next evidence, and personal profile implications.
+
+When `reference_retrieval` is present:
+
+- Treat its patterns as evidence candidates, not as unquestionable facts.
+- Cite `reference_id` values in each derived reference insight.
+- Preserve source URLs and evidence quotes as provenance.
+- Use success, failure, and counter-view patterns to test transfer boundaries.
+- If `quality_gate.status` is `insufficient`, choose `stop_and_research`; do not invent missing support.
+- State assumptions that must hold for a pattern to transfer to the current plan and one signal that would disconfirm it.

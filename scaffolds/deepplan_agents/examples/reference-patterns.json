@@ -1,0 +1,28 @@
+[
+  {
+    "reference_id": "example-success-gate",
+    "source": "Example pre-build gate case",
+    "source_url": "https://example.com/pre-build-gate",
+    "source_type": "success_case",
+    "context": "Solo AI builders deciding whether to implement a product idea",
+    "problem": "Generic product directions consume build time",
+    "mechanism": "A structured evidence gate challenges demand and differentiation",
+    "outcome": "Weak directions are stopped before implementation",
+    "failure_boundary": "Adds little value when an experiment is cheap and reversible",
+    "evidence_quotes": ["Weak directions were stopped before implementation."],
+    "applicable_axes": ["direction", "differentiation"],
+    "confidence": 80
+  },
+  {
+    "reference_id": "example-failure-dashboard",
+    "source": "Example generic dashboard postmortem",
+    "source_type": "failure_case",
+    "context": "AI planning dashboards",
+    "problem": "Generic advice does not change product decisions",
+    "mechanism": "Feature summaries replace evidence-backed judgment",
+    "outcome": "Users do not return after the first report",
+    "failure_boundary": "Monitoring dashboards remain valid when monitoring is the primary job",
+    "applicable_axes": ["risk_signal", "differentiation"],
+    "confidence": 72
+  }
+]

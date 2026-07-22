@@ -1,0 +1,65 @@
+{
+  "name": "palamedes-reference-retrieval-baseline",
+  "thresholds": {
+    "mean_recall_at_k": 1.0,
+    "mean_reciprocal_rank": 0.75,
+    "mean_source_type_recall": 0.75,
+    "gate_accuracy": 1.0
+  },
+  "corpus": [
+    {
+      "reference_id": "decision-gate-success",
+      "source": "Pre-build decision gate case",
+      "source_url": "https://example.com/decision-gate",
+      "source_type": "success_case",
+      "context": "Solo AI builders evaluating product ideas before implementation",
+      "problem": "Generic product ideas consume build time before demand is validated",
+      "mechanism": "A structured decision gate challenges demand, differentiation, and repeat behavior",
+      "outcome": "Weak ideas are stopped before implementation",
+      "failure_boundary": "The gate adds little value when an experiment is cheap and fully reversible",
+      "evidence_quotes": ["Weak ideas were stopped before implementation."],
+      "applicable_axes": ["direction", "differentiation"],
+      "confidence": 80
+    },
+    {
+      "reference_id": "dashboard-failure",
+      "source": "Generic dashboard postmortem",
+      "source_type": "failure_case",
+      "context": "AI planning dashboards",
+      "problem": "Generic advice does not change a product decision",
+      "mechanism": "Feature summaries replace evidence-backed judgment",
+      "outcome": "Users do not return after the first report",
+      "failure_boundary": "Dashboards remain useful when monitoring itself is the primary job",
+      "applicable_axes": ["risk_signal", "differentiation"],
+      "confidence": 72
+    },
+    {
+      "reference_id": "experiment-counter-view",
+      "source": "Reversible experiment counter-view",
+      "source_type": "counter_view",
+      "context": "Experienced teams running low-cost product experiments",
+      "problem": "Excessive planning can delay behavior evidence",
+      "mechanism": "Ship a narrow reversible test rather than extending analysis",
+      "outcome": "Real usage evidence arrives sooner",
+      "failure_boundary": "Unsafe when implementation is expensive, regulated, or irreversible",
+      "applicable_axes": ["timing", "constraint"],
+      "confidence": 68
+    }
+  ],
+  "cases": [
+    {
+      "id": "generic-direction",
+      "query": "How can solo AI builders avoid implementing generic product ideas?",
+      "relevant_reference_ids": ["decision-gate-success", "dashboard-failure"],
+      "expected_source_types": ["success_case", "failure_case"],
+      "expect_sufficient": true
+    },
+    {
+      "id": "planning-counter-view",
+      "query": "When does a product strategy planning gate delay learning from reversible experiments?",
+      "relevant_reference_ids": ["experiment-counter-view", "decision-gate-success"],
+      "expected_source_types": ["counter_view", "success_case"],
+      "expect_sufficient": true
+    }
+  ]
+}

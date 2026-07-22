@@ -62,7 +62,7 @@
       "description": "Evaluate whether an idea has strong problem-solution, desire, experience-loop, monetization, differentiation, and reference-insight structure.",
       "required_capabilities": ["plan.read", "strategy.evaluate"],
       "payload_required": true,
-      "payload_keys": ["idea", "entry_mode", "project_stage", "existing_artifacts", "pivot_signals", "target_user", "problem", "current_alternative", "pain_frequency", "solution", "desire", "emotion", "trigger", "action", "reward", "references", "behavior_signals", "monetization", "repeat_loop", "differentiation", "personal_profile"],
+      "payload_keys": ["idea", "entry_mode", "project_stage", "existing_artifacts", "pivot_signals", "target_user", "problem", "current_alternative", "pain_frequency", "solution", "desire", "emotion", "trigger", "action", "reward", "references", "reference_corpus", "reference_store_path", "reference_semantic_scores", "behavior_signals", "monetization", "repeat_loop", "differentiation", "personal_profile"],
       "options": ["history_limit"]
     },
     {
@@ -70,7 +70,7 @@
       "description": "Use AI to transform references, behavior signals, and personal planning profile into non-generic product directions for new or mid-project planning.",
       "required_capabilities": ["plan.read", "strategy.generate"],
       "payload_required": true,
-      "payload_keys": ["topic", "entry_mode", "project_stage", "existing_artifacts", "current_plan", "constraints", "pivot_signals", "references", "behavior_signals", "success_cases", "failure_cases", "papers", "reviews", "personal_profile"],
+      "payload_keys": ["topic", "entry_mode", "project_stage", "existing_artifacts", "current_plan", "constraints", "pivot_signals", "references", "reference_corpus", "reference_store_path", "reference_semantic_scores", "behavior_signals", "success_cases", "failure_cases", "papers", "reviews", "personal_profile"],
       "options": ["history_limit"]
     },
     {

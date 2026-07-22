@@ -7,6 +7,7 @@ from deepplan_agents.runtime.decision_gate import evaluate_snapshot_gate
 from deepplan_agents.runtime.host_events import build_success_event
 from deepplan_agents.skills.registry import build_runtime_session
 from deepplan_agents.strategy_prompt import build_strategy_prompt_bundle
+from deepplan_agents.reference_rag import validate_reference_grounding
 
 
 GENERIC_TERMS = {
@@ -311,11 +312,18 @@ def validate_strategy_report_shape(report: Dict[str, Any]) -> List[str]:
     if not isinstance(reference_insights, list) or not all(isinstance(item, dict) for item in reference_insights):
         errors.append("reference_insights must be an array of objects")
     else:
-        required = {"source", "observed_behavior", "emotion_driver", "monetization_moment", "repeat_loop", "transferable_principle", "applied_to_plan"}
+        required = {"source", "observed_behavior", "emotion_driver", "monetization_moment", "repeat_loop", "transferable_principle", "applied_to_plan", "disconfirming_signal"}
         for index, item in enumerate(reference_insights):
             missing = [key for key in sorted(required) if not isinstance(item.get(key), str)]
             if missing:
                 errors.append(f"reference_insights[{index}] missing string fields: {', '.join(missing)}")
+            for key in ["reference_ids", "source_urls", "evidence_quotes", "transfer_assumptions"]:
+                value = item.get(key)
+                if not isinstance(value, list) or not all(isinstance(entry, str) for entry in value):
+                    errors.append(f"reference_insights[{index}].{key} must be an array of strings")
+            confidence = item.get("confidence")
+            if not isinstance(confidence, int) or isinstance(confidence, bool) or confidence < 0 or confidence > 100:
+                errors.append(f"reference_insights[{index}].confidence must be an integer from 0 to 100")
     creative_directions = report.get("creative_directions")
     if not isinstance(creative_directions, list) or not all(isinstance(item, dict) for item in creative_directions):
         errors.append("creative_directions must be an array of objects")
@@ -461,12 +469,18 @@ def evaluate_strategy_payload(payload: Dict[str, Any], plan: Dict[str, Any]) -> 
         "reference_insights": [
             {
                 "source": str(item),
+                "reference_ids": [str(item)],
+                "source_urls": [],
+                "evidence_quotes": [],
                 "observed_behavior": "Needs AI extraction from the referenced behavior source.",
                 "emotion_driver": ", ".join(emotion_hits) if emotion_hits else "unknown",
                 "monetization_moment": str(payload.get("monetization", "")).strip(),
                 "repeat_loop": str(payload.get("repeat_loop", "")).strip(),
                 "transferable_principle": "Use this only as a test fixture; product execution must use AI extraction.",
                 "applied_to_plan": positioning_rewrite,
+                "transfer_assumptions": ["The referenced behavior applies to the current target user."],
+                "disconfirming_signal": "The behavior does not recur in direct evidence from the target user.",
+                "confidence": 50,
             }
             for item in payload.get("references", [])
             if str(item).strip()
@@ -526,6 +540,7 @@ class StrategyLoop:
         if not isinstance(strategy, dict):
             raise ValueError("AI strategy provider must return a JSON object")
         errors = validate_strategy_report_shape(strategy)
+        errors.extend(validate_reference_grounding(strategy, bundle["reference_retrieval"]))
         if errors:
             raise ValueError("invalid AI strategy report: " + "; ".join(errors))
         gate = {

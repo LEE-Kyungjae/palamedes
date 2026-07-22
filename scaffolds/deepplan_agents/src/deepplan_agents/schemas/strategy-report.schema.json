@@ -109,15 +109,21 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["source", "observed_behavior", "emotion_driver", "monetization_moment", "repeat_loop", "transferable_principle", "applied_to_plan"],
+        "required": ["source", "reference_ids", "source_urls", "evidence_quotes", "observed_behavior", "emotion_driver", "monetization_moment", "repeat_loop", "transferable_principle", "applied_to_plan", "transfer_assumptions", "disconfirming_signal", "confidence"],
         "properties": {
           "source": {"type": "string"},
+          "reference_ids": {"type": "array", "items": {"type": "string"}},
+          "source_urls": {"type": "array", "items": {"type": "string"}},
+          "evidence_quotes": {"type": "array", "items": {"type": "string"}},
           "observed_behavior": {"type": "string"},
           "emotion_driver": {"type": "string"},
           "monetization_moment": {"type": "string"},
           "repeat_loop": {"type": "string"},
           "transferable_principle": {"type": "string"},
-          "applied_to_plan": {"type": "string"}
+          "applied_to_plan": {"type": "string"},
+          "transfer_assumptions": {"type": "array", "items": {"type": "string"}},
+          "disconfirming_signal": {"type": "string"},
+          "confidence": {"type": "integer", "minimum": 0, "maximum": 100}
         }
       }
     },

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -88,6 +89,31 @@ class DeepPlanStrategyPromptTests(unittest.TestCase):
         self.assertIn("analyze_outcome_learning", content)
         self.assertIn("usage_signals", content)
         self.assertIn("outcome_learning", content)
+
+    def test_prompt_injects_retrieved_patterns_and_quality_gate(self):
+        bundle = build_strategy_prompt_bundle(
+            {
+                "idea": "Prevent generic AI products",
+                "reference_corpus": [
+                    {
+                        "reference_id": "failure-1",
+                        "source": "Failure report",
+                        "source_type": "failure_case",
+                        "problem": "Generic AI products fail to retain users",
+                        "mechanism": "Feature generation replaces product judgment",
+                        "source_url": "https://example.com/failure-1",
+                    }
+                ],
+            },
+            {"plan": {"goal": "Improve direction"}, "qa": {"result": "PASS"}, "health": {"status": "ok"}},
+        )
+
+        self.assertEqual(bundle["reference_retrieval"]["quality_gate"]["status"], "insufficient")
+        self.assertIn("failure-1", bundle["messages"][1]["content"])
+        self.assertIn("stop_and_research", bundle["messages"][1]["content"])
+        context = json.loads(bundle["messages"][1]["content"])
+        self.assertNotIn("reference_corpus", context["idea_payload"])
+        self.assertNotIn("reference_store_path", context["idea_payload"])
 
 
 if __name__ == "__main__":

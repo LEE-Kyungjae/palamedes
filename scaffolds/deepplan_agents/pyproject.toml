@@ -11,6 +11,9 @@ requires-python = ">=3.9"
 [project.scripts]
 deepplan-agents = "deepplan_agents.console:main"
 
+[project.optional-dependencies]
+openai = ["openai"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["deepplan_agents*"]

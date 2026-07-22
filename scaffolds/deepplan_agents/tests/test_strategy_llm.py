@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import copy
 import sys
 import unittest
 from pathlib import Path
@@ -45,12 +46,18 @@ VALID_REPORT = {
     "reference_insights": [
         {
             "source": "failed AI wrapper launches",
+            "reference_ids": ["failed-ai-wrapper-launches"],
+            "source_urls": ["https://example.com/failed-ai-wrapper-launches"],
+            "evidence_quotes": ["Builders shipped before proving repeated demand."],
             "observed_behavior": "Builders ship similar tools before proving demand.",
             "emotion_driver": "fear/control",
             "monetization_moment": "Before expensive build time starts.",
             "repeat_loop": "Every new idea goes through the gate.",
             "transferable_principle": "Convert pre-build anxiety into a paid decision checkpoint.",
             "applied_to_plan": "Make the product a strategy gate, not a dashboard.",
+            "transfer_assumptions": ["Solo builders experience meaningful pre-build uncertainty."],
+            "disconfirming_signal": "Builders proceed at the same rate after receiving the checkpoint.",
+            "confidence": 78,
         }
     ],
     "creative_directions": [
@@ -140,6 +147,28 @@ class DeepPlanStrategyLLMTests(unittest.TestCase):
             )
 
         self.assertIn("invalid strategy report", str(ctx.exception))
+
+    def test_run_strategy_llm_enforces_insufficient_retrieval_gate(self):
+        report = copy.deepcopy(VALID_REPORT)
+        report["decision"] = "continue"
+        with self.assertRaises(ValueError) as ctx:
+            run_strategy_llm(
+                StaticStrategyProvider(report),
+                payload={
+                    "idea": "generic product idea",
+                    "reference_corpus": [
+                        {
+                            "reference_id": "thin-ref",
+                            "source": "Thin reference",
+                            "source_type": "failure_case",
+                            "problem": "generic product idea",
+                        }
+                    ],
+                },
+                snapshot={},
+            )
+
+        self.assertIn("requires decision=stop_and_research", str(ctx.exception))
 
 
 if __name__ == "__main__":

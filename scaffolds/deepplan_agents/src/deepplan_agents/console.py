@@ -8,8 +8,14 @@ from typing import Any, Dict
 from deepplan_agents.adapters.deepplan_adapter import DeepPlanAdapter
 from deepplan_agents.bootstrap import ClientConfig, build_client
 from deepplan_agents.runtime.host_step import HostStep, action_contract
+from deepplan_agents.reference_rag import build_reference_rag_context, reference_query, resolve_reference_corpus
+from deepplan_agents.reference_collectors import collect_file, collect_url
+from deepplan_agents.reference_eval import evaluate_reference_retrieval
+from deepplan_agents.reference_embeddings import OpenAIReferenceEmbeddingProvider
+from deepplan_agents.reference_store import ReferenceStore
+from deepplan_agents.insight_persistence import persist_reference_insights
 from deepplan_agents.skills.registry import build_runtime_session
-from deepplan_agents.strategy_llm import openai_provider_from_env, run_strategy_llm, static_provider_from_json
+from deepplan_agents.strategy_llm import openai_provider_from_env, openai_provider_health, run_strategy_llm, static_provider_from_json
 from deepplan_agents.strategy_prompt import build_strategy_prompt_bundle
 from deepplan_agents.strategy_routes import route_strategy_next_actions
 
@@ -133,6 +139,23 @@ def _load_payload(args: argparse.Namespace) -> Dict[str, Any]:
     return payload
 
 
+def _reference_store(args: argparse.Namespace) -> ReferenceStore:
+    return ReferenceStore(Path(str(args.reference_db)))
+
+
+def _attach_reference_store(payload: Dict[str, Any], args: argparse.Namespace) -> Dict[str, Any]:
+    prepared = dict(payload)
+    path = Path(str(args.reference_db))
+    if not prepared.get("reference_corpus") and path.exists():
+        prepared["reference_store_path"] = str(path)
+    if str(getattr(args, "embedding_provider", "none")) == "openai":
+        patterns = resolve_reference_corpus(prepared)
+        if patterns:
+            provider = OpenAIReferenceEmbeddingProvider(model=str(args.embedding_model))
+            prepared["reference_semantic_scores"] = provider.semantic_scores(reference_query(prepared), patterns)
+    return prepared
+
+
 def _client_config(args: argparse.Namespace) -> ClientConfig:
     mode = "http" if args.base_url else "in-process"
     return ClientConfig(
@@ -195,8 +218,16 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_provider_health(_: argparse.Namespace) -> int:
+    health = openai_provider_health()
+    print(_json_dumps({"ok": health["status"] == "ok", "type": "provider_health", "health": health}))
+    return 0 if health["status"] == "ok" else 1
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     payload = _load_payload(args)
+    if args.action in {"evaluate_experience_strategy", "generate_creative_directions"}:
+        payload = _attach_reference_store(payload, args)
     options: Dict[str, Any] = {}
     if args.session_id:
         options["session_id"] = args.session_id
@@ -216,7 +247,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 
 def cmd_prompt(args: argparse.Namespace) -> int:
-    payload = _load_payload(args)
+    payload = _attach_reference_store(_load_payload(args), args)
     adapter = build_adapter(args)
     snapshot = adapter.snapshot()
     bundle = build_strategy_prompt_bundle(payload, snapshot, action=args.action)
@@ -224,14 +255,70 @@ def cmd_prompt(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_retrieve(args: argparse.Namespace) -> int:
+    payload = _attach_reference_store(_load_payload(args), args)
+    retrieval = build_reference_rag_context(payload)
+    if not retrieval:
+        raise ValueError("retrieve command requires a non-empty reference_corpus")
+    print(_json_dumps({"ok": True, "type": "reference_retrieval", "retrieval": retrieval}))
+    return 0 if retrieval["quality_gate"]["status"] == "sufficient" else 1
+
+
 def cmd_llm(args: argparse.Namespace) -> int:
-    payload = _load_payload(args)
+    payload = _attach_reference_store(_load_payload(args), args)
     provider = _strategy_provider_from_args(args)
     if provider is None:
         raise ValueError("llm command requires --provider openai or --provider static")
     adapter = build_adapter(args)
     snapshot = adapter.snapshot()
     result = run_strategy_llm(provider, payload=payload, snapshot=snapshot, action=args.action)
+    print(_json_dumps(result))
+    return 0
+
+
+def cmd_reference_ingest(args: argparse.Namespace) -> int:
+    items = []
+    if args.input_file:
+        items.extend(collect_file(Path(args.input_file), source_type=args.source_type))
+    if args.url:
+        items.append(collect_url(args.url, source_type=args.source_type))
+    if not items:
+        raise ValueError("reference-ingest requires --input-file or --url")
+    result = _reference_store(args).ingest(items)
+    print(_json_dumps({"ok": True, "type": "reference_ingest", "store": str(args.reference_db), **result}))
+    return 0
+
+
+def cmd_reference_list(args: argparse.Namespace) -> int:
+    store = _reference_store(args)
+    patterns = store.list(source_type=args.source_type, limit=args.limit)
+    print(_json_dumps({"ok": True, "type": "reference_list", "store": str(args.reference_db), "count": len(patterns), "patterns": patterns}))
+    return 0
+
+
+def cmd_reference_health(args: argparse.Namespace) -> int:
+    health = _reference_store(args).health()
+    print(_json_dumps({"ok": health["status"] == "ok", "type": "reference_health", "health": health}))
+    return 0 if health["status"] == "ok" else 1
+
+
+def cmd_reference_eval(args: argparse.Namespace) -> int:
+    dataset = json.loads(Path(args.dataset_file).read_text(encoding="utf-8"))
+    if not isinstance(dataset, dict):
+        raise ValueError("reference evaluation dataset must be an object")
+    corpus = dataset.get("corpus")
+    if not isinstance(corpus, list):
+        corpus = _reference_store(args).list()
+    result = evaluate_reference_retrieval(dataset, corpus)
+    print(_json_dumps({"type": "reference_evaluation", **result}))
+    return 0 if result["ok"] else 1
+
+
+def cmd_insight_apply(args: argparse.Namespace) -> int:
+    report = json.loads(Path(args.report_file).read_text(encoding="utf-8"))
+    if not isinstance(report, dict):
+        raise ValueError("strategy report must be an object")
+    result = persist_reference_insights(build_adapter(args), report)
     print(_json_dumps(result))
     return 0
 
@@ -262,6 +349,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--base-url", default="", help="Optional DeepPlan HTTP base URL, e.g. http://127.0.0.1:8787")
     parser.add_argument("--history-limit", type=int, default=5)
     parser.add_argument("--allow-unhealthy-writes", action="store_true")
+    parser.add_argument("--reference-db", default=".deeplan/references.sqlite3", help="Persistent Insight RAG reference store.")
+    parser.add_argument("--embedding-provider", choices=["none", "openai"], default="none", help="Optional semantic scorer for hybrid retrieval.")
+    parser.add_argument("--embedding-model", default="text-embedding-3-small")
     sub = parser.add_subparsers(dest="command", required=True)
 
     agents = sub.add_parser("agents", help="List available agent roles, profiles, actions, and skills.")
@@ -269,6 +359,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     snapshot = sub.add_parser("snapshot", help="Read the current DeepPlan cycle snapshot.")
     snapshot.set_defaults(func=cmd_snapshot)
+
+    provider_health = sub.add_parser("provider-health", help="Check OpenAI SDK and API-key readiness for strategy and embedding providers.")
+    provider_health.set_defaults(func=cmd_provider_health)
 
     run = sub.add_parser("run", help="Run one role-aware agent action.")
     run.add_argument("--role", choices=["planner", "strategist", "researcher", "reviewer"], required=True)
@@ -296,6 +389,33 @@ def build_parser() -> argparse.ArgumentParser:
     prompt.add_argument("--payload-json", default="")
     prompt.add_argument("--payload-file", default="")
     prompt.set_defaults(func=cmd_prompt)
+
+    retrieve = sub.add_parser("retrieve", help="Retrieve diverse reference patterns and evaluate evidence sufficiency without calling a model.")
+    retrieve.add_argument("--payload-json", default="")
+    retrieve.add_argument("--payload-file", default="")
+    retrieve.set_defaults(func=cmd_retrieve, action="evaluate_experience_strategy")
+
+    ingest = sub.add_parser("reference-ingest", help="Collect and persist reference patterns from JSON, JSONL, text, or an HTTP(S) URL.")
+    ingest.add_argument("--input-file", default="")
+    ingest.add_argument("--url", default="")
+    ingest.add_argument("--source-type", choices=["success_case", "failure_case", "counter_view", "paper", "review", "behavior_evidence", "other"], default="other")
+    ingest.set_defaults(func=cmd_reference_ingest)
+
+    reference_list = sub.add_parser("reference-list", help="List persisted reference patterns.")
+    reference_list.add_argument("--source-type", choices=["success_case", "failure_case", "counter_view", "paper", "review", "behavior_evidence", "other"], default="")
+    reference_list.add_argument("--limit", type=int, default=100)
+    reference_list.set_defaults(func=cmd_reference_list)
+
+    reference_health = sub.add_parser("reference-health", help="Check the persistent reference store schema and SQLite integrity.")
+    reference_health.set_defaults(func=cmd_reference_health)
+
+    reference_eval = sub.add_parser("reference-eval", help="Evaluate retrieval recall, ranking, viewpoint coverage, and sufficiency gating.")
+    reference_eval.add_argument("--dataset-file", required=True)
+    reference_eval.set_defaults(func=cmd_reference_eval)
+
+    insight_apply = sub.add_parser("insight-apply", help="Persist grounded reference insights into DeepPlan evidence, insights, and revision history.")
+    insight_apply.add_argument("--report-file", required=True)
+    insight_apply.set_defaults(func=cmd_insight_apply)
 
     llm = sub.add_parser("llm", help="Run the strategist LLM boundary with an AI provider.")
     llm.add_argument(

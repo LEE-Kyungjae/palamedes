@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import json
 import os
+import importlib.util
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Protocol
 
 from deepplan_agents.strategy_prompt import build_strategy_prompt_bundle
+from deepplan_agents.reference_rag import validate_reference_grounding
 from deepplan_agents.workflows.strategy_loop import validate_strategy_report_shape
 
 
@@ -97,6 +99,7 @@ def run_strategy_llm(
     if not isinstance(report, dict):
         raise ValueError("strategy provider must return a JSON object")
     errors = validate_strategy_report_shape(report)
+    errors.extend(validate_reference_grounding(report, bundle["reference_retrieval"]))
     if errors:
         raise ValueError("invalid strategy report: " + "; ".join(errors))
     return {
@@ -120,3 +123,21 @@ def static_provider_from_json(raw_json: str) -> StaticStrategyProvider:
 
 def openai_provider_from_env(*, model: str = "") -> OpenAIResponsesStrategyProvider:
     return OpenAIResponsesStrategyProvider(model=model or os.environ.get("DEEPPLAN_OPENAI_MODEL", "gpt-5.5"))
+
+
+def openai_provider_health() -> Dict[str, Any]:
+    sdk_available = importlib.util.find_spec("openai") is not None
+    api_key_set = bool(os.environ.get("OPENAI_API_KEY", "").strip())
+    issues = []
+    if not sdk_available:
+        issues.append("openai_sdk_missing")
+    if not api_key_set:
+        issues.append("OPENAI_API_KEY_missing")
+    return {
+        "status": "ok" if not issues else "unavailable",
+        "issues": issues,
+        "sdk_available": sdk_available,
+        "api_key_set": api_key_set,
+        "strategy_model": os.environ.get("DEEPPLAN_OPENAI_MODEL", "gpt-5.5"),
+        "embedding_model": os.environ.get("DEEPPLAN_OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
+    }

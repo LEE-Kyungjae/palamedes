@@ -18,12 +18,17 @@ It demonstrates:
 - runtime idempotency key and stale conflict retry policies
 - host-facing event envelopes for workflow outputs
 - a role-aware `host_step` dispatcher over local action contracts
+- provenance-preserving Insight RAG with diverse reference-pattern retrieval and a deterministic sufficiency gate
 
 This scaffold does not include:
 
 - queue workers
 - network services
 - execution runtimes
+
+## Insight RAG
+
+Pass a structured `reference_corpus` to `evaluate_experience_strategy` or `generate_creative_directions`, or ingest references into the default `.deeplan/references.sqlite3` store. The scaffold uses field-weighted BM25, accepts optional semantic scores for hybrid ranking, selects diverse success/failure/counter-view evidence, preserves source IDs, URLs, and quotes, and requires `stop_and_research` when evidence is too thin. Generated insights can be persisted into the canonical DeepPlan evidence, insight, and revision state with `insight-apply`.
 
 ## Quick start
 
@@ -32,8 +37,16 @@ Run directly from the scaffold without installing:
 ```bash
 PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console agents
 PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console snapshot
+PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console provider-health
 PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console run --role planner --action update_plan
 PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console prompt
+PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console retrieve --payload-file reference-query.json
+OPENAI_API_KEY=... PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console --embedding-provider openai retrieve --payload-file reference-query.json
+PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console reference-ingest --input-file scaffolds/deepplan_agents/examples/reference-patterns.json
+PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console reference-list
+PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console reference-health
+PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console reference-eval --dataset-file scaffolds/deepplan_agents/evals/reference-retrieval.json
+PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console insight-apply --report-file strategy-report.json
 PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console prompt --action generate_creative_directions
 PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console run --role researcher --action capture_evidence_cycle --session-id local --step-id research-1
 PYTHONPATH=scaffolds/deepplan_agents/src python3 -m deepplan_agents.console run --role reviewer --action request_review --session-id local --step-id review-1
@@ -70,6 +83,12 @@ Or install the package and use the console script:
 python3 -m pip install -e scaffolds/deepplan_agents
 deepplan-agents agents
 deepplan-agents run --role planner --action update_plan
+```
+
+Install the optional OpenAI SDK when using the strategy or embedding providers:
+
+```bash
+python3 -m pip install -e 'scaffolds/deepplan_agents[openai]'
 ```
 
 By default the console runs in-process against the current DeepPlan workspace.

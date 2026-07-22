@@ -3,6 +3,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List
 
+from deepplan_agents.reference_rag import build_reference_rag_context
+
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
 PROMPT_PATH = PACKAGE_ROOT / "prompts" / "strategist-system.md"
@@ -22,6 +24,14 @@ def load_strategy_report_schema() -> Dict[str, Any]:
 
 def _safe_dict(value: Any) -> Dict[str, Any]:
     return value if isinstance(value, dict) else {}
+
+
+def _strategy_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        key: value
+        for key, value in payload.items()
+        if key not in {"reference_corpus", "reference_store_path", "reference_semantic_scores"}
+    }
 
 
 def _compact_plan(plan: Dict[str, Any]) -> Dict[str, Any]:
@@ -93,8 +103,9 @@ def build_strategy_messages(payload: Dict[str, Any], snapshot: Dict[str, Any], *
         raise ValueError("snapshot must be an object")
     context = {
         "action": action,
-        "idea_payload": payload,
+        "idea_payload": _strategy_payload(payload),
         "deepplan_snapshot": compact_strategy_snapshot(snapshot),
+        "reference_retrieval": build_reference_rag_context(payload),
         "required_output_schema": load_strategy_report_schema(),
     }
     return [
@@ -110,4 +121,5 @@ def build_strategy_prompt_bundle(payload: Dict[str, Any], snapshot: Dict[str, An
     return {
         "messages": build_strategy_messages(payload, snapshot, action=action),
         "schema": load_strategy_report_schema(),
+        "reference_retrieval": build_reference_rag_context(payload),
     }

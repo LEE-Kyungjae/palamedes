@@ -238,7 +238,92 @@ The prompt bundle includes:
 
 - the idea payload
 - the current DeepPlan snapshot
+- a deterministic `reference_retrieval` result when `reference_corpus` or `reference_store_path` is supplied
 - the required JSON schema
+
+### Insight RAG contract
+
+Strategy actions may receive a `reference_corpus` array directly or a `reference_store_path` pointing to a persistent SQLite store. Each entry is a structured pattern rather than an arbitrary text chunk:
+
+```json
+{
+  "reference_id": "failed-wrapper-01",
+  "source": "Founder postmortem",
+  "source_url": "https://example.com/postmortem",
+  "source_type": "failure_case",
+  "context": "Solo builders shipping AI wrappers",
+  "problem": "Demand was assumed before repeated behavior was observed",
+  "mechanism": "Feature novelty replaced a durable user loop",
+  "outcome": "Initial trials did not convert into retention",
+  "failure_boundary": "The pattern may not transfer when distribution is already proven",
+  "evidence_quotes": ["Users tried the demo but did not return."],
+  "applicable_axes": ["differentiation", "risk_signal"],
+  "confidence": 78
+}
+```
+
+`deepplan_agents.reference_rag` normalizes these records, applies field-weighted BM25, optionally combines host-provided semantic scores, selects across success, failure, counter-view, behavior, review, and research categories, and returns a quality gate. The ranking boundary remains replaceable by an embedding provider or reranker without changing the prompt contract.
+
+The console can generate semantic scores with OpenAI embeddings and combine them with BM25:
+
+```bash
+python3 -m pip install -e 'scaffolds/deepplan_agents[openai]'
+
+OPENAI_API_KEY=... \
+PYTHONPATH=scaffolds/deepplan_agents/src \
+python3 -m deepplan_agents.console \
+  --embedding-provider openai \
+  --embedding-model text-embedding-3-small \
+  retrieve \
+  --payload-json '{"idea":"prevent generic product directions"}'
+```
+
+The adapter sends the query and reference-pattern texts as one embeddings batch, calculates cosine similarity locally, and injects only the resulting scores into hybrid ranking. Raw corpus contents and the local store path are removed from the strategist's `idea_payload`; only selected retrieval context reaches the model. The embeddings request follows the official create-embeddings contract: an array of input strings returns ordered embedding vectors. See the [OpenAI embeddings API reference](https://developers.openai.com/api/reference/resources/embeddings/methods/create).
+
+The quality gate is deterministic:
+
+- at least two relevant references
+- at least two source types
+- at least one source URL or evidence quote
+
+If the gate is insufficient, the provider must return `stop_and_research`. If it is sufficient, every `reference_insights` item must cite retrieved `reference_ids`; citations outside the retrieved context are rejected. Each insight also carries source URLs, evidence quotes, transfer assumptions, a disconfirming signal, and confidence.
+
+### Persistent ingestion and evaluation
+
+The console persists references in `.deeplan/references.sqlite3` by default. JSON and JSONL inputs preserve structured fields. Text and HTTP(S) inputs are collected as provenance-bearing raw patterns for later AI extraction.
+
+```bash
+PYTHONPATH=scaffolds/deepplan_agents/src \
+python3 -m deepplan_agents.console reference-ingest \
+  --input-file references.json
+
+PYTHONPATH=scaffolds/deepplan_agents/src \
+python3 -m deepplan_agents.console reference-ingest \
+  --url https://example.com/postmortem \
+  --source-type failure_case
+
+PYTHONPATH=scaffolds/deepplan_agents/src \
+python3 -m deepplan_agents.console retrieve \
+  --payload-json '{"idea":"prevent generic product directions"}'
+```
+
+Content hashes prevent duplicate records while stable reference IDs support updates. The checked-in evaluation set measures recall@k, reciprocal rank, source-type coverage, and sufficiency-gate accuracy:
+
+```bash
+PYTHONPATH=scaffolds/deepplan_agents/src \
+python3 -m deepplan_agents.console reference-eval \
+  --dataset-file scaffolds/deepplan_agents/evals/reference-retrieval.json
+```
+
+After a provider returns a grounded strategy report, persist its reference insights into canonical DeepPlan state:
+
+```bash
+PYTHONPATH=scaffolds/deepplan_agents/src \
+python3 -m deepplan_agents.console insight-apply \
+  --report-file strategy-report.json
+```
+
+Each insight write uses a stable idempotency key and creates linked `reference_extraction` evidence plus insight/replan revision history.
 
 Generate the prompt bundle without calling a model:
 

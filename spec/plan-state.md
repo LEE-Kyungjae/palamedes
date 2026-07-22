@@ -19,6 +19,9 @@ The current implementation uses these files:
 - `.deeplan/events.jsonl`
 - `.deeplan/revisions.jsonl`
 
+Hosts MAY keep a derived reference retrieval index at `.deeplan/references.sqlite3`.
+That index is non-authoritative: it MUST NOT replace `plan.json`, evidence, reference-discovery records, or revision history as the source of planning truth. It MAY be rebuilt from collected reference-pattern inputs, and its integrity/schema health SHOULD be checked independently before retrieval.
+
 `plan.json` MUST contain the current mutable plan.
 The `.jsonl` files MUST be treated as append-only logs.
 
