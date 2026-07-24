@@ -1,10 +1,10 @@
-# DeepPlan Conformance
+# Palamedes Conformance
 
-This document describes the current compatibility checks for public DeepPlan surfaces.
+This document describes the current compatibility checks for public Palamedes surfaces.
 
 ## Purpose
 
-DeepPlan conformance is intended to answer one question:
+Palamedes conformance is intended to answer one question:
 
 Can another implementation expose the same contract behavior expected by current adopters?
 
@@ -28,9 +28,9 @@ The current fixture cases live in:
 These fixtures are exercised by:
 
 - `tests/test_contracts.py`
-- `deepplan_conformance.py`
-- `scripts/deepplan_conformance.py`
-- `deepplan_reference_consumer.ts` for a non-Python HTTP consumer smoke path
+- `palamedes_conformance.py`
+- `scripts/palamedes_conformance.py`
+- `palamedes_reference_consumer.ts` for a non-Python HTTP consumer smoke path
 
 ## Runner Contract
 
@@ -51,13 +51,13 @@ The runner MUST emit a machine-readable JSON report with at least:
 
 The external CLI entrypoint is:
 
-- `python3 scripts/deepplan_conformance.py`
-- `python3 deepplan.py conformance`
+- `python3 scripts/palamedes_conformance.py`
+- `python3 palamedes.py conformance`
 
 To target an external HTTP server:
 
-- `python3 scripts/deepplan_conformance.py --base-url http://127.0.0.1:8787`
-- `python3 deepplan.py conformance --base-url http://127.0.0.1:8787`
+- `python3 scripts/palamedes_conformance.py --base-url http://127.0.0.1:8787`
+- `python3 palamedes.py conformance --base-url http://127.0.0.1:8787`
 
 ## Current Covered Surfaces
 
@@ -72,7 +72,7 @@ The current suite verifies:
 
 ## Conformance Rules
 
-An implementation should be considered compatible with the current DeepPlan contract only if:
+An implementation should be considered compatible with the current Palamedes contract only if:
 
 - all fixture-backed contract cases pass
 - documented required fields remain present

@@ -1,29 +1,35 @@
-# DeepPlan Plan State
+# Palamedes Plan State
 
-This document specifies the canonical plan state stored by the current DeepPlan repository.
+This document specifies the canonical plan state stored by the current Palamedes repository.
 
 ## Scope
 
-DeepPlan MUST keep its authoritative planning state in a single repo-local JSON object at `.deeplan/plan.json`.
-DeepPlan MUST treat the plan as the source of truth for planning direction, evidence, hypotheses, references, and revisionable decision context.
+Palamedes MUST keep its authoritative planning state in a single repo-local JSON object at `.palamedes/plan.json`.
+Palamedes MUST treat the plan as the source of truth for planning direction, evidence, hypotheses, references, and revisionable decision context.
 
 ## Storage Layout
 
-The repo-local state directory MUST be `.deeplan/`.
+The repo-local state directory MUST be `.palamedes/`.
 
 The current implementation uses these files:
 
-- `.deeplan/plan.json`
-- `.deeplan/decisions.jsonl`
-- `.deeplan/risks.jsonl`
-- `.deeplan/events.jsonl`
-- `.deeplan/revisions.jsonl`
+- `.palamedes/plan.json`
+- `.palamedes/decisions.jsonl`
+- `.palamedes/risks.jsonl`
+- `.palamedes/events.jsonl`
+- `.palamedes/revisions.jsonl`
 
-Hosts MAY keep a derived reference retrieval index at `.deeplan/references.sqlite3`.
+Hosts MAY keep a derived reference retrieval index at `.palamedes/references.sqlite3`.
 That index is non-authoritative: it MUST NOT replace `plan.json`, evidence, reference-discovery records, or revision history as the source of planning truth. It MAY be rebuilt from collected reference-pattern inputs, and its integrity/schema health SHOULD be checked independently before retrieval.
 
 `plan.json` MUST contain the current mutable plan.
 The `.jsonl` files MUST be treated as append-only logs.
+
+`view_transitions` records epistemic change alongside ordinary plan state. Each
+entry preserves the previous view, the observation or encounter that triggered
+change, the new view, blind spots introduced by that view, newly opened paths,
+the next probe, and related sources. A transition does not prove that the new
+view is correct; it makes the reason for movement auditable.
 
 ## Required Plan Fields
 
@@ -61,13 +67,18 @@ The `.jsonl` files MUST be treated as append-only logs.
 - `evidence`
 - `hypothesis_log`
 - `reference_discoveries`
+- `view_transitions`
+- `inquiry_items`
+- `reference_encounters`
+- `development_probes`
+- `open_questions`
 
 ## Field Types
 
 The current implementation requires these types:
 
 - `schema_version`, `version`, `updated_at`, `goal`, `success_metric`, `deadline`, `planning_horizon`, `review_cadence`, and `selected_option` MUST be strings.
-- `phase_plan`, `constraints`, `assumptions`, `options`, `plan_tasks`, `execution_tasks`, `dependencies`, `experiments`, `references`, `insights`, `direction_insights`, `market_insights`, `timing_insights`, `differentiation_insights`, `monetization_insights`, `constraint_insights`, `risk_signal_insights`, `evolution_insights`, `definition_of_done`, `evidence`, `hypothesis_log`, and `reference_discoveries` MUST be arrays.
+- `phase_plan`, `constraints`, `assumptions`, `options`, `plan_tasks`, `execution_tasks`, `dependencies`, `experiments`, `references`, `insights`, `direction_insights`, `market_insights`, `timing_insights`, `differentiation_insights`, `monetization_insights`, `constraint_insights`, `risk_signal_insights`, `evolution_insights`, `definition_of_done`, `evidence`, `hypothesis_log`, `reference_discoveries`, `view_transitions`, `inquiry_items`, `reference_encounters`, `development_probes`, and `open_questions` MUST be arrays.
 - `risks` MUST be an array of strings or objects.
 
 For nested records:
@@ -78,6 +89,17 @@ For nested records:
 - An evidence object MUST include `claim`, `source`, and `date` as non-empty strings, and `confidence` as an integer from 0 to 100.
 - A hypothesis object MUST include `ts`, `hypothesis`, and `status` as non-empty strings.
 - A reference-discovery object MUST include `ts`, `question`, and `search_mode` as non-empty strings.
+- A view-transition object MUST include non-empty `ts`, `previous_view`,
+  `trigger`, `new_view`, and `next_probe` strings, plus `opened_paths` and
+  `references` arrays.
+- An inquiry item MUST make statement kind, intent, status, and commitment
+  explicit.
+- A reference encounter MUST record encounter context, relation, effect, and
+  adoption state.
+- A development probe MUST state the step and expected learning before it is
+  treated as completed evidence.
+- An open question MUST preserve at least one perspective with explicit
+  `reveals` and `hides` lists plus a revisit condition.
 
 ## Structured Extension Conventions
 

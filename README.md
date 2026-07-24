@@ -1,13 +1,34 @@
-# Deep Plan
+# Palamedes
 
-Deep Plan is an experimental plan-state kernel for agentic workflows. It treats plans as structured, revisionable state rather than disposable text, so agents, tools, and humans can operate against the same planning surface over time. DeepPlan includes explicit conflict handling, restore flows, contract introspection, and fixture-backed conformance checks. It is currently alpha-stage and intended for early adopters exploring more reliable planning infrastructure across execution surfaces and runtimes.
+<p align="center">
+  <img src="assets/palamedes.png" alt="Palamedes" width="100%">
+</p>
+
+Palamedes is an experimental inquiry and plan-state kernel for work whose
+direction changes as people, models, references, implementation, and reality
+interact.
+
+It treats a plan as revisionable state rather than disposable text. Alongside
+goals, evidence, hypotheses, and restore points, Palamedes can preserve
+`view_transitions`: what was previously believed, what changed the view, what
+became visible, what the new frame may hide, and which probe should follow.
+It also distinguishes inquiry from commitment, reference collection from
+reference influence, and ordinary tasks from development steps intended to
+produce new information.
+
+Palamedes does not claim to manufacture originality or guarantee startup
+success. It provides an auditable surface for exploring those questions without
+silently rewriting the path taken. The current inquiry, including counterpoints
+and unresolved tensions, is preserved in
+[`PALAMEDES_INQUIRY.md`](PALAMEDES_INQUIRY.md).
 
 ## Current Status
 
-DeepPlan is ready for alpha release and early adopter use.
+Palamedes is ready for alpha release and early adopter use.
 
 - `core` contract surfaces such as persisted plan state, fingerprint conflict semantics, restore behavior, and documented HTTP envelopes are treated as stable according to `STABILITY.md`
 - `reference` surfaces such as host orchestration contracts, reference adapters, and example integrations are still experimental
+- `inquiry` surfaces such as view-transition lineage and longitudinal evaluation are active product hypotheses, not settled doctrine
 - the repository currently ships a canonical Python reference surface plus a thin TypeScript HTTP consumer
 
 Use it when:
@@ -21,24 +42,25 @@ It keeps planning state in your repo with:
 
 - one current plan
 - explicit evidence and hypotheses
+- traceable changes of view
 - revision history
 - restore points
 - a defined moment to replan
 
-It is intentionally `plan-only`. DeepPlan does not run tasks, schedule workflows, or own delivery.
+It is intentionally `plan-only`. Palamedes does not run tasks, schedule workflows, or own delivery.
 
 ## Architecture
 
-DeepPlan is organized around one planning kernel with a few integration surfaces around it.
+Palamedes is organized around one planning kernel with a few integration surfaces around it.
 
 ```text
-deepplan/
-├── deepplan.py                    # Core planning kernel and CLI
-├── deepplan_server.py             # Local HTTP transport
-├── deepplan_sdk/                  # Packaged Python client surface
-├── deepplan_reference_adapter.py  # Canonical Python reference adapter
-├── deepplan_reference_host.py     # Canonical Python reference host
-├── deepplan_reference_consumer.ts # Thin TypeScript HTTP consumer
+palamedes/
+├── palamedes.py                    # Core planning kernel and CLI
+├── palamedes_server.py             # Local HTTP transport
+├── palamedes_sdk/                  # Packaged Python client surface
+├── palamedes_reference_adapter.py  # Canonical Python reference adapter
+├── palamedes_reference_host.py     # Canonical Python reference host
+├── palamedes_reference_consumer.ts # Thin TypeScript HTTP consumer
 ├── spec/                          # Public contract entrypoints
 └── tests/contracts/               # Fixture-backed conformance cases
 ```
@@ -56,14 +78,14 @@ The important design choice is that the plan is the source of truth. Everything 
 
 ## Planning Flow
 
-DeepPlan is easiest to understand as one stateful loop:
+Palamedes is easiest to understand as one stateful loop:
 
 ```text
 choose direction
     ↓
 write plan state
     ↓
-add evidence and hypotheses
+add evidence, hypotheses, and view transitions
     ↓
 review plan quality
     ↓
@@ -86,7 +108,7 @@ history / restore / conformance stay available to other consumers
 
 ## Why Use It
 
-DeepPlan is for the layer before execution:
+Palamedes is for the layer before execution:
 
 - what to build
 - why now
@@ -104,13 +126,13 @@ That does not solve the harder problem:
 - finding better evidence before execution hardens the wrong path
 - keeping product and business intent coherent over time
 
-DeepPlan exists to reduce that failure mode.
+Palamedes exists to reduce that failure mode.
 
 ## Product Boundary
 
-DeepPlan is `plan-only` by design.
+Palamedes is `plan-only` by design.
 
-DeepPlan should own:
+Palamedes should own:
 
 - idea discovery
 - direction setting
@@ -119,7 +141,7 @@ DeepPlan should own:
 - evidence-backed replanning
 - revision-aware recovery
 
-DeepPlan should not own:
+Palamedes should not own:
 
 - task execution orchestration
 - delivery automation
@@ -127,11 +149,11 @@ DeepPlan should not own:
 - workflow scheduling
 - channel or chat surfaces
 
-Those layers can be built around DeepPlan, but they should not blur the purpose of this repo.
+Those layers can be built around Palamedes, but they should not blur the purpose of this repo.
 
 ## What Makes It Different
 
-DeepPlan is not:
+Palamedes is not:
 
 - a note-taking app
 - a generic project manager
@@ -139,7 +161,7 @@ DeepPlan is not:
 - an execution agent runtime
 - a loose PRD template
 
-DeepPlan is:
+Palamedes is:
 
 - a structured decision state in your repo
 - an evidence-backed planning loop
@@ -151,12 +173,14 @@ Everything else exists to improve plan quality over time:
 
 - `evidence` tests whether the plan is grounded
 - `hypothesis_log` tracks bets and outcomes
+- `view_transitions` preserves why the current frame changed, what the new
+  frame may hide, and which probe should follow
 - `revisions` show how the plan changed
 - `restore` lets you safely recover a better prior direction
 
 ## Access Surfaces
 
-DeepPlan currently ships four access surfaces around the same planning core:
+Palamedes currently ships four access surfaces around the same planning core:
 
 | Surface | Purpose |
 | --- | --- |
@@ -182,7 +206,7 @@ You start with three possible directions:
 - agent workflow layer for developers
 - local research memory for solo builders
 
-After one DeepPlan loop, the output should be sharper:
+After one Palamedes loop, the output should be sharper:
 
 - chosen direction: AI planning tool for founders
 - rejected directions: workflow layer is crowded, research memory is less urgent
@@ -195,7 +219,7 @@ That is the job: force a better direction decision before more building happens.
 
 ## Who It Is For
 
-DeepPlan is strongest for:
+Palamedes is strongest for:
 
 - solo builders working with AI
 - early-stage founders
@@ -210,12 +234,17 @@ It is a weaker fit for:
 
 ## Core Concepts
 
-DeepPlan centers on one mutable plan plus supporting logs.
+Palamedes centers on one mutable plan plus supporting logs.
 
 - `plan`: the current structured planning state
 - `evidence`: concrete signals tied to planning axes
 - `hypothesis_log`: testable bets and outcomes
 - `reference_discoveries`: logged reference-search questions, criteria, and shortlisted candidates
+- `view_transitions`: traceable changes from a previous view to a new view
+- `inquiry_items`: statements classified by intent and commitment
+- `reference_encounters`: why a reference mattered and what effect it had
+- `development_probes`: build steps defined by what they should reveal
+- `open_questions`: unresolved questions with multiple views and blind spots
 - `risks`: failure modes, early signals, mitigation
 - `revisions`: immutable plan snapshots over time
 - `events`: operational history such as auto-replan activity
@@ -239,7 +268,7 @@ Insight coverage is organized across eight axes:
 
 ## State Model
 
-DeepPlan stores repo-local state in `.deeplan/`:
+Palamedes stores repo-local state in `.palamedes/`:
 
 - `plan.json`: current plan
 - `decisions.jsonl`: decision log
@@ -257,7 +286,7 @@ The runtime also tracks:
 
 ## Contract Surface
 
-DeepPlan now separates implementation release cadence from the persisted planning contract.
+Palamedes now separates implementation release cadence from the persisted planning contract.
 
 - `plan.schema_version` is the canonical contract version for persisted state
 - `plan.version` is kept as a compatibility alias during the transition
@@ -265,7 +294,7 @@ DeepPlan now separates implementation release cadence from the persisted plannin
 - normative contract docs live in `spec/`
 - fixture-backed contract tests live in `tests/contracts/`
 - aggregated contract/readiness surfaces are available at `GET /contracts` and `GET /doctor`
-- the conformance runner is available through `python3 deepplan.py conformance`
+- the conformance runner is available through `python3 palamedes.py conformance`
 
 Current stability boundary:
 
@@ -296,9 +325,9 @@ Start with the default loop:
 5. review whether to continue or replan
 
 ```bash
-python3 deepplan.py init
-python3 deepplan.py ideate --profile "solo builder" --interests "automation,founder tools" --count 3
-python3 deepplan.py plan \
+python3 palamedes.py init
+python3 palamedes.py ideate --profile "solo builder" --interests "automation,founder tools" --count 3
+python3 palamedes.py plan \
   --goal "Validate an AI planning tool for founders" \
   --success-metric "5 founder users complete one weekly planning review by 2026-04-30" \
   --deadline "2026-04-30" \
@@ -314,10 +343,38 @@ python3 deepplan.py plan \
   --constraint-insights "Need a narrow user and local-first scope" \
   --risk-signal-insights "If founders mainly ask for task automation, positioning is wrong" \
   --evolution-insights "Start with founder planning, expand only after repeated validation"
-python3 deepplan.py evidence --claim "3 founders said direction drift is worse than shipping speed" --source "interviews" --confidence 72 --axis market
-python3 deepplan.py hypothesis --hypothesis "Founders will return weekly for plan review" --metric "weekly review completions" --target ">=5" --window "14 days" --status open
-python3 deepplan.py show
-python3 deepplan.py review
+python3 palamedes.py evidence --claim "3 founders said direction drift is worse than shipping speed" --source "interviews" --confidence 72 --axis market
+python3 palamedes.py hypothesis --hypothesis "Founders will return weekly for plan review" --metric "weekly review completions" --target ">=5" --window "14 days" --status open
+python3 palamedes.py view \
+  --previous-view "A better strategist report is the primary product value" \
+  --trigger "Building and model progress exposed a wider viewpoint-evolution problem" \
+  --new-view "Preserve why views change across references, implementation, and outcomes" \
+  --new-blind-spots "Process language can excuse drift or delay closure" \
+  --opened-paths "longitudinal comparison,reference influence history" \
+  --next-probe "Run one live project through repeated view-build-observe cycles" \
+  --source "owner inquiry" \
+  --references "PALAMEDES_INQUIRY.md"
+python3 palamedes.py inquiry \
+  --statement "Would a fine-tuned model help?" \
+  --kind thought_experiment \
+  --status closed \
+  --intent "Widen the reasoning space, not propose a roadmap" \
+  --commitment none
+python3 palamedes.py encounter \
+  --reference "/Users/ze/work/ref" \
+  --encountered-while "Studying collected repository patterns" \
+  --initial-interest "Collection history may expose direction" \
+  --relation "Reference influence may be stronger evidence than clone presence" \
+  --effect opened_question
+python3 palamedes.py probe \
+  --step "Run one live view-build-observe cycle" \
+  --expected-learning "Whether the record exposes a meaningful view change"
+python3 palamedes.py question \
+  --question "How should creativity and success interact?" \
+  --perspectives-json '[{"view":"creativity","reveals":["possibility"],"hides":["viability"]},{"view":"success","reveals":["reality"],"hides":["fragile novelty"]}]' \
+  --revisit-when "After three live cases"
+python3 palamedes.py show
+python3 palamedes.py review
 ```
 
 Then expand only if needed:
@@ -330,7 +387,7 @@ Then expand only if needed:
 
 ## Planning Commands
 
-DeepPlan is designed around explicit planning loops:
+Palamedes is designed around explicit planning loops:
 
 - `plan`: define or overwrite core direction
 - `evidence`: add structured market/product signal
@@ -364,9 +421,9 @@ Restore is treated as a normal write:
 
 The Python client has typed conflict and retry semantics:
 
-- `DeepPlanConflictError`: stale fingerprint conflict
-- `DeepPlanClientOperationError`: higher-level multi-step failure
-- `DeepPlanHealthGateError`: optional write blocked by degraded storage health
+- `PalamedesConflictError`: stale fingerprint conflict
+- `PalamedesClientOperationError`: higher-level multi-step failure
+- `PalamedesHealthGateError`: optional write blocked by degraded storage health
 - append-style operations can carry `idempotency_key` to safely dedupe retries
 
 Default retry policy is conservative:
@@ -381,7 +438,7 @@ Default retry policy is conservative:
 
 Main commands:
 
-- `init`: create `.deeplan/` state files
+- `init`: create `.palamedes/` state files
 - `plan`: create or overwrite core plan fields
 - `replan`: update the plan from new evidence
 - `decide`: append a decision record
@@ -399,6 +456,11 @@ Main commands:
 - `restore`: preview or restore a prior revision
 - `ideate`: generate option seeds from lightweight context
 - `insight`: generate viewpoint-expansion insight packs
+- `view`: record a traceable change of view without declaring it final
+- `inquiry`: classify a statement without promoting it to a plan
+- `encounter`: record a reference's actual influence
+- `probe`: record a development step by its expected learning
+- `question`: preserve unresolved perspectives and blind spots
 - `review`: run cycle-based review with recommendations
 
 Development checks:
@@ -415,7 +477,7 @@ make schema-check
 Start the local service:
 
 ```bash
-python3 deepplan_server.py --host 127.0.0.1 --port 8787
+python3 palamedes_server.py --host 127.0.0.1 --port 8787
 ```
 
 Available endpoints:
@@ -457,48 +519,48 @@ curl -X POST http://127.0.0.1:8787/restore/preview \
 The local wrapper exposes slash-style and lightweight natural-language control:
 
 ```bash
-python3 deepplan_agent.py tools
-python3 deepplan_agent.py run --input '/deepplan.show'
-python3 deepplan_agent.py run --input '/deepplan.health'
-python3 deepplan_agent.py run --input '/deepplan.history'
-python3 deepplan_agent.py run --input '/deepplan.restore-preview revision_id=<revision-id>'
-python3 deepplan_agent.py run --input 'preview previous revision'
-python3 deepplan_agent.py run --input '/deepplan.plan goal="Ship local agent layer" planning_horizon="4 weeks" review_cadence=weekly'
-python3 deepplan_agent.py run --input '/deepplan.replan evidence="Pilot retention improved" evidence_confidence=70 evidence_axis=market'
-python3 deepplan_agent.py run --input '/deepplan.evidence claim="Repeated planning pain" source=interviews confidence=72 axis=market'
-python3 deepplan_agent.py run --input 'show plan'
+python3 palamedes_agent.py tools
+python3 palamedes_agent.py run --input '/palamedes.show'
+python3 palamedes_agent.py run --input '/palamedes.health'
+python3 palamedes_agent.py run --input '/palamedes.history'
+python3 palamedes_agent.py run --input '/palamedes.restore-preview revision_id=<revision-id>'
+python3 palamedes_agent.py run --input 'preview previous revision'
+python3 palamedes_agent.py run --input '/palamedes.plan goal="Ship local agent layer" planning_horizon="4 weeks" review_cadence=weekly'
+python3 palamedes_agent.py run --input '/palamedes.replan evidence="Pilot retention improved" evidence_confidence=70 evidence_axis=market'
+python3 palamedes_agent.py run --input '/palamedes.evidence claim="Repeated planning pain" source=interviews confidence=72 axis=market'
+python3 palamedes_agent.py run --input 'show plan'
 ```
 
 Supported slash commands:
 
-- `/deepplan`
-- `/deepplan.plan`
-- `/deepplan.replan`
-- `/deepplan.show`
-- `/deepplan.health`
-- `/deepplan.history`
-- `/deepplan.restore`
-- `/deepplan.restore-preview`
-- `/deepplan.qa`
-- `/deepplan.validate`
-- `/deepplan.evidence`
-- `/deepplan.hypothesis`
+- `/palamedes`
+- `/palamedes.plan`
+- `/palamedes.replan`
+- `/palamedes.show`
+- `/palamedes.health`
+- `/palamedes.history`
+- `/palamedes.restore`
+- `/palamedes.restore-preview`
+- `/palamedes.qa`
+- `/palamedes.validate`
+- `/palamedes.evidence`
+- `/palamedes.hypothesis`
 
 Tool responses use stable `ok`, `tool_name`, and `result_type` fields.
 
 ## Python Client
 
-The repo includes a lightweight client in `deepplan_sdk/`.
+The repo includes a lightweight client in `palamedes_sdk/`.
 
 ```python
-from deepplan_sdk import (
-    DeepPlanClient,
-    DeepPlanClientOperationError,
-    DeepPlanConflictError,
-    DeepPlanHealthGateError,
+from palamedes_sdk import (
+    PalamedesClient,
+    PalamedesClientOperationError,
+    PalamedesConflictError,
+    PalamedesHealthGateError,
 )
 
-client = DeepPlanClient.from_http("127.0.0.1", 8787)
+client = PalamedesClient.from_http("127.0.0.1", 8787)
 
 cycle = client.get_cycle(history_limit=5)
 updated = client.update_plan({"goal": "Ship local agent layer"})
@@ -528,7 +590,7 @@ cycle_result = client.capture_evidence_cycle(
 )
 ```
 
-Use the client when another repo needs DeepPlan planning state without re-implementing:
+Use the client when another repo needs Palamedes planning state without re-implementing:
 
 - stale-write handling
 - refresh-and-retry policy
@@ -544,16 +606,16 @@ See also:
 - `spec/http-api.md`
 - `spec/conflict-and-restore.md`
 - `docs/integration-agentscope.md`
-- `docs/deepplan-agents-bootstrap.md`
-- `deepplan_reference_adapter.py`
-- `deepplan_reference_host.py`
-- `deepplan_reference_consumer.ts`
-- `examples/deepplan_kernel_adapter.py`
-- `examples/deepplan_planner_host.py`
-- `examples/deepplan_reference_consumer.ts`
-- `examples/deepplan_agents_skills/registry.py`
-- `scaffolds/deepplan_agents/`
-- `deepplan_client.py` remains as a compatibility import path
+- `docs/palamedes-agents-bootstrap.md`
+- `palamedes_reference_adapter.py`
+- `palamedes_reference_host.py`
+- `palamedes_reference_consumer.ts`
+- `examples/palamedes_kernel_adapter.py`
+- `examples/palamedes_planner_host.py`
+- `examples/palamedes_reference_consumer.ts`
+- `examples/palamedes_agents_skills/registry.py`
+- `scaffolds/palamedes_agents/`
+- `palamedes_client.py` remains as a compatibility import path
 
 Install the SDK surface locally from this repo:
 
@@ -563,7 +625,7 @@ python3 -m pip install -e .
 
 ## Design Principles
 
-DeepPlan favors:
+Palamedes favors:
 
 1. Strong references
 2. Actionable insights
@@ -577,19 +639,19 @@ AI should improve decision quality, not just generate more tasks.
 
 ## 📈 Star History
 
-<a href="https://star-history.com/#LEE-Kyungjae/deep-plan&Date">
+<a href="https://star-history.com/#LEE-Kyungjae/Palamedes&Date">
   <picture>
     <source
       media="(prefers-color-scheme: dark)"
-      srcset="https://api.star-history.com/svg?repos=LEE-Kyungjae/deep-plan&type=Date&theme=dark"
+      srcset="https://api.star-history.com/svg?repos=LEE-Kyungjae/Palamedes&type=Date&theme=dark"
     />
     <source
       media="(prefers-color-scheme: light)"
-      srcset="https://api.star-history.com/svg?repos=LEE-Kyungjae/deep-plan&type=Date"
+      srcset="https://api.star-history.com/svg?repos=LEE-Kyungjae/Palamedes&type=Date"
     />
     <img
       alt="Star History Chart"
-      src="https://api.star-history.com/svg?repos=LEE-Kyungjae/deep-plan&type=Date"
+      src="https://api.star-history.com/svg?repos=LEE-Kyungjae/Palamedes&type=Date"
     />
   </picture>
 </a>

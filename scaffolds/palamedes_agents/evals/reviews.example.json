@@ -1,0 +1,24 @@
+{
+  "reviews": [
+    {
+      "case_id": "palamedes-agentization",
+      "reviewer": "reviewer-id",
+      "scores": {
+        "A": {
+          "non_genericity": 1,
+          "decision_usefulness": 1,
+          "evidence_traceability": 1,
+          "action_safety": 1
+        },
+        "B": {
+          "non_genericity": 1,
+          "decision_usefulness": 1,
+          "evidence_traceability": 1,
+          "action_safety": 1
+        }
+      },
+      "attributable_decision": false,
+      "decision_note": ""
+    }
+  ]
+}

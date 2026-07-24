@@ -1,10 +1,10 @@
-# DeepPlan Contract Stability Policy
+# Palamedes Contract Stability Policy
 
 This document defines what adopters can depend on and what may change without notice.
 
 ## Stability Levels
 
-DeepPlan has two stability levels:
+Palamedes has two stability levels:
 
 - `stable`: documented public contract surface
 - `experimental`: anything not explicitly listed as stable
@@ -20,7 +20,7 @@ The following are stable when documented in the README or spec files:
 - the meaning of `plan.schema_version` as the canonical persisted contract version
 - the `fingerprint` conflict token and `412` conflict behavior
 - the core HTTP endpoints documented in the README and integration guides
-- the public SDK methods exported by `deepplan_sdk`
+- the public SDK methods exported by `palamedes_sdk`
 - the primary CLI commands described in the README
 - the meanings of `ok`, `tool_name`, `result_type`, and `current_fingerprint` in public responses
 - the additive response fields `contract_version` and `implementation_version` when present in public envelopes
@@ -57,7 +57,7 @@ Experimental surfaces are allowed to evolve quickly. Adopters should not build p
 
 - the current release must be able to read the immediately previous supported contract version
 - automatic migration is required when the old format can be converted losslessly and deterministically
-- if automatic migration is not safe, DeepPlan must fail with a clear migration-needed error and document the manual steps
+- if automatic migration is not safe, Palamedes must fail with a clear migration-needed error and document the manual steps
 - stored plan data should never be silently rewritten into a breaking shape
 
 ## Adopter Rule

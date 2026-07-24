@@ -1,4 +1,0 @@
-interface:
-  display_name: "DeepPlan Intelligence"
-  short_description: "Plan-only long-horizon planning copilot"
-  default_prompt: "Use $deepplan-plan-intelligence to strengthen plan quality before execution."

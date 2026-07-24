@@ -4,7 +4,7 @@ from setuptools import setup
 
 
 setup(
-    name="deepplan",
+    name="palamedes",
     version="0.5.0",
     description="A local, agent-friendly planning kernel with a thin Python SDK surface.",
     long_description=open("README.md", encoding="utf-8").read(),
@@ -13,11 +13,11 @@ setup(
     license="MIT",
     python_requires=">=3.9",
     py_modules=[
-        "deepplan",
-        "deepplan_agent",
-        "deepplan_client",
-        "deepplan_server",
-        "deepplan_store",
+        "palamedes",
+        "palamedes_agent",
+        "palamedes_client",
+        "palamedes_server",
+        "palamedes_store",
     ],
-    packages=["deepplan_sdk"],
+    packages=["palamedes_sdk"],
 )

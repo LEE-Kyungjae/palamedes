@@ -1,0 +1,4 @@
+interface:
+  display_name: "Palamedes Intelligence"
+  short_description: "Plan-only long-horizon planning copilot"
+  default_prompt: "Use $palamedes-plan-intelligence to strengthen plan quality before execution."

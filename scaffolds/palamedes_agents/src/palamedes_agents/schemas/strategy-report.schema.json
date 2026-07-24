@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PalamedesStrategyReport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "overall_score",
+    "decision",
+    "axes",
+    "emotion_drivers",
+    "risk_boundaries",
+    "generic_patterns",
+    "missing_fields",
+    "risks",
+    "recommendations",
+    "research_questions",
+    "next_actions",
+    "positioning_rewrite",
+    "monetization_moment",
+    "reference_insights",
+    "creative_directions",
+    "personal_profile_updates",
+    "project_context",
+    "outcome_learning"
+  ],
+  "properties": {
+    "overall_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["continue", "revise_before_build", "stop_and_research", "review_risk_boundary"]
+    },
+    "axes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["problem_solution", "desire_emotion", "experience_loop", "monetization_trigger", "anti_generic", "reference_insight"],
+      "properties": {
+        "problem_solution": {"type": "integer", "minimum": 0, "maximum": 100},
+        "desire_emotion": {"type": "integer", "minimum": 0, "maximum": 100},
+        "experience_loop": {"type": "integer", "minimum": 0, "maximum": 100},
+        "monetization_trigger": {"type": "integer", "minimum": 0, "maximum": 100},
+        "anti_generic": {"type": "integer", "minimum": 0, "maximum": 100},
+        "reference_insight": {"type": "integer", "minimum": 0, "maximum": 100}
+      }
+    },
+    "emotion_drivers": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "risk_boundaries": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "generic_patterns": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "missing_fields": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {"type": "string"}
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "research_questions": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "next_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["target_role", "action", "priority", "reason", "payload"],
+        "properties": {
+          "target_role": {
+            "type": "string",
+            "enum": ["planner", "researcher", "reviewer", "strategist"]
+          },
+          "action": {"type": "string"},
+          "priority": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "reason": {"type": "string"},
+          "payload": {"type": "object"}
+        }
+      }
+    },
+    "positioning_rewrite": {
+      "type": "string"
+    },
+    "monetization_moment": {
+      "type": "string"
+    },
+    "reference_insights": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "reference_ids", "source_urls", "evidence_quotes", "observed_behavior", "emotion_driver", "monetization_moment", "repeat_loop", "transferable_principle", "applied_to_plan", "transfer_assumptions", "disconfirming_signal", "confidence"],
+        "properties": {
+          "source": {"type": "string"},
+          "reference_ids": {"type": "array", "items": {"type": "string"}},
+          "source_urls": {"type": "array", "items": {"type": "string"}},
+          "evidence_quotes": {"type": "array", "items": {"type": "string"}},
+          "observed_behavior": {"type": "string"},
+          "emotion_driver": {"type": "string"},
+          "monetization_moment": {"type": "string"},
+          "repeat_loop": {"type": "string"},
+          "transferable_principle": {"type": "string"},
+          "applied_to_plan": {"type": "string"},
+          "transfer_assumptions": {"type": "array", "items": {"type": "string"}},
+          "disconfirming_signal": {"type": "string"},
+          "confidence": {"type": "integer", "minimum": 0, "maximum": 100}
+        }
+      }
+    },
+    "creative_directions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "target_user", "problem", "experience_loop", "emotional_wedge", "monetization_trigger", "reference_basis", "why_not_generic"],
+        "properties": {
+          "name": {"type": "string"},
+          "target_user": {"type": "string"},
+          "problem": {"type": "string"},
+          "experience_loop": {"type": "string"},
+          "emotional_wedge": {"type": "string"},
+          "monetization_trigger": {"type": "string"},
+          "reference_basis": {"type": "string"},
+          "why_not_generic": {"type": "string"}
+        }
+      }
+    },
+    "personal_profile_updates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repeated_biases", "weak_axes", "overused_solution_patterns", "recommended_next_prompts"],
+      "properties": {
+        "repeated_biases": {"type": "array", "items": {"type": "string"}},
+        "weak_axes": {"type": "array", "items": {"type": "string"}},
+        "overused_solution_patterns": {"type": "array", "items": {"type": "string"}},
+        "recommended_next_prompts": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "project_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entry_mode", "stage", "existing_artifacts_used", "mid_project_risks"],
+      "properties": {
+        "entry_mode": {"type": "string", "enum": ["new_project", "mid_project", "pivot", "rescue", "unknown"]},
+        "stage": {"type": "string"},
+        "existing_artifacts_used": {"type": "array", "items": {"type": "string"}},
+        "mid_project_risks": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "outcome_learning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observed_outcomes", "interpretation", "plan_adjustments", "next_evidence", "profile_implications"],
+      "properties": {
+        "observed_outcomes": {"type": "array", "items": {"type": "string"}},
+        "interpretation": {"type": "array", "items": {"type": "string"}},
+        "plan_adjustments": {"type": "array", "items": {"type": "string"}},
+        "next_evidence": {"type": "array", "items": {"type": "string"}},
+        "profile_implications": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

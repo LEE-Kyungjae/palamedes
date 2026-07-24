@@ -1,6 +1,6 @@
-# DeepPlan Conflict, Restore, and Idempotency
+# Palamedes Conflict, Restore, and Idempotency
 
-This document specifies the current coordination semantics used by DeepPlan writes.
+This document specifies the current coordination semantics used by Palamedes writes.
 
 ## Fingerprint Model
 
@@ -33,8 +33,8 @@ Restore targets MAY be resolved in one of two ways:
 - explicit `revision_id`
 - `previous: true`
 
-When `previous: true` is used, DeepPlan MUST resolve the latest revision's previous fingerprint if available.
-If that cannot be resolved directly, DeepPlan MAY fall back to the immediately previous revision entry.
+When `previous: true` is used, Palamedes MUST resolve the latest revision's previous fingerprint if available.
+If that cannot be resolved directly, Palamedes MAY fall back to the immediately previous revision entry.
 
 If no matching revision exists, the request MUST fail as a validation error.
 
@@ -74,7 +74,7 @@ The current implementation uses an event-log record with:
 - `fingerprint`
 - `result`
 
-If a request repeats the same scope and idempotency key, DeepPlan MUST replay the recorded result and MUST set `idempotency_replayed: true`.
+If a request repeats the same scope and idempotency key, Palamedes MUST replay the recorded result and MUST set `idempotency_replayed: true`.
 The original result MUST be returned without appending a duplicate logical effect.
 
 Current append-style surfaces that support this behavior include:

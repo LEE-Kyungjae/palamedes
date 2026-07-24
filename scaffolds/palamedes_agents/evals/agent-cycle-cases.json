@@ -1,0 +1,79 @@
+{
+  "version": "1",
+  "purpose": "Compare a generic strategy prompt with the bounded Palamedes AgentCycle on real local projects.",
+  "generation_protocol": {
+    "model_rule": "Use the same model, model version, reasoning setting, and maximum output budget for baseline and Palamedes.",
+    "baseline_system_prompt": "generic-baseline-system.md",
+    "palamedes_action": "evaluate_experience_strategy",
+    "report_schema": "../src/palamedes_agents/schemas/strategy-report.schema.json",
+    "artifact_rule": "Both systems receive the same case question and listed project artifacts. Only Palamedes receives retrieved central-reference patterns and stored planning profile.",
+    "run_rule": "Generate each report in a fresh session. Do not expose system identity in report prose or filenames given to reviewers."
+  },
+  "rubric": {
+    "non_genericity": {
+      "weight": 30,
+      "question": "Does the report reject generic wrappers and produce a project-specific strategic wedge?"
+    },
+    "decision_usefulness": {
+      "weight": 30,
+      "question": "Does the report cause a concrete continue, stop, pivot, or positioning decision?"
+    },
+    "evidence_traceability": {
+      "weight": 25,
+      "question": "Can important claims be traced to repository artifacts or reference sources?"
+    },
+    "action_safety": {
+      "weight": 15,
+      "question": "Are next actions capability-valid, bounded, and escalated when human judgment is required?"
+    }
+  },
+  "success_gate": {
+    "minimum_cases": 3,
+    "palamedes_preferred_cases": 2,
+    "minimum_attributable_decisions": 1
+  },
+  "cases": [
+    {
+      "id": "palamedes-agentization",
+      "repository": ".",
+      "entry_mode": "mid_project",
+      "project_stage": "working plan-state kernel with strategist scaffold",
+      "question": "How should Palamedes become a high-quality agent without losing its plan-only kernel boundary?",
+      "artifacts": [
+        "README.md",
+        "docs/palamedes-strategist-agent.md",
+        "scaffolds/palamedes_agents/src/palamedes_agents/runtime/agent_cycle.py",
+        "/Users/ze/work/ref/catalog/agent-patterns.json"
+      ],
+      "required_decision": "Choose the smallest bounded agent loop and explicitly reject runtime scope that belongs in the host."
+    },
+    {
+      "id": "gahyeonbot-voice-assistant",
+      "repository": "/Users/ze/work/gahyeonbot",
+      "entry_mode": "mid_project",
+      "project_stage": "Discord scheduling, media, newsletter, and voice assistant product",
+      "question": "Which user loop should GahyeonBot prioritize instead of remaining a broad collection of bot features?",
+      "artifacts": [
+        "README.md",
+        "ref/voicebox/README.md",
+        "ref/ten-vad/README.md"
+      ],
+      "required_decision": "Select or reject a narrow repeat loop using observed Discord behavior, latency, trust, and operating-cost evidence."
+    },
+    {
+      "id": "termi-remote-agent-control",
+      "repository": "/Users/ze/work/termi",
+      "entry_mode": "mid_project",
+      "project_stage": "macOS tmux connector with mobile and web clients",
+      "question": "Should Termi remain remote terminal I/O or become a controlled interface for long-running coding agents?",
+      "artifacts": [
+        "README.md",
+        "agent/",
+        "mobile/",
+        "frontend/",
+        "ref/palamedes/README.md"
+      ],
+      "required_decision": "Choose a product boundary based on session ownership, reconnect safety, approvals, and return behavior."
+    }
+  ]
+}

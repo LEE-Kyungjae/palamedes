@@ -1,6 +1,6 @@
-# DeepPlan HTTP API
+# Palamedes HTTP API
 
-This document specifies the current local HTTP service exposed by `deepplan_server.py`.
+This document specifies the current local HTTP service exposed by `palamedes_server.py`.
 
 ## Transport Rules
 

@@ -1,14 +1,14 @@
-# DeepPlan Landing Copy
+# Palamedes Landing Copy
 
 ## Hero
 
-DeepPlan helps builders working with AI choose a direction before execution hardens the wrong path.
+Palamedes helps builders working with AI choose a direction before execution hardens the wrong path.
 
 Track one current plan, the evidence behind it, the signals that would invalidate it, and the exact moment to replan.
 
 ## Short Version
 
-DeepPlan is a local planning engine for builders who can ship fast but do not want to drift.
+Palamedes is a local planning engine for builders who can ship fast but do not want to drift.
 
 It keeps planning state in your repo so you can:
 
@@ -32,14 +32,14 @@ Teams can generate code, tasks, and workflows faster than ever, but still strugg
 
 ## Positioning
 
-DeepPlan is not:
+Palamedes is not:
 
 - a note-taking app
 - a generic PM tool
 - a workflow engine
 - an execution agent runtime
 
-DeepPlan is:
+Palamedes is:
 
 - a versioned planning state
 - an evidence-backed decision loop
@@ -47,7 +47,7 @@ DeepPlan is:
 
 ## Outcome
 
-After one DeepPlan loop, you should have:
+After one Palamedes loop, you should have:
 
 - one chosen direction
 - the directions you rejected
@@ -74,7 +74,7 @@ After one DeepPlan loop, you should have:
 ### Section 1: Hero
 
 Headline:
-DeepPlan helps builders working with AI choose a direction before execution hardens the wrong path.
+Palamedes helps builders working with AI choose a direction before execution hardens the wrong path.
 
 Subhead:
 Keep one current plan, the evidence behind it, the signals that would invalidate it, and the exact moment to replan.
@@ -93,7 +93,7 @@ Execution got cheaper. Direction did not.
 Body:
 AI can generate code, tasks, and workflows fast. The harder problem is still deciding what matters, what evidence supports it, and when to change course.
 
-### Section 3: What DeepPlan Does
+### Section 3: What Palamedes Does
 
 Headline:
 Planning state, not execution sprawl.
@@ -145,4 +145,4 @@ Headline:
 Decide what matters before AI builds it.
 
 Body:
-DeepPlan gives you a versioned planning state so faster execution does not lock in the wrong strategy.
+Palamedes gives you a versioned planning state so faster execution does not lock in the wrong strategy.

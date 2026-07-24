@@ -1,0 +1,11 @@
+{
+  "name": "mid-project-intake",
+  "version": "v1",
+  "role": "strategist",
+  "summary": "Let Palamedes enter an already-started project by using current artifacts, traction, constraints, and pivot signals.",
+  "depends_on_capabilities": ["plan.read", "strategy.evaluate"],
+  "preferred_actions": ["evaluate_experience_strategy", "generate_creative_directions"],
+  "escalation_actions": ["run_reference_discovery", "request_review"],
+  "input_signals": ["entry_mode", "project_stage", "existing_artifacts", "current_plan", "constraints", "pivot_signals"],
+  "prompt_asset": "prompts/mid-project-intake.md"
+}

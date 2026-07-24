@@ -1,25 +1,25 @@
-# DeepPlan Integration Guide
+# Palamedes Integration Guide
 
-This guide is for a separate integration repo that wants to use DeepPlan as its planning state layer.
+This guide is for a separate integration repo that wants to use Palamedes as its planning state layer.
 
-Use DeepPlan when your runtime needs one place to keep:
+Use Palamedes when your runtime needs one place to keep:
 
 - the current plan
 - evidence and hypotheses behind that plan
 - revision history
 - restore points when direction changes
 
-DeepPlan should sit under your multi-agent runtime, not replace it.
+Palamedes should sit under your multi-agent runtime, not replace it.
 
 Recommended role split:
 
-- DeepPlan: planning state, QA, revisions, restore, planning context
+- Palamedes: planning state, QA, revisions, restore, planning context
 - host runtime: orchestration, agent routing, execution, scheduling, channels
 - research/execution agents: produce updates, evidence, and candidate replans
 
 ## System Boundary
 
-Use DeepPlan when you need:
+Use Palamedes when you need:
 
 - one authoritative planning state
 - evidence-backed planning updates
@@ -27,7 +27,7 @@ Use DeepPlan when you need:
 - stale-write protection for agent writes
 - planning QA and health gating
 
-Do not use DeepPlan for:
+Do not use Palamedes for:
 
 - task execution runtime
 - queueing or distributed workers
@@ -81,15 +81,15 @@ Inspect:
 
 ## Conflict Model
 
-DeepPlan uses fingerprint-based stale-write protection:
+Palamedes uses fingerprint-based stale-write protection:
 
 - current plan state is identified by `fingerprint`
 - stale writes fail with `412`
-- Python client surfaces that as `DeepPlanConflictError`
+- Python client surfaces that as `PalamedesConflictError`
 
 This is a coordination signal, not a transport failure.
 
-Useful fields on `DeepPlanConflictError`:
+Useful fields on `PalamedesConflictError`:
 
 - `expected_fingerprint`
 - `current_fingerprint`
@@ -129,7 +129,7 @@ result = client.apply_and_get_cycle(
 )
 ```
 
-If storage health is not `ok`, the client raises `DeepPlanHealthGateError`.
+If storage health is not `ok`, the client raises `PalamedesHealthGateError`.
 
 Recommended host behavior:
 
@@ -158,7 +158,7 @@ Use restore as a normal planning write, not as an out-of-band emergency tool.
 
 ## Minimal Adapter Pattern
 
-The host repo should wrap `DeepPlanClient`, not call the HTTP API directly.
+The host repo should wrap `PalamedesClient`, not call the HTTP API directly.
 
 Suggested responsibilities for a host-side adapter:
 
@@ -166,11 +166,11 @@ Suggested responsibilities for a host-side adapter:
 - apply one planning mutation
 - attach host metadata around the call
 - branch on conflict vs health-gate vs operation failure
-- convert DeepPlan results into the host runtime's event model
+- convert Palamedes results into the host runtime's event model
 
 This repo includes a minimal adapter skeleton in:
 
-- `examples/deepplan_kernel_adapter.py`
+- `examples/palamedes_kernel_adapter.py`
 
 ## Example Host Loop
 
@@ -186,15 +186,15 @@ Typical host-side decision flow:
 
 For a separate AgentScope-style repo:
 
-1. run DeepPlan HTTP locally
-2. wrap `DeepPlanClient` in a thin adapter
+1. run Palamedes HTTP locally
+2. wrap `PalamedesClient` in a thin adapter
 3. give the planner agent only the adapter surface
 4. use `get_cycle()` as the pre/post step context
-5. keep execution/runtime memory outside DeepPlan
+5. keep execution/runtime memory outside Palamedes
 
 The goal is simple:
 
-- DeepPlan decides what the current plan is
+- Palamedes decides what the current plan is
 - your runtime decides what to execute next
 
 ## Relevant Client Methods
@@ -217,13 +217,13 @@ and `replan`.
 Preferred import surface for host repos:
 
 ```python
-from deepplan_sdk import DeepPlanClient
+from palamedes_sdk import PalamedesClient
 ```
 
 For local development against this repo:
 
 ```bash
-python3 -m pip install -e /path/to/deep-plan
+python3 -m pip install -e /path/to/palamedes
 ```
 
 ## Non-Goals

@@ -1,6 +1,6 @@
-# DeepPlan Contract Versioning Policy
+# Palamedes Contract Versioning Policy
 
-This document defines how DeepPlan versions the planning contract separately from the code that implements it.
+This document defines how Palamedes versions the planning contract separately from the code that implements it.
 
 ## Terms
 
@@ -20,7 +20,7 @@ It must never be used to track the implementation release number.
 
 ## SemVer Rules
 
-DeepPlan follows semantic versioning for the contract version:
+Palamedes follows semantic versioning for the contract version:
 
 - `patch`: bug fixes, doc fixes, internal refactors, and other changes that do not alter stable contract behavior
 - `minor`: additive changes that are backward-compatible for existing adopters

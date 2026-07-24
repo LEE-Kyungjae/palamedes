@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://deepplan.local/schemas/plan.schema.json",
-  "title": "DeepPlan",
+  "$id": "https://palamedes.local/schemas/plan.schema.json",
+  "title": "Palamedes",
   "type": "object",
   "required": [
     "schema_version",
@@ -35,7 +35,12 @@
     "definition_of_done",
     "evidence",
     "hypothesis_log",
-    "reference_discoveries"
+    "reference_discoveries",
+    "view_transitions",
+    "inquiry_items",
+    "reference_encounters",
+    "development_probes",
+    "open_questions"
   ],
   "properties": {
     "schema_version": {
@@ -351,6 +356,364 @@
           },
           "notes": {
             "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "view_transitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "ts",
+          "previous_view",
+          "trigger",
+          "new_view",
+          "new_blind_spots",
+          "opened_paths",
+          "next_probe",
+          "source",
+          "references",
+          "plan_effect",
+          "plan_effect_reason"
+        ],
+        "properties": {
+          "ts": {
+            "type": "string"
+          },
+          "previous_view": {
+            "type": "string"
+          },
+          "trigger": {
+            "type": "string"
+          },
+          "new_view": {
+            "type": "string"
+          },
+          "new_blind_spots": {
+            "type": "string"
+          },
+          "opened_paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "next_probe": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "plan_effect": {
+            "type": "string",
+            "enum": [
+              "none",
+              "observe",
+              "add_probe",
+              "reframe",
+              "revise_plan",
+              "stop",
+              "restore"
+            ]
+          },
+          "plan_effect_reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "inquiry_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "ts",
+          "statement",
+          "kind",
+          "status",
+          "intent",
+          "commitment",
+          "source",
+          "opened_questions",
+          "references"
+        ],
+        "properties": {
+          "ts": {
+            "type": "string"
+          },
+          "statement": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "observation",
+              "question",
+              "thought_experiment",
+              "hypothesis",
+              "option",
+              "proposal",
+              "decision",
+              "commitment",
+              "rejection"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "exploring",
+              "held",
+              "validated",
+              "invalidated",
+              "adopted",
+              "rejected",
+              "closed"
+            ]
+          },
+          "intent": {
+            "type": "string"
+          },
+          "commitment": {
+            "type": "string",
+            "enum": [
+              "none",
+              "considering",
+              "decided",
+              "committed"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "opened_questions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "reference_encounters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "ts",
+          "reference",
+          "encountered_while",
+          "initial_interest",
+          "relation",
+          "effect",
+          "adoption",
+          "later_outcome",
+          "source"
+        ],
+        "properties": {
+          "ts": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "encountered_while": {
+            "type": "string"
+          },
+          "initial_interest": {
+            "type": "string"
+          },
+          "relation": {
+            "type": "string"
+          },
+          "effect": {
+            "type": "string",
+            "enum": [
+              "none",
+              "reinforced",
+              "challenged",
+              "opened_question",
+              "reframed_problem",
+              "adopted_pattern",
+              "rejected_after_use"
+            ]
+          },
+          "adoption": {
+            "type": "string",
+            "enum": [
+              "not_decided",
+              "not_applicable",
+              "adopted",
+              "rejected",
+              "removed_after_use"
+            ]
+          },
+          "later_outcome": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "development_probes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "ts",
+          "step",
+          "expected_learning",
+          "expected_result",
+          "status",
+          "actual_observation",
+          "unexpected_observation",
+          "view_transition_id",
+          "next_step",
+          "source",
+          "references"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "ts": {
+            "type": "string"
+          },
+          "step": {
+            "type": "string"
+          },
+          "expected_learning": {
+            "type": "string"
+          },
+          "expected_result": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "running",
+              "completed",
+              "abandoned"
+            ]
+          },
+          "actual_observation": {
+            "type": "string"
+          },
+          "unexpected_observation": {
+            "type": "string"
+          },
+          "view_transition_id": {
+            "type": "string"
+          },
+          "next_step": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "open_questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "ts",
+          "question",
+          "perspectives",
+          "resolution",
+          "revisit_when",
+          "source",
+          "references"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "ts": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string"
+          },
+          "perspectives": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "view",
+                "reveals",
+                "hides"
+              ],
+              "properties": {
+                "view": {
+                  "type": "string"
+                },
+                "reveals": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "hides": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "resolution": {
+            "type": "string",
+            "enum": [
+              "intentionally_open",
+              "resolved",
+              "deferred"
+            ]
+          },
+          "revisit_when": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "additionalProperties": true

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "palamedes-agents"
+version = "0.1.0"
+description = "Skill-aware orchestration scaffold for Palamedes."
+requires-python = ">=3.9"
+
+[project.scripts]
+palamedes-agents = "palamedes_agents.console:main"
+
+[project.optional-dependencies]
+openai = ["openai"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["palamedes_agents*"]
+
+[tool.setuptools.package-data]
+palamedes_agents = [
+  "contracts/*.json",
+  "schemas/*.json",
+  "skills/*.json",
+  "skills/manifests/*.json",
+  "prompts/*.md",
+]
