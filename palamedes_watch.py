@@ -362,10 +362,14 @@ def execute_wake(
 
         from palamedes_thought import ThoughtStore
         from palamedes_knowledge import KnowledgeStore
+        from palamedes_epistemics import EpistemicStore
 
         thought_store = ThoughtStore(palamedes_module.STATE_DIR / "thoughts")
         knowledge_store = KnowledgeStore(
             palamedes_module.STATE_DIR / "knowledge"
+        )
+        epistemic_store = EpistemicStore(
+            palamedes_module.STATE_DIR / "epistemics"
         )
         discoveries = thought_store.active_discoveries()
         result = run_cognition_cycle(
@@ -384,12 +388,18 @@ def execute_wake(
                 + json.dumps(
                     knowledge_store.open_unknowns(), ensure_ascii=False
                 )
+                + "\n\nObservation coverage and surface bias:\n"
+                + json.dumps(
+                    epistemic_store.load_coverage(), ensure_ascii=False
+                )
             ),
             cycle_store=CognitionCycleStore(
                 palamedes_module.STATE_DIR / "missions" / "cognition"
             ),
             available_discovery_ids={
-                item["discovery_id"] for item in discoveries
+                item["discovery_id"]
+                for item in discoveries
+                if item.get("promotion_state") == "mission_eligible"
             },
         )
         contract = result["contract"]

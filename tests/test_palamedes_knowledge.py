@@ -5,6 +5,7 @@ from pathlib import Path
 
 import palamedes_knowledge
 import palamedes_thought
+import palamedes_epistemics
 
 
 def context():
@@ -19,7 +20,15 @@ def context():
         ],
         "reference_root": {
             "repositories": [
-                {"name": "outside-pattern", "head": "external-head"}
+                {
+                    "name": "outside-pattern",
+                    "head": "external-head",
+                    "knowledge_document": {
+                        "path": "/ref/outside-pattern/README.md",
+                        "content_sha256": "external-sha",
+                        "excerpt": "A documented external pattern",
+                    },
+                }
             ]
         },
         "experiences": [],
@@ -48,13 +57,37 @@ def claim(
         "normative_assumptions": ["observed use should not define rightful use"],
         "known_exclusions": ["unobserved future users"],
         "supersedes": supersedes or [],
+        "epistemic_profile": {
+            "evidence_layer": "expression",
+            "generality": "bounded_group",
+            "salience": 40,
+            "representativeness": 20,
+            "relevance": 70,
+            "independence": 40,
+            "persistence": 20,
+            "behavioral_support": 0,
+            "base_rate": {
+                "available": False,
+                "observations": 0,
+                "denominator": 0,
+                "window": "",
+                "source_ids": [],
+            },
+            "allowed_inference": "The source presents this claim",
+            "forbidden_inferences": [
+                "The claim is general",
+                "The described practice is legitimate",
+            ],
+        },
     }
 
 
 class PalamedesKnowledgeTests(unittest.TestCase):
     def test_temporal_claims_preserve_scope_perspective_and_unknowns(self):
         with tempfile.TemporaryDirectory() as tempdir:
-            store = palamedes_knowledge.KnowledgeStore(Path(tempdir))
+            store = palamedes_knowledge.KnowledgeStore(
+                Path(tempdir) / "knowledge"
+            )
             result = palamedes_knowledge.persist_knowledge_updates(
                 store=store,
                 context=context(),
@@ -81,6 +114,9 @@ class PalamedesKnowledgeTests(unittest.TestCase):
 
             stored = store.active_claims()[0]
             unknown = store.open_unknowns()[0]
+            coverage = palamedes_epistemics.EpistemicStore(
+                store.root.parent / "epistemics"
+            ).load_coverage()
 
         self.assertEqual(len(result["claims"]), 1)
         self.assertEqual(stored["domain"], "internal_product")
@@ -90,10 +126,15 @@ class PalamedesKnowledgeTests(unittest.TestCase):
         self.assertEqual(stored["known_exclusions"], ["unobserved future users"])
         self.assertEqual(stored["valid_to"], "")
         self.assertEqual(unknown["status"], "open")
+        self.assertFalse(coverage["ambient_baseline_available"])
+        self.assertFalse(coverage["general_population_inference_allowed"])
+        self.assertIn("silent users and non-users", coverage["missing_populations"])
 
     def test_claim_cannot_cite_unobserved_evidence(self):
         with tempfile.TemporaryDirectory() as tempdir:
-            store = palamedes_knowledge.KnowledgeStore(Path(tempdir))
+            store = palamedes_knowledge.KnowledgeStore(
+                Path(tempdir) / "knowledge"
+            )
             with self.assertRaisesRegex(ValueError, "unavailable source"):
                 palamedes_knowledge.persist_knowledge_updates(
                     store=store,
@@ -111,9 +152,139 @@ class PalamedesKnowledgeTests(unittest.TestCase):
                     },
                 )
 
+    def test_salient_exposure_cannot_be_promoted_to_population_claim(self):
+        viral = claim(
+            domain="external_world",
+            text="A conflict post was viewed widely",
+            source="ref:outside-pattern@external-head",
+            perspective="public posts selected by a platform",
+        )
+        viral["epistemic_profile"].update(
+            {
+                "evidence_layer": "exposure",
+                "generality": "population",
+                "salience": 95,
+                "representativeness": 20,
+                "allowed_inference": "A highly visible post exists",
+                "forbidden_inferences": [
+                    "The population agrees",
+                    "The underlying event is common",
+                ],
+            }
+        )
+        with tempfile.TemporaryDirectory() as tempdir:
+            with self.assertRaisesRegex(
+                ValueError, "population claim requires"
+            ):
+                palamedes_knowledge.persist_knowledge_updates(
+                    store=palamedes_knowledge.KnowledgeStore(
+                        Path(tempdir) / "knowledge"
+                    ),
+                    context=context(),
+                    output={
+                        "knowledge_claims": [viral],
+                        "unknown_boundaries": [],
+                    },
+                )
+
+    def test_quiet_behavioral_baseline_can_support_population_claim(self):
+        grounded_context = context()
+        grounded_context["declared_surfaces"] = [
+            {
+                "source_id": "analytics:quiet-retention-90d",
+                "origin_id": "warehouse:retention-events-v2",
+                "surface_type": "analytics_baseline",
+                "collection_method": "all eligible sessions over 90 days",
+                "selection_process": ["eligibility rules", "event instrumentation"],
+                "observed_population": "all instrumented active users",
+                "missing_population": ["users blocked before instrumentation"],
+                "visibility_bias": "measured behavior is visible; motives are not",
+            }
+        ]
+        behavioral = claim(
+            domain="internal_product",
+            text="Three percent of eligible users quietly reuse saved outputs",
+            source="analytics:quiet-retention-90d",
+            perspective="instrumented user behavior",
+        )
+        behavioral["epistemic_profile"].update(
+            {
+                "evidence_layer": "behavior",
+                "generality": "population",
+                "salience": 10,
+                "representativeness": 85,
+                "behavioral_support": 90,
+                "base_rate": {
+                    "available": True,
+                    "observations": 30,
+                    "denominator": 1000,
+                    "window": "90 days",
+                    "source_ids": ["analytics:quiet-retention-90d"],
+                },
+                "allowed_inference": "3% of the instrumented eligible population reused outputs",
+                "forbidden_inferences": ["The behavior explains user motives"],
+            }
+        )
+        with tempfile.TemporaryDirectory() as tempdir:
+            store = palamedes_knowledge.KnowledgeStore(
+                Path(tempdir) / "knowledge"
+            )
+            result = palamedes_knowledge.persist_knowledge_updates(
+                store=store,
+                context=grounded_context,
+                output={
+                    "knowledge_claims": [behavioral],
+                    "unknown_boundaries": [],
+                },
+            )
+
+        profile = result["claims"][0]["epistemic_profile"]
+        self.assertTrue(profile["base_rate"]["verified"])
+        self.assertTrue(result["coverage"]["ambient_baseline_available"])
+
+    def test_republished_sources_do_not_count_as_independent_evidence(self):
+        copied_context = context()
+        copied_context["declared_surfaces"] = [
+            {
+                "source_id": source_id,
+                "origin_id": "wire:single-original-report",
+                "surface_type": "news",
+                "collection_method": "publisher feed",
+                "selection_process": ["editor selection", "wire republication"],
+                "observed_population": "published reports",
+                "missing_population": ["unreported ordinary events"],
+                "visibility_bias": "conflict and novelty are overvisible",
+            }
+            for source_id in ("news:publisher-a", "news:publisher-b")
+        ]
+        copied = claim(
+            domain="external_world",
+            text="Two publishers reported the same conflict",
+            source="news:publisher-a",
+            perspective="republished news coverage",
+        )
+        copied["source_ids"] = ["news:publisher-a", "news:publisher-b"]
+        copied["epistemic_profile"]["independence"] = 100
+        with tempfile.TemporaryDirectory() as tempdir:
+            with self.assertRaisesRegex(
+                ValueError, "distinct origin lineage"
+            ):
+                palamedes_knowledge.persist_knowledge_updates(
+                    store=palamedes_knowledge.KnowledgeStore(
+                        Path(tempdir) / "knowledge"
+                    ),
+                    context=copied_context,
+                    output={
+                        "knowledge_claims": [copied],
+                        "unknown_boundaries": [],
+                    },
+                )
+
     def test_new_claim_supersedes_but_does_not_erase_old_worldview(self):
         with tempfile.TemporaryDirectory() as tempdir:
-            store = palamedes_knowledge.KnowledgeStore(Path(tempdir))
+            store = palamedes_knowledge.KnowledgeStore(
+                Path(tempdir) / "knowledge"
+            )
             first = palamedes_knowledge.persist_knowledge_updates(
                 store=store,
                 context=context(),
@@ -157,10 +328,20 @@ class PalamedesKnowledgeTests(unittest.TestCase):
         internal = {
             "knowledge_id": "knowledge-internal1",
             "domain": "internal_product",
+            "epistemic_profile": {
+                "evidence_layer": "behavior",
+                "generality": "bounded_group",
+                "base_rate": {"available": True, "verified": True},
+            },
         }
         external = {
             "knowledge_id": "knowledge-external1",
             "domain": "external_world",
+            "epistemic_profile": {
+                "evidence_layer": "expression",
+                "generality": "bounded_group",
+                "base_rate": {"available": False},
+            },
         }
         discovery = {
             "connected_thought_ids": ["thought-one", "thought-two"],
@@ -208,6 +389,37 @@ class PalamedesKnowledgeTests(unittest.TestCase):
 
         self.assertEqual(persisted[0]["discovery_mode"], "cross_domain")
         self.assertEqual(len(persisted[0]["grounding_knowledge_ids"]), 2)
+        self.assertEqual(
+            persisted[0]["promotion_state"], "cross_check_required"
+        )
+
+        discovery["promotion_state"] = "mission_eligible"
+        with tempfile.TemporaryDirectory() as tempdir:
+            with self.assertRaisesRegex(
+                ValueError, "behavioral base-rate baseline"
+            ):
+                palamedes_thought.persist_discoveries(
+                    store=palamedes_thought.ThoughtStore(Path(tempdir)),
+                    output={"discoveries": [discovery]},
+                    available_thought_ids={"thought-one", "thought-two"},
+                    available_knowledge={
+                        internal["knowledge_id"]: internal,
+                        external["knowledge_id"]: external,
+                    },
+                )
+        discovery["baseline_knowledge_ids"] = ["knowledge-internal1"]
+        discovery["opposing_sample_knowledge_ids"] = ["knowledge-external1"]
+        with tempfile.TemporaryDirectory() as tempdir:
+            promoted = palamedes_thought.persist_discoveries(
+                store=palamedes_thought.ThoughtStore(Path(tempdir)),
+                output={"discoveries": [discovery]},
+                available_thought_ids={"thought-one", "thought-two"},
+                available_knowledge={
+                    internal["knowledge_id"]: internal,
+                    external["knowledge_id"]: external,
+                },
+            )
+        self.assertEqual(promoted[0]["promotion_state"], "mission_eligible")
 
 
 if __name__ == "__main__":

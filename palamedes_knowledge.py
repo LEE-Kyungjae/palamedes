@@ -84,6 +84,11 @@ def observation_source_ids(context: Dict[str, Any]) -> set:
         for item in context.get("documents", [])
     )
     source_ids.update(
+        str(item.get("source_id", "")).strip()
+        for item in context.get("declared_surfaces", [])
+        if isinstance(item, dict) and str(item.get("source_id", "")).strip()
+    )
+    source_ids.update(
         f"ref:{item['name']}@{item.get('head', '')}"
         for item in context.get("reference_root", {}).get("repositories", [])
     )
@@ -118,7 +123,17 @@ def persist_knowledge_updates(
     store: KnowledgeStore,
     output: Dict[str, Any],
     context: Dict[str, Any],
-) -> Dict[str, List[Dict[str, Any]]]:
+) -> Dict[str, Any]:
+    from palamedes_epistemics import (
+        EpistemicStore,
+        persist_observation_epistemics,
+        validate_epistemic_profile,
+    )
+
+    epistemics = persist_observation_epistemics(
+        store=EpistemicStore(store.root.parent / "epistemics"),
+        context=context,
+    )
     candidates = output.get("knowledge_claims", [])
     unknown_candidates = output.get("unknown_boundaries", [])
     if not isinstance(candidates, list):
@@ -157,6 +172,11 @@ def persist_knowledge_updates(
             or not 0 <= confidence <= 100
         ):
             raise ValueError("knowledge confidence must be 0-100")
+        epistemic_profile = validate_epistemic_profile(
+            candidate.get("epistemic_profile"),
+            source_ids=sources,
+            surface_by_source=epistemics["surface_by_source"],
+        )
         normalized = {
             "domain": domain,
             "claim_type": claim_type,
@@ -177,6 +197,7 @@ def persist_knowledge_updates(
             **normalized,
             "source_ids": sources,
             "confidence": confidence,
+            "epistemic_profile": epistemic_profile,
             "valid_from": str(candidate.get("valid_from", context["observed_at"])).strip(),
             "valid_to": "",
             "last_verified_at": context["observed_at"],
@@ -254,4 +275,9 @@ def persist_knowledge_updates(
             }
         )
         persisted_unknowns.append(unknown)
-    return {"claims": persisted_claims, "unknowns": persisted_unknowns}
+    return {
+        "claims": persisted_claims,
+        "unknowns": persisted_unknowns,
+        "surfaces": epistemics["surfaces"],
+        "coverage": epistemics["coverage"],
+    }

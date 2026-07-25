@@ -127,6 +127,7 @@ palamedes/
 ├── palamedes_watch.py              # 이벤트 기반 자율 관찰 루프
 ├── palamedes_thought.py            # 미션 이전 생각·발견 숙성 계층
 ├── palamedes_knowledge.py          # 시간성을 가진 자기·외부 지식과 미지 경계
+├── palamedes_epistemics.py         # 관측면·coverage·기준율 일반화 게이트
 ├── palamedes_mission.py            # 프리플래너 계약과 게이트
 ├── palamedes_server.py             # 로컬 HTTP 전송 계층
 ├── palamedes_sdk/                  # Python 클라이언트
@@ -184,6 +185,27 @@ discovery는 활성 내부 claim과 외부 claim을 최소 하나씩 인용해�
 관찰된 현실과 규범 판단, 배제된 당사자, 권리 위험, 시대 민감성을 각각
 기록해야 한다. 따라서 흔하거나 합법적이거나 수익성이 있거나 역사적으로
 용인됐다는 사실이 정당성으로 자동 변환되지 않는다.
+
+Palamedes는 claim이 왜 보였는지도 observation surface로 기록한다. 여기에는
+수집 방식, 선택·노출 과정, 관찰된 모집단과 빠진 모집단, visibility bias가
+포함된다. epistemic profile은 자극 강도와 대표성, 관련성, 독립성, 지속성,
+행동 근거, 기준율 근거를 분리하고, expression·exposure·behavior·outcome
+증거를 구분한다. 각 claim에는 현재 허용되는 가장 좁은 추론과 금지되는
+일반화가 함께 동결된다.
+각 surface는 `origin_id`도 기록한다. 동일 원문을 복제한 여러 기사나
+게시물은 출처 수만큼 독립적인 증거로 계산되지 않으며, 서로 다른 원자료
+비율보다 높은 독립성을 주장할 수 없다.
+
+모집단 수준 claim은 대표성 있는 표본과 분모를 가진 행동 또는 결과 근거가
+없으면 거부된다. 강하게 노출된 게시물만으로는 이 게이트를 통과할 수 없다.
+`.palamedes/epistemics/coverage.json`은 과대표집된 관측면, 빠진 모집단,
+평범한 ambient baseline의 존재를 기록한다. discovery는 행동 기준율이
+확보되기 전까지 `surface_anomaly`, `representativeness_unknown`,
+`cross_check_required`, `bounded_opportunity` 중 하나에 머문다.
+`mission_eligible` discovery ID만 자율 selector가 미션 출처로 주장할 수
+있으며, 나머지는 폐기하지 않고 조사할 질문으로 계속 보존한다.
+또한 mission eligibility에는 반대 표본 claim이 필요하므로, 하나의
+지지 baseline만으로 자기 확증 루프를 만들 수 없다.
 
 ## 빠른 시작
 

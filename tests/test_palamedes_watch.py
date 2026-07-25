@@ -321,6 +321,7 @@ class PalamedesWatchTests(unittest.TestCase):
                 "smallest_probe": "Measure unchanged output reuse",
                 "disconfirmation": "Reuse does not predict retention",
                 "why_non_obvious": "It connects navigation to product identity",
+                "promotion_state": "mission_eligible",
                 "status": "candidate",
                 "created_at": "2026-07-26T00:00:00+00:00",
                 "mission_authority_granted": False,
@@ -346,6 +347,10 @@ class PalamedesWatchTests(unittest.TestCase):
         self.assertEqual(contract["status"], "draft")
         self.assertIn(
             "Temporal scoped knowledge supporting or challenging them",
+            provider.calls[0][-1]["content"],
+        )
+        self.assertIn(
+            "Observation coverage and surface bias",
             provider.calls[0][-1]["content"],
         )
 

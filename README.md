@@ -141,6 +141,7 @@ palamedes/
 ├── palamedes_watch.py              # Event-driven autonomous observation loop
 ├── palamedes_thought.py            # Pre-mission thought and discovery incubation
 ├── palamedes_knowledge.py          # Temporal self/world claims and unknown boundaries
+├── palamedes_epistemics.py         # Observation surfaces, coverage, and base-rate gates
 ├── palamedes_mission.py            # Experimental pre-planner contracts and gates
 ├── palamedes_server.py             # Local HTTP transport
 ├── palamedes_sdk/                  # Packaged Python client surface
@@ -680,6 +681,29 @@ claim and one active external claim. It must also separate descriptive
 observation from normative judgment and name excluded stakeholders, rights
 risk, and time sensitivity. Common, legal, profitable, or historically
 accepted behavior is therefore not automatically treated as legitimate.
+
+Palamedes also records the observation surface that made a claim visible:
+collection method, selection process, observed and missing populations, and
+visibility bias. An epistemic profile separates salience from
+representativeness, relevance, independence, persistence, behavioral support,
+and base-rate support. It also distinguishes expression, exposure, behavior,
+and outcome evidence and freezes the narrowest allowed inference plus
+forbidden generalizations.
+Each surface also records an `origin_id`; multiple publishers or posts derived
+from one original report cannot claim more independence than their distinct
+origin ratio permits.
+
+Population-level claims are rejected unless they have representative,
+denominator-bearing behavior or outcome evidence; a vivid exposure signal
+cannot satisfy this gate. `.palamedes/epistemics/coverage.json` records
+overrepresented surfaces, missing populations, and whether an ambient baseline
+exists. Discoveries remain `surface_anomaly`, `representativeness_unknown`,
+`cross_check_required`, or `bounded_opportunity` until a behavioral base-rate
+baseline makes them `mission_eligible`. Only mission-eligible discovery IDs may
+be claimed by the autonomous selector, although lower states remain visible as
+questions worth investigating.
+Mission eligibility additionally requires an opposing-sample claim, preventing
+a supporting baseline from becoming its own unchallenged confirmation loop.
 
 Mission authority follows an explicit vertical contract:
 

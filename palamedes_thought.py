@@ -19,6 +19,13 @@ THOUGHT_KINDS = {
     "analogy",
     "future_event",
 }
+DISCOVERY_PROMOTION_STATES = {
+    "surface_anomaly",
+    "representativeness_unknown",
+    "cross_check_required",
+    "bounded_opportunity",
+    "mission_eligible",
+}
 
 
 class ThoughtStore:
@@ -325,6 +332,51 @@ def persist_discoveries(
             time_sensitivity = str(
                 candidate.get("time_sensitivity", "")
             ).strip()
+        promotion_state = candidate.get(
+            "promotion_state", "cross_check_required"
+        )
+        if promotion_state not in DISCOVERY_PROMOTION_STATES:
+            raise ValueError("discovery has invalid promotion_state")
+        baseline_ids = candidate.get("baseline_knowledge_ids", [])
+        opposing_ids = candidate.get("opposing_sample_knowledge_ids", [])
+        for field, values in (
+            ("baseline_knowledge_ids", baseline_ids),
+            ("opposing_sample_knowledge_ids", opposing_ids),
+        ):
+            if not isinstance(values, list) or not all(
+                isinstance(item, str) and item.strip() for item in values
+            ):
+                raise ValueError(f"discovery {field} must be an array")
+            if not set(values).issubset(available_knowledge):
+                raise ValueError(f"discovery {field} cites unavailable knowledge")
+        if promotion_state == "mission_eligible":
+            grounded_claims = [
+                available_knowledge[item] for item in grounding_ids
+            ]
+            has_behavioral_base_rate = any(
+                claim.get("epistemic_profile", {}).get("base_rate", {}).get(
+                    "verified"
+                )
+                and claim.get("epistemic_profile", {}).get("evidence_layer")
+                in {"behavior", "outcome", "mixed"}
+                for claim in grounded_claims
+            )
+            if not baseline_ids or not has_behavioral_base_rate:
+                raise ValueError(
+                    "mission_eligible discovery requires a behavioral base-rate baseline"
+                )
+            if not opposing_ids:
+                raise ValueError(
+                    "mission_eligible discovery requires an opposing sample"
+                )
+            if any(
+                claim.get("epistemic_profile", {}).get("generality")
+                == "existence_only"
+                for claim in grounded_claims
+            ):
+                raise ValueError(
+                    "existence-only evidence cannot make a discovery mission eligible"
+                )
         discovery = {
             "discovery_version": "palamedes-discovery/1",
             "connected_thought_ids": sorted(set(thought_ids)),
@@ -343,6 +395,9 @@ def persist_discoveries(
             "excluded_stakeholders": excluded_stakeholders,
             "rights_risk": rights_risk,
             "time_sensitivity": time_sensitivity,
+            "promotion_state": promotion_state,
+            "baseline_knowledge_ids": baseline_ids,
+            "opposing_sample_knowledge_ids": opposing_ids,
             "status": "candidate",
             "created_at": utc_now(),
             "mission_authority_granted": False,
@@ -410,7 +465,26 @@ Return exactly:
     "affected_stakeholders":["..."],
     "normative_assumptions":["value judgments embedded in the claim"],
     "known_exclusions":["people or conditions not covered"],
-    "supersedes":["prior knowledge IDs only when directly contradicted"]
+    "supersedes":["prior knowledge IDs only when directly contradicted"],
+    "epistemic_profile":{{
+      "evidence_layer":"expression|exposure|behavior|outcome|mixed",
+      "generality":"existence_only|bounded_group|population",
+      "salience":50,
+      "representativeness":0,
+      "relevance":50,
+      "independence":50,
+      "persistence":0,
+      "behavioral_support":0,
+      "base_rate":{{
+        "available":false,
+        "observations":0,
+        "denominator":0,
+        "window":"",
+        "source_ids":["only analytics, random-sample, or official-statistics sources"]
+      }},
+      "allowed_inference":"the narrowest claim supported",
+      "forbidden_inferences":["unsupported generalizations"]
+    }}
   }}],
   "unknown_boundaries": [{{
     "subject":"...",
@@ -484,7 +558,10 @@ Return exactly:
     "normative_judgment":"the separate value judgment, not inferred from prevalence",
     "excluded_stakeholders":["whose experience is absent or underrepresented"],
     "rights_risk":"possible dignity, safety, equality, autonomy, or exploitation risk",
-    "time_sensitivity":"how product or social change could invalidate this framing"
+    "time_sensitivity":"how product or social change could invalidate this framing",
+    "promotion_state":"surface_anomaly|representativeness_unknown|cross_check_required|bounded_opportunity|mission_eligible",
+    "baseline_knowledge_ids":["behavior or outcome claims with a denominator"],
+    "opposing_sample_knowledge_ids":["claims that pressure the proposed framing"]
   }}]
 }}
 
@@ -492,6 +569,8 @@ Available thoughts:
 {json.dumps(list(available.values()), ensure_ascii=False)}
 Temporal, scoped knowledge:
 {json.dumps(list(available_knowledge.values()), ensure_ascii=False)}
+Observation coverage and surface bias:
+{json.dumps(knowledge_result["coverage"], ensure_ascii=False)}
 Open knowledge boundaries:
 {json.dumps(knowledge_store.open_unknowns(), ensure_ascii=False)}"""
     connector = _provider_json(
