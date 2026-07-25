@@ -1,0 +1,110 @@
+{
+  "claim_status": "unproven",
+  "frozen_cases": [
+    {
+      "case_id": "palamedes-self-hosting",
+      "information_fingerprint": "04ff5e4e50dd73a85955bca939292cbdb34f9d63245f94f6db5b3c30d9c4d0f9",
+      "repository_revision": "13aebb714d2d7e6348676c69d4671db561472516"
+    },
+    {
+      "case_id": "gahyeonbot-voice-loop",
+      "information_fingerprint": "ab4765e72b79296fa34fdd1e116d7ed41d1cee3b241b7ffdae5d249088e04580",
+      "repository_revision": "eb141cbcb090709b87624b8d43bbabbfc0603dcc"
+    },
+    {
+      "case_id": "termi-agent-control",
+      "information_fingerprint": "2c125e0199db7e8a33066bb81873f3bb844f191568315a581594a1427f213752",
+      "repository_revision": "557556d8c0d42bad9f0d9f2c4a0c723ab1d0a287"
+    }
+  ],
+  "manifest_fingerprint": "70a76dfaa1dc6f81cf423f325c683831b7490997ad84ad4c900d1d2ff220476c",
+  "portfolio": {
+    "cases": [
+      {
+        "artifacts": [
+          "README.md",
+          "PALAMEDES_INQUIRY.md",
+          "docs/palamedes-pre-planner-contract.md",
+          "docs/reference-agent-patterns.md"
+        ],
+        "case_id": "palamedes-self-hosting",
+        "question": "What mission should Palamedes pursue next to earn confidence that it improves upstream judgment rather than merely producing elaborate planning artifacts?",
+        "repository": ".",
+        "required_decision": "Choose the smallest evidence-producing direction and reject feature expansion that does not strengthen the product claim."
+      },
+      {
+        "artifacts": [
+          "README.md",
+          "ref/voicebox/README.md",
+          "ref/ten-vad/README.md"
+        ],
+        "case_id": "gahyeonbot-voice-loop",
+        "question": "Which user loop should GahyeonBot prioritize instead of remaining a broad collection of Discord bot features?",
+        "repository": "/Users/ze/work/gahyeonbot",
+        "required_decision": "Select or reject a narrow repeat loop using observed Discord behavior, latency, trust, and operating-cost evidence."
+      },
+      {
+        "artifacts": [
+          "README.md",
+          "mobile/README.md",
+          "agent",
+          "frontend"
+        ],
+        "case_id": "termi-agent-control",
+        "question": "Should Termi remain remote terminal I/O or become a controlled interface for long-running coding agents?",
+        "repository": "/Users/ze/work/termi",
+        "required_decision": "Choose a product boundary based on session ownership, reconnect safety, approvals, and return behavior."
+      }
+    ],
+    "claim": "Given the same frozen project information, Palamedes produces a more useful mission than a one-shot general agent and retires material upstream framing labor.",
+    "generation_protocol": {
+      "baseline_calls": 1,
+      "compute_is_not_equal": true,
+      "compute_tradeoff_must_be_reported": true,
+      "fresh_session_per_call": true,
+      "maximum_artifact_bytes": 24000,
+      "model": "configured-default",
+      "palamedes_calls": 4,
+      "provider": "codex",
+      "same_information_packet_required": true,
+      "same_model_required": true
+    },
+    "portfolio_id": "palamedes-real-project-proof-2026",
+    "preregistered_at": "2026-07-25T09:30:00+00:00",
+    "proof_portfolio_version": "palamedes-proof-portfolio/1",
+    "rubric": {
+      "decision_usefulness": {
+        "question": "Would this change a continue, stop, pivot, positioning, or sequencing decision?",
+        "weight": 20
+      },
+      "evidence_use": {
+        "question": "Are important claims grounded in the frozen artifacts without inventing evidence?",
+        "weight": 20
+      },
+      "falsifiability": {
+        "question": "Can the mission be rejected through a bounded probe and explicit failure signals?",
+        "weight": 20
+      },
+      "non_genericity": {
+        "question": "Is the selected direction specific enough that a generic agent-company answer would not fit?",
+        "weight": 20
+      },
+      "problem_framing": {
+        "question": "Does the mission identify the consequential upstream problem rather than restating the project?",
+        "weight": 20
+      }
+    },
+    "success_gate": {
+      "minimum_attributable_outcomes": 1,
+      "minimum_blinded_reviews_per_case": 1,
+      "minimum_cases": 3,
+      "minimum_labor_retirement_cases": 1,
+      "palamedes_preferred_cases": 2
+    }
+  },
+  "portfolio_fingerprint": "42285d54ead1394343bf7c18d93334fab0b567b91805f72922991b1b6e217f47",
+  "prepared_at": "2026-07-25T10:29:00.603472+00:00",
+  "proof_run_version": "palamedes-proof-run/1",
+  "run_id": "proof-001",
+  "status": "prepared"
+}

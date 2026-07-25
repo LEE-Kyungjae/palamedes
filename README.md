@@ -93,6 +93,13 @@ evidence that Palamedes makes better decisions. Comparative superiority remains
 unknown until equal-budget control/treatment runs, blinded review, and
 longitudinal outcome records exist.
 
+The executable three-project proof program is documented in
+[`experiments/PROOF.md`](experiments/PROOF.md). It freezes equal information
+packets before generation, separates a one-shot baseline from the four-role
+Palamedes condition, blinds origin during review, reports compute and token
+asymmetry, and refuses to promote mission preference into a product claim
+without an attributable downstream choice and an owner labor-retirement record.
+
 Use it when:
 
 - you have ideas but do not know what to validate first
