@@ -1,0 +1,61 @@
+{
+  "case_id": "palamedes-self-hosting",
+  "condition": "baseline",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-07-25T10:36:54.741934+00:00",
+  "information_fingerprint": "41a4a80283e8b2a38c8b48e0a430a4bdb853d25f4e3d982fc411ea9a2a6e43e2",
+  "mission": {
+    "beneficiary": "Project owners who need to choose what to pursue, reject, or change before implementation and currently risk wasting labor through direction drift or elaborate but unproven planning.",
+    "consequential_choice": "sequence: pause feature expansion; execute and evaluate one complete equal-budget blinded case first, then continue to the remaining proof cases only if it yields credible comparative signal or a clear, repairable evaluation failure.",
+    "falsifiers": [
+      "Blinded reviewers do not prefer the Palamedes output over the equal-budget one-shot baseline.",
+      "Any apparent preference disappears when information, token, compute, or review asymmetries are controlled.",
+      "The Palamedes output is more elaborate but does not change an attributable downstream choice.",
+      "The consequential choice produces no observable benefit, avoids no meaningful harm, and retires no owner labor.",
+      "A simpler static process or ordinary planner produces an equally strong mission from the same packet.",
+      "The experiment cannot separate mission quality from planning, implementation, environmental, or measurement effects well enough to support learning."
+    ],
+    "interpretation": "The project’s binding uncertainty is comparative decision value, not missing architecture, schemas, retrieval coverage, or agent features. Further feature expansion would increase ceremony before establishing that Palamedes improves upstream judgment.",
+    "mission": "Run the smallest preregistered, equal-budget, blinded baseline-versus-Palamedes experiment that yields an attributable consequential mission choice and records its downstream outcome.",
+    "next_probe": "Complete the frozen insight-rag paired pilot by generating the one-shot baseline and bounded Palamedes treatment under declared budgets, blind their origins, obtain independent reviews against preregistered criteria, and trace whether the selected mission changes a real action and owner workload.",
+    "non_goals": [
+      "Expanding the analyzer, corpus, retrieval system, schemas, or reference adapters.",
+      "Adding queues, schedulers, shell execution, manager hierarchies, plugins, or unbounded autonomy.",
+      "Fine-tuning a model.",
+      "Claiming general superiority, creativity, originality, or startup success from one case.",
+      "Treating test counts, schema validity, reasoning-cycle volume, indexed records, or rejection of a bad packet as evidence of better decisions.",
+      "Polishing philosophical ontology or view-transition lineage unless required to execute or interpret the comparison."
+    ],
+    "rationale": "This directly tests the product hypothesis with existing proof machinery while minimizing cost and self-serving expansion. A single rigorously completed case cannot establish broad superiority, but it can validate the evaluation loop, produce the first comparative evidence, and determine whether completing the three-project proof program is warranted.",
+    "situation": "Palamedes has a stable, heavily tested planning kernel and has shown that its safety protocol can reject a bad retrieval treatment, but it has not yet shown that its pre-planning process produces better decisions than a one-shot baseline under equal information and budget.",
+    "success_signal": "From the same frozen information packet and transparently reported compute budgets, blinded reviewers prefer the Palamedes mission contract over the one-shot baseline, and the preferred contract causes a documented stop, pivot, positioning, or sequencing choice whose downstream consequence and owner labor effect can be observed."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "d6b2cb7670942356d9586403d535c585c7c21212fb079a77ba12ece784ccdef2",
+  "provider": "codex",
+  "role_artifacts": {},
+  "usage": {
+    "call_count": 1,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-07-25T10:36:54.741692+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 12032,
+          "input_tokens": 22589,
+          "output_tokens": 615,
+          "reasoning_output_tokens": 0
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 12032,
+      "input_tokens": 22589,
+      "output_tokens": 615,
+      "reasoning_output_tokens": 0
+    }
+  }
+}

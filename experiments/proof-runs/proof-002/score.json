@@ -1,0 +1,176 @@
+{
+  "attributable_outcomes": 0,
+  "case_results": [
+    {
+      "case_id": "palamedes-self-hosting",
+      "outcome": null,
+      "review_count": 3,
+      "unanimous": true,
+      "vote_counts": {
+        "baseline": 0,
+        "palamedes": 3,
+        "tie": 0
+      },
+      "votes": [
+        {
+          "decision_difference": "Choose A to first establish whether Palamedes improves action-choice quality over strong and lightweight baselines; defer real-world outcome tracking until that controlled comparative advantage exists. B combines these stages, potentially turning an interpretable product-claim test into an inconclusive outcome experiment.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "Both missions correctly frame comparative decision value as the binding uncertainty and reject feature expansion. A is more decision-improving because it isolates the full-system comparative effect with preregistered margins, budget and presentation controls, reviewer-stability checks, an explicit null policy, and a lightweight structured-prompt substitute. B prematurely requires downstream outcome attribution in the same pilot, introducing implementation, environmental, and measurement confounds that its own falsifiers acknowledge and making the smallest probe less bounded.",
+          "reviewer_id": "codex-blind-1",
+          "weighted_scores": {
+            "A": 5.0,
+            "B": 4.8
+          }
+        },
+        {
+          "decision_difference": "Choose A's controlled paired comparison first; defer downstream outcome tracking until a comparative upstream effect survives budget, presentation, reviewer-variance, and lightweight-substitute controls.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "Both correctly identify comparative decision value as the binding uncertainty and reject feature expansion. A is stronger because it isolates upstream judgment through preregistered margins, presentation controls, reviewer-agreement checks, matched costs, and a compact-prompt alternative. B adds real-action and downstream-outcome requirements that may confound mission quality with implementation and environmental effects, making a single-case rejection less bounded.",
+          "reviewer_id": "codex-blind-2",
+          "weighted_scores": {
+            "A": 5.0,
+            "B": 4.8
+          }
+        },
+        {
+          "decision_difference": "Choose A to establish a controlled full-system effect before outcome tracking or replication. Choose B only if immediate real-world action tracing is worth accepting weaker attribution and a slower, more confounded first test.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "Both missions correctly identify comparative decision value as the binding uncertainty and reject feature expansion. A is stronger because it isolates mission-quality advantage through an equal-information, budget-matched, presentation-normalized blinded comparison, includes an explicit meaningful-margin and null-result policy, and tests whether a compact prompt makes the full process unnecessary. B adds real downstream outcomes and owner workload to the initial experiment; those are valuable later but introduce implementation, environmental, timing, and measurement confounds that make a one-case probe less bounded and attributable.",
+          "reviewer_id": "codex-blind-3",
+          "weighted_scores": {
+            "A": 5.0,
+            "B": 4.8
+          }
+        }
+      ],
+      "winner": "palamedes"
+    },
+    {
+      "case_id": "gahyeonbot-voice-loop",
+      "outcome": null,
+      "review_count": 3,
+      "unanimous": false,
+      "vote_counts": {
+        "baseline": 1,
+        "palamedes": 2,
+        "tie": 0
+      },
+      "votes": [
+        {
+          "decision_difference": "A tests whether the underlying bedtime-departure loop deserves priority before choosing voice; B commits product learning to the spoken version immediately. The key decision difference is demand-first sequencing versus simultaneous demand-and-voice validation.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "A better improves the required sequencing decision by separating evidence of recurring departure demand from the cost, latency, and trust risks introduced by voice. It explicitly acknowledges the absence of behavioral evidence and uses a reversible text-only probe before committing to the spoken pipeline. B is highly specific and directly tests voice performance, but it pivots toward the more complex modality before establishing that self-departure itself is frequent and valuable. Both missions have bounded measurements and credible failure signals, though neither provides sharp numeric rejection thresholds.",
+          "reviewer_id": "codex-blind-1",
+          "weighted_scores": {
+            "A": 4.8,
+            "B": 4.4
+          }
+        },
+        {
+          "decision_difference": "Choose A to validate recurring self-departure demand first and sequence voice testing only after that behavior survives; choose B to immediately concentrate product learning and engineering on the end-to-end spoken loop.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "A tests the consequential upstream uncertainty—whether bedtime departure is recurrent and preferable to existing alternatives—before adding voice-specific cost, latency, and trust risks. Its staged probe is bounded, instrumented, reversible, and grounded in the acknowledged absence of behavioral evidence. B is highly specific and directly measures the full spoken loop, but it prematurely elevates voice interaction as the distinctive opportunity despite having no demand evidence that hands-free control is valued over text or manual departure.",
+          "reviewer_id": "codex-blind-2",
+          "weighted_scores": {
+            "A": 5.0,
+            "B": 4.6
+          }
+        },
+        {
+          "decision_difference": "Choose B to test and potentially prioritize the complete spoken bedtime-departure loop; choose A only if the immediate decision is whether generic self-departure demand exists before evaluating voice interaction.",
+          "preferred_label": "B",
+          "preferred_system": "baseline",
+          "rationale": "B directly evaluates the proposed spoken bedtime loop against every required decision variable: observed repeat behavior, latency, trust, execution reliability, and operating cost. Its bounded live-cohort probe and explicit failure signals can support a clear pivot or rejection. A is well grounded and intelligently sequences demand validation, but its text-only probe cannot determine whether the distinctive spoken interaction is usable or economically viable, leaving latency and voice-stack cost unresolved.",
+          "reviewer_id": "codex-blind-3",
+          "weighted_scores": {
+            "A": 4.6,
+            "B": 5.0
+          }
+        }
+      ],
+      "winner": "palamedes"
+    },
+    {
+      "case_id": "termi-agent-control",
+      "outcome": null,
+      "review_count": 3,
+      "unanimous": true,
+      "vote_counts": {
+        "baseline": 0,
+        "palamedes": 3,
+        "tie": 0
+      },
+      "votes": [
+        {
+          "decision_difference": "A sequences a reversible controlled-agent experiment before choosing terminal, agent, hybrid, or stop; B chooses the agent-control pivot now and uses the experiment mainly to validate execution of that choice.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "A best improves the required boundary decision because it acknowledges that the frozen evidence does not yet establish either user demand or lifecycle-protocol feasibility, preserves the evidenced terminal model, and defines a bounded comparative probe with explicit technical and user-value failure signals. B is highly specific and testable, but commits to the controlled-agent boundary before its own probe resolves the central uncertainties; its claim that existing foundations are better suited to agent supervision is plausible but not demonstrated by the supplied artifacts.",
+          "reviewer_id": "codex-blind-1",
+          "weighted_scores": {
+            "A": 5.0,
+            "B": 4.4
+          }
+        },
+        {
+          "decision_difference": "A sequences evidence collection before commitment and preserves all boundary outcomes; B chooses the controlled-agent pivot now and uses the probe mainly to validate implementation viability.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "A directly improves the product-boundary decision by acknowledging that the frozen evidence does not yet justify a pivot and specifying a disposable vertical slice that tests ownership, reconnect safety, approvals, recovery, return behavior, and comparative user value against tmux. Its explicit failure signals can support terminal, controlled-agent, hybrid, or stop outcomes. B is specific and testable, but it commits to the controlled-agent boundary before its own probe resolves demand and protocol feasibility, and its claim that existing foundations are better suited to agent supervision is stronger than the supplied evidence supports.",
+          "reviewer_id": "codex-blind-2",
+          "weighted_scores": {
+            "A": 5.0,
+            "B": 4.0
+          }
+        },
+        {
+          "decision_difference": "A sequences an evidence-generating vertical slice before choosing terminal, controlled-agent, hybrid, or stop; B commits to the controlled-agent boundary first and uses the prototype mainly to validate implementation of that choice.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "A directly addresses the insufficient evidence behind the boundary decision and proposes a bounded, disposable comparison that tests ownership, reconnect safety, approvals, recovery, and return behavior with explicit failure signals. It preserves the evidenced terminal boundary while generating information capable of supporting a later pivot or stop. B is specific and testable, but declares the pivot before its own probe validates demand and protocol feasibility; its claim that existing foundations are better suited to agent supervision is only partially grounded in the supplied artifacts.",
+          "reviewer_id": "codex-blind-3",
+          "weighted_scores": {
+            "A": 5.0,
+            "B": 3.8
+          }
+        }
+      ],
+      "winner": "palamedes"
+    }
+  ],
+  "claim_boundary": "Three-case mission preference plus at least one attributable decision and upstream labor retirement; not general startup-success proof.",
+  "claim_demonstrated": false,
+  "condition_usage": {
+    "baseline": {
+      "call_count": 3,
+      "input_tokens": 69756,
+      "output_tokens": 2141,
+      "reasoning_output_tokens": 205
+    },
+    "input_token_ratio_palamedes_to_baseline": 4.26,
+    "palamedes": {
+      "call_count": 12,
+      "input_tokens": 297173,
+      "output_tokens": 11329,
+      "reasoning_output_tokens": 325
+    }
+  },
+  "labor_retirement_cases": 0,
+  "mission_quality_gate_passed": true,
+  "outcome_gate_passed": false,
+  "preference_summary": {
+    "baseline_votes": 1,
+    "palamedes_votes": 8,
+    "tie_votes": 0,
+    "total_votes": 9,
+    "unanimous_cases": 2
+  },
+  "proof_score_version": "palamedes-proof-score/1",
+  "run_id": "proof-002",
+  "scored_at": "2026-07-25T10:47:53.539768+00:00"
+}

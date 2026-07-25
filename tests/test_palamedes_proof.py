@@ -127,6 +127,16 @@ class PalamedesProofTests(unittest.TestCase):
                     record = {
                         "condition": condition,
                         "mission": mission(condition),
+                        "usage": {
+                            "call_count": 1 if condition == "baseline" else 4,
+                            "token_usage": {
+                                "input_tokens": (
+                                    100 if condition == "baseline" else 425
+                                ),
+                                "output_tokens": 10,
+                                "reasoning_output_tokens": 2,
+                            },
+                        },
                     }
                     palamedes_proof.write_object(
                         case_root / f"{condition}.json", record
@@ -186,6 +196,12 @@ class PalamedesProofTests(unittest.TestCase):
         self.assertTrue(score["mission_quality_gate_passed"])
         self.assertFalse(score["outcome_gate_passed"])
         self.assertFalse(score["claim_demonstrated"])
+        self.assertEqual(score["preference_summary"]["palamedes_votes"], 3)
+        self.assertEqual(score["preference_summary"]["unanimous_cases"], 3)
+        self.assertEqual(
+            score["condition_usage"]["input_token_ratio_palamedes_to_baseline"],
+            4.25,
+        )
 
     def test_recorded_attributable_labor_outcome_completes_outcome_gate(self):
         with tempfile.TemporaryDirectory() as tempdir:

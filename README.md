@@ -76,7 +76,8 @@ autonomous pre-planner is an active, falsifiable product hypothesis.
 | Internal reasoning development | 401 recorded dependent cycles |
 | First real retrieval contact | 1,624 evidence records and 837 components indexed |
 | Reference-treatment safety | Correctly blocked the first packet with 9 explicit reasons |
-| Equal-budget baseline vs treatment | Not yet run |
+| Equal-information baseline vs treatment | `proof-002`: Palamedes won 8/9 blinded model-review votes and all 3 case majorities |
+| Generation cost | Palamedes used 4.26x baseline input tokens; cost-adjusted superiority is not proven |
 | Better external decisions or outcomes | Not yet proven |
 
 The first cross-repository case targets `insight-rag`. Palamedes selected a
@@ -88,10 +89,13 @@ authority. See the [preregistration](experiments/case-001-insight-rag/preregistr
 [paired pilot task](experiments/case-001-insight-rag/pilot-task.md), and
 [cycle 401 record](docs/inquiry/reasoning-cycles/cycle-401.md).
 
-That is evidence that the safety protocol can reject a bad treatment. It is not
-evidence that Palamedes makes better decisions. Comparative superiority remains
-unknown until equal-budget control/treatment runs, blinded review, and
-longitudinal outcome records exist.
+The first preregistered comparison now provides initial evidence that Palamedes
+produces more useful upstream missions: three fresh-session, origin-blinded
+Codex reviewers cast 8 of 9 votes for Palamedes, giving it the majority in all
+three cases. This is model-review evidence, not independent human validation.
+It also cost 4.26 times the baseline input tokens, so cost-adjusted superiority
+and downstream outcome improvement remain unproven. See the
+[`proof-002` result](experiments/proof-runs/proof-002/RESULT.md).
 
 The executable three-project proof program is documented in
 [`experiments/PROOF.md`](experiments/PROOF.md). It freezes equal information

@@ -1,0 +1,211 @@
+{
+  "case_id": "termi-agent-control",
+  "condition": "palamedes",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-07-25T10:43:32.465007+00:00",
+  "information_fingerprint": "62833d4288bf7f185225b21ba62af0bdf15d7c69d00163998098c153099bcf4e",
+  "mission": {
+    "beneficiary": "Developers who may need to delegate long-running coding work across devices, while protecting existing users who rely on universal tmux terminal access.",
+    "consequential_choice": "sequence: preserve remote terminal I/O as the current boundary, run the bounded controlled-agent vertical slice, then choose terminal, controlled-agent, hybrid, or stop based on protocol feasibility and demonstrated user value",
+    "falsifiers": [
+      "Representative users primarily value interactive pane attachment and rarely need unattended delegation, asynchronous approvals, notifications, or structured results.",
+      "The selected coding agent cannot expose dependable machine-readable lifecycle, approval, cancellation, artifact, and completion events without brittle terminal parsing.",
+      "The vertical slice cannot preserve authoritative ownership, event ordering, replay, input deduplication, and completion state across disconnects or restarts.",
+      "Users cannot correctly distinguish terminal control from agent-run control or understand which actions are covered by approvals.",
+      "Adapter, storage, identity, authorization, and client complexity outweigh measurable improvement in successful unattended completion."
+    ],
+    "interpretation": "None of the frozen product-boundary candidates survives strongly enough for commitment. The remote-terminal candidate best matches current evidence and is most reversible, but could entrench the wrong abstraction; the policy gateway risks a false security boundary; the controlled-agent and hybrid candidates impose substantial complexity before demand and protocol feasibility are established.",
+    "mission": "Defer the product-boundary choice and collect decisive evidence through a bounded, disposable controlled-agent vertical slice alongside the existing terminal model.",
+    "next_probe": "Implement an isolated prototype for one coding agent that records a minimal task/run event log and demonstrates create, disconnect, approval request, cross-client reconnect, approval, cancellation, connector or relay restart recovery, and durable completion summary plus artifacts; compare it with ordinary tmux reconnection in observed user trials.",
+    "non_goals": [
+      "Redesigning all Termi sessions around tasks and runs.",
+      "Shipping a hybrid workspace or committing to multi-agent orchestration.",
+      "Claiming that regex command policies comprehensively secure arbitrary shell execution.",
+      "Replacing generic terminal access or removing raw pane interaction.",
+      "Building production-grade migrations, notifications, multi-user administration, or broad agent-adapter support before the probe succeeds."
+    ],
+    "rationale": "A thin create-disconnect-approve-reconnect-return experiment has the highest information gain without committing Termi to a durable orchestration architecture. It tests the key differentiators—task ownership, asynchronous approval, reconnectable history, and explicit results—while preserving the currently evidenced terminal product. The experiment must avoid security claims because raw terminal input and in-pane execution may bypass command-level controls.",
+    "situation": "Termi currently presents as tmux-backed remote terminal I/O, while the available packet lacks sufficient evidence about user demand, lifecycle protocols, ownership, reconnect guarantees, approval enforcement, and return semantics to justify an irreversible shift toward agent orchestration.",
+    "success_signal": "With one supported coding agent, representative users can create a task, disconnect, receive and resolve an approval request from another client, survive connector or relay interruption, and retrieve an unambiguous durable completion or failure summary with artifacts; this materially outperforms reopening the tmux pane for unattended workflows."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "5d69e18138bde93655d922cc3bfe0190532c6c940cc251f775c3e38e3a670376",
+  "provider": "codex",
+  "role_artifacts": {
+    "adversary": {
+      "candidate_critiques": [
+        {
+          "disconfirming_evidence": "Research showing users chiefly start work remotely, leave it unattended, approve actions asynchronously, and return for structured outcomes; frequent failures caused by missing lifecycle state rather than lost terminal bytes; demand for notifications and artifacts over interactive attachment.",
+          "failure_mode": "It may perfect byte-stream continuity around the wrong user job. Cursor replay and input deduplication do not provide task completion, approval state, artifact delivery, or dependable human-input requests, and pane ownership remains a weak proxy for ownership of agent work.",
+          "hidden_harm": "A polished terminal abstraction could entrench pane-oriented APIs and clients, making a later task/run model expensive to introduce. Users may also infer stronger recovery guarantees than tmux, bounded replay, and WebSockets actually provide after connector restarts or pane destruction.",
+          "mission": "Keep Termi a reliable remote terminal for reconnecting to user-owned tmux panes from mobile and web clients."
+        },
+        {
+          "disconfirming_evidence": "Bypass tests through indirect execution or interactive programs; evidence that enforcement cannot observe process-level intent; material false-positive rates in real agent sessions; users routinely approving prompts without inspection; any HTTP, WebSocket, relay, mobile, web, local, or in-pane execution path outside the policy decision point.",
+          "failure_mode": "Command policy applied to raw terminal input is likely incomplete or misleading: shell aliases, scripts, editors, encoded commands, subprocesses, pasted multiline input, interactive programs, and already-running processes can evade text-pattern classification. Enforcing every remote path still does not control locally originated or agent-generated actions inside the pane.",
+          "hidden_harm": "This candidate risks creating a false security boundary. Users may trust denylist and confirmation rules as authorization even though the supplied evidence establishes neither comprehensive interception nor enforcement coverage. Friction, false positives, approval fatigue, and a break-glass route could then weaken both usability and actual safety.",
+          "mission": "Make Termi a policy-enforced terminal gateway that preserves arbitrary CLI compatibility while controlling dangerous actions."
+        },
+        {
+          "disconfirming_evidence": "Users consistently returning to raw panes for diagnosis and control; low use of unattended delegation; coding agents lacking reliable machine-readable lifecycle hooks; ambiguous completion or cancellation under crashes; adapter maintenance dominating product work; the proposed vertical slice failing across disconnects, restarts, and multiple clients.",
+          "failure_mode": "It assumes Termi should own a new orchestration domain despite no supplied evidence that users prefer tasks and runs to terminals. Agent protocols may not expose stable structured events, approvals, cancellation, artifacts, or completion semantics, forcing brittle terminal parsing and adapter-specific behavior.",
+          "hidden_harm": "This candidate would waste the most effort if wrong because it requires a durable domain model, storage, migrations, identity, authorization, adapters, lifecycle recovery, audit history, notifications, artifact handling, and redesigned clients before demand or protocol feasibility is established. It could also narrow Termi from a universal terminal into a fragile agent-specific platform.",
+          "mission": "Turn Termi into a controlled interface for delegating and supervising long-running coding-agent tasks."
+        },
+        {
+          "disconfirming_evidence": "Usability tests where users misidentify approval coverage or ownership; registered runs continuing after Termi reports cancellation; raw input mutating agent state outside the structured history; frequent transitions between registered and ordinary processes; per-agent adapters requiring incompatible lifecycle semantics.",
+          "failure_mode": "The hybrid may inherit the complexity of orchestration without achieving a coherent control boundary. A pane can contain both registered and unregistered processes, raw input may bypass registered-run approvals, and users may not know whether tmux, Termi, or an adapter owns cancellation, reconnect state, and completion.",
+          "hidden_harm": "Optional structure can conceal inconsistent guarantees behind one interface. Security claims may apply only to registered actions while adjacent shell activity remains unrestricted; duplicated terminal and agent state can drift; adapter and UI complexity may consume effort indefinitely while neither mode becomes dependable.",
+          "mission": "Offer a hybrid terminal-and-agent workspace in which structured agent control is an optional capability layered over ordinary tmux sessions."
+        }
+      ],
+      "shared_assumptions": [
+        "The four missions assume the current documentation accurately reflects implementation, although the main README is truncated, the mobile README is generic, frontend evidence is mostly generated output, and relevant source and tests are absent.",
+        "They assume tmux is a sufficiently stable execution substrate; there is no evidence for recovery after tmux server loss, pane destruction, connector upgrades, host restarts, or concurrent attachment.",
+        "They assume reconnect safety can be added without first defining authoritative ordering, persistence, replay windows, stale-client handling, duplicate-input semantics, and recovery across connector and relay restarts.",
+        "They assume session or task ownership can be made explicit without a demonstrated identity, authorization, revocation, multi-device, or multi-user model.",
+        "They assume the public relay can participate safely without evidence about connector authentication, relay trust, impersonation resistance, secret handling, or end-to-end authorization.",
+        "They assume approvals are meaningful and enforceable, despite no evidence about the policy implementation, approver identity, auditability, expiration, scope, or bypass through raw input and in-pane execution.",
+        "They assume users share one dominant workflow, but no research or telemetry establishes whether interactive terminal attachment, restricted remote access, or asynchronous agent delegation is the primary unmet need.",
+        "They assume coding-agent state can be mapped reliably onto panes or structured adapters, although no protocol evidence defines tasks, runs, events, artifacts, human-input requests, cancellation, or completion.",
+        "They assume mobile and web can support equivalent lifecycle guarantees despite different connectivity, certificate, background-execution, and browser-security constraints.",
+        "They assume adding control semantics will improve safety and completion outcomes rather than increase friction, approval fatigue, state ambiguity, and operational burden.",
+        "They assume a product boundary can be chosen before defining measurable success criteria for reliability, unattended completion, security, compatibility, latency, offline behavior, and maintenance cost."
+      ]
+    },
+    "interpreter": {
+      "interpretations": [
+        "Termi can be interpreted as a transport-neutral remote terminal whose responsibility ends at exposing tmux panes safely; coding agents remain ordinary terminal processes owned by users or external tools.",
+        "Termi can be interpreted as an emerging controlled execution surface because it already has pairing, persistent tmux-backed sessions, relay access, and a command-policy concept that could support approvals.",
+        "The tmux dependency may provide adequate process continuity for a terminal product, while still being insufficient for agent-level ownership because tmux tracks panes rather than tasks, principals, approval state, or completion contracts.",
+        "Raw terminal input offers maximum compatibility with existing coding agents, but it can bypass or blur structured controls unless every execution path is mediated by an enforceable policy layer.",
+        "A relay may improve browser reachability without changing the product boundary; alternatively, it could become a control plane if it gains durable identity, authorization, event history, and agent lifecycle state.",
+        "The existing denylist and confirmation patterns may be a lightweight safety aid for terminal commands, or an early sign of a future approval system; the supplied evidence cannot distinguish those intents.",
+        "A controlled agent interface would likely require Termi to own task lifecycle and return semantics, whereas the current documentation suggests that tmux owns process continuity and clients merely attach to terminal panes.",
+        "The mismatch between the detailed root README and generic mobile README may indicate rapid prototyping, incomplete product definition, or documentation drift rather than a settled boundary."
+      ],
+      "missing_evidence": [
+        "A precise definition of session ownership: who creates, names, resumes, terminates, and authorizes access to tmux sessions, panes, coding-agent runs, and tasks.",
+        "Reconnect guarantees, including output buffering, cursor or sequence identifiers, replay windows, duplicate input prevention, stale-client handling, and behavior after connector or relay restarts.",
+        "Approval semantics: which actions require approval, where policy is enforced, whether raw input can bypass it, who may approve, approval expiration, and audit logging.",
+        "Return behavior for long-running work: how completion, failure, cancellation, partial results, artifacts, notifications, and requests for human input are represented and delivered.",
+        "Identity and authorization details for pairing, token storage, token revocation, multi-device access, multi-user isolation, relay trust, and connector impersonation resistance.",
+        "Implementation evidence for the policy example, including code paths, tests, default configuration, matching limitations, and enforcement coverage across HTTP, WebSocket, mobile, web, and local inputs.",
+        "Evidence about intended users and workflows, such as whether users primarily watch interactive shells, delegate autonomous coding tasks, approve risky actions asynchronously, or retrieve completed results later.",
+        "Reliability data or tests covering dropped connections, concurrent clients, pane destruction, tmux server loss, connector upgrades, relay failures, and network transitions on mobile devices.",
+        "A durable domain model distinguishing terminals, sessions, agents, tasks, runs, approvals, messages, outputs, and artifacts.",
+        "Protocol/API specifications showing whether communication is only byte-stream terminal I/O or already includes structured events and commands.",
+        "Source code and tests for the agent, mobile client, frontend, relay, pairing flow, session APIs, WebSocket protocol, and terminal-status QA route; the packet mostly provides documentation and generated manifests.",
+        "Security analysis for exposing command execution through direct and relayed connections, including threat boundaries, least privilege, secret handling, auditability, and recovery from compromised credentials.",
+        "Product constraints and success criteria for choosing the boundary, including compatibility requirements, acceptable complexity, latency expectations, offline behavior, and operational ownership.",
+        "User research or telemetry demonstrating whether terminal attachment or controlled delegation is the dominant unmet need.",
+        "The omitted portion of the truncated root README and any relevant design documents, issues, architecture decisions, or roadmap materials that may already define ownership, approvals, reconnect safety, or result delivery."
+      ],
+      "observations": [
+        "Termi is currently described as a macOS Go connector backed by tmux, with Flutter and Next.js clients for pairing, session discovery, terminal output, and raw input.",
+        "The documented interaction boundary is pane-oriented terminal I/O: list panes, subscribe to output over WebSocket, and send raw input back to a pane.",
+        "Existing shell workflows are expected to run inside tmux sessions or windows, and start.sh may create a default detached tmux session.",
+        "The architecture supports direct private-network connections and a public HTTPS relay that forwards HTTP and WebSocket traffic to a selected connector.",
+        "The repository includes a command policy example with denylisted commands and commands requiring confirmation, indicating some prior consideration of execution controls.",
+        "The supplied policy excerpt does not establish where enforcement occurs, whether it covers all input paths, or how confirmations are presented and recorded.",
+        "The README calls the web client a web-first draft and explicitly says it is not yet a full replacement for the mobile app.",
+        "The packet documents reconnectable transport components such as tmux and WebSockets but does not describe durable client subscriptions, output cursors, replay semantics, or command deduplication.",
+        "The packet contains generated Next.js build artifacts, including a terminal-status QA route and relay API route, but little frontend source or behavioral evidence.",
+        "The mobile README is still generic Flutter starter text and does not document product behavior, lifecycle guarantees, or control semantics.",
+        "The frozen packet includes only 9,759 bytes within a 24,000-byte budget, and the primary README excerpt is truncated."
+      ]
+    },
+    "inventor": {
+      "candidate_missions": [
+        {
+          "beneficiary": "Developers who already run shells and coding agents inside tmux and want dependable remote observation and interaction without adopting a new orchestration system.",
+          "falsifier": "Target users primarily need asynchronous delegation, approvals, completion notifications, and structured result retrieval rather than interactive terminal attachment.",
+          "mechanism": "Treat terminal byte-stream transport as the product boundary; add durable output cursors, bounded replay, duplicate-input protection, explicit pane ownership, secure pairing, and reconnect tests without modeling coding-agent tasks.",
+          "mission": "Keep Termi a reliable remote terminal for reconnecting to user-owned tmux panes from mobile and web clients.",
+          "next_probe": "Prototype cursor-based pane replay and input deduplication, then test whether users can safely resume real sessions after connector, relay, and mobile-network interruptions."
+        },
+        {
+          "beneficiary": "Individuals and small teams that need remote terminal access but cannot accept unrestricted command execution from paired devices or relayed browsers.",
+          "falsifier": "Raw interactive input cannot be classified or intercepted comprehensively enough to prevent bypasses, or users reject the latency and friction introduced by command-level approvals.",
+          "mechanism": "Mediate every remote input path through connector-side authorization and policy enforcement; introduce structured approval requests, approver identity, expiration, audit records, and an explicit break-glass path while leaving process lifecycle in tmux.",
+          "mission": "Make Termi a policy-enforced terminal gateway that preserves arbitrary CLI compatibility while controlling dangerous actions.",
+          "next_probe": "Trace all HTTP, WebSocket, mobile, web, relay, and local input paths and implement one end-to-end confirmation-required command test proving that no remote path bypasses enforcement."
+        },
+        {
+          "beneficiary": "Developers who start coding work from one device, leave it running unattended, approve risky actions asynchronously, and retrieve results later from another device.",
+          "falsifier": "Users continue to reason primarily in terminals and panes, coding-agent protocols cannot provide dependable structured state, or the added lifecycle model fails to improve successful unattended task completion.",
+          "mechanism": "Create first-class tasks and runs with durable ownership, lifecycle states, structured agent events, approval checkpoints, cancellation, reconnectable history, artifact capture, human-input requests, and explicit completion or failure returns; use tmux only as an execution backend.",
+          "mission": "Turn Termi into a controlled interface for delegating and supervising long-running coding-agent tasks.",
+          "next_probe": "Build a thin vertical slice for one coding agent: create a task, disconnect, receive an approval request, reconnect from another client, approve it, and retrieve a durable completion summary plus artifacts."
+        },
+        {
+          "beneficiary": "Developers who need universal shell compatibility today but want safer asynchronous delegation for selected coding-agent workflows.",
+          "falsifier": "The dual model creates ambiguous ownership or security boundaries, users cannot predict whether an action is terminal-controlled or agent-controlled, or maintaining adapters costs more than the structured workflow is worth.",
+          "mechanism": "Retain generic pane streaming and raw input, but allow supported processes to register an agent-run contract providing task identity, events, approvals, artifacts, and return status; expose unsupported processes as terminals and registered runs as controlled agents.",
+          "mission": "Offer a hybrid terminal-and-agent workspace in which structured agent control is an optional capability layered over ordinary tmux sessions.",
+          "next_probe": "Define a minimal agent registration protocol and test one tmux pane containing a registered run beside one ordinary shell, measuring whether users can correctly understand ownership, approval coverage, reconnect behavior, and completion state."
+        }
+      ]
+    }
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-07-25T10:42:18.191825+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 22077,
+          "output_tokens": 1087,
+          "reasoning_output_tokens": 24
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-07-25T10:42:40.880823+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 23183,
+          "output_tokens": 740,
+          "reasoning_output_tokens": 47
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-07-25T10:43:13.316672+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 23928,
+          "output_tokens": 1214,
+          "reasoning_output_tokens": 38
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-07-25T10:43:32.464934+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 25230,
+          "output_tokens": 671,
+          "reasoning_output_tokens": 0
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 16128,
+      "input_tokens": 94418,
+      "output_tokens": 3712,
+      "reasoning_output_tokens": 109
+    }
+  }
+}

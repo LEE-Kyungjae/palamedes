@@ -1,0 +1,60 @@
+{
+  "case_id": "gahyeonbot-voice-loop",
+  "condition": "baseline",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-07-25T10:37:20.762867+00:00",
+  "information_fingerprint": "31ddbfaaa7a3bd31741b589bcec8c7fef14a3661f030d92a5b0e634810737c31",
+  "mission": {
+    "beneficiary": "Couples and close friends who routinely remain together in a Discord voice channel until bedtime and want departure coordination without typing or returning to the app.",
+    "consequential_choice": "pivot: stop treating GahyeonBot as a broad feature collection and concentrate product learning on the spoken bedtime departure loop; retain other capabilities only as non-priority maintenance until this loop is validated or falsified.",
+    "falsifiers": [
+      "Target users do not repeat the loop after initial novelty.",
+      "Users prefer Discord text commands or manual departure because speaking to the bot feels intrusive.",
+      "End-to-end detection, transcription, reasoning, and confirmation latency regularly breaks conversational expectations.",
+      "False activations, transcription errors, or incorrect departures prevent users from trusting unattended execution.",
+      "Voicebox, STT, model inference, or hosting requirements make the cost or operational burden disproportionate to usage.",
+      "Discord permissions or platform behavior prevent reliable scheduled departure execution."
+    ],
+    "interpretation": "The strongest distinctive opportunity is not a general Discord assistant; it is a hands-free voice-channel coordination loop built around the original bedtime friction: a user speaks a short request, the bot detects one utterance, schedules a departure, confirms it, and reliably executes it. TEN VAD and Voicebox support this direction, but their presence is technical readiness rather than proof of demand.",
+    "mission": "Prove that couples and small private Discord groups repeatedly trust GahyeonBot to schedule and execute bedtime voice-channel departures through one low-latency spoken interaction.",
+    "next_probe": "Run the complete spoken bedtime-departure loop with a small set of recurring target users and record request completion, confirmation latency, execution accuracy, false activations, repeat nights, corrections, and marginal operating cost per successful departure.",
+    "non_goals": [
+      "Expanding music-bot functionality.",
+      "Growing newsletter themes or subscriptions.",
+      "Building a general-purpose conversational AI companion.",
+      "Supporting broad meeting scheduling or every voice-channel administration scenario.",
+      "Adding more speech engines, personas, or expressive voice effects before the core loop is validated."
+    ],
+    "rationale": "This loop connects the project’s original problem, existing reservation concept, and voice infrastructure into a narrow behavior with a clear trigger, action, confirmation, and recurring outcome. It can be evaluated against real usage and reliability, whereas music, newsletters, and broad AI conversation compete with established alternatives and dilute learning. The immediate priority is validating dependable execution and user trust before expanding the assistant.",
+    "situation": "GahyeonBot presents scheduling, music, newsletters, AI conversation, and an optional local voice stack, but the packet contains no observed usage, latency, trust, retention, or operating-cost evidence showing that this breadth creates a repeatable user habit.",
+    "success_signal": "In a small live cohort, the same users complete the spoken schedule-to-departure loop on multiple nights, most initiated requests receive an unambiguous confirmation within an acceptable conversational delay, scheduled departures execute correctly, accidental activations and corrections are rare, and measured per-use infrastructure cost is sustainable."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "82e1984e1f51a11f7d070511d0a2295bd5601c6a0db4e7e48873372b382a44c8",
+  "provider": "codex",
+  "role_artifacts": {},
+  "usage": {
+    "call_count": 1,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-07-25T10:37:20.762818+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 24987,
+          "output_tokens": 775,
+          "reasoning_output_tokens": 124
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 0,
+      "input_tokens": 24987,
+      "output_tokens": 775,
+      "reasoning_output_tokens": 124
+    }
+  }
+}

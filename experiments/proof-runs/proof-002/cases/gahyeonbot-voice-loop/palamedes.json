@@ -1,0 +1,214 @@
+{
+  "case_id": "gahyeonbot-voice-loop",
+  "condition": "palamedes",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-07-25T10:41:46.032001+00:00",
+  "information_fingerprint": "31ddbfaaa7a3bd31741b589bcec8c7fef14a3661f030d92a5b0e634810737c31",
+  "mission": {
+    "beneficiary": "Late-night Discord users, especially couples and friends who regularly fall asleep together in voice channels and want their own departure automated.",
+    "consequential_choice": "sequence: defer product commitment, test text-only automatic bedtime departure first, and consider voice commands or consenting group exits only if repeated voluntary use and dependable execution survive the cohort test",
+    "falsifiers": [
+      "Most users schedule only once or show low weekly repeat use.",
+      "Users report no meaningful advantage over manual Discord controls or generic timers.",
+      "Execution failures, mistimed departures, or cancellations occur often enough to weaken trust.",
+      "Self-departure demand is too infrequent to justify a focused product loop.",
+      "Group-departure requests produce material consent or permission disputes."
+    ],
+    "interpretation": "No candidate has enough behavioral evidence for a durable product commitment. The most reversible, informative position is to provisionally test automatic bedtime voice-channel departure through text commands only, avoiding the voice pipeline and consent-sensitive group automation until demand is established.",
+    "mission": "Validate whether dependable, user-controlled bedtime voice-channel departure is a recurring Discord loop worth prioritizing.",
+    "next_probe": "Instrument a text-only self-departure flow for 30 days, measuring schedule creation, confirmation, cancellation, successful execution, execution error, weekly repeat use, and comparison with manual departure; interview repeat users, one-time users, and abandoners about frequency, trust, and alternatives.",
+    "non_goals": [
+      "Building an open-ended conversational voice companion.",
+      "Adding VAD, STT, LLM, personalized TTS, or cloned voices to the initial test.",
+      "Automating group departure without explicit per-user consent.",
+      "Prioritizing music, newsletters, general AI chat, or event coordination during the bounded experiment.",
+      "Treating README prominence or implementation depth as evidence of retention."
+    ],
+    "rationale": "This candidate has the strongest problem evidence in the supplied context, the lowest implementation and operating-cost exposure, and the safest path to learning. A bounded text-only cohort test can measure repeat demand and reliability without prematurely incurring VAD, STT, LLM, TTS, ambient-listening, cloned-voice, or group-permission risks. Selection remains deferred pending observed behavior.",
+    "situation": "GahyeonBot spans many Discord features, but the packet contains no observed usage, retention, latency, trust, or cost evidence. The bedtime departure loop addresses the clearest concrete problem and has fewer dependencies and failure modes than hands-free control or open-ended voice conversation.",
+    "success_signal": "Over a 30-day opt-in cohort, users repeatedly schedule departures across multiple weeks, scheduled exits execute reliably, cancellations and permission complaints remain low, and interviews show a clear preference over manually leaving or using a generic timer."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "6d5079ed0bbd2e9de1f30400cd402673549b5009052cd6e735cac877660a8e95",
+  "provider": "codex",
+  "role_artifacts": {
+    "adversary": {
+      "candidate_critiques": [
+        {
+          "disconfirming_evidence": "Low 30-day repeat scheduling, high cancellation or execution-failure rates, permission complaints, and no measurable preference over manual Discord controls or simple timers.",
+          "failure_mode": "The loop may be too infrequent and narrow to sustain retention: many users will configure it once, use it sporadically, or prefer manually leaving. Voice-command support could add needless complexity to what is fundamentally a timer.",
+          "hidden_harm": "Group departure creates consent and permission disputes, while failed or mistimed execution can disconnect users during important conversations and destroy trust in automation.",
+          "mission": "Make bedtime voice-channel departure automatic and dependable."
+        },
+        {
+          "disconfirming_evidence": "Lower task completion than text controls, unacceptable p95 confirmation latency, frequent false or missed activations, low seven-day reuse, or operating cost that exceeds users' reported value.",
+          "failure_mode": "A constrained vocabulary does not eliminate Discord-specific recognition problems: music, overlapping speakers, slang, echo, packet loss, and ambiguous commands can make voice control slower than clicking or typing after corrections and confirmations.",
+          "hidden_harm": "False activation could disconnect users or alter shared music without authorization; persistent listening may also feel disproportionate to the minor convenience delivered.",
+          "mission": "Become a low-latency hands-free controller for common Discord voice-channel actions."
+        },
+        {
+          "disconfirming_evidence": "Weak enablement-to-first-turn conversion, few multi-turn sessions, low weekly return, disruptive warm or cold p95 latency, inadequate Korean speech quality, poor concurrency, negative trust ratings, or lower comfort with cloned voices than generic TTS.",
+          "failure_mode": "This is the candidate that would waste the most effort if wrong because it requires the entire VAD-STT-LLM-TTS-playback chain, local model operations, concurrency management, consent design, and failure recovery before demand has been demonstrated. Local STT and TTS do not make the loop fully private when utterance-derived text is still sent to OpenRouter, and the 300-second TTS timeout signals serious latency risk.",
+          "hidden_harm": "Recording ambiguity, transcript disclosure, cloned-voice impersonation, GPU or CPU expense, moderation burden, and socially awkward bot interruptions could damage user trust and the bot's reputation even if the pipeline technically works.",
+          "mission": "Provide a private, locally processed conversational companion inside small Discord voice rooms."
+        },
+        {
+          "disconfirming_evidence": "Few organizers create a second event, acknowledgements and reminders are ignored, participant opt-outs or moderation incidents are high, and measured completion or time saved does not beat ordinary Discord coordination.",
+          "failure_mode": "The proposal may duplicate Discord messages, events, mentions, and existing moderation bots while introducing a longer create-invite-acknowledge-remind flow. Explicit opt-in protects users but may remove the convenience that supposedly differentiates it.",
+          "hidden_harm": "Reminder fatigue, social pressure to acknowledge, accidental exclusion, and perceived moderator surveillance could generate conflict; move or disconnect controls amplify the consequences of permission mistakes.",
+          "mission": "Coordinate short group gatherings in Discord voice channels without becoming a general assistant."
+        }
+      ],
+      "shared_assumptions": [
+        "README prominence and configuration depth reflect real user demand rather than implementation enthusiasm or aspirational documentation.",
+        "A recurring Discord problem necessarily produces a sufficiently frequent repeat loop; no candidate currently has observed frequency, retention, or cohort evidence.",
+        "Users will install, enable, configure, and trust a bot with the permissions required to listen, move, or disconnect participants.",
+        "Discord users prefer an additional bot interaction over native controls, messages, events, timers, or established bots.",
+        "TEN VAD and Voicebox claims will transfer to Korean, noisy, overlapping Discord audio under packet loss and echo.",
+        "A 1200 ms end-of-speech silence plus STT, LLM, TTS, and playback latency can feel responsive enough for the proposed voice loops.",
+        "Local processing will be operationally affordable and privacy-enhancing despite hardware, model-loading, concurrency, maintenance, fallback-provider, and OpenRouter dependencies.",
+        "False activations, missed turns, clipped speech, duplicate actions, and service outages can be reduced to trust-preserving levels.",
+        "Consent can be made explicit and durable for group disconnection, ambient listening, transcript processing, and cloned voices.",
+        "The listed features are implemented, reliable, and production-ready; the bounded packet provides no verification of actual integration behavior.",
+        "The same mission will generalize across couples, friends, gaming groups, moderators, and communities despite different norms and permission structures.",
+        "Narrowing the product before comparable experiments across scheduled exits, voice commands, conversation, coordination, music, newsletters, and text AI will improve rather than prematurely constrain learning."
+      ]
+    },
+    "interpreter": {
+      "interpretations": [
+        "A narrow hands-free conversational loop inside Discord voice channels could be the intended differentiator because the repository has substantial VAD, STT, streaming LLM, and personalized TTS configuration.",
+        "A voice loop may still be infrastructure-led rather than demand-led: implementation detail is abundant, but evidence that Discord users repeatedly want to converse with the bot is absent.",
+        "The strongest repeat behavior may remain scheduling an automatic voice-channel exit before sleep, since it solves the concrete problem highlighted first in the README and has lower latency, trust, and operating-cost exposure.",
+        "A lightweight voice utility loop—such as speaking one command and receiving one short confirmation—could fit observed Discord context better than open-ended AI conversation, but no usage evidence distinguishes these scopes.",
+        "Local Voicebox integration could improve privacy and marginal cost, yet operational burden, hardware requirements, model-loading delays, and voice-cloning consent may outweigh those advantages.",
+        "TEN VAD may reduce accidental STT and LLM calls, improving cost and trust, but threshold and silence settings could also cause clipped speech, missed turns, or sluggish responses in noisy and overlapping Discord conversations.",
+        "Streaming the OpenRouter response once per utterance may improve perceived responsiveness and constrain duplicate calls, although end-to-end responsiveness still depends on STT completion and TTS startup.",
+        "Personalized cloned-voice output could make the bot engaging and habitual, or it could create impersonation, consent, and social-comfort risks that weaken trust.",
+        "The broad feature list could represent useful experimentation before convergence, or it could fragment product identity and obscure which behavior actually retains users."
+      ],
+      "missing_evidence": [
+        "Per-feature usage frequency, unique users, repeat rate, retention, session frequency, and abandonment data.",
+        "Discord-specific funnel data for voice assistant enablement, first successful turn, subsequent turns, and return usage.",
+        "Comparative evidence for scheduled exits, music, newsletters, text AI, and voice AI using the same retention and satisfaction measures.",
+        "End-to-end latency distributions for VAD finalization, STT, first LLM token, TTS startup, and audible response, including warm and cold starts.",
+        "Rates of false activation, missed speech, clipped utterances, duplicate turns, interruptions, overlapping speakers, and failures under music, echo, and Discord packet loss.",
+        "User tolerance for the documented 1200 ms end-of-speech silence and the thresholds at which the interaction stops feeling conversational.",
+        "Actual operating costs per active user and per completed turn, including OpenRouter, cloud fallback, compute, GPU or CPU hosting, storage, bandwidth, and maintenance.",
+        "Hardware profiles and concurrent-session capacity for local Voicebox and TEN VAD deployments.",
+        "Quality measurements for Korean STT, Korean TTS naturalness, speaker attribution, slang, code-switching, and noisy voice channels.",
+        "Evidence about whether Voicebox's documented API behavior and model/profile semantics match GahyeonBot's current integration.",
+        "User trust research covering recording awareness, audio retention, transcript handling, third-party transmission, cloned-voice consent, moderation, and deletion controls.",
+        "Security and privacy details for tokens, audio, transcripts, voice samples, profile access, and external-provider requests.",
+        "Observed demand for cloned or personalized voices versus generic TTS, and whether personalization materially increases repeat usage.",
+        "Failure-recovery behavior when STT, OpenRouter, Voicebox, or Discord playback is unavailable or slow.",
+        "Controlled tests comparing candidate narrow loops on task completion, perceived latency, trust, cost, and repeated voluntary use.",
+        "Evidence that the README's listed capabilities are implemented, production-ready, and used rather than aspirational documentation.",
+        "The contents omitted by excerpt truncation, including any benchmarks, limitations, licensing conditions, or integration details relevant to deployment decisions."
+      ],
+      "observations": [
+        "GahyeonBot is currently presented as a broad Discord bot spanning scheduled voice-channel exits, group exits, reservation management, music controls, newsletters, AI chat, and a voice assistant.",
+        "The supplied README gives unusually detailed configuration for a voice loop: Discord audio input, TEN VAD speech detection, silence-based turn finalization, STT via Voicebox, OpenRouter streaming responses, and TTS via Voicebox, Edge, or a custom provider.",
+        "The documented voice loop attempts to suppress false requests by requiring detected human speech and sustained silence before invoking STT or OpenRouter.",
+        "Voice-assistant, STT, and OpenRouter functions are disabled by default, while VAD is enabled by default within the assistant configuration.",
+        "The voice path crosses several components—Discord audio, native VAD, STT, an LLM provider, TTS, and Discord playback—creating multiple latency and failure points.",
+        "Voicebox is local-first, supports both STT and TTS, voice cloning, multiple engines, and local execution, which could reduce cloud disclosure and some marginal API costs.",
+        "Voicebox model loading and synthesis may take long enough that the configured TTS timeout is 300 seconds, indicating potentially significant cold-start or generation latency.",
+        "TEN VAD claims real-time, frame-level detection with low computational and memory cost, but the packet supplies no GahyeonBot-specific measurements validating those claims in Discord conditions.",
+        "The original scheduled-exit use case addresses a concrete recurring Discord voice-channel inconvenience and requires a much simpler interaction than the AI voice pipeline.",
+        "The information packet contains product and dependency documentation but no observed user behavior, production telemetry, user interviews, retention data, or cost records."
+      ]
+    },
+    "inventor": {
+      "candidate_missions": [
+        {
+          "beneficiary": "Couples, friends, and late-night Discord users who fall asleep together in voice channels.",
+          "falsifier": "Reject this mission if a cohort test shows low weekly repeat use, frequent cancellations or permission disputes, or no meaningful preference over Discord’s existing manual controls.",
+          "mechanism": "Let a user schedule their own or a consenting group’s voice-channel exit through one short text or voice command, then provide an immediate confirmation and execute at the specified time.",
+          "mission": "Make bedtime voice-channel departure automatic and dependable.",
+          "next_probe": "Instrument scheduling, confirmation, cancellation, successful execution, repeat use, and permission failures for 30 days; interview repeat and one-time users about bedtime frequency and trust."
+        },
+        {
+          "beneficiary": "Users who are gaming, resting, or otherwise unable to type while in a voice channel.",
+          "falsifier": "Reject this mission if command completion is materially worse than text controls, p95 audible confirmation exceeds users’ tolerance, false or missed activations remain high in noisy channels, or per-command cost exceeds the value users report.",
+          "mechanism": "Recognize a constrained command set—leave, leave together, pause, skip, resume, and set a timer—using TEN VAD and STT, then respond with a brief confirmation instead of open-ended AI dialogue.",
+          "mission": "Become a low-latency hands-free controller for common Discord voice-channel actions.",
+          "next_probe": "Run opt-in tests for five commands and measure completion rate, false activation, missed speech, correction rate, end-to-end latency, operating cost, and seven-day voluntary reuse against equivalent text commands."
+        },
+        {
+          "beneficiary": "Close friends, couples, and small communities that want an ambient AI participant without routinely sending voice data to cloud speech providers.",
+          "falsifier": "Reject this mission if users do not return for multi-turn sessions, warm p95 response latency feels disruptive, local hardware cannot support expected concurrency, privacy controls do not establish trust, or cloned voices reduce social comfort.",
+          "mechanism": "Use TEN VAD for turn detection, local Voicebox STT and personalized TTS, and one streamed LLM request per utterance to sustain short, hands-free conversations with explicit recording and voice-consent controls.",
+          "mission": "Provide a private, locally processed conversational companion inside small Discord voice rooms.",
+          "next_probe": "Pilot with consenting small groups and record enablement-to-first-turn conversion, turns per session, weekly return rate, latency by pipeline stage, failure recovery, compute cost, and trust ratings for generic versus cloned voices."
+        },
+        {
+          "beneficiary": "Community moderators, gaming parties, study groups, and event hosts who need members to assemble or leave together.",
+          "falsifier": "Reject this mission if organizers rarely create a second event, invitees ignore reminders, opt-in requirements make completion cumbersome, or coordination does not outperform ordinary Discord messages and events.",
+          "mechanism": "Let an organizer announce a voice-room rendezvous, collect lightweight acknowledgements, remind participants, and optionally move or disconnect only users who explicitly opted in.",
+          "mission": "Coordinate short group gatherings in Discord voice channels without becoming a general assistant.",
+          "next_probe": "Prototype the full create-invite-acknowledge-remind-complete funnel in several servers and compare event completion, organizer repeat rate, participant opt-out, moderation incidents, and time saved with existing coordination methods."
+        }
+      ]
+    }
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-07-25T10:40:36.255807+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 24886,
+          "output_tokens": 1109,
+          "reasoning_output_tokens": 29
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-07-25T10:40:55.863562+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 26011,
+          "output_tokens": 698,
+          "reasoning_output_tokens": 31
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-07-25T10:41:29.177426+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 26732,
+          "output_tokens": 961,
+          "reasoning_output_tokens": 31
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-07-25T10:41:46.031881+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 27787,
+          "output_tokens": 590,
+          "reasoning_output_tokens": 0
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 48384,
+      "input_tokens": 105416,
+      "output_tokens": 3358,
+      "reasoning_output_tokens": 91
+    }
+  }
+}

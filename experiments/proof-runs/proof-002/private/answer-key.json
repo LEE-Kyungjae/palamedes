@@ -1,0 +1,35 @@
+{
+  "blind_key_version": "palamedes-proof-key/1",
+  "cases": [
+    {
+      "case_id": "palamedes-self-hosting",
+      "labels": {
+        "A": "palamedes",
+        "B": "baseline"
+      }
+    },
+    {
+      "case_id": "gahyeonbot-voice-loop",
+      "labels": {
+        "A": "palamedes",
+        "B": "baseline"
+      }
+    },
+    {
+      "case_id": "termi-agent-control",
+      "labels": {
+        "A": "palamedes",
+        "B": "baseline"
+      }
+    }
+  ],
+  "run_id": "proof-002",
+  "seed_sha256": "3bbc7ea2c4fa9b824f8d641d29ba08568edcc444b2eac9c13c86c4bcfab5f5af",
+  "success_gate": {
+    "minimum_attributable_outcomes": 1,
+    "minimum_blinded_reviews_per_case": 1,
+    "minimum_cases": 3,
+    "minimum_labor_retirement_cases": 1,
+    "palamedes_preferred_cases": 2
+  }
+}

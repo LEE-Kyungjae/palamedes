@@ -623,6 +623,38 @@ def _weighted(scores: Dict[str, Any], rubric: Dict[str, Any]) -> float:
     )
 
 
+def _condition_usage(run_path: Path, case_ids: Iterable[str]) -> Dict[str, Any]:
+    totals: Dict[str, Dict[str, int]] = {}
+    for condition in ("baseline", "palamedes"):
+        aggregate = {
+            "call_count": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "reasoning_output_tokens": 0,
+        }
+        for case_id in case_ids:
+            path = run_path / "cases" / case_id / f"{condition}.json"
+            if not path.exists():
+                continue
+            usage = load_object(path).get("usage", {})
+            tokens = usage.get("token_usage", {})
+            aggregate["call_count"] += int(usage.get("call_count", 0))
+            for name in (
+                "input_tokens",
+                "output_tokens",
+                "reasoning_output_tokens",
+            ):
+                aggregate[name] += int(tokens.get(name, 0))
+        totals[condition] = aggregate
+    baseline_input = totals["baseline"]["input_tokens"]
+    totals["input_token_ratio_palamedes_to_baseline"] = (
+        round(totals["palamedes"]["input_tokens"] / baseline_input, 3)
+        if baseline_input
+        else None
+    )
+    return totals
+
+
 def score_run(run_path: Path) -> Dict[str, Any]:
     packet = load_object(run_path / "blind" / "packet.json")
     key = load_object(run_path / "private" / "answer-key.json")
@@ -671,6 +703,15 @@ def score_run(run_path: Path) -> Dict[str, Any]:
             {
                 "case_id": case_id,
                 "review_count": len(case_votes),
+                "vote_counts": {
+                    "palamedes": palamedes_votes,
+                    "baseline": baseline_votes,
+                    "tie": sum(
+                        item["preferred_system"] == "tie" for item in case_votes
+                    ),
+                },
+                "unanimous": bool(case_votes)
+                and len({item["preferred_system"] for item in case_votes}) == 1,
                 "winner": winner,
                 "votes": case_votes,
                 "outcome": outcome,
@@ -698,6 +739,22 @@ def score_run(run_path: Path) -> Dict[str, Any]:
         attributable >= int(gate["minimum_attributable_outcomes"])
         and labor >= int(gate["minimum_labor_retirement_cases"])
     )
+    all_votes = [
+        vote
+        for item in case_results
+        for vote in item["votes"]
+    ]
+    preference_summary = {
+        "total_votes": len(all_votes),
+        "palamedes_votes": sum(
+            item["preferred_system"] == "palamedes" for item in all_votes
+        ),
+        "baseline_votes": sum(
+            item["preferred_system"] == "baseline" for item in all_votes
+        ),
+        "tie_votes": sum(item["preferred_system"] == "tie" for item in all_votes),
+        "unanimous_cases": sum(item["unanimous"] for item in case_results),
+    }
     result = {
         "proof_score_version": "palamedes-proof-score/1",
         "run_id": packet["run_id"],
@@ -707,6 +764,8 @@ def score_run(run_path: Path) -> Dict[str, Any]:
         "claim_demonstrated": quality_gate and outcome_gate,
         "attributable_outcomes": attributable,
         "labor_retirement_cases": labor,
+        "preference_summary": preference_summary,
+        "condition_usage": _condition_usage(run_path, votes),
         "case_results": case_results,
         "claim_boundary": (
             "Three-case mission preference plus at least one attributable decision "

@@ -1,0 +1,162 @@
+{
+  "blind_review_version": "palamedes-proof-review/1",
+  "review_fingerprint": "7a357e1542c9b2601aa5520614417143562fbaa158ccecd5c237294a80395bdf",
+  "reviewed_at": "2026-07-25T10:46:55.218711+00:00",
+  "reviewer_id": "codex-blind-2",
+  "reviews": [
+    {
+      "case_id": "palamedes-self-hosting",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.94,
+        "decision_difference": "Choose A's controlled paired comparison first; defer downstream outcome tracking until a comparative upstream effect survives budget, presentation, reviewer-variance, and lightweight-substitute controls.",
+        "preferred": "A",
+        "rationale": "Both correctly identify comparative decision value as the binding uncertainty and reject feature expansion. A is stronger because it isolates upstream judgment through preregistered margins, presentation controls, reviewer-agreement checks, matched costs, and a compact-prompt alternative. B adds real-action and downstream-outcome requirements that may confound mission quality with implementation and environmental effects, making a single-case rejection less bounded.",
+        "scores": {
+          "A": {
+            "decision_usefulness": 5,
+            "evidence_use": 5,
+            "falsifiability": 5,
+            "non_genericity": 5,
+            "problem_framing": 5
+          },
+          "B": {
+            "decision_usefulness": 5,
+            "evidence_use": 5,
+            "falsifiability": 4,
+            "non_genericity": 5,
+            "problem_framing": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-blind-2",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-07-25T10:46:27.707420+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 12032,
+              "input_tokens": 19084,
+              "output_tokens": 330,
+              "reasoning_output_tokens": 127
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 12032,
+          "input_tokens": 19084,
+          "output_tokens": 330,
+          "reasoning_output_tokens": 127
+        }
+      }
+    },
+    {
+      "case_id": "gahyeonbot-voice-loop",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.91,
+        "decision_difference": "Choose A to validate recurring self-departure demand first and sequence voice testing only after that behavior survives; choose B to immediately concentrate product learning and engineering on the end-to-end spoken loop.",
+        "preferred": "A",
+        "rationale": "A tests the consequential upstream uncertainty—whether bedtime departure is recurrent and preferable to existing alternatives—before adding voice-specific cost, latency, and trust risks. Its staged probe is bounded, instrumented, reversible, and grounded in the acknowledged absence of behavioral evidence. B is highly specific and directly measures the full spoken loop, but it prematurely elevates voice interaction as the distinctive opportunity despite having no demand evidence that hands-free control is valued over text or manual departure.",
+        "scores": {
+          "A": {
+            "decision_usefulness": 5,
+            "evidence_use": 5,
+            "falsifiability": 5,
+            "non_genericity": 5,
+            "problem_framing": 5
+          },
+          "B": {
+            "decision_usefulness": 5,
+            "evidence_use": 4,
+            "falsifiability": 5,
+            "non_genericity": 5,
+            "problem_framing": 4
+          }
+        }
+      },
+      "reviewer_id": "codex-blind-2",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-07-25T10:46:42.773982+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 12032,
+              "input_tokens": 18994,
+              "output_tokens": 471,
+              "reasoning_output_tokens": 248
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 12032,
+          "input_tokens": 18994,
+          "output_tokens": 471,
+          "reasoning_output_tokens": 248
+        }
+      }
+    },
+    {
+      "case_id": "termi-agent-control",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.96,
+        "decision_difference": "A sequences evidence collection before commitment and preserves all boundary outcomes; B chooses the controlled-agent pivot now and uses the probe mainly to validate implementation viability.",
+        "preferred": "A",
+        "rationale": "A directly improves the product-boundary decision by acknowledging that the frozen evidence does not yet justify a pivot and specifying a disposable vertical slice that tests ownership, reconnect safety, approvals, recovery, return behavior, and comparative user value against tmux. Its explicit failure signals can support terminal, controlled-agent, hybrid, or stop outcomes. B is specific and testable, but it commits to the controlled-agent boundary before its own probe resolves demand and protocol feasibility, and its claim that existing foundations are better suited to agent supervision is stronger than the supplied evidence supports.",
+        "scores": {
+          "A": {
+            "decision_usefulness": 5,
+            "evidence_use": 5,
+            "falsifiability": 5,
+            "non_genericity": 5,
+            "problem_framing": 5
+          },
+          "B": {
+            "decision_usefulness": 4,
+            "evidence_use": 3,
+            "falsifiability": 4,
+            "non_genericity": 5,
+            "problem_framing": 4
+          }
+        }
+      },
+      "reviewer_id": "codex-blind-2",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-07-25T10:46:55.218660+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 0,
+              "input_tokens": 19084,
+              "output_tokens": 309,
+              "reasoning_output_tokens": 76
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 19084,
+          "output_tokens": 309,
+          "reasoning_output_tokens": 76
+        }
+      }
+    }
+  ],
+  "run_id": "proof-002"
+}

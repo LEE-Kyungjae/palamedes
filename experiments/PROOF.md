@@ -104,3 +104,20 @@ python3 palamedes_proof.py score \
 
 `proof-001` is the first frozen run. Its inputs were committed before condition
 generation so later results cannot change its initial information.
+
+## Current evidence
+
+[`proof-002`](proof-runs/proof-002/RESULT.md) is the first completed mission
+quality run. Three fresh-session Codex reviewers evaluated three origin-blinded
+cases:
+
+- Palamedes received 8 of 9 preference votes and won all three case majorities.
+- Two cases were unanimous; the Gahyeonbot case split 2–1.
+- Palamedes generation used 297,173 input tokens versus the baseline's 69,756,
+  a 4.26x ratio.
+- The quality gate passed, but the outcome gate did not. No attributable choice
+  or owner-attested labor retirement has been recorded.
+
+This is repeatable model-review evidence for mission quality under unequal
+compute. It is not yet cost-adjusted superiority, independent human validation,
+or proof of improved startup outcomes.

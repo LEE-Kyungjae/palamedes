@@ -1,0 +1,242 @@
+{
+  "case_id": "palamedes-self-hosting",
+  "condition": "palamedes",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-07-25T10:39:57.757135+00:00",
+  "information_fingerprint": "41a4a80283e8b2a38c8b48e0a430a4bdb853d25f4e3d982fc411ea9a2a6e43e2",
+  "mission": {
+    "beneficiary": "Project owners deciding what to validate, stop, or pursue before committing implementation resources.",
+    "consequential_choice": "sequence: run the single paired comparison first; stop feature expansion unless it shows a robust, cost-justified advantage, then proceed to outcome tracking and broader replication",
+    "falsifiers": [
+      "Palamedes shows no predefined meaningful blinded advantage over the strong-model baseline.",
+      "Any apparent advantage disappears after controlling for verbosity, polish, traceability, or evaluator exposure to Palamedes-specific structure.",
+      "The result is smaller than reviewer disagreement or unstable across reviewers, seeds, or formatting.",
+      "Palamedes requires materially greater compute, latency, or owner labor than the observed advantage justifies.",
+      "The insight-rag packet lacks a consequential, reversible action choice or is too incomplete to support a valid comparison.",
+      "A compact structured prompt reproduces the apparent advantage, indicating that the full process is unnecessary."
+    ],
+    "interpretation": "The binding uncertainty is comparative decision value, not missing functionality. The blocked retrieval packet demonstrates caution but does not establish that the full Palamedes process improves action choice or exceeds a lightweight substitute.",
+    "mission": "Run the smallest preregistered, equal-information comparison that can determine whether Palamedes improves upstream action choice over a single strong-model baseline on the existing insight-rag case.",
+    "next_probe": "Execute one paired insight-rag pilot using a frozen packet and rubric; preregister the meaningful improvement margin and null-result policy; match and disclose model, tool, token, time, retrieval, and human-effort budgets; normalize presentation; blind reviewers; and publish scores, agreement, costs, selected action, displaced alternative, and any protocol invalidation.",
+    "non_goals": [
+      "Expanding the analyzer, retrieval corpus, autonomous runtime, schemas, or agent hierarchy.",
+      "Running a combinatorial component-ablation tournament before establishing a full-system effect.",
+      "Claiming beneficiary improvement, causal outcome superiority, or cross-domain generality from one pilot.",
+      "Treating reviewer preference, output sophistication, action influence, or rejection reasons as sufficient product validation.",
+      "Retuning the protocol after results without recording the run as a falsifying or inconclusive result."
+    ],
+    "rationale": "This mission most directly tests the central product claim with bounded cost, high information gain, and no feature expansion. It is reversible, uses an existing case and proof protocol, and can stop or redirect investment if Palamedes loses after budget matching and presentation controls. Ablation, three-project comparison, and real-world outcome claims should wait until a detectable comparative effect exists.",
+    "situation": "Palamedes has extensive implementation, schema, safety, and reasoning evidence, but no equal-information comparative result showing better upstream judgment than a simpler process.",
+    "success_signal": "Under preregistered budgets and length-normalized blinded review, Palamedes exceeds a predefined meaningful margin on upstream action-choice quality, with reviewer agreement and no disproportionate compute, latency, or owner-labor burden; the preferred recommendation identifies a consequential, reversible next action and its displaced alternative."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "5f0215072bb22b3bb169881116689babf489ccbdb5b53f1cfd456cd3dc4271e4",
+  "provider": "codex",
+  "role_artifacts": {
+    "adversary": {
+      "candidate_critiques": [
+        {
+          "disconfirming_evidence": "Length-normalized, budget-matched results show no predefined meaningful advantage; reviewer preference disappears when rationales are stripped or actual choices are evaluated; a compact structured prompt matches the result; or the selected action fails to improve a preregistered consequence.",
+          "failure_mode": "Nominal budget matching will not isolate Palamedes-specific judgment: the conditions differ structurally in roles, deliberation, and context allocation, while one related technical case provides weak power and generalizability. Blinded reviewers may reward persuasive justification rather than superior action choice.",
+          "hidden_harm": "A favorable pilot could legitimize an expensive architecture on presentation effects; a null result could trigger protocol tweaking instead of falsification. Recording whether advice changes the owner's action also risks treating influence as benefit.",
+          "mission": "Run the smallest preregistered, equal-information comparison against a single strong-model baseline on insight-rag."
+        },
+        {
+          "disconfirming_evidence": "A static checklist, relevance filter, or single adversarial prompt matches or exceeds Palamedes on false acceptance, false rejection, decision quality, latency, and cost—especially on subtle mixed packets and genuinely useful remote analogies.",
+          "failure_mode": "A packet-classification benchmark reduces upstream judgment to retrieval triage and may merely test conservatism. Synthetic or hand-selected packets can leak labels through obvious irrelevance, while false-rejection costs depend heavily on domain and decision context.",
+          "hidden_harm": "Success could reposition Palamedes around a narrow safety function that simpler filters already perform, distracting from its central claim. Optimizing rejection may institutionalize excessive caution and suppress unusual but valuable evidence.",
+          "mission": "Test whether Palamedes's safety value exceeds a lightweight relevance-and-caution gate."
+        },
+        {
+          "disconfirming_evidence": "The initial three-arm probe shows no stable, predefined advantage for full Palamedes or falsification alone; rankings change across reviewers, seeds, or formatting; compact prompts reproduce gains; or observed differences are smaller than evaluation noise and cost asymmetry.",
+          "failure_mode": "Component effects are interactive and order-dependent, so additive arms may misattribute value. A single decision and noisy subjective review cannot support reliable decomposition, while equal total inference budgets may disadvantage multi-stage methods by construction or conceal their true operating cost.",
+          "hidden_harm": "This candidate would waste the most effort if wrong: the arm count, prompt calibration, repeated inference, review burden, and interaction analysis can expand combinatorially before there is evidence that the full system has any effect worth decomposing. It can also turn null results into endless searches for a favorable component combination.",
+          "mission": "Determine which Palamedes-specific reasoning components contribute incremental judgment value through ablation."
+        },
+        {
+          "disconfirming_evidence": "Palamedes does not change the action; the changed action underperforms its recorded alternative or violates harm guardrails; independent assessors reject the causal attribution; owner labor and delay exceed the realized value; or replication reverses the apparent effect.",
+          "failure_mode": "A single realized outcome cannot cleanly attribute causality among mission selection, execution quality, environmental change, measurement error, and luck. Owner choice breaks experimental symmetry, and short-horizon metrics may favor reversible local gains over strategically important long-term effects.",
+          "hidden_harm": "The project may expose a beneficiary or external project to an inadequately validated recommendation, then convert an anecdotal outcome into proof. Instrumentation and attribution requirements may distort the decision, delay action, or encourage choosing an artificially measurable case.",
+          "mission": "Earn confidence through one attributable real-world stop, pivot, or positioning decision."
+        },
+        {
+          "disconfirming_evidence": "An independently specified compact template matches full Palamedes on blinded judgment and downstream outcomes while using materially less compute, latency, maintenance, and owner review; full-system gains fail the preregistered justification margin; or results do not replicate across cases.",
+          "failure_mode": "The 'simplest sufficient' substitute and required margin are design choices controlled by Palamedes's maintainers, enabling a weak comparator or a threshold chosen after seeing costs. Three heterogeneous cases may be too few for inference yet costly enough to invite narrative aggregation.",
+          "hidden_harm": "Prematurely running three projects can multiply adoption, instrumentation, and maintenance costs before the basic effect is established. Conversely, a strong compact substitute may be absorbed and relabeled as Palamedes rather than triggering genuine retirement, defeating the anti-entrenchment test.",
+          "mission": "Test anti-entrenchment by comparing full Palamedes with the simplest sufficient mission-originating process across three projects."
+        }
+      ],
+      "shared_assumptions": [
+        "The insight-rag case contains a consequential, reversible, near-term decision that can reveal upstream judgment quality.",
+        "A frozen information packet is sufficiently complete and balanced despite the artifact-byte limit and truncated source documents.",
+        "A single strong-model baseline represents the relevant simpler alternatives; model choice, prompts, seeds, and inference settings will not dominate the comparison.",
+        "Budgets for tokens, tools, time, retrieval, roles, and human labor can be matched or adjusted well enough to support causal interpretation.",
+        "Output normalization can remove polish, verbosity, traceability, and role-count cues without deleting reasoning that legitimately affects judgment.",
+        "Qualified blinded reviewers can reliably distinguish upstream decision quality from plausibility, confidence, documentation quality, and agreement with their own priors.",
+        "The proposed rubrics measure beneficiary-relevant judgment rather than compliance with Palamedes's own ontology and contract fields.",
+        "Changing an owner's action is meaningful evidence even though influence is not equivalent to improvement.",
+        "Short-horizon outcomes can be attributed sufficiently to mission choice despite implementation, environment, luck, and measurement effects.",
+        "The owner can preregister null-result interpretations and improvement margins without later rationalizing failure as task mismatch, weak implementation, or insufficient evaluation sensitivity.",
+        "Candidate missions or treatment outputs remain meaningfully independent despite shared models, evidence framing, prompts, and maintainer assumptions.",
+        "Compute and process complexity are acceptable research costs before any demonstrated effect, and opportunity costs will be counted honestly.",
+        "One or three project cases can support confidence beyond those particular technical contexts.",
+        "Palamedes's maintainers will honor anti-entrenchment evidence, including retiring components or the system if a simpler process is sufficient.",
+        "No mission should be treated as validated merely because it produces auditability, rejection reasons, reviewer preference, or an attributable decision; real beneficiary improvement remains the unresolved standard."
+      ]
+    },
+    "interpreter": {
+      "interpretations": [
+        "Palamedes may already possess enough machinery, with its main deficit being comparative empirical evidence rather than additional features.",
+        "The successful rejection of a bad retrieval packet may indicate valuable epistemic safety, but it may also be behavior reproducible by a much simpler relevance filter or cautious prompt.",
+        "The extensive contracts, schemas, and reasoning records may reflect disciplined falsifiability and auditability, or they may be elaborate planning artifacts whose sophistication exceeds their demonstrated decision value.",
+        "The proof program may be the appropriate mechanism for resolving the central uncertainty, but its four-role treatment could confound judgment quality with greater compute, deliberation time, and process structure.",
+        "Blinded preference could detect clearer or more persuasive recommendations without proving that the chosen upstream judgment produces better real-world consequences.",
+        "An attributable stop, pivot, or positioning decision could demonstrate practical influence, yet influence alone could be harmful or neutral unless downstream outcomes and counterfactual alternatives are assessed.",
+        "View-transition lineage may expose genuine learning and reduce retrospective rewriting, or it may enable persuasive post-hoc narratives that remain causally unvalidated.",
+        "Reference histories may reveal useful research trajectories, or they may mostly encode collection habits, trend following, opposition research, and citation theater.",
+        "Independent mission competition may increase diversity and surface hidden assumptions, or it may inflate cost and ceremonial complexity without outperforming one capable agent using the same information.",
+        "The insight-rag case may be a useful first external test, but evidence from a closely related technical project may not generalize to different beneficiaries, domains, or decision types.",
+        "The requirement to choose the least sufficient cognitive operation and preserve partial orderings may support calibrated judgment, or it may make outputs harder to compare consistently against simpler baselines.",
+        "The explicit anti-entrenchment requirement creates a credible path to falsification, but it has not yet produced evidence that Palamedes survives comparison with simpler substitutes.",
+        "A negative or null comparative result could indicate that the hypothesis is weak, that the evaluation lacks sensitivity, that the task class is unsuitable, or that implementation quality is insufficient; those explanations would need separation."
+      ],
+      "missing_evidence": [
+        "Results from preregistered equal-information baseline and Palamedes treatment runs.",
+        "Exact parity or measured asymmetry in tokens, model access, tool access, wall-clock time, retrieval, and human effort across conditions.",
+        "Blinded reviewer judgments with predefined rubrics, reviewer identities or qualifications, inter-rater agreement, and uncertainty intervals.",
+        "Evidence that reviewers evaluate upstream decision quality rather than verbosity, polish, traceability, or apparent rigor.",
+        "Concrete downstream choices attributable to Palamedes recommendations, including which alternatives were displaced.",
+        "Outcome measurements showing whether attributable choices improved beneficiary conditions, reduced harm, increased information, or preserved option value.",
+        "Longitudinal records connecting mission selection to planning, implementation, environmental changes, measurement error, and eventual consequences.",
+        "Comparisons against simpler substitutes such as a single strong reasoning model, a standard planner, a static checklist, retrieval plus relevance filtering, or a lightweight adversarial review.",
+        "Ablation evidence identifying whether competing interpretations, retrieval, criticism, view transitions, mission tournaments, or contract structure contributes incremental value.",
+        "Replication across the three proposed real projects and across materially different domains and decision types.",
+        "Failure-case evidence where Palamedes selects a worse direction, fails to stop, rationalizes owner bias, or adds ceremony without changing a decision.",
+        "Calibration data for confidence, disconfirmation criteria, reversal triggers, and beneficiary-representation confidence.",
+        "Evidence that independently generated candidates remain genuinely independent rather than converging through shared prompts, models, priors, or evidence framing.",
+        "Evidence that reference use changes causal understanding or decisions rather than merely increasing citations and prose.",
+        "Operational data on whether Palamedes reduces or increases owner labor, review burden, decision latency, and maintenance cost.",
+        "Criteria for what magnitude of improvement would justify Palamedes relative to its compute, complexity, and opportunity cost.",
+        "The complete preregistration, pilot task, cycle 401 record, proof protocol, evaluation dataset, and truncated portions of the supplied artifacts.",
+        "Independent verification that the reported test counts, evidence records, components, and packet-blocking reasons correspond to meaningful coverage rather than duplicated or low-value cases.",
+        "A predefined interpretation policy for null, mixed, or negative results that distinguishes product-hypothesis failure from evaluation or implementation failure.",
+        "Evidence that the frozen packet is sufficient and balanced for the required decision, including what repository evidence was excluded by the artifact-byte budget."
+      ],
+      "observations": [
+        "Palamedes claims to improve judgment before conventional planning by maintaining competing interpretations, candidate missions, falsification criteria, and revisionable reasoning state.",
+        "The plan-state kernel and bounded pre-planner contracts are extensively implemented and tested, including 1,209 mission tests, 298 experimental schemas, and 401 recorded reasoning cycles.",
+        "Existing tests primarily establish implementation, schema, conformance, and safety behavior; they do not establish better upstream decisions or downstream outcomes.",
+        "The first real retrieval treatment produced a low-confidence, task-irrelevant packet, and Palamedes blocked it with nine explicit reasons.",
+        "Blocking that packet demonstrates one safety behavior: resistance to laundering irrelevant retrieval into decision authority.",
+        "No equal-information, equal-budget baseline-versus-treatment comparison has yet been run.",
+        "No blinded comparative review, attributable downstream decision improvement, longitudinal outcome evidence, or owner labor-retirement record currently supports the product claim.",
+        "A preregistered proof program already specifies frozen information packets, a one-shot baseline, a four-role Palamedes condition, blinded review, and disclosure of compute and token asymmetry.",
+        "The first cross-repository case targets insight-rag and uses a counterfactual action-choice benchmark rather than immediate analyzer or corpus expansion.",
+        "The project explicitly labels the autonomous pre-planner, view-transition lineage, and longitudinal evaluation as hypotheses rather than settled capabilities.",
+        "The contract requires Palamedes to test its own necessity and replacement by a planner, simpler agent, or static process.",
+        "The reference architecture favors a bounded vertical loop and rejects unbounded autonomy, premature manager hierarchies, unsupported model prose, and treating schema validity as decision quality.",
+        "The documented release-quality gate calls for three real project cases, at least two blinded preferences over a generic baseline, and at least one attributable stop, pivot, or positioning decision.",
+        "The supplied artifacts are excerpts, and three of the four are truncated; the packet therefore represents declared artifacts without exposing their complete contents."
+      ]
+    },
+    "inventor": {
+      "candidate_missions": [
+        {
+          "beneficiary": "Project owners deciding what to validate, stop, or pursue before implementation.",
+          "falsifier": "Palamedes shows no meaningful blinded advantage, loses after controlling for polish and verbosity, or fails to change an action despite materially greater process cost.",
+          "mechanism": "Freeze one decision packet and rubric; give baseline and Palamedes conditions matched model access, tools, time, and token budgets; blind and normalize outputs for length and presentation; have qualified reviewers score decision relevance, causal justification, falsifiability, displaced alternatives, and actionability; then record whether either output changes the owner's chosen action.",
+          "mission": "Run the smallest preregistered, equal-information comparison that can determine whether Palamedes improves upstream action choice over a single strong-model baseline on the existing insight-rag case.",
+          "next_probe": "Execute one paired pilot on insight-rag and publish condition budgets, blinded scores, reviewer agreement, chosen action, and the preregistered interpretation of a null result."
+        },
+        {
+          "beneficiary": "Teams using retrieved evidence to choose product or technical direction without laundering irrelevant material into authority.",
+          "falsifier": "A simpler gate matches or exceeds Palamedes on harmful-evidence rejection and useful-evidence retention at substantially lower cost, or Palamedes's caution causes excessive rejection of decision-relevant evidence.",
+          "mechanism": "Construct a blinded set of relevant, irrelevant, misleading, and mixed retrieval packets for upstream decisions; compare Palamedes with a static checklist, retrieval relevance filter, and single-agent adversarial prompt on accepting, rejecting, or qualifying evidence; measure false acceptance, false rejection, decision degradation, latency, and compute.",
+          "mission": "Test whether Palamedes's demonstrated safety value exceeds a lightweight relevance-and-caution gate.",
+          "next_probe": "Turn the cycle-401 packet into the first preregistered item, add matched positive and mixed controls, and run the smallest comparator set before expanding retrieval or analyzer features."
+        },
+        {
+          "beneficiary": "Palamedes maintainers and adopters who need a smaller, evidence-backed process instead of an elaborate inseparable system.",
+          "falsifier": "No component produces repeatable incremental value, the full system performs no better than a compact subset, or apparent gains disappear under budget matching and output normalization.",
+          "mechanism": "Run a bounded ablation tournament on the same frozen decisions: strong-model baseline; baseline plus falsification checklist; plus independent candidate missions; plus adversarial criticism; plus view-transition lineage; and full Palamedes. Keep total inference budgets measured and use blinded pairwise review focused on upstream choice quality rather than artifact quality.",
+          "mission": "Determine which, if any, Palamedes-specific reasoning components contribute incremental judgment value.",
+          "next_probe": "Select one existing pilot decision and run only three initial arms—strong baseline, baseline plus falsification, and full Palamedes—to estimate whether a larger ablation is warranted."
+        },
+        {
+          "beneficiary": "The concrete users or project stakeholders whose condition should improve because a better mission was chosen.",
+          "falsifier": "Palamedes does not alter the decision, alters it without improving the preregistered beneficiary outcome, causes unacceptable harm or delay, or requires more owner labor than the decision value justifies.",
+          "mechanism": "Apply baseline and Palamedes recommendations to a reversible decision with a short outcome horizon; blind-review them, preregister the beneficiary metric and harm guardrails, have the owner record the chosen recommendation and displaced alternative before acting, then trace implementation, environmental changes, outcomes, and owner labor.",
+          "mission": "Earn confidence through one attributable real-world stop, pivot, or positioning decision rather than reviewer preference alone.",
+          "next_probe": "Choose the insight-rag action-choice benchmark only if it has a reversible action and measurable near-term consequence; otherwise identify one comparably bounded project decision that does."
+        },
+        {
+          "beneficiary": "Small teams seeking better direction without adopting unnecessary autonomous infrastructure, maintenance burden, or ceremony.",
+          "falsifier": "Full Palamedes fails to outperform the compact substitute by a predefined margin that justifies its additional compute, latency, maintenance, and review burden.",
+          "mechanism": "Define a compact substitute consisting of a structured mission template, explicit alternatives, disconfirmation criteria, and a review trigger; compare it with full Palamedes across the three planned real-project cases using equal frozen packets, cost accounting, blinded judgment, attributable choices, and downstream outcomes.",
+          "mission": "Test Palamedes's anti-entrenchment claim by attempting to replace it with the simplest sufficient mission-originating process.",
+          "next_probe": "Specify the minimum substitute and the required improvement margin before any new Palamedes feature work, then include it as a condition in the first proof-program run."
+        }
+      ]
+    }
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-07-25T10:38:26.867172+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 12032,
+          "input_tokens": 22490,
+          "output_tokens": 1298,
+          "reasoning_output_tokens": 27
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-07-25T10:38:57.668160+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 23815,
+          "output_tokens": 934,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-07-25T10:39:36.826598+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 24813,
+          "output_tokens": 1311,
+          "reasoning_output_tokens": 39
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-07-25T10:39:57.757047+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 26221,
+          "output_tokens": 716,
+          "reasoning_output_tokens": 59
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 28160,
+      "input_tokens": 97339,
+      "output_tokens": 4259,
+      "reasoning_output_tokens": 125
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "case_id": "termi-agent-control",
+  "condition": "baseline",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-07-25T10:37:42.640270+00:00",
+  "information_fingerprint": "62833d4288bf7f185225b21ba62af0bdf15d7c69d00163998098c153099bcf4e",
+  "mission": {
+    "beneficiary": "A developer who starts a coding agent on a Mac, leaves the desk, and needs to supervise, approve, recover, and collect the result safely from another device.",
+    "consequential_choice": "pivot: make controlled long-running coding-agent supervision the product boundary, retain raw terminal I/O only as an underlying transport and recovery escape hatch",
+    "falsifiers": [
+      "Target developers consistently prefer unrestricted terminal access and do not value explicit run state, approvals, or completion handoffs.",
+      "The supported coding-agent workflows cannot expose reliable approval or completion signals without brittle terminal-output parsing.",
+      "Reconnect tests frequently create ambiguous ownership, duplicate input, missed approvals, or incorrect terminal states.",
+      "A controlled run cannot be made materially safer than raw terminal access while preserving a useful mobile workflow."
+    ],
+    "interpretation": "Generic remote terminal access leaves Termi competing on transport and terminal UX, while its persistence, relay, and policy foundations are better suited to supervising long-running coding agents. The product should own an agent-run lifecycle above tmux without pretending to own the underlying coding agent.",
+    "mission": "Pivot Termi into a controlled interface for long-running coding agents: let a user launch or adopt one run, safely leave and reconnect, review approval requests, and receive a clear completion or failure handoff from mobile or web.",
+    "next_probe": "Prototype one instrumented golden path around a single coding-agent session: create or adopt the run with one explicit owner, disconnect and reconnect, surface one confirm-required action, approve or deny it, then return a structured terminal state and summary. Test it across the connector and one remote client, recording every ownership ambiguity, lost event, and manual terminal escape.",
+    "non_goals": [
+      "Building a general-purpose remote shell or full terminal emulator.",
+      "Replacing coding agents, tmux, or developers' existing local workflows.",
+      "Supporting multiple simultaneous controllers for one run.",
+      "Broadening platform coverage or adding terminal customization before the controlled run loop is validated.",
+      "Automatically approving consequential commands or promising unattended autonomy."
+    ],
+    "rationale": "This boundary turns existing terminal connectivity into a differentiated workflow and directly resolves the four required product questions. Termi should own the control record, authenticated viewers, approval state, reconnect semantics, and return summary; tmux should remain the execution substrate and raw terminal access should remain an escape hatch. A narrow end-to-end agent-run loop is more valuable now than expanding terminal features or maintaining equal investment across generic mobile and web terminal clients.",
+    "situation": "Termi already connects mobile and web clients to persistent tmux sessions through a macOS connector, with pairing, session discovery, live output, raw input, relay access, and an example command policy. Its current boundary is remote terminal I/O, while the unresolved product decision concerns ownership, reconnection, approvals, and how completed work returns to the user.",
+    "success_signal": "In repeated real runs, a developer can start or adopt a coding-agent session, disconnect, reconnect from mobile or web without losing run identity or duplicating control, resolve a gated approval, and receive an unambiguous completed, failed, or interrupted return state with a concise result summary."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "15e03ad80e5b87e434004a2f100712fb45c155f878b7cfcc76773ae2cd430d1b",
+  "provider": "codex",
+  "role_artifacts": {},
+  "usage": {
+    "call_count": 1,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-07-25T10:37:42.640225+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 22180,
+          "output_tokens": 751,
+          "reasoning_output_tokens": 81
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 16128,
+      "input_tokens": 22180,
+      "output_tokens": 751,
+      "reasoning_output_tokens": 81
+    }
+  }
+}
