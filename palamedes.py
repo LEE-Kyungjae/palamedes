@@ -3622,6 +3622,23 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--json", action="store_true")
     s.set_defaults(func=cmd_observe)
 
+    s = sub.add_parser("watch", help="Continuously observe and select bounded cognition.")
+    s.add_argument("--workspace", type=str, default="")
+    s.add_argument("--ref-root", type=str, default="")
+    s.add_argument("--test-command", type=str, default="")
+    s.add_argument("--test-timeout", type=int, default=120)
+    s.add_argument("--interval", type=float, default=30.0)
+    s.add_argument("--once", action="store_true")
+    s.add_argument("--max-iterations", type=int, default=0)
+    s.add_argument("--wake-initial", action="store_true")
+    s.add_argument("--auto-cognition", action="store_true")
+    s.add_argument("--provider", choices=["openrouter", "openai"], default="openrouter")
+    s.add_argument("--model", type=str, default="")
+    s.add_argument("--max-calls-per-wake", type=int, default=4)
+    s.add_argument("--max-calls-total", type=int, default=20)
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(func=cmd_watch)
+
     s = sub.add_parser("init")
     s.set_defaults(func=cmd_init)
 
@@ -3864,6 +3881,18 @@ def cmd_observe(args: argparse.Namespace) -> None:
     from palamedes_observe import cmd_observe as run_observe_command
 
     run_observe_command(args, sys.modules[__name__])
+
+
+def cmd_watch(args: argparse.Namespace) -> None:
+    if args.interval < 1:
+        raise ValueError("watch interval must be at least 1 second")
+    if args.max_iterations < 0:
+        raise ValueError("max-iterations must be zero or positive")
+    if args.max_calls_per_wake < 0 or args.max_calls_total < 0:
+        raise ValueError("watch call budgets must be zero or positive")
+    from palamedes_watch import cmd_watch as run_watch_command
+
+    run_watch_command(args, sys.modules[__name__])
 
 
 def main() -> None:

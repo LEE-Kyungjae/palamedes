@@ -19,6 +19,7 @@ setup(
         "palamedes_client",
         "palamedes_mission",
         "palamedes_observe",
+        "palamedes_watch",
         "palamedes_server",
         "palamedes_store",
     ],

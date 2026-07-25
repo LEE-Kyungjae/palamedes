@@ -397,6 +397,20 @@ def compare_snapshots(
     )
     if previous_plan != current_plan:
         reasons.append("palamedes_plan_changed")
+    previous_outcomes = (
+        previous.get("signals", {})
+        .get("palamedes_state", {})
+        .get("outcomes", {})
+        .get("content_sha256")
+    )
+    current_outcomes = (
+        current.get("signals", {})
+        .get("palamedes_state", {})
+        .get("outcomes", {})
+        .get("content_sha256")
+    )
+    if previous_outcomes != current_outcomes and current_outcomes:
+        reasons.append("mission_outcome_appended")
     previous_ref = {
         item["name"]: item.get("head", "")
         for item in previous.get("signals", {}).get("reference_root", {}).get("repositories", [])

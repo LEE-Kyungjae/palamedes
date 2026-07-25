@@ -528,6 +528,54 @@ was explicitly supplied, and invokes commands without a shell.
 provenance-bearing context to the interpreter. This grounds the cognition cycle
 in project state rather than only the user's phrasing.
 
+### Bounded autonomous watch
+
+Run one policy-only wake without calling a model:
+
+```bash
+palamedes watch --workspace /path/to/project --once
+```
+
+Keep watching and permit bounded cognition:
+
+```bash
+palamedes watch \
+  --workspace /path/to/project \
+  --interval 30 \
+  --auto-cognition \
+  --provider openrouter \
+  --model <provider/model> \
+  --max-calls-per-wake 4 \
+  --max-calls-total 20
+```
+
+`watch` turns observed changes into the least sufficient cognitive operation:
+
+| Observed signal | Wake operation |
+| --- | --- |
+| No new signal, duplicate signal, or initial baseline | Wait |
+| Primary document changed | Interpreter |
+| Central reference revision changed | Interpreter + inventor |
+| Plan changed | Adversary + selector |
+| Git implementation changed | Interpreter + adversary |
+| Explicit test failed | Interpreter + adversary |
+| Mission outcome appended | Outcome analyst |
+| Three or more independent signal classes changed | Full four-role cycle |
+
+Autonomous cognition is off unless `--auto-cognition` is supplied. The watcher
+never runs tests unless `--test-command` is explicitly supplied, never gains
+delivery authority, and never approves a mission into the plan. A full wake may
+save a mission as a reviewable draft only. Per-wake and lifetime call budgets
+are enforced before provider access; attempted calls are charged even if the
+provider fails. Repeated identical signal states are suppressed.
+
+Watch state is local and inspectable under `.palamedes/watch/`: `state.json`
+holds the current cursor and budget total, `events.jsonl` is append-only, and
+`wakes/` preserves each decision and its artifacts. A PID lock prevents two
+watchers from acting on the same workspace. Use `--wake-initial` only when the
+first baseline itself should trigger cognition, and `--max-iterations` for a
+bounded foreground run.
+
 Mission authority follows an explicit vertical contract:
 
 ```text
@@ -732,6 +780,8 @@ Main commands:
 - `probe`: record a development step by its expected learning
 - `question`: preserve unresolved perspectives and blind spots
 - `review`: run cycle-based review with recommendations
+- `observe`: capture a bounded, redacted workspace snapshot without an AI call
+- `watch`: map workspace changes to budgeted, duplicate-suppressed cognition
 
 Development checks:
 

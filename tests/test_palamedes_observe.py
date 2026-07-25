@@ -109,6 +109,24 @@ class PalamedesObserveTests(unittest.TestCase):
         self.assertNotIn("collection_limits", context)
         self.assertNotIn("snapshot_fingerprint", context)
 
+    def test_appended_mission_outcome_is_a_distinct_change_signal(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            workspace = Path(tempdir)
+            outcomes = workspace / ".palamedes" / "missions" / "outcomes.jsonl"
+            outcomes.parent.mkdir(parents=True)
+            outcomes.write_text('{"outcome_id":"one"}\n', encoding="utf-8")
+            palamedes_observe.collect_observation(workspace, ref_root=None)
+            with outcomes.open("a", encoding="utf-8") as handle:
+                handle.write('{"outcome_id":"two"}\n')
+
+            snapshot = palamedes_observe.collect_observation(
+                workspace, ref_root=None
+            )
+
+        self.assertIn(
+            "mission_outcome_appended", snapshot["change"]["reasons"]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
