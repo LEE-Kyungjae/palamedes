@@ -1,0 +1,87 @@
+{
+  "proof_portfolio_version": "palamedes-proof-portfolio/1",
+  "portfolio_id": "palamedes-four-call-cost-control-2026",
+  "preregistered_at": "2026-07-25T10:55:00+00:00",
+  "claim": "With the same frozen information and four model calls per condition, the Palamedes role sequence produces a more useful mission than a strong independent-candidate tournament.",
+  "claim_boundary": "Three-case, same-model, equal-call comparison of Palamedes role sequencing against a strong candidate tournament; not equal-token, human-validated, downstream-outcome, or startup-success proof.",
+  "generation_protocol": {
+    "provider": "codex",
+    "model": "configured-default",
+    "same_model_required": true,
+    "same_information_packet_required": true,
+    "fresh_session_per_call": true,
+    "comparison_condition": "tournament",
+    "treatment_condition": "palamedes",
+    "tournament_calls": 4,
+    "palamedes_calls": 4,
+    "compute_is_not_equal": true,
+    "compute_tradeoff_must_be_reported": true,
+    "maximum_artifact_bytes": 24000
+  },
+  "rubric": {
+    "problem_framing": {
+      "weight": 20,
+      "question": "Does the mission identify the consequential upstream problem rather than restating the project?"
+    },
+    "non_genericity": {
+      "weight": 20,
+      "question": "Is the selected direction specific enough that a generic agent-company answer would not fit?"
+    },
+    "evidence_use": {
+      "weight": 20,
+      "question": "Are important claims grounded in the frozen artifacts without inventing evidence?"
+    },
+    "falsifiability": {
+      "weight": 20,
+      "question": "Can the mission be rejected through a bounded probe and explicit failure signals?"
+    },
+    "decision_usefulness": {
+      "weight": 20,
+      "question": "Would this change a continue, stop, pivot, positioning, or sequencing decision?"
+    }
+  },
+  "success_gate": {
+    "minimum_cases": 3,
+    "minimum_blinded_reviews_per_case": 3,
+    "palamedes_preferred_cases": 2,
+    "minimum_attributable_outcomes": 0,
+    "minimum_labor_retirement_cases": 0
+  },
+  "cases": [
+    {
+      "case_id": "palamedes-self-hosting",
+      "repository": ".",
+      "question": "What mission should Palamedes pursue next to earn confidence that it improves upstream judgment rather than merely producing elaborate planning artifacts?",
+      "required_decision": "Choose the smallest evidence-producing direction and reject feature expansion that does not strengthen the product claim.",
+      "artifacts": [
+        "README.md",
+        "PALAMEDES_INQUIRY.md",
+        "docs/palamedes-pre-planner-contract.md",
+        "docs/reference-agent-patterns.md"
+      ]
+    },
+    {
+      "case_id": "gahyeonbot-voice-loop",
+      "repository": "/Users/ze/work/gahyeonbot",
+      "question": "Which user loop should GahyeonBot prioritize instead of remaining a broad collection of Discord bot features?",
+      "required_decision": "Select or reject a narrow repeat loop using observed Discord behavior, latency, trust, and operating-cost evidence.",
+      "artifacts": [
+        "README.md",
+        "ref/voicebox/README.md",
+        "ref/ten-vad/README.md"
+      ]
+    },
+    {
+      "case_id": "termi-agent-control",
+      "repository": "/Users/ze/work/termi",
+      "question": "Should Termi remain remote terminal I/O or become a controlled interface for long-running coding agents?",
+      "required_decision": "Choose a product boundary based on session ownership, reconnect safety, approvals, and return behavior.",
+      "artifacts": [
+        "README.md",
+        "mobile/README.md",
+        "agent",
+        "frontend"
+      ]
+    }
+  ]
+}

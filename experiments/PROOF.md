@@ -126,3 +126,10 @@ cases:
 This is repeatable model-review evidence for mission quality under unequal
 compute. It is not yet cost-adjusted superiority, independent human validation,
 or proof of improved startup outcomes.
+
+The preregistered [`proof-cost-portfolio.json`](proof-cost-portfolio.json)
+addresses the largest compute objection with a stronger four-call comparator.
+Its `tournament` condition generates three independent missions through
+different product lenses and spends the fourth call selecting among them.
+Palamedes also receives four calls. Token and latency differences remain
+measured rather than assumed equal.

@@ -70,6 +70,25 @@ def mission(name: str):
 
 
 class PalamedesProofTests(unittest.TestCase):
+    def test_tournament_is_a_four_call_strong_comparator(self):
+        class Engine:
+            def __init__(self):
+                self.calls = 0
+
+            def call(self, **_kwargs):
+                self.calls += 1
+                return mission(f"candidate-{self.calls}")
+
+        engine = Engine()
+        result = palamedes_proof.generate_tournament(
+            {"question": "What next?", "required_decision": "Choose."},
+            engine,
+        )
+
+        self.assertEqual(engine.calls, 4)
+        self.assertEqual(result["mission"]["mission"], "candidate-4")
+        self.assertEqual(len(result["role_artifacts"]["candidates"]), 3)
+
     def test_prepare_freezes_three_real_information_packets(self):
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
@@ -196,10 +215,10 @@ class PalamedesProofTests(unittest.TestCase):
         self.assertTrue(score["mission_quality_gate_passed"])
         self.assertFalse(score["outcome_gate_passed"])
         self.assertFalse(score["claim_demonstrated"])
-        self.assertEqual(score["preference_summary"]["palamedes_votes"], 3)
+        self.assertEqual(score["preference_summary"]["treatment_votes"], 3)
         self.assertEqual(score["preference_summary"]["unanimous_cases"], 3)
         self.assertEqual(
-            score["condition_usage"]["input_token_ratio_palamedes_to_baseline"],
+            score["condition_usage"]["input_token_ratio_treatment_to_comparison"],
             4.25,
         )
 

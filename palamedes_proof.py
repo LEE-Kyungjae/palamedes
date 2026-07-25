@@ -341,6 +341,52 @@ Frozen information packet:
     return mission
 
 
+def generate_tournament(
+    packet: Dict[str, Any], engine: MeteredCodex
+) -> Dict[str, Any]:
+    shared = json.dumps(packet, ensure_ascii=False)
+    candidates = []
+    lenses = (
+        "beneficiary value and recurring demand",
+        "technical feasibility, safety, and operating cost",
+        "reversibility, information gain, and opportunity cost",
+    )
+    for lens in lenses:
+        candidate = engine.call(
+            system=(
+                "You are a strong general-purpose product strategist in an "
+                "independent fresh session. Return only JSON."
+            ),
+            prompt=f"""Choose the single most worthwhile mission using the lens:
+{lens}.
+Use only the frozen information packet. Make a consequential choice and return
+exactly:
+{_mission_shape()}
+
+Frozen information packet:
+{shared}""",
+        )
+        validate_mission(candidate)
+        candidates.append(candidate)
+    mission = engine.call(
+        system=(
+            "You are a strong general-purpose product strategy selector. "
+            "Return only JSON."
+        ),
+        prompt=f"""Select the most decision-useful of the three independently
+generated missions. Use only the frozen evidence, reject unsupported claims,
+and return exactly:
+{_mission_shape()}
+
+Frozen information packet:
+{shared}
+Candidate missions:
+{json.dumps(candidates, ensure_ascii=False)}""",
+    )
+    validate_mission(mission)
+    return {"mission": mission, "role_artifacts": {"candidates": candidates}}
+
+
 def generate_palamedes(packet: Dict[str, Any], engine: MeteredCodex) -> Dict[str, Any]:
     shared = json.dumps(packet, ensure_ascii=False)
     interpreter = engine.call(
@@ -415,9 +461,9 @@ def generate_condition(
     case_id: str = "",
 ) -> Dict[str, Any]:
     manifest = load_object(run_path / "manifest.json")
-    expected_calls = {"baseline": 1, "palamedes": 4}
+    expected_calls = {"baseline": 1, "tournament": 4, "palamedes": 4}
     if condition not in expected_calls:
-        raise ValueError("condition must be baseline or palamedes")
+        raise ValueError("condition must be baseline, tournament, or palamedes")
     selected = [
         item
         for item in manifest["frozen_cases"]
@@ -439,6 +485,10 @@ def generate_condition(
             if condition == "baseline":
                 mission = generate_baseline(packet, engine)
                 role_artifacts: Dict[str, Any] = {}
+            elif condition == "tournament":
+                generated = generate_tournament(packet, engine)
+                mission = generated["mission"]
+                role_artifacts = generated["role_artifacts"]
             else:
                 generated = generate_palamedes(packet, engine)
                 mission = generated["mission"]
@@ -496,18 +546,26 @@ def blind_labels(case_id: str, seed: str) -> Tuple[str, str]:
     return ("A", "B") if digest[0] % 2 == 0 else ("B", "A")
 
 
-def prepare_blind_packet(run_path: Path, *, seed: str) -> Dict[str, Any]:
+def prepare_blind_packet(
+    run_path: Path,
+    *,
+    seed: str,
+    comparison_condition: str = "baseline",
+    treatment_condition: str = "palamedes",
+) -> Dict[str, Any]:
+    if comparison_condition == treatment_condition:
+        raise ValueError("blind conditions must be different")
     manifest = load_object(run_path / "manifest.json")
     packet_cases = []
     key_cases = []
     for item in manifest["frozen_cases"]:
         root = run_path / "cases" / item["case_id"]
-        baseline = load_object(root / "baseline.json")
-        palamedes = load_object(root / "palamedes.json")
-        baseline_label, palamedes_label = blind_labels(item["case_id"], seed)
+        comparison = load_object(root / f"{comparison_condition}.json")
+        treatment = load_object(root / f"{treatment_condition}.json")
+        comparison_label, treatment_label = blind_labels(item["case_id"], seed)
         reports = {
-            baseline_label: baseline["mission"],
-            palamedes_label: palamedes["mission"],
+            comparison_label: comparison["mission"],
+            treatment_label: treatment["mission"],
         }
         information = load_object(root / "information.json")
         packet_cases.append(
@@ -523,14 +581,16 @@ def prepare_blind_packet(run_path: Path, *, seed: str) -> Dict[str, Any]:
             {
                 "case_id": item["case_id"],
                 "labels": {
-                    baseline_label: "baseline",
-                    palamedes_label: "palamedes",
+                    comparison_label: comparison_condition,
+                    treatment_label: treatment_condition,
                 },
             }
         )
     blind = {
         "blind_packet_version": "palamedes-proof-blind/1",
         "run_id": manifest["run_id"],
+        "comparison_condition": comparison_condition,
+        "treatment_condition": treatment_condition,
         "rubric": manifest["portfolio"]["rubric"],
         "cases": packet_cases,
         "origin_visible": False,
@@ -538,6 +598,8 @@ def prepare_blind_packet(run_path: Path, *, seed: str) -> Dict[str, Any]:
     key = {
         "blind_key_version": "palamedes-proof-key/1",
         "run_id": manifest["run_id"],
+        "comparison_condition": comparison_condition,
+        "treatment_condition": treatment_condition,
         "seed_sha256": hashlib.sha256(seed.encode("utf-8")).hexdigest(),
         "success_gate": manifest["portfolio"]["success_gate"],
         "cases": key_cases,
@@ -623,9 +685,12 @@ def _weighted(scores: Dict[str, Any], rubric: Dict[str, Any]) -> float:
     )
 
 
-def _condition_usage(run_path: Path, case_ids: Iterable[str]) -> Dict[str, Any]:
+def _condition_usage(
+    run_path: Path, case_ids: Iterable[str], conditions: Iterable[str]
+) -> Dict[str, Any]:
     totals: Dict[str, Dict[str, int]] = {}
-    for condition in ("baseline", "palamedes"):
+    condition_names = tuple(conditions)
+    for condition in condition_names:
         aggregate = {
             "call_count": 0,
             "input_tokens": 0,
@@ -646,10 +711,11 @@ def _condition_usage(run_path: Path, case_ids: Iterable[str]) -> Dict[str, Any]:
             ):
                 aggregate[name] += int(tokens.get(name, 0))
         totals[condition] = aggregate
-    baseline_input = totals["baseline"]["input_tokens"]
-    totals["input_token_ratio_palamedes_to_baseline"] = (
-        round(totals["palamedes"]["input_tokens"] / baseline_input, 3)
-        if baseline_input
+    comparison, treatment = condition_names
+    comparison_input = totals[comparison]["input_tokens"]
+    totals["input_token_ratio_treatment_to_comparison"] = (
+        round(totals[treatment]["input_tokens"] / comparison_input, 3)
+        if comparison_input
         else None
     )
     return totals
@@ -658,6 +724,8 @@ def _condition_usage(run_path: Path, case_ids: Iterable[str]) -> Dict[str, Any]:
 def score_run(run_path: Path) -> Dict[str, Any]:
     packet = load_object(run_path / "blind" / "packet.json")
     key = load_object(run_path / "private" / "answer-key.json")
+    comparison_condition = key.get("comparison_condition", "baseline")
+    treatment_condition = key.get("treatment_condition", "palamedes")
     review_paths = sorted((run_path / "reviews").glob("*.json"))
     keys = {item["case_id"]: item["labels"] for item in key["cases"]}
     votes: Dict[str, List[Dict[str, Any]]] = {
@@ -686,17 +754,17 @@ def score_run(run_path: Path) -> Dict[str, Any]:
             )
     case_results = []
     for case_id, case_votes in votes.items():
-        palamedes_votes = sum(
-            item["preferred_system"] == "palamedes" for item in case_votes
+        treatment_votes = sum(
+            item["preferred_system"] == treatment_condition for item in case_votes
         )
-        baseline_votes = sum(
-            item["preferred_system"] == "baseline" for item in case_votes
+        comparison_votes = sum(
+            item["preferred_system"] == comparison_condition for item in case_votes
         )
         winner = "tie"
-        if palamedes_votes > baseline_votes:
-            winner = "palamedes"
-        elif baseline_votes > palamedes_votes:
-            winner = "baseline"
+        if treatment_votes > comparison_votes:
+            winner = treatment_condition
+        elif comparison_votes > treatment_votes:
+            winner = comparison_condition
         outcome_path = run_path / "cases" / case_id / "outcome.json"
         outcome = load_object(outcome_path) if outcome_path.exists() else None
         case_results.append(
@@ -704,8 +772,8 @@ def score_run(run_path: Path) -> Dict[str, Any]:
                 "case_id": case_id,
                 "review_count": len(case_votes),
                 "vote_counts": {
-                    "palamedes": palamedes_votes,
-                    "baseline": baseline_votes,
+                    treatment_condition: treatment_votes,
+                    comparison_condition: comparison_votes,
                     "tie": sum(
                         item["preferred_system"] == "tie" for item in case_votes
                     ),
@@ -724,7 +792,7 @@ def score_run(run_path: Path) -> Dict[str, Any]:
             item["review_count"] >= int(gate["minimum_blinded_reviews_per_case"])
             for item in case_results
         )
-        and sum(item["winner"] == "palamedes" for item in case_results)
+        and sum(item["winner"] == treatment_condition for item in case_results)
         >= int(gate["palamedes_preferred_cases"])
     )
     attributable = sum(
@@ -750,11 +818,13 @@ def score_run(run_path: Path) -> Dict[str, Any]:
     ]
     preference_summary = {
         "total_votes": len(all_votes),
-        "palamedes_votes": sum(
-            item["preferred_system"] == "palamedes" for item in all_votes
+        "treatment_condition": treatment_condition,
+        "comparison_condition": comparison_condition,
+        "treatment_votes": sum(
+            item["preferred_system"] == treatment_condition for item in all_votes
         ),
-        "baseline_votes": sum(
-            item["preferred_system"] == "baseline" for item in all_votes
+        "comparison_votes": sum(
+            item["preferred_system"] == comparison_condition for item in all_votes
         ),
         "tie_votes": sum(item["preferred_system"] == "tie" for item in all_votes),
         "unanimous_cases": sum(item["unanimous"] for item in case_results),
@@ -769,11 +839,19 @@ def score_run(run_path: Path) -> Dict[str, Any]:
         "attributable_outcomes": attributable,
         "labor_retirement_cases": labor,
         "preference_summary": preference_summary,
-        "condition_usage": _condition_usage(run_path, votes),
+        "condition_usage": _condition_usage(
+            run_path,
+            votes,
+            (comparison_condition, treatment_condition),
+        ),
         "case_results": case_results,
         "claim_boundary": (
-            "Three-case mission preference plus at least one attributable decision "
-            "and upstream labor retirement; not general startup-success proof."
+            load_object(run_path / "manifest.json")["portfolio"].get(
+                "claim_boundary",
+                "Three-case mission preference plus at least one attributable "
+                "decision and upstream labor retirement; not general "
+                "startup-success proof.",
+            )
         ),
     }
     write_object(run_path / "score.json", result)
@@ -837,13 +915,19 @@ def build_parser() -> argparse.ArgumentParser:
 
     command = sub.add_parser("generate")
     command.add_argument("--run", required=True)
-    command.add_argument("--condition", choices=["baseline", "palamedes"], required=True)
+    command.add_argument(
+        "--condition",
+        choices=["baseline", "tournament", "palamedes"],
+        required=True,
+    )
     command.add_argument("--case-id", default="")
     command.add_argument("--model", default="")
 
     command = sub.add_parser("blind")
     command.add_argument("--run", required=True)
     command.add_argument("--seed", required=True)
+    command.add_argument("--comparison-condition", default="baseline")
+    command.add_argument("--treatment-condition", default="palamedes")
 
     command = sub.add_parser("review")
     command.add_argument("--run", required=True)
@@ -884,7 +968,12 @@ def main() -> int:
             case_id=args.case_id,
         )
     elif args.command == "blind":
-        result = prepare_blind_packet(Path(args.run), seed=args.seed)
+        result = prepare_blind_packet(
+            Path(args.run),
+            seed=args.seed,
+            comparison_condition=args.comparison_condition,
+            treatment_condition=args.treatment_condition,
+        )
     elif args.command == "review":
         result = review_blind_packet(
             Path(args.run), reviewer_id=args.reviewer_id, model=args.model
