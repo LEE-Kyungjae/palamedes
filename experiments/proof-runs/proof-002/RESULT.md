@@ -1,7 +1,7 @@
 # proof-002 result
 
-Status: mission-quality gate passed; outcome gate pending; bounded claim not
-yet demonstrated.
+Status: mission-quality gate passed; one attributable downstream choice
+recorded; owner-labor gate pending; bounded claim not yet demonstrated.
 
 ## Frozen comparison
 
@@ -41,8 +41,12 @@ configurations, not an equal-compute or cost-adjusted advantage.
 ## Gate interpretation
 
 - `mission_quality_gate_passed=true`: passed.
-- `outcome_gate_passed=false`: no real attributable decision and no
-  owner-attested upstream labor retirement have been recorded.
+- `attributable_outcomes=1`: the selected Palamedes mission caused the
+  `proof-003` equal-call comparator to be implemented, preregistered, executed,
+  and published before feature expansion. The evidence chain is commits
+  `25bcb41`, `0396f13`, and `74e89f8`.
+- `outcome_gate_passed=false`: no owner-attested upstream labor retirement has
+  been recorded.
 - `claim_demonstrated=false`: the preregistered bounded product claim remains
   unproven until both gates pass.
 

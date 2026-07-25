@@ -264,6 +264,54 @@ class PalamedesProofTests(unittest.TestCase):
         self.assertTrue(outcome["owner_attested"])
         self.assertEqual(outcome["retired_seconds"], 480)
 
+    def test_decision_and_owner_labor_can_be_recorded_separately(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            prepared = palamedes_proof.prepare_run(
+                portfolio(root), run_root=root / "runs", run_id="proof-test"
+            )
+            run = Path(prepared["run_path"])
+
+            decision = palamedes_proof.record_decision(
+                run,
+                case_id="case-0",
+                selected_system="palamedes",
+                observed_choice="Run the cost-controlled proof.",
+                attributable_decision=True,
+                evidence="Commits before and after the decision.",
+            )
+            labor = palamedes_proof.record_labor(
+                run,
+                case_id="case-0",
+                owner_seconds_without=600,
+                owner_seconds_with=120,
+                owner_attestation="The owner confirms both estimates.",
+                evidence="Timestamped owner response.",
+            )
+
+            with self.assertRaises(ValueError):
+                palamedes_proof.record_decision(
+                    run,
+                    case_id="case-0",
+                    selected_system="neither",
+                    observed_choice="Rewrite it.",
+                    attributable_decision=False,
+                    evidence="Duplicate.",
+                )
+            with self.assertRaises(ValueError):
+                palamedes_proof.record_labor(
+                    run,
+                    case_id="case-0",
+                    owner_seconds_without=1,
+                    owner_seconds_with=0,
+                    owner_attestation="Duplicate.",
+                    evidence="Duplicate.",
+                )
+
+        self.assertTrue(decision["attributable_decision"])
+        self.assertTrue(labor["owner_attested"])
+        self.assertTrue(labor["labor_retired"])
+
     def test_quality_only_claim_marks_outcome_gate_not_applicable(self):
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)

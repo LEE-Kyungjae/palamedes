@@ -763,8 +763,21 @@ def score_run(run_path: Path) -> Dict[str, Any]:
             winner = treatment_condition
         elif comparison_votes > treatment_votes:
             winner = comparison_condition
-        outcome_path = run_path / "cases" / case_id / "outcome.json"
+        case_path = run_path / "cases" / case_id
+        outcome_path = case_path / "outcome.json"
         outcome = load_object(outcome_path) if outcome_path.exists() else None
+        decision_path = case_path / "decision.json"
+        decision = (
+            load_object(decision_path)
+            if decision_path.exists()
+            else outcome
+        )
+        labor_path = case_path / "labor.json"
+        labor_record = (
+            load_object(labor_path)
+            if labor_path.exists()
+            else outcome
+        )
         case_results.append(
             {
                 "case_id": case_id,
@@ -780,6 +793,8 @@ def score_run(run_path: Path) -> Dict[str, Any]:
                 and len({item["preferred_system"] for item in case_votes}) == 1,
                 "winner": winner,
                 "votes": case_votes,
+                "decision": decision,
+                "labor": labor_record,
                 "outcome": outcome,
             }
         )
@@ -794,14 +809,17 @@ def score_run(run_path: Path) -> Dict[str, Any]:
         >= int(gate["palamedes_preferred_cases"])
     )
     attributable = sum(
-        bool(item["outcome"] and item["outcome"].get("attributable_decision"))
+        bool(
+            item["decision"]
+            and item["decision"].get("attributable_decision")
+        )
         for item in case_results
     )
     labor = sum(
         bool(
-            item["outcome"]
-            and item["outcome"].get("owner_attested")
-            and item["outcome"].get("labor_retired")
+            item["labor"]
+            and item["labor"].get("owner_attested")
+            and item["labor"].get("labor_retired")
         )
         for item in case_results
     )
@@ -860,6 +878,73 @@ def score_run(run_path: Path) -> Dict[str, Any]:
     }
     write_object(run_path / "score.json", result)
     return result
+
+
+def record_decision(
+    run_path: Path,
+    *,
+    case_id: str,
+    selected_system: str,
+    observed_choice: str,
+    attributable_decision: bool,
+    evidence: str,
+) -> Dict[str, Any]:
+    if selected_system not in {"baseline", "tournament", "palamedes", "neither"}:
+        raise ValueError(
+            "selected_system must be baseline, tournament, palamedes, or neither"
+        )
+    if not observed_choice.strip():
+        raise ValueError("observed_choice is required")
+    if not evidence.strip():
+        raise ValueError("timestamped decision evidence is required")
+    record = {
+        "proof_decision_version": "palamedes-proof-decision/1",
+        "case_id": case_id,
+        "recorded_at": utc_now(),
+        "selected_system": selected_system,
+        "observed_choice": observed_choice,
+        "attributable_decision": attributable_decision,
+        "evidence": evidence,
+    }
+    path = run_path / "cases" / case_id / "decision.json"
+    if path.exists():
+        raise ValueError(f"decision is append-once and already exists: {path}")
+    write_object(path, record)
+    return record
+
+
+def record_labor(
+    run_path: Path,
+    *,
+    case_id: str,
+    owner_seconds_without: int,
+    owner_seconds_with: int,
+    owner_attestation: str,
+    evidence: str,
+) -> Dict[str, Any]:
+    if owner_seconds_without < 0 or owner_seconds_with < 0:
+        raise ValueError("owner seconds must be non-negative")
+    if not owner_attestation.strip():
+        raise ValueError("an explicit owner attestation is required")
+    if not evidence.strip():
+        raise ValueError("timestamped labor evidence is required")
+    record = {
+        "proof_labor_version": "palamedes-proof-labor/1",
+        "case_id": case_id,
+        "recorded_at": utc_now(),
+        "owner_seconds_without": owner_seconds_without,
+        "owner_seconds_with": owner_seconds_with,
+        "owner_attested": True,
+        "owner_attestation": owner_attestation,
+        "retired_seconds": max(0, owner_seconds_without - owner_seconds_with),
+        "labor_retired": owner_seconds_with < owner_seconds_without,
+        "evidence": evidence,
+    }
+    path = run_path / "cases" / case_id / "labor.json"
+    if path.exists():
+        raise ValueError(f"labor is append-once and already exists: {path}")
+    write_object(path, record)
+    return record
 
 
 def record_outcome(
@@ -941,6 +1026,26 @@ def build_parser() -> argparse.ArgumentParser:
     command = sub.add_parser("score")
     command.add_argument("--run", required=True)
 
+    command = sub.add_parser("decision")
+    command.add_argument("--run", required=True)
+    command.add_argument("--case-id", required=True)
+    command.add_argument(
+        "--selected-system",
+        choices=["baseline", "tournament", "palamedes", "neither"],
+        required=True,
+    )
+    command.add_argument("--observed-choice", required=True)
+    command.add_argument("--attributable-decision", action="store_true")
+    command.add_argument("--evidence", required=True)
+
+    command = sub.add_parser("labor")
+    command.add_argument("--run", required=True)
+    command.add_argument("--case-id", required=True)
+    command.add_argument("--owner-seconds-without", type=int, required=True)
+    command.add_argument("--owner-seconds-with", type=int, required=True)
+    command.add_argument("--owner-attestation", required=True)
+    command.add_argument("--evidence", required=True)
+
     command = sub.add_parser("outcome")
     command.add_argument("--run", required=True)
     command.add_argument("--case-id", required=True)
@@ -984,6 +1089,24 @@ def main() -> int:
         )
     elif args.command == "score":
         result = score_run(Path(args.run))
+    elif args.command == "decision":
+        result = record_decision(
+            Path(args.run),
+            case_id=args.case_id,
+            selected_system=args.selected_system,
+            observed_choice=args.observed_choice,
+            attributable_decision=args.attributable_decision,
+            evidence=args.evidence,
+        )
+    elif args.command == "labor":
+        result = record_labor(
+            Path(args.run),
+            case_id=args.case_id,
+            owner_seconds_without=args.owner_seconds_without,
+            owner_seconds_with=args.owner_seconds_with,
+            owner_attestation=args.owner_attestation,
+            evidence=args.evidence,
+        )
     else:
         result = record_outcome(
             Path(args.run),

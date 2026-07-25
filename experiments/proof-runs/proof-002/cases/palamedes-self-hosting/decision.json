@@ -1,0 +1,9 @@
+{
+  "attributable_decision": true,
+  "case_id": "palamedes-self-hosting",
+  "evidence": "proof-002 Palamedes mission output plus commits 25bcb41 (comparator), 0396f13 (pre-generation freeze), and 74e89f8 (published result).",
+  "observed_choice": "Stopped feature expansion and implemented the preregistered proof-003 four-call tournament comparison before pursuing downstream or new product work.",
+  "proof_decision_version": "palamedes-proof-decision/1",
+  "recorded_at": "2026-07-25T11:06:08.031030+00:00",
+  "selected_system": "palamedes"
+}

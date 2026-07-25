@@ -79,7 +79,8 @@ autonomous pre-planner is an active, falsifiable product hypothesis.
 | Equal-information baseline vs treatment | `proof-002`: Palamedes won 8/9 blinded model-review votes and all 3 case majorities |
 | Generation cost | Palamedes used 4.26x baseline input tokens; cost-adjusted superiority is not proven |
 | Equal-call strong comparator | `proof-003`: Palamedes won 7/9 votes and 2/3 cases with 12 calls each and 1.045x input tokens |
-| Better external decisions or outcomes | Not yet proven |
+| Attributable downstream choice | 1 recorded: `proof-002` mission caused the `proof-003` equal-call experiment before feature expansion |
+| Owner labor retirement | Not yet owner-attested |
 
 The first cross-repository case targets `insight-rag`. Palamedes selected a
 counterfactual action-choice benchmark instead of immediately expanding its

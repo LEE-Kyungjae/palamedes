@@ -71,15 +71,24 @@ python3 palamedes_proof.py review \
   --reviewer-id codex-blind-1
 ```
 
-Record observed outcomes only after a real decision:
+Record a consequential decision only after it actually occurs:
 
 ```bash
-python3 palamedes_proof.py outcome \
+python3 palamedes_proof.py decision \
   --run experiments/proof-runs/proof-002 \
   --case-id <case-id> \
   --selected-system palamedes \
   --observed-choice "<choice that actually occurred>" \
   --attributable-decision \
+  --evidence "<timestamped commits, decision log, or other evidence>"
+```
+
+Record owner labor separately and only from an explicit owner statement:
+
+```bash
+python3 palamedes_proof.py labor \
+  --run experiments/proof-runs/proof-002 \
+  --case-id <case-id> \
   --owner-seconds-without <counterfactual-seconds> \
   --owner-seconds-with <observed-seconds> \
   --owner-attestation "<owner's explicit estimate in their own words>" \
@@ -88,7 +97,10 @@ python3 palamedes_proof.py outcome \
 
 Do not infer or backfill the owner's counterfactual time. The outcome gate
 counts labor retirement only when the record contains an explicit owner
-attestation and timestamped evidence.
+attestation and timestamped evidence. Decision and labor records are append-once
+and deliberately separate so observed action evidence does not imply an
+unobserved labor claim. The combined `outcome` command remains available for
+legacy runs that captured both at the same time.
 
 Finally:
 
@@ -120,8 +132,11 @@ cases:
 - Two cases were unanimous; the Gahyeonbot case split 2–1.
 - Palamedes generation used 297,173 input tokens versus the baseline's 69,756,
   a 4.26x ratio.
-- The quality gate passed, but the outcome gate did not. No attributable choice
-  or owner-attested labor retirement has been recorded.
+- The quality gate passed. One attributable choice is now recorded: the
+  Palamedes mission caused the four-call `proof-003` comparison to be built,
+  frozen, run, and published before feature expansion.
+- The full outcome gate still does not pass because no owner-attested labor
+  retirement has been recorded.
 
 This is repeatable model-review evidence for mission quality under unequal
 compute. It is not yet cost-adjusted superiority, independent human validation,
