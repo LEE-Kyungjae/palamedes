@@ -1,6 +1,10 @@
 # Palamedes
 
 <p align="center">
+  <strong>English</strong> · <a href="README.ko.md">한국어</a>
+</p>
+
+<p align="center">
   <img src="assets/palamedes.png" alt="Palamedes" width="100%">
 </p>
 
