@@ -7,6 +7,13 @@ silently replace inquiry with a cleaner retrospective story.
 The detailed conversation record is
 [`docs/inquiry/2026-07-25-origin-and-evolution.md`](docs/inquiry/2026-07-25-origin-and-evolution.md).
 
+The latest empirical transition is recorded in
+[`Autonomous Inquiry Cycle 02`](docs/inquiry/2026-07-25-autonomous-cycle-02.md):
+after blinded mission-quality and equal-call comparisons passed, the next proof
+frontier moved from model-rated artifacts to a prospective live trial of
+retired owner judgment, complete burden, correction cost, and beneficiary
+non-inferiority.
+
 ## Starting observation
 
 The project began from an observation that probabilistic language models often
