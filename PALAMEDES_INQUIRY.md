@@ -14,6 +14,13 @@ frontier moved from model-rated artifacts to a prospective live trial of
 retired owner judgment, complete burden, correction cost, and beneficiary
 non-inferiority.
 
+[`Autonomous Inquiry Cycle 03`](docs/inquiry/2026-07-25-autonomous-cycle-03.md)
+then tested whether Palamedes, GahyeonBot, or Termi should be selected merely
+because they were available. All four selection routes were disqualified, and
+the selector preserved `defer`: case selection itself can contaminate the proof
+through self-interest, owner priming, artifact curation, monitoring bias, and
+measurement overhead.
+
 ## Starting observation
 
 The project began from an observation that probabilistic language models often
