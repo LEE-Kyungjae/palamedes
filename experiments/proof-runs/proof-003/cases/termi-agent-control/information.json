@@ -1,0 +1,124 @@
+{
+  "artifact_byte_budget": 24000,
+  "artifact_bytes_included": 9759,
+  "artifacts": [
+    {
+      "declared_path": "README.md",
+      "excerpt": "# termi\n\n`termi` is a two-part MVP:\n\n- `agent/`: Go daemon running on macOS, backed by `tmux`. In user-facing copy, this is the local Termi connector.\n- `mobile/`: Flutter client (iOS-first) for pairing, session listing, and terminal I/O.\n\n## Branch workflow\n\nNormal work now happens on `develop`, not `main`.\n\n- commit on `develop`\n- push `develop`\n- open a `develop -> main` PR for release/merge\n\nLocal git guardrails are documented in `docs/branch-workflow.md`.\n\n## 1) macOS connector quick start\n\nPrerequisites:\n\n- macOS with `tmux` installed\n- Existing shell workflows moved into tmux sessions/windows\n- Go 1.22+\n\nRun:\n\n```bash\n./start.sh\n```\n\nNotes:\n\n- `start.sh` now starts two listeners by default:\n  - app/mobile: `http://...:8787`\n  - hosted web: `https://...:8788`\n- If `mkcert` is installed, `start.sh` generates a local trusted dev certificate for `localhost`, `127.0.0.1`, and the current Tailscale IPv4.\n- Otherwise it falls back to an `openssl` self-signed certificate.\n- Generated certs are stored under `.termi-dev-tls/` and wired into `.termi-env` as `TERMI_TLS_CERT_PATH` / `TERMI_TLS_KEY_PATH`.\n- Set `TERMI_ENABLE_DEV_TLS=0` if you want to disable the HTTPS listener.\n- For production browser access from `https://termi-web.vercel.app`, you still need a browser-trusted certificate chain for the connector endpoint.\n\nStop:\n\n```bash\n./stop.sh\n```\n\nNotes:\n\n- `start.sh` will auto-create a default tmux session (detached) so the mobile app has at least one session to display.\n- You can disable that by setting `TERMI_AUTO_TMUX_SESSION=0` in `.termi-env`.\n- If `tmux` or `tailscale` is missing and Homebrew is installed, `start.sh` will offer to install them automatically (set `TERMI_AUTO_INSTALL=0` to disable).\n- If Homebrew or Go is missing, `start.sh` can also offer to install them (macOS only). Tailscale still requires a one-time login + Connect in the app.\n\nDefault addresses:\n\n- app/mobile: `:8787`\n- web/https: `:8788`\n\nHealth check:\n\n```bash\ncurl -s http://127.0.0.1:8787/healthz\ncurl -sk https://127.0.0.1:8788/healthz\n```\n\n## 2) iOS Flutter app quick start\n\nPrerequisites:\n\n- Flutter SDK 3.3+\n- Xcode and iOS simulator/device\n\nRun:\n\n```bash\ncd mobile\nflutter pub get\nflutter run\n```\n\nOn first launch:\n\n- Connector URL: example `http://100.x.y.z:8787` (Tailscale IP)\n\n## 3) Web app draft quick start\n\nThe repo now also contains a web client draft at `frontend` built with Next.js.\n\nRun:\n\n```bash\nnpm install\nnpm run web:dev\n```\n\nThen open `http://localhost:3000` and connect the browser to your own connector URL.\n\nImportant:\n\n- Flutter can connect directly to `http://100.x.y.z:8787`.\n- Hosted web should use `https://100.x.y.z:8788` when using the default `start.sh` setup.\n- The hosted web app at `https://termi-web.vercel.app` cannot directly call an `http://...` connector endpoint from the browser.\n- For web pairing/session access from the hosted site, the connector must be exposed as `https://...` and `/ws` must upgrade as `wss://...`.\n- If your HTTPS certificate is not browser-trusted, the hosted web app may still fail until the browser trusts that connector certificate.\n- For iPhone direct access, export an installable trust cert with `agent/scripts/export_ios_trust_assets.sh` and follow [docs/iphone-direct-tls.md](docs/iphone-direct-tls.md).\n- To avoid direct browser-to-connector TLS issues on mobile Safari/iPhone, you can run the relay server from `agent/cmd/termi-relay` on a public HTTPS domain such as `https://api.zaeze.com` and set `NEXT_PUBLIC_TERMI_RELAY_URL=https://api.zaeze.com` for the web app.\n\n## 4) Relay server for hosted web\n\nIf you want `https://termi-web.vercel.app` to work from iPhone or other browsers without direct HTTPS access to your private connector, run the relay server on a public host that can reach your Tailscale network.\n\nRun:\n\n```bash\ncd agent\ngo run ./cmd/termi-relay\n```\n\nImportant relay environment variables:\n\n- `TERMI_RELAY_ADDR=:8789`\n- `TERMI_RELAY_ALLOWED_ORIGINS=https://termi-web.vercel.app`\n- `TERMI_RELAY_ALLOWED_HOSTS=.tail43d6a0.ts.net,100.78.81.51`\n\nThen set the web app environment variable:\n\n```bash\nNEXT_PUBLIC_TERMI_RELAY_URL=https://api.zaeze.com\n```\n\nIn relay mode, the browser calls `api.zaeze.com`, and the relay forwards HTTP/WebSocket traffic to the selected Termi connector over your private network.\n\nCurrent scope:\n\n- pair with `POST /api/v1/pair/start`\n- load panes from `GET /api/v1/sessions`\n- subscribe to pane output over `/ws`\n- send raw input back to the pane\n\nThis is intentionally a web-first draft, not a full replacement for the mobile app yet.\n\n## Mobile deployment automation\n\nAndroid automatic deployment to Google Play is documented in `docs/android-play-cicd.md`.\nThe repository now routes Android release delivery through `mobile/fastlane/Fastfile` and the workflow `.github/workflows/android-play-deploy.yml`.\nBy default, pushes to `main` that touch `mobile/` build and upload the Android `.aab` to the Play Console `internal` track.\n\niOS TestFlight delivery is documented in `docs/ios-testflight-cicd.md`.\nThe repository also includes a manual workflow at `.github/workflows/ios-testflight-deploy.yml` that runs `bundle exec fastlane ios beta` once App Store Connect and signing secrets are configured.\n\nMobile commits can also auto-increment the Flutter Android build number through the repo hook path `.githooks/pre-commit`.\n\n## DevOps release runbook\n\nFor launchd/TLS/Tailscale, relay setup, Vercel/Supabase env wiring, packaging, and MVP reliability checklists, see:\n\n- `docs/mvp-devops-release-runbook.md`\n\n## Integration QA smoke\n\nRun local cross-stack smoke checks (Go relay/cloud/e2e + web tests + Flutter socket/viewmodel/api):\n\n```bash\n./scripts/run-integration-qa-smoke.sh\n```\n\nRun with Playwright full e2e enabled:\n\n```bash\nQA_SMOKE_RUN_PLAYWRIGHT=1 ./scripts/run-integration-qa-smoke.sh\n```\n\nPlaywright coverage guards:\n\n```bash\n# fail if any test.skip remains in frontend/e2e\n./scripts/check-playwright-no-skip.sh\n\n# fail if total Playwright cases dr",
+      "excerpt_truncated": true,
+      "repository_relative_path": "README.md",
+      "sha256": "3701291ecb12fd25592c89d73cc752e57a582e006f790b0385e66a44f8c7337e",
+      "size_bytes": 12219,
+      "source_path": "/Users/ze/work/termi/README.md"
+    },
+    {
+      "declared_path": "mobile/README.md",
+      "excerpt": "# Adelie Terminal\n\nA new Flutter project.\n\n## Getting Started\n\nThis project is a starting point for a Flutter application.\n\nA few resources to get you started if this is your first Flutter project:\n\n- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)\n- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)\n\nFor help getting started with Flutter development, view the\n[online documentation](https://docs.flutter.dev/), which offers tutorials,\nsamples, guidance on mobile development, and a full API reference.\n",
+      "excerpt_truncated": false,
+      "repository_relative_path": "mobile/README.md",
+      "sha256": "81f800e124c77e3374a399ff0130bc59cee96746d77c8a59ebb7f9ac49d0500c",
+      "size_bytes": 558,
+      "source_path": "/Users/ze/work/termi/mobile/README.md"
+    },
+    {
+      "declared_path": "agent",
+      "excerpt": "denylist:\n  - '(?i)\\brm\\s+-rf\\s+/'\n  - '(?i)\\bmkfs'\n  - '(?i)\\bdd\\s+if=.*\\s+of=/dev/'\n  - '(?i)\\bshutdown\\b'\n  - '(?i)\\breboot\\b'\nconfirm_required:\n  - '(?i)\\bgit\\s+push\\s+.*--force'\n  - '(?i)\\bdocker\\s+system\\s+prune'\n  - '(?i)\\bterraform\\s+apply\\b'\nallowlist: []\n",
+      "excerpt_truncated": false,
+      "repository_relative_path": "agent/examples/policy.yaml",
+      "sha256": "897cea3fc755bc17467cb07b2a250d16584d5b90d06bd146769bf615a1fd1d58",
+      "size_bytes": 265,
+      "source_path": "/Users/ze/work/termi/agent/examples/policy.yaml"
+    },
+    {
+      "declared_path": "agent",
+      "excerpt": "module termi/agent\n\ngo 1.22\n\nrequire (\n\tgithub.com/google/uuid v1.6.0\n\tgithub.com/gorilla/mux v1.8.1\n\tgithub.com/gorilla/websocket v1.5.3\n\tgopkg.in/yaml.v3 v3.0.1\n)\n",
+      "excerpt_truncated": false,
+      "repository_relative_path": "agent/go.mod",
+      "sha256": "fa589be6287203b0cd6ea4de209ddb21bd92c1f1a4a04f57a997913371f2c717",
+      "size_bytes": 165,
+      "source_path": "/Users/ze/work/termi/agent/go.mod"
+    },
+    {
+      "declared_path": "frontend",
+      "excerpt": "{\n  \"pages\": {\n    \"/_not-found/page\": [\n      \"static/chunks/webpack-2122bfe4609c7db2.js\",\n      \"static/chunks/c7879cf7-b5ab1053c1d9a2e7.js\",\n      \"static/chunks/131-6949739670f4cb89.js\",\n      \"static/chunks/main-app-feb033fcde524bba.js\",\n      \"static/chunks/app/_not-found/page-c7bcbd31204d7f43.js\"\n    ],\n    \"/layout\": [\n      \"static/chunks/webpack-2122bfe4609c7db2.js\",\n      \"static/chunks/c7879cf7-b5ab1053c1d9a2e7.js\",\n      \"static/chunks/131-6949739670f4cb89.js\",\n      \"static/chunks/main-app-feb033fcde524bba.js\",\n      \"static/css/7a850be915cbf42a.css\",\n      \"static/chunks/app/layout-cfd2ed7e2bbf93e6.js\"\n    ],\n    \"/manifest.webmanifest/route\": [\n      \"static/chunks/webpack-2122bfe4609c7db2.js\",\n      \"static/chunks/c7879cf7-",
+      "excerpt_truncated": true,
+      "repository_relative_path": "frontend/.next/app-build-manifest.json",
+      "sha256": "0ae2fff2bc895702af78181fcdfae12b3674ab50c4f9eda213da15cded41fb0b",
+      "size_bytes": 2269,
+      "source_path": "/Users/ze/work/termi/frontend/.next/app-build-manifest.json"
+    },
+    {
+      "declared_path": "frontend",
+      "excerpt": "{\n  \"/_not-found/page\": \"/_not-found\",\n  \"/manifest.webmanifest/route\": \"/manifest.webmanifest\",\n  \"/page\": \"/\",\n  \"/qa/terminal-status/page\": \"/qa/terminal-status\",\n  \"/download/[platform]/page\": \"/download/[platform]\",\n  \"/api/relay/[...path]/route\": \"/api/relay/[...path]\"\n}",
+      "excerpt_truncated": false,
+      "repository_relative_path": "frontend/.next/app-path-routes-manifest.json",
+      "sha256": "b970d284bedae4d4733e91275288e34b31cad3c0f303be177fa09264dd29e318",
+      "size_bytes": 277,
+      "source_path": "/Users/ze/work/termi/frontend/.next/app-path-routes-manifest.json"
+    },
+    {
+      "declared_path": "frontend",
+      "excerpt": "{\n  \"polyfillFiles\": [\n    \"static/chunks/polyfills-42372ed130431b0a.js\"\n  ],\n  \"devFiles\": [],\n  \"ampDevFiles\": [],\n  \"lowPriorityFiles\": [\n    \"static/PqbgnMa8Si7x1d_6w5K5g/_buildManifest.js\",\n    \"static/PqbgnMa8Si7x1d_6w5K5g/_ssgManifest.js\"\n  ],\n  \"rootMainFiles\": [\n    \"static/chunks/webpack-2122bfe4609c7db2.js\",\n    \"static/chunks/c7879cf7-b5ab1053c1d9a2e7.js\",\n    \"static/chunks/131-6949739670f4cb89.js\",\n    \"static/chunks/main-app-feb033fcde524bba.js\"\n  ],\n  \"rootMainFilesTree\": {},\n  \"pages\": {\n    \"/_app\": [\n      \"static/chunks/webpack-2122bfe4609c7db2.js\",\n      \"static/chunks/framework-9ad035430eed8b2b.js\",\n      \"static/chunks/main-488fda1394bcd49e.js\",\n      \"static/chunks/pages/_app-930c2e1cfe9b86bc.js\"\n    ],\n    \"/_error\"",
+      "excerpt_truncated": true,
+      "repository_relative_path": "frontend/.next/build-manifest.json",
+      "sha256": "e936e5c785a868e9e2c11fb4cbd5eacf08e8a2c1027b267ed709c473a2218cea",
+      "size_bytes": 995,
+      "source_path": "/Users/ze/work/termi/frontend/.next/build-manifest.json"
+    },
+    {
+      "declared_path": "frontend",
+      "excerpt": "{}",
+      "excerpt_truncated": false,
+      "repository_relative_path": "frontend/.next/cache/next-devtools-config.json",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+      "size_bytes": 2,
+      "source_path": "/Users/ze/work/termi/frontend/.next/cache/next-devtools-config.json"
+    },
+    {
+      "declared_path": "frontend",
+      "excerpt": "{\n  \"buildStage\": \"static-generation\",\n  \"buildOptions\": {\n    \"useBuildWorker\": \"true\"\n  }\n}",
+      "excerpt_truncated": false,
+      "repository_relative_path": "frontend/.next/diagnostics/build-diagnostics.json",
+      "sha256": "e4932338188cf0fbd08fb45f8b04421b523d0b2d9b90f197b5ad2e24fec94306",
+      "size_bytes": 93,
+      "source_path": "/Users/ze/work/termi/frontend/.next/diagnostics/build-diagnostics.json"
+    },
+    {
+      "declared_path": "frontend",
+      "excerpt": "{\"name\":\"Next.js\",\"version\":\"15.5.13\"}",
+      "excerpt_truncated": false,
+      "repository_relative_path": "frontend/.next/diagnostics/framework.json",
+      "sha256": "56af80d610cfe450bd5d5217fe9cde0683aa4dcc723ce127693a54e4373e33ff",
+      "size_bytes": 38,
+      "source_path": "/Users/ze/work/termi/frontend/.next/diagnostics/framework.json"
+    },
+    {
+      "declared_path": "frontend",
+      "excerpt": "{\n  \"version\": 1,\n  \"hasExportPathMap\": false,\n  \"exportTrailingSlash\": false,\n  \"isNextImageImported\": false\n}",
+      "excerpt_truncated": false,
+      "repository_relative_path": "frontend/.next/export-marker.json",
+      "sha256": "82356527db218adb95bd1eca0ede6f3391165b38b22d667d064e62e6b539d974",
+      "size_bytes": 111,
+      "source_path": "/Users/ze/work/termi/frontend/.next/export-marker.json"
+    },
+    {
+      "declared_path": "frontend",
+      "excerpt": "{\n  \"version\": 1,\n  \"images\": {\n    \"deviceSizes\": [\n      640,\n      750,\n      828,\n      1080,\n      1200,\n      1920,\n      2048,\n      3840\n    ],\n    \"imageSizes\": [\n      16,\n      32,\n      48,\n      64,\n      96,\n      128,\n      256,\n      384\n    ],\n    \"path\": \"/_next/image\",\n    \"loader\": \"default\",\n    \"loaderFile\": \"\",\n    \"domains\": [],\n    \"disableStaticImages\": false,\n    \"minimumCacheTTL\": 60,\n    \"formats\": [\n      \"image/webp\"\n    ],\n    \"maximumResponseBody\": 50000000,\n    \"dangerouslyAllowSVG\": false,\n    \"contentSecurityPolicy\": \"script-src 'none'; frame-src 'none'; sandbox;\",\n    \"contentDispositionType\": \"attachment\",\n    \"remotePatterns\": [],\n    \"unoptimized\": false,\n    \"sizes\": [\n      640,\n      750,\n      828",
+      "excerpt_truncated": true,
+      "repository_relative_path": "frontend/.next/images-manifest.json",
+      "sha256": "aa214cfadf69e21be1f4300f1c33b0266167f3eb9108825ac6238b295ac510ad",
+      "size_bytes": 905,
+      "source_path": "/Users/ze/work/termi/frontend/.next/images-manifest.json"
+    }
+  ],
+  "case_id": "termi-agent-control",
+  "declared_artifact_count": 4,
+  "frozen_at": "2026-07-25T10:54:32.489844+00:00",
+  "information_fingerprint": "faa10143a3618101c02de5c21ce73e839411f9ce2c7e89aa77c631c22b0ff71c",
+  "information_packet_version": "palamedes-proof-information/1",
+  "question": "Should Termi remain remote terminal I/O or become a controlled interface for long-running coding agents?",
+  "repository": "/Users/ze/work/termi",
+  "repository_revision": "557556d8c0d42bad9f0d9f2c4a0c723ab1d0a287",
+  "represented_declared_artifact_count": 4,
+  "required_decision": "Choose a product boundary based on session ownership, reconnect safety, approvals, and return behavior."
+}
