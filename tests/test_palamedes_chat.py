@@ -349,6 +349,17 @@ class PalamedesChatTests(unittest.TestCase):
                     (isolated.STATE_DIR / "missions" / "cognition").glob("cycle-*.json")
                 )
                 cycle = json.loads(cycle_path.read_text(encoding="utf-8"))
+                experience_path = next(
+                    (isolated.STATE_DIR / "thoughts" / "experiences").glob("*.json")
+                )
+                experience = json.loads(
+                    experience_path.read_text(encoding="utf-8")
+                )
+                mission_contract = json.loads(
+                    next(
+                        (isolated.STATE_DIR / "missions").glob("mission-*.json")
+                    ).read_text(encoding="utf-8")
+                )
 
         self.assertEqual(
             [item["role"] for item in cycle["artifacts"]],
@@ -371,6 +382,12 @@ class PalamedesChatTests(unittest.TestCase):
             ],
         )
         self.assertIn("Outcome analyst completed", output.getvalue())
+        self.assertEqual(
+            experience["mission_contract_id"],
+            mission_contract["mission_id"],
+        )
+        self.assertEqual(experience["outcome_status"], "success")
+        self.assertEqual(experience["evidence_source_type"], "implementer_claim")
 
     def test_completed_work_is_classified_as_audit_not_origination(self):
         class RetrospectiveOriginClaimProvider(StaticChatProvider):

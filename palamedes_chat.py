@@ -868,6 +868,14 @@ Observed outcome:
     cycle["latest_mission_disposition"] = output["mission_disposition"]
     cycle["live_model_call_count"] = 4 + len(cycle["outcome_analyses"])
     cycle_store.save(cycle)
+    from palamedes_thought import ThoughtStore, persist_mission_experience
+
+    persist_mission_experience(
+        store=ThoughtStore(mission_store.root.parent / "thoughts"),
+        contract=contract,
+        outcome=outcome,
+        analysis=analysis,
+    )
     if output["mission_disposition"] != "continue":
         mission_store.append_outcome_gate(
             {
@@ -1309,6 +1317,13 @@ def record_mission_outcome(
         revision_reason=observation,
     )
     mission_store.append_outcome(outcome)
+    from palamedes_thought import ThoughtStore, persist_mission_experience
+
+    persist_mission_experience(
+        store=ThoughtStore(mission_store.root.parent / "thoughts"),
+        contract=contract,
+        outcome=outcome,
+    )
     updated = dict(contract)
     updated.update(
         {

@@ -7,6 +7,7 @@ import json
 import os
 import time
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -23,9 +24,17 @@ def select_wake_policy(
     snapshot: Dict[str, Any],
     *,
     wake_initial: bool = False,
+    incubation_due: bool = False,
 ) -> Dict[str, Any]:
     reasons = set(snapshot.get("change", {}).get("reasons", []))
     if not snapshot.get("change", {}).get("changed"):
+        if incubation_due:
+            return _policy(
+                "revisit_incubation",
+                ["noticer", "connector"],
+                2,
+                "an unresolved thought survived long enough for bounded reconsideration",
+            )
         return _policy("wait", [], 0, "no decision-relevant change")
     if reasons == {"initial_observation"} and not wake_initial:
         return _policy(
@@ -65,17 +74,17 @@ def select_wake_policy(
         )
     if "reference_repository_set_or_head_changed" in reasons:
         return _policy(
-            "explore_reference_change",
-            ["interpreter", "inventor"],
+            "incubate_discovery",
+            ["noticer", "connector"],
             2,
-            "new reference material may open a different mission frame",
+            "new reference material may leave residues worth connecting over time",
         )
     if "document_set_or_content_changed" in reasons:
         return _policy(
-            "reinterpret_document_change",
-            ["interpreter"],
-            1,
-            "project meaning changed in a primary document",
+            "incubate_discovery",
+            ["noticer", "connector"],
+            2,
+            "project meaning changed and should incubate before mission formation",
         )
     if "palamedes_plan_changed" in reasons:
         return _policy(
@@ -336,6 +345,14 @@ def execute_wake(
             "model_call_count": 0,
             "mission_draft_issued": False,
         }
+    if policy["operation"] in {"incubate_discovery", "revisit_incubation"}:
+        from palamedes_thought import ThoughtStore, run_discovery_incubation
+
+        return run_discovery_incubation(
+            provider=provider,
+            snapshot=snapshot,
+            store=ThoughtStore(palamedes_module.STATE_DIR / "thoughts"),
+        )
     if policy["operation"] == "full_cycle":
         from palamedes_chat import (
             CognitionCycleStore,
@@ -343,12 +360,18 @@ def execute_wake(
             run_cognition_cycle,
         )
 
+        from palamedes_thought import ThoughtStore
+
+        thought_store = ThoughtStore(palamedes_module.STATE_DIR / "thoughts")
+        discoveries = thought_store.active_discoveries()
         result = run_cognition_cycle(
             provider=provider,
             palamedes_module=palamedes_module,
             context=(
                 "Autonomous wake from bounded workspace changes:\n"
                 + json.dumps(observation_context(snapshot), ensure_ascii=False)
+                + "\n\nIncubated discovery candidates (not yet missions):\n"
+                + json.dumps(discoveries, ensure_ascii=False)
             ),
             cycle_store=CognitionCycleStore(
                 palamedes_module.STATE_DIR / "missions" / "cognition"
@@ -356,6 +379,19 @@ def execute_wake(
         )
         contract = result["contract"]
         if contract:
+            source_discovery_ids = [
+                item["discovery_id"] for item in discoveries
+            ]
+            if source_discovery_ids:
+                contract["source_discovery_ids"] = source_discovery_ids
+                governed = {
+                    "prior_contract_fingerprint": contract["contract_fingerprint"],
+                    "source_discovery_ids": source_discovery_ids,
+                }
+                contract["contract_fingerprint"] = fingerprint(governed)
+                contract["mission_id"] = (
+                    f"mission-{contract['contract_fingerprint'][:12]}"
+                )
             MissionStore(palamedes_module.STATE_DIR / "missions").save_contract(
                 contract
             )
@@ -392,9 +428,29 @@ def watch_once(
         test_command=test_command,
         test_timeout=test_timeout,
     )
-    policy = select_wake_policy(snapshot, wake_initial=wake_initial)
-    key = wake_key(snapshot, policy)
     state = store.load_state()
+    from palamedes_thought import ThoughtStore
+
+    thought_store = ThoughtStore(palamedes_module.STATE_DIR / "thoughts")
+    active_thoughts = thought_store.active_thoughts(1)
+    last_incubation_at = str(state.get("last_incubation_at", "")).strip()
+    incubation_due = False
+    if active_thoughts:
+        try:
+            last_incubation = datetime.fromisoformat(last_incubation_at)
+            if last_incubation.tzinfo is None:
+                last_incubation = last_incubation.replace(tzinfo=timezone.utc)
+            incubation_due = (
+                datetime.now(timezone.utc) - last_incubation
+            ).total_seconds() >= 86400
+        except ValueError:
+            incubation_due = True
+    policy = select_wake_policy(
+        snapshot,
+        wake_initial=wake_initial,
+        incubation_due=incubation_due,
+    )
+    key = wake_key(snapshot, policy)
     budget_date = utc_now()[:10]
     daily_calls = (
         int(state.get("daily_model_calls", 0))
@@ -402,7 +458,7 @@ def watch_once(
         else 0
     )
     duplicate = bool(key and key == state.get("last_wake_key"))
-    if duplicate and policy["operation"] != "wait":
+    if duplicate and policy["operation"] not in {"wait", "revisit_incubation"}:
         policy = _policy(
             "wait",
             [],
@@ -516,6 +572,11 @@ def watch_once(
             "iteration_count": int(state.get("iteration_count", 0)) + 1,
         }
     )
+    if (
+        policy["operation"] in {"incubate_discovery", "revisit_incubation"}
+        and wake["execution"]["status"] == "completed"
+    ):
+        state["last_incubation_at"] = wake["created_at"]
     store.save_state(state)
     return wake
 

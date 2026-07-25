@@ -136,6 +136,10 @@ Palamedes is organized around one planning kernel with a few integration surface
 ```text
 palamedes/
 ├── palamedes.py                    # Core planning kernel and CLI
+├── palamedes_chat.py               # AI terminal and cognition cycle
+├── palamedes_observe.py            # Bounded, redacted workspace observation
+├── palamedes_watch.py              # Event-driven autonomous observation loop
+├── palamedes_thought.py            # Pre-mission thought and discovery incubation
 ├── palamedes_mission.py            # Experimental pre-planner contracts and gates
 ├── palamedes_server.py             # Local HTTP transport
 ├── palamedes_sdk/                  # Packaged Python client surface
@@ -608,8 +612,9 @@ and prevents repeated whole-repository exploration from becoming the default.
 | Observed signal | Wake operation |
 | --- | --- |
 | No new signal, duplicate signal, or initial baseline | Wait |
-| Primary document changed | Interpreter |
-| Central reference revision changed | Interpreter + inventor |
+| Unresolved thought not incubated for 24 hours | Noticer + connector revisit |
+| Primary document changed | Noticer + connector incubation |
+| Central reference revision changed | Noticer + connector incubation |
 | Plan changed | Adversary + selector |
 | Git implementation changed | Interpreter + adversary |
 | Explicit test failed | Interpreter + adversary |
@@ -633,6 +638,28 @@ holds the current cursor and budget total, `events.jsonl` is append-only, and
 watchers from acting on the same workspace. Use `--wake-initial` only when the
 first baseline itself should trigger cognition, and `--max-iterations` for a
 bounded foreground run.
+
+Document and reference changes now stop before mission formation. A `noticer`
+extracts at least two unresolved residues rather than advice, and a `connector`
+may relate distant thoughts only when the relationship replaces an assumption,
+reframes the product, and changes a possible decision. Thoughts persist across
+wakes under `.palamedes/thoughts/thoughts/`; candidate discoveries live under
+`.palamedes/thoughts/discoveries/`. Neither grants mission or delivery
+authority. A later full cognition wake receives these candidates and, if its
+existing adversarial selector issues a draft, records their IDs on the mission.
+
+Mission outcomes are also compressed into
+`.palamedes/thoughts/experiences/` as decision-time reason, forecast, observed
+result, prediction gap, belief update, and next probe. Later noticer wakes can
+therefore reason over decision-to-outcome experience rather than raw logs
+alone. This is an initial traceable discovery loop, not evidence that the
+system already produces human-level insight or business outcomes.
+
+An unresolved thought can trigger one bounded reconsideration after 24 hours
+even when no new workspace signal arrives. Revisited residues gain strength;
+thoughts omitted from successive incubation lose strength and are eventually
+archived. The same daily and lifetime model-call budgets still apply, so
+incubation cannot become an unbounded self-conversation.
 
 Mission authority follows an explicit vertical contract:
 

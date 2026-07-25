@@ -125,6 +125,7 @@ palamedes/
 ├── palamedes_chat.py               # AI 터미널과 인지 사이클
 ├── palamedes_observe.py            # 제한·마스킹된 작업공간 관찰
 ├── palamedes_watch.py              # 이벤트 기반 자율 관찰 루프
+├── palamedes_thought.py            # 미션 이전 생각·발견 숙성 계층
 ├── palamedes_mission.py            # 프리플래너 계약과 게이트
 ├── palamedes_server.py             # 로컬 HTTP 전송 계층
 ├── palamedes_sdk/                  # Python 클라이언트
@@ -136,6 +137,8 @@ palamedes/
 
 ```text
 세계 신호와 누적 레퍼런스
+  → 설명되지 않은 잔여와 미완성 생각
+  → 시간·영역이 다른 생각의 비자명한 연결
   → 경쟁하는 해석
   → 후보 미션
   → 근거, 비판, 반증
@@ -143,6 +146,27 @@ palamedes/
   → planner → task → implementation
   → 관찰된 결과를 Palamedes에 환류
 ```
+
+문서나 중앙 레퍼런스가 바뀌면 즉시 기능이나 미션을 제안하지 않는다.
+`noticer`가 현재 설명에 흡수되지 않는 잔여를 최소 두 개 추출하고,
+`connector`는 기존 가정을 바꾸고 제품을 재구성하며 가능한 결정을
+달라지게 하는 연결만 discovery 후보로 남긴다. 생각은
+`.palamedes/thoughts/thoughts/`, 발견 후보는
+`.palamedes/thoughts/discoveries/`에 wake를 넘어 보존된다. 둘 다 미션이나
+실행 권한을 갖지 않는다. 이후 full cognition wake가 이 발견들을 입력으로
+받고 기존 adversary·selector를 통과한 경우에만 출처 discovery ID가 미션
+초안에 연결된다.
+
+미션 outcome은 결정 당시 이유, 예상, 실제 관찰, 예상과의 차이, 믿음 수정,
+다음 probe를 포함한 경험으로 `.palamedes/thoughts/experiences/`에 압축된다.
+이 경험은 이후 발견 wake의 입력으로 돌아간다. 이는 추적 가능한 발견
+루프의 첫 구현이며, 아직 인간 수준의 통찰이나 사업 성과를 증명했다는
+주장은 아니다.
+
+새 작업공간 신호가 없어도 미해결 thought가 24시간 동안 숙성되지 않았다면
+예산 안에서 한 번 재검토한다. 다시 관찰된 잔여는 강해지고, 연속 숙성에서
+선택되지 않은 thought는 약해져 결국 보관된다. 동일한 일일·누적 모델 호출
+예산이 적용되므로 무제한 자기 대화로 확장되지는 않는다.
 
 ## 빠른 시작
 
@@ -278,8 +302,9 @@ palamedes watch \
 | 관찰된 신호 | 선택되는 사고 |
 | --- | --- |
 | 변화 없음, 중복 신호, 최초 baseline | 대기 |
-| 주요 문서 변경 | interpreter 1회 |
-| 중앙 ref revision 변경 | interpreter + inventor |
+| 24시간 동안 숙성되지 않은 미해결 thought | noticer + connector 재검토 |
+| 주요 문서 변경 | noticer + connector 숙성 |
+| 중앙 ref revision 변경 | noticer + connector 숙성 |
 | 계획 변경 | adversary + selector |
 | 구현 변경 | interpreter + adversary |
 | 명시적 테스트 실패 | interpreter + adversary |
