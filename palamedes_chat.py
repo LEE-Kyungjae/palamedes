@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
 import sys
@@ -22,8 +23,20 @@ CHAT_COMMANDS = {
     "/think": "Explore the missing mode of thought before recommending action.",
     "/challenge": "Attack the strongest assumptions in the current direction and state what evidence would change the conclusion.",
     "/research": "Identify the minimum external evidence needed next. Do not pretend that uncollected evidence exists.",
-    "/mission": "Produce the strongest current mission contract: mission, rationale, evidence, falsifiers, non-goals, uncertainty, and next probe.",
+    "/mission": "Produce a structured mission draft.",
 }
+MISSION_REQUIRED_FIELDS = (
+    "mission",
+    "rationale",
+    "success_metric",
+    "evidence",
+    "hypotheses",
+    "falsifiers",
+    "non_goals",
+    "constraints",
+    "next_probe",
+    "planner_brief",
+)
 
 
 def utc_now() -> str:
@@ -202,6 +215,423 @@ class ChatSessionStore:
         return [path.stem for path in sorted(self.root.glob("*.jsonl"))]
 
 
+class MissionStore:
+    def __init__(self, root: Path) -> None:
+        self.root = root
+        self.handoff_root = root / "handoffs"
+        self.outcomes_path = root / "outcomes.jsonl"
+
+    def contract_path(self, mission_id: str) -> Path:
+        if not re.fullmatch(r"mission-[a-f0-9]{12}", mission_id):
+            raise ValueError("invalid mission ID")
+        return self.root / f"{mission_id}.json"
+
+    def save_contract(self, contract: Dict[str, Any]) -> Path:
+        path = self.contract_path(contract["mission_id"])
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(".json.tmp")
+        temporary.write_text(
+            json.dumps(contract, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(path)
+        return path
+
+    def load_contract(self, mission_id: str) -> Dict[str, Any]:
+        path = self.contract_path(mission_id)
+        if not path.is_file():
+            raise ValueError(f"mission contract not found: {mission_id}")
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("mission contract must be an object")
+        return payload
+
+    def save_handoff(self, handoff: Dict[str, Any]) -> Path:
+        self.handoff_root.mkdir(parents=True, exist_ok=True)
+        path = self.handoff_root / f"{handoff['handoff_id']}.json"
+        path.write_text(
+            json.dumps(handoff, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return path
+
+    def append_outcome(self, outcome: Dict[str, Any]) -> None:
+        self.root.mkdir(parents=True, exist_ok=True)
+        with self.outcomes_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(outcome, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+def _fingerprint(payload: Dict[str, Any]) -> str:
+    encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _extract_json_object(text: str) -> Dict[str, Any]:
+    candidate = text.strip()
+    if candidate.startswith("```"):
+        candidate = re.sub(r"^```(?:json)?\s*", "", candidate)
+        candidate = re.sub(r"\s*```$", "", candidate)
+    try:
+        payload = json.loads(candidate)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"mission response must be one JSON object: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise ValueError("mission response must be a JSON object")
+    return payload
+
+
+def validate_mission_draft(payload: Dict[str, Any]) -> Dict[str, Any]:
+    errors = []
+    for field in MISSION_REQUIRED_FIELDS:
+        if field not in payload:
+            errors.append(f"{field} is required")
+    for field in ("mission", "rationale", "success_metric", "planner_brief"):
+        if not isinstance(payload.get(field), str) or not payload.get(field, "").strip():
+            errors.append(f"{field} must be a non-empty string")
+    for field in ("falsifiers", "non_goals", "constraints"):
+        value = payload.get(field)
+        if not isinstance(value, list) or not value or not all(
+            isinstance(item, str) and item.strip() for item in value
+        ):
+            errors.append(f"{field} must be a non-empty string array")
+    evidence = payload.get("evidence")
+    if not isinstance(evidence, list) or not evidence:
+        errors.append("evidence must be a non-empty array")
+        evidence = []
+    normalized_evidence = []
+    for index, item in enumerate(evidence):
+        if not isinstance(item, dict):
+            errors.append(f"evidence[{index}] must be an object")
+            continue
+        claim = str(item.get("claim", "")).strip()
+        source = str(item.get("source", "")).strip()
+        confidence = item.get("confidence")
+        if not claim or not source:
+            errors.append(f"evidence[{index}] requires claim and source")
+        if not isinstance(confidence, int) or isinstance(confidence, bool) or not 0 <= confidence <= 100:
+            errors.append(f"evidence[{index}].confidence must be an integer from 0 to 100")
+        normalized_evidence.append(
+            {"claim": claim, "source": source, "confidence": confidence}
+        )
+    hypotheses = payload.get("hypotheses")
+    if not isinstance(hypotheses, list) or not hypotheses:
+        errors.append("hypotheses must be a non-empty array")
+        hypotheses = []
+    normalized_hypotheses = []
+    for index, item in enumerate(hypotheses):
+        if not isinstance(item, dict):
+            errors.append(f"hypotheses[{index}] must be an object")
+            continue
+        normalized = {
+            key: str(item.get(key, "")).strip()
+            for key in ("hypothesis", "metric", "target", "window")
+        }
+        if not all(normalized.values()):
+            errors.append(
+                f"hypotheses[{index}] requires hypothesis, metric, target, and window"
+            )
+        normalized_hypotheses.append(normalized)
+    next_probe = payload.get("next_probe")
+    if not isinstance(next_probe, dict):
+        errors.append("next_probe must be an object")
+        next_probe = {}
+    normalized_probe = {
+        key: str(next_probe.get(key, "")).strip()
+        for key in ("step", "expected_learning", "expected_result")
+    }
+    if not all(normalized_probe.values()):
+        errors.append(
+            "next_probe requires step, expected_learning, and expected_result"
+        )
+    uncertainty = payload.get("uncertainty", 50)
+    if not isinstance(uncertainty, int) or isinstance(uncertainty, bool) or not 0 <= uncertainty <= 100:
+        errors.append("uncertainty must be an integer from 0 to 100")
+    if errors:
+        raise ValueError("invalid mission draft: " + "; ".join(errors))
+    normalized = {
+        "mission": payload["mission"].strip(),
+        "rationale": payload["rationale"].strip(),
+        "success_metric": payload["success_metric"].strip(),
+        "deadline": str(payload.get("deadline", "")).strip(),
+        "evidence": normalized_evidence,
+        "hypotheses": normalized_hypotheses,
+        "falsifiers": [item.strip() for item in payload["falsifiers"]],
+        "non_goals": [item.strip() for item in payload["non_goals"]],
+        "constraints": [item.strip() for item in payload["constraints"]],
+        "next_probe": normalized_probe,
+        "planner_brief": payload["planner_brief"].strip(),
+        "uncertainty": uncertainty,
+    }
+    mission_id = f"mission-{_fingerprint(normalized)[:12]}"
+    return {
+        "mission_contract_version": "palamedes-chat-mission/1",
+        "mission_id": mission_id,
+        "status": "draft",
+        "created_at": utc_now(),
+        **normalized,
+        "contract_fingerprint": _fingerprint(normalized),
+    }
+
+
+def mission_prompt(context: str) -> str:
+    return f"""Create one mission contract from the user context.
+Return exactly one JSON object and no Markdown.
+
+Required shape:
+{{
+  "mission": "outcome worth pursuing, not a task",
+  "rationale": "why this mission now",
+  "success_metric": "observable outcome and threshold",
+  "deadline": "optional date or review horizon",
+  "evidence": [{{"claim": "...", "source": "user|plan|path|URL", "confidence": 0}}],
+  "hypotheses": [{{"hypothesis": "...", "metric": "...", "target": "...", "window": "..."}}],
+  "falsifiers": ["observable reason to reject or reopen the mission"],
+  "non_goals": ["work explicitly excluded"],
+  "constraints": ["boundary the planner must preserve"],
+  "next_probe": {{
+    "step": "smallest information-producing step",
+    "expected_learning": "what it should reveal",
+    "expected_result": "precommitted observable result"
+  }},
+  "planner_brief": "semantic handoff for a downstream planner",
+  "uncertainty": 50
+}}
+
+Do not invent external evidence. Use source "user" or "plan" for claims from the
+provided context. If evidence is weak, preserve that weakness with low
+confidence and a falsifying probe.
+
+User context:
+{context}"""
+
+
+def render_mission(contract: Dict[str, Any]) -> str:
+    lines = [
+        f"Mission draft: {contract['mission_id']}",
+        f"  mission: {contract['mission']}",
+        f"  rationale: {contract['rationale']}",
+        f"  success metric: {contract['success_metric']}",
+        f"  uncertainty: {contract['uncertainty']}/100",
+        "  evidence:",
+    ]
+    lines.extend(
+        f"    - [{item['confidence']}] {item['claim']} ({item['source']})"
+        for item in contract["evidence"]
+    )
+    lines.append("  hypotheses:")
+    lines.extend(
+        f"    - {item['hypothesis']} | {item['metric']} {item['target']} in {item['window']}"
+        for item in contract["hypotheses"]
+    )
+    lines.append("  falsifiers:")
+    lines.extend(f"    - {item}" for item in contract["falsifiers"])
+    lines.append("  non-goals:")
+    lines.extend(f"    - {item}" for item in contract["non_goals"])
+    probe = contract["next_probe"]
+    lines.append(f"  next probe: {probe['step']}")
+    lines.append(f"  expected learning: {probe['expected_learning']}")
+    lines.append("")
+    lines.append("Run /approve to persist this mission or /reject <reason> to reject it.")
+    return "\n".join(lines)
+
+
+def latest_mission_id(records: List[Dict[str, Any]], statuses: Optional[set] = None) -> str:
+    for record in reversed(records):
+        if record.get("type") != "mission_state":
+            continue
+        if statuses is not None and record.get("status") not in statuses:
+            return ""
+        mission_id = record.get("mission_id")
+        if isinstance(mission_id, str):
+            return mission_id
+    return ""
+
+
+def approve_mission(
+    palamedes_module: Any,
+    mission_store: MissionStore,
+    contract: Dict[str, Any],
+    session_id: str,
+) -> Dict[str, Any]:
+    if contract.get("status") != "draft":
+        raise ValueError(f"mission is not approvable from status {contract.get('status')}")
+    mission_id = contract["mission_id"]
+    ts = utc_now()
+
+    def apply(plan: Dict[str, Any]) -> None:
+        plan["goal"] = contract["mission"]
+        plan["success_metric"] = contract["success_metric"]
+        if contract["deadline"]:
+            plan["deadline"] = contract["deadline"]
+        plan["selected_option"] = contract["mission"]
+        plan.setdefault("options", [])
+        if contract["mission"] not in plan["options"]:
+            plan["options"].append(contract["mission"])
+        for constraint in contract["constraints"]:
+            if constraint not in plan.setdefault("constraints", []):
+                plan["constraints"].append(constraint)
+        for item in contract["evidence"]:
+            palamedes_module.add_evidence(
+                plan,
+                item["claim"],
+                item["source"],
+                item["confidence"],
+                "direction_insights",
+                metadata={"mission_contract_id": mission_id},
+            )
+        for item in contract["hypotheses"]:
+            plan.setdefault("hypothesis_log", []).append(
+                {
+                    "ts": ts,
+                    **item,
+                    "status": "open",
+                    "outcome": "",
+                    "mission_contract_id": mission_id,
+                }
+            )
+        probe = contract["next_probe"]
+        plan.setdefault("development_probes", []).append(
+            {
+                "id": f"probe-{mission_id[8:]}",
+                "ts": ts,
+                "step": probe["step"],
+                "expected_learning": probe["expected_learning"],
+                "expected_result": probe["expected_result"],
+                "status": "planned",
+                "actual_observation": "",
+                "unexpected_observation": "",
+                "view_transition_id": "",
+                "next_step": "",
+                "source": "palamedes-chat-mission",
+                "references": [item["source"] for item in contract["evidence"]],
+                "mission_contract_id": mission_id,
+            }
+        )
+        if probe["step"] not in plan.setdefault("plan_tasks", []):
+            plan["plan_tasks"].append(probe["step"])
+
+    palamedes_module.mutate_plan_state(
+        apply,
+        event_payloads=[
+            {
+                "ts": ts,
+                "type": "mission_contract_approved",
+                "source": "palamedes_chat",
+                "mission_contract_id": mission_id,
+                "session_id": session_id,
+                "contract_fingerprint": contract["contract_fingerprint"],
+            }
+        ],
+        revision_source="palamedes_chat_approve",
+        revision_reason=contract["mission"],
+    )
+    approved = dict(contract)
+    approved.update({"status": "approved", "approved_at": ts, "session_id": session_id})
+    mission_store.save_contract(approved)
+    handoff = {
+        "handoff_version": "palamedes-planner-handoff/1",
+        "handoff_id": f"handoff-{mission_id[8:]}",
+        "mission_contract_id": mission_id,
+        "mission_contract_fingerprint": contract["contract_fingerprint"],
+        "issued_at": ts,
+        "status": "awaiting_planner",
+        "mission": contract["mission"],
+        "success_metric": contract["success_metric"],
+        "planner_brief": contract["planner_brief"],
+        "constraints": contract["constraints"],
+        "non_goals": contract["non_goals"],
+        "falsifiers": contract["falsifiers"],
+        "next_probe": contract["next_probe"],
+        "planner_may_change_mission": False,
+        "delivery_authority_granted": False,
+    }
+    handoff["handoff_fingerprint"] = _fingerprint(handoff)
+    handoff_path = mission_store.save_handoff(handoff)
+    return {"contract": approved, "handoff": handoff, "handoff_path": handoff_path}
+
+
+def record_mission_outcome(
+    palamedes_module: Any,
+    mission_store: MissionStore,
+    contract: Dict[str, Any],
+    status: str,
+    observation: str,
+) -> Dict[str, Any]:
+    if contract.get("status") not in {"approved", "outcome_recorded"}:
+        raise ValueError("outcomes require an approved mission")
+    if status not in {"success", "failure", "mixed", "unknown"}:
+        raise ValueError("outcome status must be success, failure, mixed, or unknown")
+    ts = utc_now()
+    mission_id = contract["mission_id"]
+    outcome = {
+        "outcome_version": "palamedes-mission-outcome/1",
+        "outcome_id": f"outcome-{uuid.uuid4().hex[:12]}",
+        "mission_contract_id": mission_id,
+        "mission_contract_fingerprint": contract["contract_fingerprint"],
+        "recorded_at": ts,
+        "status": status,
+        "observation": observation,
+        "attribution": "unresolved",
+        "may_rewrite_prior_history": False,
+    }
+
+    def apply(plan: Dict[str, Any]) -> None:
+        palamedes_module.add_evidence(
+            plan,
+            observation,
+            "mission-outcome",
+            80 if status != "unknown" else 50,
+            "evolution_insights",
+            metadata={
+                "mission_contract_id": mission_id,
+                "outcome_id": outcome["outcome_id"],
+                "outcome_status": status,
+            },
+        )
+        for probe in reversed(plan.get("development_probes", [])):
+            if probe.get("mission_contract_id") == mission_id:
+                probe["status"] = "completed"
+                probe["actual_observation"] = observation
+                break
+        for hypothesis in plan.get("hypothesis_log", []):
+            if hypothesis.get("mission_contract_id") == mission_id:
+                hypothesis["outcome"] = observation
+                hypothesis["status"] = (
+                    "validated"
+                    if status == "success"
+                    else "invalidated"
+                    if status == "failure"
+                    else hypothesis.get("status", "open")
+                )
+
+    palamedes_module.mutate_plan_state(
+        apply,
+        event_payloads=[
+            {
+                "ts": ts,
+                "type": "mission_outcome_recorded",
+                "source": "palamedes_chat",
+                "mission_contract_id": mission_id,
+                "outcome_id": outcome["outcome_id"],
+                "status": status,
+            }
+        ],
+        revision_source="palamedes_chat_outcome",
+        revision_reason=observation,
+    )
+    mission_store.append_outcome(outcome)
+    updated = dict(contract)
+    updated.update(
+        {
+            "status": "outcome_recorded",
+            "latest_outcome_id": outcome["outcome_id"],
+            "latest_outcome_status": status,
+        }
+    )
+    mission_store.save_contract(updated)
+    return outcome
+
+
 def _plan_context(palamedes_module: Any) -> str:
     palamedes_module.ensure_state()
     plan = palamedes_module.load_plan()
@@ -256,6 +686,12 @@ def _print_help(output: TextIO) -> None:
                 "  /challenge <claim>   attack assumptions and define falsifiers",
                 "  /research <question> identify the minimum missing evidence",
                 "  /mission <context>   draft a mission contract",
+                "  /preview             inspect the latest mission draft",
+                "  /approve             persist the draft and create planner handoff",
+                "  /reject <reason>     reject the latest draft without rewriting it",
+                "  /handoff             show the latest planner handoff",
+                "  /outcome <status> <observation>",
+                "                       record success|failure|mixed|unknown",
                 "  /status              show provider, model, workspace, and session",
                 "  /history             show persisted turns in this session",
                 "  /sessions            list local session IDs",
@@ -278,6 +714,7 @@ def run_chat(
     output: TextIO = sys.stdout,
 ) -> int:
     store = ChatSessionStore(palamedes_module.STATE_DIR / "chat")
+    mission_store = MissionStore(palamedes_module.STATE_DIR / "missions")
     active_session = session_id
     workspace = Path(palamedes_module.ROOT)
     output.write("Palamedes Research Alpha\n")
@@ -325,6 +762,121 @@ def run_chat(
             ]
             output.write("\n".join(turns) + ("\n" if turns else "No turns.\n"))
             continue
+        if text == "/preview":
+            records = store.load(active_session)
+            mission_id = latest_mission_id(records, {"draft"})
+            if not mission_id:
+                output.write("No pending mission draft in this session.\n")
+                continue
+            output.write(render_mission(mission_store.load_contract(mission_id)) + "\n")
+            continue
+        if text == "/approve":
+            records = store.load(active_session)
+            mission_id = latest_mission_id(records, {"draft"})
+            if not mission_id:
+                output.write("No pending mission draft to approve.\n")
+                continue
+            contract = mission_store.load_contract(mission_id)
+            result = approve_mission(
+                palamedes_module, mission_store, contract, active_session
+            )
+            store.append(
+                active_session,
+                {
+                    "ts": utc_now(),
+                    "type": "mission_state",
+                    "mission_id": mission_id,
+                    "status": "approved",
+                    "handoff_id": result["handoff"]["handoff_id"],
+                },
+            )
+            output.write(
+                f"Mission approved: {mission_id}\n"
+                f"Planner handoff: {result['handoff_path']}\n"
+                "Delivery authority remains ungranted.\n"
+            )
+            continue
+        if text.startswith("/reject"):
+            reason = text[len("/reject") :].strip()
+            if not reason:
+                output.write("/reject requires a reason.\n")
+                continue
+            records = store.load(active_session)
+            mission_id = latest_mission_id(records, {"draft"})
+            if not mission_id:
+                output.write("No pending mission draft to reject.\n")
+                continue
+            contract = mission_store.load_contract(mission_id)
+            contract.update(
+                {"status": "rejected", "rejected_at": utc_now(), "rejection_reason": reason}
+            )
+            mission_store.save_contract(contract)
+            store.append(
+                active_session,
+                {
+                    "ts": utc_now(),
+                    "type": "mission_state",
+                    "mission_id": mission_id,
+                    "status": "rejected",
+                    "reason": reason,
+                },
+            )
+            output.write(f"Mission rejected: {mission_id}\n")
+            continue
+        if text == "/handoff":
+            records = store.load(active_session)
+            mission_id = latest_mission_id(records, {"approved", "outcome_recorded"})
+            if not mission_id:
+                output.write("No approved mission handoff in this session.\n")
+                continue
+            path = mission_store.handoff_root / f"handoff-{mission_id[8:]}.json"
+            if not path.is_file():
+                output.write(f"Handoff is missing for {mission_id}.\n")
+                continue
+            output.write(path.read_text(encoding="utf-8"))
+            continue
+        if text.startswith("/outcome"):
+            raw = text[len("/outcome") :].strip()
+            parts = raw.split(maxsplit=1)
+            if len(parts) != 2:
+                output.write(
+                    "/outcome requires: success|failure|mixed|unknown <observation>\n"
+                )
+                continue
+            status, observation = parts
+            records = store.load(active_session)
+            mission_id = latest_mission_id(records, {"approved", "outcome_recorded"})
+            if not mission_id:
+                output.write("No approved mission can accept an outcome.\n")
+                continue
+            contract = mission_store.load_contract(mission_id)
+            try:
+                outcome = record_mission_outcome(
+                    palamedes_module,
+                    mission_store,
+                    contract,
+                    status,
+                    observation,
+                )
+            except ValueError as exc:
+                output.write(f"{exc}\n")
+                continue
+            store.append(
+                active_session,
+                {
+                    "ts": utc_now(),
+                    "type": "mission_state",
+                    "mission_id": mission_id,
+                    "status": "outcome_recorded",
+                    "outcome_id": outcome["outcome_id"],
+                    "outcome_status": status,
+                },
+            )
+            output.write(
+                f"Outcome recorded: {outcome['outcome_id']} ({status})\n"
+                "Attribution remains unresolved until separately evaluated.\n"
+            )
+            continue
 
         user_content = text
         command = text.split(maxsplit=1)[0]
@@ -333,7 +885,11 @@ def run_chat(
             if not remainder:
                 output.write(f"{command} requires a topic or context.\n")
                 continue
-            user_content = f"{CHAT_COMMANDS[command]}\n\nUser context:\n{remainder}"
+            user_content = (
+                mission_prompt(remainder)
+                if command == "/mission"
+                else f"{CHAT_COMMANDS[command]}\n\nUser context:\n{remainder}"
+            )
         elif text.startswith("/"):
             output.write(f"Unknown command: {command}. Type /help.\n")
             continue
@@ -355,17 +911,41 @@ def run_chat(
             {"role": "user", "content": user_content},
         ]
         chunks: List[str] = []
-        output.write("\n")
+        is_mission = command == "/mission"
+        if not is_mission:
+            output.write("\n")
         try:
             for chunk in provider.stream(messages):
                 chunks.append(chunk)
-                output.write(chunk)
-                output.flush()
+                if not is_mission:
+                    output.write(chunk)
+                    output.flush()
         except (RuntimeError, ValueError) as exc:
             output.write(f"\n[provider error] {exc}\n\n")
             continue
         reply = "".join(chunks).strip()
-        output.write("\n\n")
+        if is_mission:
+            try:
+                contract = validate_mission_draft(_extract_json_object(reply))
+            except ValueError as exc:
+                output.write(f"[mission validation error] {exc}\n")
+                output.write("Draft was not saved or made approvable.\n\n")
+                continue
+            mission_store.save_contract(contract)
+            store.append(
+                active_session,
+                {
+                    "ts": utc_now(),
+                    "type": "mission_state",
+                    "mission_id": contract["mission_id"],
+                    "status": "draft",
+                    "contract_fingerprint": contract["contract_fingerprint"],
+                },
+            )
+            reply = render_mission(contract)
+            output.write(reply + "\n\n")
+        else:
+            output.write("\n\n")
         if reply:
             store.append(
                 active_session,

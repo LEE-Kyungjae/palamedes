@@ -9,6 +9,7 @@ from unittest.mock import patch
 from pathlib import Path
 
 import palamedes_chat
+import palamedes
 
 
 class FakePalamedes:
@@ -41,8 +42,72 @@ class StaticChatProvider:
 
     def stream(self, messages):
         self.calls.append(messages)
+        if "Required shape:" in messages[-1]["content"]:
+            payload = {
+                "mission": "Prove that one mission improves the next action",
+                "rationale": "The product claim currently lacks an approved vertical slice.",
+                "success_metric": "One outcome is recorded against an approved mission",
+                "deadline": "7 days",
+                "evidence": [
+                    {
+                        "claim": "The user requested a mission approval flow",
+                        "source": "user",
+                        "confidence": 90,
+                    }
+                ],
+                "hypotheses": [
+                    {
+                        "hypothesis": "Explicit approval prevents silent authority expansion",
+                        "metric": "unapproved plan mutations",
+                        "target": "0",
+                        "window": "one mission cycle",
+                    }
+                ],
+                "falsifiers": ["The plan changes before /approve"],
+                "non_goals": ["Execute delivery tasks"],
+                "constraints": ["Plan-only authority"],
+                "next_probe": {
+                    "step": "Run one approved mission cycle",
+                    "expected_learning": "Whether the state transition is traceable",
+                    "expected_result": "One linked handoff and outcome record",
+                },
+                "planner_brief": "Plan the smallest traceable mission experiment.",
+                "uncertainty": 35,
+            }
+            yield json.dumps(payload)
+            return
         yield "A falsifiable "
         yield "mission."
+
+
+class PalamedesIsolation:
+    def __init__(self, root: Path) -> None:
+        self.root = root
+        self.originals = {}
+
+    def __enter__(self):
+        for name in (
+            "ROOT",
+            "STATE_DIR",
+            "PLAN_PATH",
+            "DECISIONS_PATH",
+            "RISKS_PATH",
+            "EVENTS_PATH",
+            "REVISIONS_PATH",
+        ):
+            self.originals[name] = getattr(palamedes, name)
+        palamedes.ROOT = self.root
+        palamedes.STATE_DIR = self.root / ".palamedes"
+        palamedes.PLAN_PATH = palamedes.STATE_DIR / "plan.json"
+        palamedes.DECISIONS_PATH = palamedes.STATE_DIR / "decisions.jsonl"
+        palamedes.RISKS_PATH = palamedes.STATE_DIR / "risks.jsonl"
+        palamedes.EVENTS_PATH = palamedes.STATE_DIR / "events.jsonl"
+        palamedes.REVISIONS_PATH = palamedes.STATE_DIR / "revisions.jsonl"
+        return palamedes
+
+    def __exit__(self, exc_type, exc, tb):
+        for name, value in self.originals.items():
+            setattr(palamedes, name, value)
 
 
 class PalamedesChatTests(unittest.TestCase):
@@ -65,10 +130,82 @@ class PalamedesChatTests(unittest.TestCase):
             ).load("trial-1")
 
         self.assertEqual(result, 0)
-        self.assertIn("A falsifiable mission.", output.getvalue())
-        self.assertEqual([record["role"] for record in records], ["user", "assistant"])
+        self.assertIn("Mission draft:", output.getvalue())
+        self.assertEqual(
+            [
+                record["role"]
+                for record in records
+                if record.get("role") in {"user", "assistant"}
+            ],
+            ["user", "assistant"],
+        )
         self.assertEqual(records[0]["content"], "/mission improve direction")
         self.assertIn("mission contract", provider.calls[0][-1]["content"])
+
+    def test_mission_approve_handoff_and_outcome_vertical_slice(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                provider = StaticChatProvider()
+                output = io.StringIO()
+                result = palamedes_chat.run_chat(
+                    palamedes_module=isolated,
+                    provider=provider,
+                    session_id="vertical",
+                    input_stream=io.StringIO(
+                        "/mission improve upstream decisions\n"
+                        "/approve\n"
+                        "/approve\n"
+                        "/outcome success The approved probe produced a traceable result\n"
+                        "/quit\n"
+                    ),
+                    output=output,
+                )
+                plan = isolated.load_plan()
+                mission_files = list(
+                    (isolated.STATE_DIR / "missions").glob("mission-*.json")
+                )
+                handoff_files = list(
+                    (isolated.STATE_DIR / "missions" / "handoffs").glob("*.json")
+                )
+                outcomes = (
+                    isolated.STATE_DIR / "missions" / "outcomes.jsonl"
+                ).read_text(encoding="utf-8")
+
+        self.assertEqual(result, 0)
+        self.assertEqual(
+            plan["goal"], "Prove that one mission improves the next action"
+        )
+        self.assertEqual(plan["hypothesis_log"][-1]["status"], "validated")
+        self.assertEqual(len(plan["hypothesis_log"]), 1)
+        self.assertEqual(plan["development_probes"][-1]["status"], "completed")
+        self.assertEqual(len(mission_files), 1)
+        self.assertEqual(len(handoff_files), 1)
+        self.assertIn('"status": "success"', outcomes)
+        self.assertIn("Delivery authority remains ungranted.", output.getvalue())
+        self.assertIn("No pending mission draft to approve.", output.getvalue())
+
+    def test_invalid_mission_output_cannot_be_approved(self):
+        class InvalidMissionProvider:
+            provider_name = "static"
+            model = "invalid"
+
+            def stream(self, messages):
+                yield "This is prose, not a contract."
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=InvalidMissionProvider(),
+                session_id="invalid",
+                input_stream=io.StringIO("/mission vague idea\n/approve\n/quit\n"),
+                output=output,
+            )
+
+        self.assertIn("[mission validation error]", output.getvalue())
+        self.assertIn("No pending mission draft to approve.", output.getvalue())
 
     def test_new_session_does_not_overwrite_previous_history(self):
         with tempfile.TemporaryDirectory() as tempdir:

@@ -453,6 +453,10 @@ palamedes> /think What important question are we failing to ask?
 palamedes> /challenge Our current product direction
 palamedes> /research What evidence is missing before commitment?
 palamedes> /mission Produce the strongest mission worth planning
+palamedes> /preview
+palamedes> /approve
+palamedes> /handoff
+palamedes> /outcome success The probe produced the precommitted result
 ```
 
 Available commands:
@@ -460,7 +464,12 @@ Available commands:
 - `/think`: choose and perform the missing mode of thought
 - `/challenge`: attack assumptions and state falsifiers
 - `/research`: identify the minimum missing external evidence
-- `/mission`: draft a mission contract with rationale, non-goals, uncertainty, and next probe
+- `/mission`: generate and validate a structured draft without changing the plan
+- `/preview`: inspect the latest pending mission contract
+- `/approve`: project the draft into plan, evidence, hypotheses, and a probe
+- `/reject`: preserve and reject a draft with an explicit reason
+- `/handoff`: inspect the immutable planner-facing mission handoff
+- `/outcome`: append an observed result and update linked hypothesis/probe state
 - `/status`, `/history`, `/sessions`, `/new`, `/help`, `/quit`
 
 The current directory is the default workspace; `--workspace` selects another
@@ -473,6 +482,25 @@ and provider-side API billing.
 The chat surface is deliberately plan-only. Model output can recommend a
 mission or plan change, but it cannot silently mutate a plan or claim that
 delivery work occurred.
+
+Mission authority follows an explicit vertical contract:
+
+```text
+/mission
+  -> schema-validated draft
+  -> /preview
+  -> /approve
+  -> plan + evidence + hypothesis + probe
+  -> planner handoff (delivery authority still false)
+  -> /outcome
+  -> append-only outcome + linked state update
+```
+
+Drafts and approved contracts live under `.palamedes/missions/`; planner
+handoffs live under `.palamedes/missions/handoffs/`; returned outcomes are
+appended to `.palamedes/missions/outcomes.jsonl`. Repeating `/approve` cannot
+approve a contract that has already left `draft` status. Outcome attribution is
+recorded as unresolved rather than inferred from success or failure text.
 
 The first 5 to 10 minutes should produce:
 
