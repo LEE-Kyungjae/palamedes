@@ -732,7 +732,11 @@ def score_run(run_path: Path) -> Dict[str, Any]:
         for item in case_results
     )
     labor = sum(
-        bool(item["outcome"] and item["outcome"].get("labor_retired"))
+        bool(
+            item["outcome"]
+            and item["outcome"].get("owner_attested")
+            and item["outcome"].get("labor_retired")
+        )
         for item in case_results
     )
     outcome_gate = (
@@ -785,16 +789,23 @@ def record_outcome(
     attributable_decision: bool,
     owner_seconds_without: int,
     owner_seconds_with: int,
+    owner_attestation: str,
     evidence: str,
 ) -> Dict[str, Any]:
     if selected_system not in {"baseline", "palamedes", "neither"}:
         raise ValueError("selected_system must be baseline, palamedes, or neither")
+    if owner_seconds_without < 0 or owner_seconds_with < 0:
+        raise ValueError("owner seconds must be non-negative")
+    if not owner_attestation.strip():
+        raise ValueError("an explicit owner attestation is required")
+    if not evidence.strip():
+        raise ValueError("timestamped outcome evidence is required")
     if owner_seconds_with > owner_seconds_without:
         labor_retired = False
     else:
         labor_retired = owner_seconds_with < owner_seconds_without
     outcome = {
-        "proof_outcome_version": "palamedes-proof-outcome/1",
+        "proof_outcome_version": "palamedes-proof-outcome/2",
         "case_id": case_id,
         "recorded_at": utc_now(),
         "selected_system": selected_system,
@@ -802,6 +813,8 @@ def record_outcome(
         "attributable_decision": attributable_decision,
         "owner_seconds_without": owner_seconds_without,
         "owner_seconds_with": owner_seconds_with,
+        "owner_attested": True,
+        "owner_attestation": owner_attestation,
         "retired_seconds": max(0, owner_seconds_without - owner_seconds_with),
         "labor_retired": labor_retired,
         "evidence": evidence,
@@ -850,6 +863,7 @@ def build_parser() -> argparse.ArgumentParser:
     command.add_argument("--attributable-decision", action="store_true")
     command.add_argument("--owner-seconds-without", type=int, required=True)
     command.add_argument("--owner-seconds-with", type=int, required=True)
+    command.add_argument("--owner-attestation", required=True)
     command.add_argument("--evidence", required=True)
     return parser
 
@@ -886,6 +900,7 @@ def main() -> int:
             attributable_decision=args.attributable_decision,
             owner_seconds_without=args.owner_seconds_without,
             owner_seconds_with=args.owner_seconds_with,
+            owner_attestation=args.owner_attestation,
             evidence=args.evidence,
         )
     print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))

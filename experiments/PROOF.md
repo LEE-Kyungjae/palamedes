@@ -82,8 +82,13 @@ python3 palamedes_proof.py outcome \
   --attributable-decision \
   --owner-seconds-without <counterfactual-seconds> \
   --owner-seconds-with <observed-seconds> \
+  --owner-attestation "<owner's explicit estimate in their own words>" \
   --evidence "<timestamped evidence location>"
 ```
+
+Do not infer or backfill the owner's counterfactual time. The outcome gate
+counts labor retirement only when the record contains an explicit owner
+attestation and timestamped evidence.
 
 Finally:
 

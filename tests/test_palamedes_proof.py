@@ -219,6 +219,10 @@ class PalamedesProofTests(unittest.TestCase):
                 attributable_decision=True,
                 owner_seconds_without=600,
                 owner_seconds_with=120,
+                owner_attestation=(
+                    "I would have spent about ten minutes framing this choice; "
+                    "reviewing the mission took two."
+                ),
                 evidence="Owner timestamped decision record.",
             )
 
@@ -231,10 +235,12 @@ class PalamedesProofTests(unittest.TestCase):
                     attributable_decision=True,
                     owner_seconds_without=600,
                     owner_seconds_with=120,
+                    owner_attestation="Owner confirms the estimate.",
                     evidence="Duplicate.",
                 )
 
         self.assertTrue(outcome["labor_retired"])
+        self.assertTrue(outcome["owner_attested"])
         self.assertEqual(outcome["retired_seconds"], 480)
 
     def test_generation_failure_is_preserved_and_not_retried_in_place(self):
