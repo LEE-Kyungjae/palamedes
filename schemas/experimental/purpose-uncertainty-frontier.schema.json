@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/purpose-uncertainty-frontier.schema.json",
+  "title": "PalamedesPurposeUncertaintyFrontier",
+  "description": "Experimental Cycle 261 frontier of unresolved value-relevant uncertainties and active mission assumptions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "frontier_id",
+    "contract_thesis_id",
+    "active_mission_id",
+    "snapshot_at",
+    "rerun_all_generators_on_every_event",
+    "frontier_entries",
+    "archived_entry_ids",
+    "frontier_refresh_reason"
+  ],
+  "properties": {
+    "frontier_id": {"type": "string", "minLength": 1},
+    "contract_thesis_id": {"type": "string", "minLength": 1},
+    "active_mission_id": {"type": "string", "minLength": 1},
+    "snapshot_at": {"type": "string", "minLength": 1},
+    "rerun_all_generators_on_every_event": {"const": false},
+    "frontier_entries": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entry_id",
+          "kind",
+          "claim",
+          "relevance_to_value_or_mission",
+          "value_boundary_id",
+          "mission_id",
+          "evidence_id",
+          "last_tested_at",
+          "next_discriminating_observation",
+          "wake_condition",
+          "priority",
+          "status"
+        ],
+        "properties": {
+          "entry_id": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["value_uncertainty", "mission_assumption"]},
+          "claim": {"type": "string", "minLength": 1},
+          "relevance_to_value_or_mission": {"type": "string", "minLength": 1},
+          "value_boundary_id": {"type": "string"},
+          "mission_id": {"type": "string"},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "last_tested_at": {"type": "string", "minLength": 1},
+          "next_discriminating_observation": {"type": "string", "minLength": 1},
+          "wake_condition": {"type": "string", "minLength": 1},
+          "priority": {"type": "number", "minimum": 0, "maximum": 1},
+          "status": {"enum": ["unresolved", "active"]}
+        }
+      }
+    },
+    "archived_entry_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "frontier_refresh_reason": {"type": "string", "minLength": 1}
+  }
+}

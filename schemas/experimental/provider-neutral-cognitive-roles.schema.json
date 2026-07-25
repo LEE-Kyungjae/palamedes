@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/provider-neutral-cognitive-roles.schema.json",
+  "title": "PalamedesProviderNeutralCognitiveRoles",
+  "description": "Cycle 322 provider-neutral interpreter, inventor, adversary, selector, and outcome analyst role boundaries.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["role_topology_id", "command_api_thesis_id", "assignment_policy_id", "roles", "runtime_assignment_policy", "provider_neutral", "multiple_providers_required", "role_boundaries_depend_on_provider", "topology_rationale"],
+  "properties": {
+    "role_topology_id": {"type": "string", "minLength": 1},
+    "command_api_thesis_id": {"type": "string", "minLength": 1},
+    "assignment_policy_id": {"type": "string", "minLength": 1},
+    "roles": {
+      "type": "array", "minItems": 5, "maxItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["role", "responsibility", "allowed_input_artifact_types", "output_artifact_type", "completion_criterion", "semantic_validator_id", "forbidden_authorities", "provider_id", "model_id", "may_assume_other_role_authority"],
+        "properties": {
+          "role": {"enum": ["interpreter", "inventor", "adversary", "selector", "outcome_analyst"]},
+          "responsibility": {"type": "string", "minLength": 1},
+          "allowed_input_artifact_types": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "output_artifact_type": {"type": "string", "minLength": 1},
+          "completion_criterion": {"type": "string", "minLength": 1},
+          "semantic_validator_id": {"type": "string", "minLength": 1},
+          "forbidden_authorities": {"type": "array", "minItems": 3, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "provider_id": {"const": ""},
+          "model_id": {"const": ""},
+          "may_assume_other_role_authority": {"const": false}
+        }
+      }
+    },
+    "runtime_assignment_policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["provider_count_minimum", "distinct_provider_per_role_required", "distinct_model_per_role_required", "assignment_manifest_required", "selection_basis", "reassignment_trigger"],
+      "properties": {
+        "provider_count_minimum": {"const": 1},
+        "distinct_provider_per_role_required": {"const": false},
+        "distinct_model_per_role_required": {"const": false},
+        "assignment_manifest_required": {"const": true},
+        "selection_basis": {"type": "string", "minLength": 1},
+        "reassignment_trigger": {"type": "string", "minLength": 1}
+      }
+    },
+    "provider_neutral": {"const": true},
+    "multiple_providers_required": {"const": false},
+    "role_boundaries_depend_on_provider": {"const": false},
+    "topology_rationale": {"type": "string", "minLength": 1}
+  }
+}

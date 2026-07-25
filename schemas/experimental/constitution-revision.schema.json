@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/constitution-revision.schema.json",
+  "title": "PalamedesConstitutionRevision",
+  "description": "Experimental Cycle 102 successor-only constitution revision contract.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "parent_version",
+    "revision_reason",
+    "trigger_sources",
+    "amendments"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "parent_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "revision_reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trigger_sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "amendments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation",
+          "clause_id",
+          "rationale",
+          "evidence_ids",
+          "new_text"
+        ],
+        "properties": {
+          "operation": {
+            "enum": [
+              "add",
+              "modify",
+              "retire"
+            ]
+          },
+          "clause_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "new_text": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

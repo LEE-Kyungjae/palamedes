@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/signal-thesis-integration.schema.json",
+  "title": "PalamedesSignalThesisIntegration",
+  "description": "Experimental Cycle 210 integration of bounded signal wake classes and observation blind spots.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "signal_thesis_id",
+    "event_attention_policy_id",
+    "source_structure_id",
+    "signal_claim_id",
+    "mission_wake_policy_id",
+    "accepted_wake_classes",
+    "unsupported_event_can_wake",
+    "observation_blind_spot_ids",
+    "blind_spot_is_self_interpreting",
+    "wake_cases",
+    "integration_rationale",
+    "conclusion"
+  ],
+  "properties": {
+    "signal_thesis_id": {"type": "string", "minLength": 1},
+    "event_attention_policy_id": {"type": "string", "minLength": 1},
+    "source_structure_id": {"type": "string", "minLength": 1},
+    "signal_claim_id": {"type": "string", "minLength": 1},
+    "mission_wake_policy_id": {"type": "string", "minLength": 1},
+    "accepted_wake_classes": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "enum": ["value_relevant_deviation", "consequential_anomaly", "model_failure"]
+      }
+    },
+    "unsupported_event_can_wake": {"const": false},
+    "observation_blind_spot_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "blind_spot_is_self_interpreting": {"const": false},
+    "wake_cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "wake_case_id",
+          "wake_class",
+          "basis_record_id",
+          "mission_change_candidate_id",
+          "evidence_id",
+          "why_cognition_could_change_mission"
+        ],
+        "properties": {
+          "wake_case_id": {"type": "string", "minLength": 1},
+          "wake_class": {
+            "enum": ["value_relevant_deviation", "consequential_anomaly", "model_failure"]
+          },
+          "basis_record_id": {"type": "string", "minLength": 1},
+          "mission_change_candidate_id": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "why_cognition_could_change_mission": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "integration_rationale": {"type": "string", "minLength": 1},
+    "conclusion": {"const": "signal_thesis_supported"}
+  }
+}

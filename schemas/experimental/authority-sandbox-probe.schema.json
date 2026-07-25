@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/authority-sandbox-probe.schema.json",
+  "title": "PalamedesAuthoritySandboxProbe",
+  "description": "Experimental Cycle 144 safe sandbox evidence for weak authority analogy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "probe_id",
+    "reasoning_id",
+    "simulated_action",
+    "sandbox_boundary",
+    "synthetic_inputs",
+    "observation",
+    "analogy_update_rule",
+    "rollback",
+    "stop_condition",
+    "external_communication",
+    "real_affected_parties",
+    "persistent_external_effect",
+    "creates_commitment",
+    "reversible",
+    "resource_limit",
+    "resource_unit",
+    "distinguishing_outcomes"
+  ],
+  "properties": {
+    "probe_id": {"type": "string", "minLength": 1},
+    "reasoning_id": {"type": "string", "minLength": 1},
+    "simulated_action": {"type": "string", "minLength": 1},
+    "sandbox_boundary": {"type": "string", "minLength": 1},
+    "synthetic_inputs": {"type": "string", "minLength": 1},
+    "observation": {"type": "string", "minLength": 1},
+    "analogy_update_rule": {"type": "string", "minLength": 1},
+    "rollback": {"type": "string", "minLength": 1},
+    "stop_condition": {"type": "string", "minLength": 1},
+    "external_communication": {"const": false},
+    "real_affected_parties": {"const": false},
+    "persistent_external_effect": {"const": false},
+    "creates_commitment": {"const": false},
+    "reversible": {"const": true},
+    "resource_limit": {"type": "integer", "minimum": 0},
+    "resource_unit": {"type": "string", "minLength": 1},
+    "distinguishing_outcomes": {
+      "type": "array",
+      "minItems": 2,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

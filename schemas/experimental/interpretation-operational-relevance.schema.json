@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/interpretation-operational-relevance.schema.json",
+  "title": "PalamedesInterpretationOperationalRelevance",
+  "description": "Experimental Cycle 228 contract classifying interpretations by option-set or probe change.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "interpretation_relevance_id",
+    "interpretation_id",
+    "interpretation_summary",
+    "mission_option_ids_before",
+    "mission_option_ids_after",
+    "prior_probe_id",
+    "next_probe_id",
+    "changes_mission_option_set",
+    "changes_next_probe",
+    "classification",
+    "decision_effect",
+    "storage_disposition"
+  ],
+  "properties": {
+    "interpretation_relevance_id": {"type": "string", "minLength": 1},
+    "interpretation_id": {"type": "string", "minLength": 1},
+    "interpretation_summary": {"type": "string", "minLength": 1},
+    "mission_option_ids_before": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "mission_option_ids_after": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "prior_probe_id": {"type": "string", "minLength": 1},
+    "next_probe_id": {"type": "string", "minLength": 1},
+    "changes_mission_option_set": {"type": "boolean"},
+    "changes_next_probe": {"type": "boolean"},
+    "classification": {"enum": ["operational", "background_knowledge"]},
+    "decision_effect": {"type": "string"},
+    "storage_disposition": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/pre-rival-mission-forecast-freeze.schema.json",
+  "title": "PalamedesPreRivalMissionForecastFreeze",
+  "description": "Experimental Cycle 315 isolated mission generation with forecasts frozen before rival inspection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["proposal_batch_id", "source_bundle_id", "source_bundle_fingerprint", "generation_sessions", "rival_reveal_at", "sessions_share_generation_context", "rivals_visible_before_forecast_freeze", "batch_rationale"],
+  "properties": {
+    "proposal_batch_id": {"type": "string", "minLength": 1},
+    "source_bundle_id": {"type": "string", "minLength": 1},
+    "source_bundle_fingerprint": {"type": "string", "minLength": 1},
+    "generation_sessions": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["generation_context_id", "source_bundle_id", "source_bundle_fingerprint", "rival_candidate_ids_visible", "mission_candidate", "frozen_forecast", "forecast_mutable_after_reveal"],
+        "properties": {
+          "generation_context_id": {"type": "string", "minLength": 1},
+          "source_bundle_id": {"type": "string", "minLength": 1},
+          "source_bundle_fingerprint": {"type": "string", "minLength": 1},
+          "rival_candidate_ids_visible": {"const": []},
+          "mission_candidate": {"$ref": "complete-mission-candidate-basis.schema.json"},
+          "frozen_forecast": {
+            "type": "object", "additionalProperties": false,
+            "required": ["forecast_id", "expected_outcome", "outcome_probability", "time_horizon", "resource_forecast", "harm_forecast", "disconfirmation_forecast", "forecast_fingerprint", "frozen_at"],
+            "properties": {
+              "forecast_id": {"type": "string", "minLength": 1},
+              "expected_outcome": {"type": "string", "minLength": 1},
+              "outcome_probability": {"type": "number", "minimum": 0, "maximum": 1},
+              "time_horizon": {"type": "string", "minLength": 1},
+              "resource_forecast": {"type": "string", "minLength": 1},
+              "harm_forecast": {"type": "string", "minLength": 1},
+              "disconfirmation_forecast": {"type": "string", "minLength": 1},
+              "forecast_fingerprint": {"type": "string", "minLength": 1},
+              "frozen_at": {"type": "string", "minLength": 1}
+            }
+          },
+          "forecast_mutable_after_reveal": {"const": false}
+        }
+      }
+    },
+    "rival_reveal_at": {"type": "string", "minLength": 1},
+    "sessions_share_generation_context": {"const": false},
+    "rivals_visible_before_forecast_freeze": {"const": false},
+    "batch_rationale": {"type": "string", "minLength": 1}
+  }
+}

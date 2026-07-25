@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/constitution-amendment-security.schema.json",
+  "title": "PalamedesConstitutionAmendmentSecurity",
+  "description": "Experimental Cycle 276 protection of constitutional amendments through authority, visible diffs, delayed activation, and high-impact rollback.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "amendment_security_id",
+    "amendment_id",
+    "constitution_id",
+    "proposer_id",
+    "amendment_authority_grant_id",
+    "authorization_verified",
+    "self_granted_authority",
+    "independent_ratifier_id",
+    "amendment_rationale",
+    "rationale_evidence_id",
+    "visible_clause_diffs",
+    "diff_publication_id",
+    "impact_level",
+    "proposed_at",
+    "activation_at",
+    "activation_delay_hours",
+    "minimum_high_impact_delay_hours",
+    "immediate_activation",
+    "rollback_plan",
+    "security_rationale"
+  ],
+  "properties": {
+    "amendment_security_id": {"type": "string", "minLength": 1},
+    "amendment_id": {"type": "string", "minLength": 1},
+    "constitution_id": {"type": "string", "minLength": 1},
+    "proposer_id": {"type": "string", "minLength": 1},
+    "amendment_authority_grant_id": {"type": "string", "minLength": 1},
+    "authorization_verified": {"const": true},
+    "self_granted_authority": {"const": false},
+    "independent_ratifier_id": {"type": "string", "minLength": 1},
+    "amendment_rationale": {"type": "string", "minLength": 1},
+    "rationale_evidence_id": {"type": "string", "minLength": 1},
+    "visible_clause_diffs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["clause_id", "before_text", "after_text", "change_rationale", "impact"],
+        "properties": {
+          "clause_id": {"type": "string", "minLength": 1},
+          "before_text": {"type": "string", "minLength": 1},
+          "after_text": {"type": "string", "minLength": 1},
+          "change_rationale": {"type": "string", "minLength": 1},
+          "impact": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "diff_publication_id": {"type": "string", "minLength": 1},
+    "impact_level": {"enum": ["low", "high"]},
+    "proposed_at": {"type": "string", "minLength": 1},
+    "activation_at": {"type": "string", "minLength": 1},
+    "activation_delay_hours": {"type": "number", "minimum": 0},
+    "minimum_high_impact_delay_hours": {"type": "number", "minimum": 0},
+    "immediate_activation": {"type": "boolean"},
+    "rollback_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "predecessor_snapshot_id",
+        "rollback_trigger",
+        "rollback_action",
+        "rollback_authority_id",
+        "verification_test"
+      ],
+      "properties": {
+        "predecessor_snapshot_id": {"type": "string", "minLength": 1},
+        "rollback_trigger": {"type": "string", "minLength": 1},
+        "rollback_action": {"type": "string", "minLength": 1},
+        "rollback_authority_id": {"type": "string", "minLength": 1},
+        "verification_test": {"type": "string", "minLength": 1}
+      }
+    },
+    "security_rationale": {"type": "string", "minLength": 1}
+  }
+}

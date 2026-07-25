@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/essential-mechanism-open-form-contract.schema.json",
+  "title": "PalamedesEssentialMechanismOpenFormContract",
+  "description": "Experimental Cycle 254 contract preserving essential causal mechanisms while leaving implementation forms negotiable.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "causal_contract_id",
+    "planner_contract_id",
+    "desired_condition_contract_id",
+    "causal_thesis",
+    "causal_evidence_id",
+    "essential_mechanisms",
+    "negotiable_forms",
+    "prescribed_form_ids",
+    "implementation_form_mistaken_for_mechanism",
+    "planner_may_substitute_negotiable_forms",
+    "planner_freedom_rationale"
+  ],
+  "properties": {
+    "causal_contract_id": {"type": "string", "minLength": 1},
+    "planner_contract_id": {"type": "string", "minLength": 1},
+    "desired_condition_contract_id": {"type": "string", "minLength": 1},
+    "causal_thesis": {"type": "string", "minLength": 1},
+    "causal_evidence_id": {"type": "string", "minLength": 1},
+    "essential_mechanisms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mechanism_id",
+          "mechanism",
+          "predicted_effect",
+          "supporting_evidence_id",
+          "falsification_condition",
+          "removal_breaks_causal_thesis"
+        ],
+        "properties": {
+          "mechanism_id": {"type": "string", "minLength": 1},
+          "mechanism": {"type": "string", "minLength": 1},
+          "predicted_effect": {"type": "string", "minLength": 1},
+          "supporting_evidence_id": {"type": "string", "minLength": 1},
+          "falsification_condition": {"type": "string", "minLength": 1},
+          "removal_breaks_causal_thesis": {"const": true}
+        }
+      }
+    },
+    "negotiable_forms": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["form_id", "form", "substitution_rule", "preserves_mechanism_ids"],
+        "properties": {
+          "form_id": {"type": "string", "minLength": 1},
+          "form": {"type": "string", "minLength": 1},
+          "substitution_rule": {"type": "string", "minLength": 1},
+          "preserves_mechanism_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "prescribed_form_ids": {"type": "array", "maxItems": 0},
+    "implementation_form_mistaken_for_mechanism": {"const": false},
+    "planner_may_substitute_negotiable_forms": {"const": true},
+    "planner_freedom_rationale": {"type": "string", "minLength": 1}
+  }
+}

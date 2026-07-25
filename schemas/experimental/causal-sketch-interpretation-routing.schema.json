@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/causal-sketch-interpretation-routing.schema.json",
+  "title": "PalamedesCausalSketchInterpretationRouting",
+  "description": "Cycle 324 route between one-pass and independent causal interpretation calls based on prediction separability.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["routing_record_id", "signal_set_fingerprint", "interpreter_role_id", "route", "sketches", "predictions_pairwise_separable", "co_generated_sketch_visibility", "other_sketches_visible_during_call", "routing_decided_before_interpretation", "unseparable_sketches_collapsed_as_plural", "routing_rationale"],
+  "properties": {
+    "routing_record_id": {"type": "string", "minLength": 1},
+    "signal_set_fingerprint": {"type": "string", "minLength": 1},
+    "interpreter_role_id": {"const": "interpreter"},
+    "route": {"enum": ["single_pass", "independent_calls"]},
+    "sketches": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["causal_sketch_id", "call_id", "sketch_fingerprint", "falsifiable_predictions", "discriminating_observation", "prediction_registered_before_outcome"],
+        "properties": {
+          "causal_sketch_id": {"type": "string", "minLength": 1},
+          "call_id": {"type": "string", "minLength": 1},
+          "sketch_fingerprint": {"type": "string", "minLength": 1},
+          "falsifiable_predictions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "discriminating_observation": {"type": "string", "minLength": 1},
+          "prediction_registered_before_outcome": {"const": true}
+        }
+      }
+    },
+    "predictions_pairwise_separable": {"type": "boolean"},
+    "co_generated_sketch_visibility": {"type": "boolean"},
+    "other_sketches_visible_during_call": {"type": "boolean"},
+    "routing_decided_before_interpretation": {"const": true},
+    "unseparable_sketches_collapsed_as_plural": {"const": false},
+    "routing_rationale": {"type": "string", "minLength": 1}
+  }
+}

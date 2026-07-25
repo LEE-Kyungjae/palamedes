@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/atomic-mission-cycle.schema.json",
+  "title": "PalamedesAtomicMissionCycle",
+  "description": "Experimental Cycle 196 complete mismatch-to-consequence mission cycle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cycle_id", "constitution_id", "started_at", "completed_at", "steps", "steps_skipped"],
+  "properties": {
+    "cycle_id": {"type": "string", "minLength": 1},
+    "constitution_id": {"type": "string", "minLength": 1},
+    "started_at": {"type": "string", "minLength": 1},
+    "completed_at": {"type": "string", "minLength": 1},
+    "steps": {
+      "type": "array",
+      "prefixItems": [
+        {"properties": {"operation": {"const": "observe_mismatch"}}},
+        {"properties": {"operation": {"const": "interpret_condition"}}},
+        {"properties": {"operation": {"const": "generate_missions"}}},
+        {"properties": {"operation": {"const": "attack_missions"}}},
+        {"properties": {"operation": {"const": "select_authority_bounded_action"}}},
+        {"properties": {"operation": {"const": "learn_consequence"}}}
+      ],
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "operation",
+          "artifact_id",
+          "input_fingerprint",
+          "output_fingerprint",
+          "evidence_id",
+          "result",
+          "completed"
+        ],
+        "properties": {
+          "operation": {
+            "enum": [
+              "observe_mismatch",
+              "interpret_condition",
+              "generate_missions",
+              "attack_missions",
+              "select_authority_bounded_action",
+              "learn_consequence"
+            ]
+          },
+          "artifact_id": {"type": "string", "minLength": 1},
+          "input_fingerprint": {"type": "string", "minLength": 1},
+          "output_fingerprint": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "result": {"type": "string", "minLength": 1},
+          "completed": {"const": true}
+        }
+      }
+    },
+    "steps_skipped": {"type": "array", "maxItems": 0}
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/creativity-diagnostic-report.schema.json",
+  "title": "PalamedesCreativityDiagnosticReport",
+  "description": "Cycle 378 useful frame-distance and opened-action diagnostic.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["creativity_report_id", "mission_candidate_id", "source_frame_id", "source_frame_fingerprint", "diagnostic_protocol_id", "report_fingerprint", "frame_distance_axes", "opened_actions", "non_compensable_gates", "declared_diagnostics", "candidate_eligible", "creativity_used_as_selection_objective", "creativity_compensates_for_failed_gate", "novel_language_counts_without_opened_action", "report_rationale"],
+  "properties": {
+    "creativity_report_id": {"type": "string", "minLength": 1},
+    "mission_candidate_id": {"type": "string", "minLength": 1},
+    "source_frame_id": {"type": "string", "minLength": 1},
+    "source_frame_fingerprint": {"type": "string", "minLength": 1},
+    "diagnostic_protocol_id": {"type": "string", "minLength": 1},
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "frame_distance_axes": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["axis", "source_frame", "candidate_frame", "relation_evidence", "distance", "distance_rationale"],
+        "properties": {
+          "axis": {"enum": ["beneficiary", "causal_model", "option_structure", "evaluation_question"]},
+          "source_frame": {"type": "string", "minLength": 1},
+          "candidate_frame": {"type": "string", "minLength": 1},
+          "relation_evidence": {"type": "string", "minLength": 1},
+          "distance": {"type": "number", "minimum": 0, "maximum": 1},
+          "distance_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "opened_actions": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["action_id", "action", "previously_unreachable_because", "new_relation_that_opens_it", "evidence_or_probe", "was_reachable_under_source_frame", "purpose_relevant_and_testable"],
+        "properties": {
+          "action_id": {"type": "string", "minLength": 1},
+          "action": {"type": "string", "minLength": 1},
+          "previously_unreachable_because": {"type": "string", "minLength": 1},
+          "new_relation_that_opens_it": {"type": "string", "minLength": 1},
+          "evidence_or_probe": {"type": "string", "minLength": 1},
+          "was_reachable_under_source_frame": {"const": false},
+          "purpose_relevant_and_testable": {"type": "boolean"}
+        }
+      }
+    },
+    "non_compensable_gates": {
+      "type": "object", "additionalProperties": false,
+      "required": ["constitutional_validity", "causal_coherence", "harm_boundary_passed"],
+      "properties": {
+        "constitutional_validity": {"type": "boolean"},
+        "causal_coherence": {"type": "boolean"},
+        "harm_boundary_passed": {"type": "boolean"}
+      }
+    },
+    "declared_diagnostics": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mean_frame_distance", "opened_action_count", "useful_opened_action_count"],
+      "properties": {
+        "mean_frame_distance": {"type": "number", "minimum": 0, "maximum": 1},
+        "opened_action_count": {"type": "integer", "minimum": 1},
+        "useful_opened_action_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "candidate_eligible": {"type": "boolean"},
+    "creativity_used_as_selection_objective": {"const": false},
+    "creativity_compensates_for_failed_gate": {"const": false},
+    "novel_language_counts_without_opened_action": {"const": false},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

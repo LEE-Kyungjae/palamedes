@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/capability-institution-mismatch.schema.json",
+  "title": "PalamedesCapabilityInstitutionMismatch",
+  "description": "Experimental Cycle 121 contract discovering opportunities before trend consensus.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mismatch_id",
+    "new_capability",
+    "capability_change_date",
+    "old_institution",
+    "institutional_rule_or_assumption",
+    "why_rule_persists",
+    "blocked_condition_change",
+    "affected_group_id",
+    "mismatch_mechanism",
+    "disconfirming_condition",
+    "trend_consensus_defines_opportunity",
+    "trend_consensus_status",
+    "capability_source_ids",
+    "institution_source_ids"
+  ],
+  "properties": {
+    "mismatch_id": {"type": "string", "minLength": 1},
+    "new_capability": {"type": "string", "minLength": 1},
+    "capability_change_date": {"type": "string", "minLength": 1},
+    "old_institution": {"type": "string", "minLength": 1},
+    "institutional_rule_or_assumption": {"type": "string", "minLength": 1},
+    "why_rule_persists": {"type": "string", "minLength": 1},
+    "blocked_condition_change": {"type": "string", "minLength": 1},
+    "affected_group_id": {"type": "string", "minLength": 1},
+    "mismatch_mechanism": {"type": "string", "minLength": 1},
+    "disconfirming_condition": {"type": "string", "minLength": 1},
+    "trend_consensus_defines_opportunity": {"const": false},
+    "trend_consensus_status": {"enum": ["absent", "forming", "established"]},
+    "capability_source_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "institution_source_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

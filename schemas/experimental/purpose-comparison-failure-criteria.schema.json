@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/purpose-comparison-failure-criteria.schema.json",
+  "title": "PalamedesPurposeComparisonFailureCriteria",
+  "description": "Experimental Cycle 289 protocol for six binding purpose-comparison failure modes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["failure_protocol_id", "case_id", "failure_criteria", "overall_verdict", "failure_can_be_offset_by_other_scores", "criteria_frozen_before_evaluation", "decision_rationale"],
+  "properties": {
+    "failure_protocol_id": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "failure_criteria": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["criterion_id", "failure_type", "observable_test", "failure_threshold", "evidence_id", "independent_evaluator_id", "finding", "triggered"],
+        "properties": {
+          "criterion_id": {"type": "string", "minLength": 1},
+          "failure_type": {"enum": ["generic_mission", "hidden_human_goal_injection", "proxy_harm", "constitution_theater", "planner_reconstruction", "no_outcome_advantage"]},
+          "observable_test": {"type": "string", "minLength": 1},
+          "failure_threshold": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "independent_evaluator_id": {"type": "string", "minLength": 1},
+          "finding": {"type": "string", "minLength": 1},
+          "triggered": {"type": "boolean"}
+        }
+      }
+    },
+    "overall_verdict": {"enum": ["fail", "eligible_for_proof"]},
+    "failure_can_be_offset_by_other_scores": {"const": false},
+    "criteria_frozen_before_evaluation": {"const": true},
+    "decision_rationale": {"type": "string", "minLength": 1}
+  }
+}

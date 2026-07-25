@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/incentive-corroborated-signal-priority.schema.json",
+  "title": "PalamedesIncentiveCorroboratedSignalPriority",
+  "description": "Experimental Cycle 271 signal priority discounted by source incentives and restored through independent corroboration.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "priority_review_id",
+    "signal_id",
+    "primary_source_id",
+    "reported_urgency",
+    "source_incentive",
+    "source_incentive_risk",
+    "source_incentive_evidence_id",
+    "corroborating_sources",
+    "corroboration_strength",
+    "computed_priority",
+    "priority_threshold",
+    "reported_urgency_used_directly",
+    "decision",
+    "priority_rationale"
+  ],
+  "properties": {
+    "priority_review_id": {"type": "string", "minLength": 1},
+    "signal_id": {"type": "string", "minLength": 1},
+    "primary_source_id": {"type": "string", "minLength": 1},
+    "reported_urgency": {"type": "number", "minimum": 0, "maximum": 1},
+    "source_incentive": {"type": "string", "minLength": 1},
+    "source_incentive_risk": {"type": "number", "minimum": 0, "maximum": 1},
+    "source_incentive_evidence_id": {"type": "string", "minLength": 1},
+    "corroborating_sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_id",
+          "observation",
+          "evidence_id",
+          "operationally_independent",
+          "independence_evidence_id",
+          "support_strength"
+        ],
+        "properties": {
+          "source_id": {"type": "string", "minLength": 1},
+          "observation": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "operationally_independent": {"const": true},
+          "independence_evidence_id": {"type": "string", "minLength": 1},
+          "support_strength": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }
+    },
+    "corroboration_strength": {"type": "number", "minimum": 0, "maximum": 1},
+    "computed_priority": {"type": "number", "minimum": 0, "maximum": 1},
+    "priority_threshold": {"type": "number", "minimum": 0, "maximum": 1},
+    "reported_urgency_used_directly": {"const": false},
+    "decision": {"enum": ["prioritize", "hold_priority"]},
+    "priority_rationale": {"type": "string", "minLength": 1}
+  }
+}

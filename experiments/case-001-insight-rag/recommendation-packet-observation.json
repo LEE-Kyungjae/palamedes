@@ -1,0 +1,88 @@
+{
+  "case_id": "case-001-insight-rag",
+  "observed_at": "2026-07-25",
+  "engine_confidence": "low",
+  "indexed_corpus": {
+    "raw_evidence_count": 1624,
+    "component_count": 837,
+    "repositories": [
+      "openclaw-diagnostics-otel@70a8c2a1c99d061134c26216f88568e0e4cff560",
+      "n8n-instance-ai@55e92cc28317a30e6054c374c3960514c14fd0c9",
+      "portkey-gateway@669825cbe89ee51569918b8f78a9db486fd69dd4",
+      "tambo-api@d24882e2b581a564a7bb4f2727feb15e3737452d"
+    ]
+  },
+  "ranked_candidates": [
+    {
+      "candidate_id": "openclaw-diagnostics-otel:Src:src",
+      "score": 0.5478,
+      "confidence": "low",
+      "query_reference_score": 9.167,
+      "positive_capabilities": ["observability"],
+      "missing_required_capabilities": [
+        "test or validation evidence",
+        "structured logging",
+        "correlation id",
+        "SLO/runbook"
+      ]
+    },
+    {
+      "candidate_id": "n8n-instance-ai:SrcToolsOrchestrationTestsBuildAgent.tool.test:src/tools/orchestration/__tests__/build-agent.tool.test",
+      "score": 0.4409,
+      "confidence": "low",
+      "query_reference_score": 7.166,
+      "positive_capabilities": ["test evidence"],
+      "missing_required_capabilities": [
+        "runtime path evidence",
+        "structured logging",
+        "correlation id"
+      ]
+    },
+    {
+      "candidate_id": "portkey-gateway:SrcProvidersCohereTypes:src/providers/cohere/types",
+      "score": 0.4399,
+      "confidence": "low",
+      "query_reference_score": 7.059,
+      "positive_capabilities": ["failure handling", "runtime path implementation"],
+      "missing_required_capabilities": ["structured logging", "correlation id"]
+    },
+    {
+      "candidate_id": "n8n-instance-ai:SrcTracingTracePayloads:src/tracing/trace-payloads",
+      "score": 0.4312,
+      "confidence": "low",
+      "query_reference_score": 6.567,
+      "positive_capabilities": ["observability", "correlation id"],
+      "missing_required_capabilities": [
+        "test or validation evidence",
+        "structured logging",
+        "SLO/runbook"
+      ]
+    },
+    {
+      "candidate_id": "tambo-api:SrcCommonServicesLogger.service:src/common/services/logger.service",
+      "score": 0.3982,
+      "confidence": "low",
+      "query_reference_score": 5.662,
+      "positive_capabilities": ["observability", "failure handling"],
+      "missing_required_capabilities": ["structured logging", "correlation id"]
+    }
+  ],
+  "selected_candidate_id": "openclaw-diagnostics-otel:Src:src",
+  "observed_guidance": [
+    "Locate the current runtime boundary before adding abstractions.",
+    "Map the reference pattern to local modules.",
+    "Define cache key construction separately from business logic.",
+    "Add duplicate request collapse, TTL, and invalidation.",
+    "Define cache miss, stale value, and backend fallback behavior.",
+    "Propagate request or correlation identifiers through the runtime path."
+  ],
+  "blocking_observations": [
+    "The selected candidate lacks positive correlation-id evidence required by the task.",
+    "All five candidates are low confidence.",
+    "Cache and duplicate-collapse instructions are unrelated to the frozen voice-turn trace task.",
+    "Guidance steps are not individually linked to source evidence.",
+    "The generated handoff prompt is executable despite the low confidence and missing evidence."
+  ],
+  "treatment_status": "unavailable_insufficient_evidence",
+  "handoff_authorized": false
+}

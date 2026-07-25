@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/narrow-cognitive-command-api-thesis.schema.json",
+  "title": "PalamedesNarrowCognitiveCommandApiThesis",
+  "description": "Cycle 320 integration of narrow cognitive commands with enforced preconditions and inspectable intermediate artifacts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["api_thesis_id", "command_registry_id", "revision_envelope_adapter_id", "commands", "generic_create_endpoint_exposed", "commands_may_skip_preconditions", "intermediate_artifacts_collapsed", "model_may_mutate_hidden_state", "outcome_may_rewrite_history", "api_thesis_decision", "thesis_rationale"],
+  "properties": {
+    "api_thesis_id": {"type": "string", "minLength": 1},
+    "command_registry_id": {"type": "string", "minLength": 1},
+    "revision_envelope_adapter_id": {"type": "string", "minLength": 1},
+    "commands": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ordinal", "command", "intent", "semantic_validator_id", "required_input_artifact_types", "precondition_expression", "authority_id", "output_artifact_type", "inspectable_output", "preconditions_checked_before_execution", "hidden_state_transition", "implicit_downstream_execution"],
+        "properties": {
+          "ordinal": {"type": "integer", "minimum": 1, "maximum": 8},
+          "command": {"enum": ["record_signal", "evaluate_wake", "record_competing_causal_sketches", "freeze_pre_rival_mission_forecasts", "record_mission_critiques", "select_mission_mode", "issue_mission_contract", "record_mission_outcome"]},
+          "intent": {"type": "string", "minLength": 1},
+          "semantic_validator_id": {"type": "string", "minLength": 1},
+          "required_input_artifact_types": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "precondition_expression": {"type": "string", "minLength": 1},
+          "authority_id": {"type": "string", "minLength": 1},
+          "output_artifact_type": {"type": "string", "minLength": 1},
+          "inspectable_output": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["artifact_id", "artifact_type", "schema_id", "fingerprint", "provenance_record_id", "independently_retrievable", "independently_validatable"],
+            "properties": {
+              "artifact_id": {"type": "string", "minLength": 1},
+              "artifact_type": {"type": "string", "minLength": 1},
+              "schema_id": {"type": "string", "minLength": 1},
+              "fingerprint": {"type": "string", "minLength": 1},
+              "provenance_record_id": {"type": "string", "minLength": 1},
+              "independently_retrievable": {"const": true},
+              "independently_validatable": {"const": true}
+            }
+          },
+          "preconditions_checked_before_execution": {"const": true},
+          "hidden_state_transition": {"const": false},
+          "implicit_downstream_execution": {"const": false}
+        }
+      }
+    },
+    "generic_create_endpoint_exposed": {"const": false},
+    "commands_may_skip_preconditions": {"const": false},
+    "intermediate_artifacts_collapsed": {"const": false},
+    "model_may_mutate_hidden_state": {"const": false},
+    "outcome_may_rewrite_history": {"const": false},
+    "api_thesis_decision": {"const": "integrated"},
+    "thesis_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/probability-downside-profile.schema.json",
+  "title": "PalamedesProbabilityDownsideProfile",
+  "description": "Experimental Cycle 135 probability range and downside exposure profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profile_id",
+    "candidate_id",
+    "upside_scenario",
+    "probability_basis",
+    "unknowns_outside_range",
+    "probability_lower",
+    "probability_upper",
+    "downside_exposures"
+  ],
+  "properties": {
+    "profile_id": {"type": "string", "minLength": 1},
+    "candidate_id": {"type": "string", "minLength": 1},
+    "upside_scenario": {"type": "string", "minLength": 1},
+    "probability_basis": {"type": "string", "minLength": 1},
+    "unknowns_outside_range": {"type": "string", "minLength": 1},
+    "probability_lower": {"type": "integer", "minimum": 0, "maximum": 100},
+    "probability_upper": {"type": "integer", "minimum": 0, "maximum": 100},
+    "downside_exposures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "exposure_id",
+          "affected_group_id",
+          "harm",
+          "severity",
+          "reversibility",
+          "mitigation",
+          "source_id"
+        ],
+        "properties": {
+          "exposure_id": {"type": "string", "minLength": 1},
+          "affected_group_id": {"type": "string", "minLength": 1},
+          "harm": {"type": "string", "minLength": 1},
+          "severity": {"type": "string", "minLength": 1},
+          "reversibility": {"type": "string", "minLength": 1},
+          "mitigation": {"type": "string", "minLength": 1},
+          "source_id": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/hidden-harm-adversarial-criticism.schema.json",
+  "title": "PalamedesHiddenHarmAdversarialCriticism",
+  "description": "Experimental Cycle 275 adversarial search for displaced costs and unobserved parties behind metric-compliant missions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "criticism_id",
+    "mission_candidate_id",
+    "claimed_metric",
+    "claimed_metric_evidence_id",
+    "claimed_metric_met",
+    "metric_compliance_is_sufficient",
+    "critic_id",
+    "adversarial_searches",
+    "decision",
+    "decision_rationale"
+  ],
+  "properties": {
+    "criticism_id": {"type": "string", "minLength": 1},
+    "mission_candidate_id": {"type": "string", "minLength": 1},
+    "claimed_metric": {"type": "string", "minLength": 1},
+    "claimed_metric_evidence_id": {"type": "string", "minLength": 1},
+    "claimed_metric_met": {"const": true},
+    "metric_compliance_is_sufficient": {"const": false},
+    "critic_id": {"type": "string", "minLength": 1},
+    "adversarial_searches": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "search_id",
+          "search_type",
+          "adversarial_hypothesis",
+          "search_method",
+          "searched_scope",
+          "evidence_id",
+          "harm_found",
+          "affected_party_or_system",
+          "harm_or_cost",
+          "harm_status",
+          "response",
+          "mitigation_evidence_id"
+        ],
+        "properties": {
+          "search_id": {"type": "string", "minLength": 1},
+          "search_type": {"enum": ["displaced_cost", "unobserved_party"]},
+          "adversarial_hypothesis": {"type": "string", "minLength": 1},
+          "search_method": {"type": "string", "minLength": 1},
+          "searched_scope": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "harm_found": {"type": "boolean"},
+          "affected_party_or_system": {"type": "string"},
+          "harm_or_cost": {"type": "string"},
+          "harm_status": {"enum": ["not_found", "resolved", "unresolved"]},
+          "response": {"type": "string"},
+          "mitigation_evidence_id": {"type": "string"}
+        }
+      }
+    },
+    "decision": {"enum": ["revise_or_reject", "eligible_after_adversarial_review"]},
+    "decision_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/event-attention-admission.schema.json",
+  "title": "PalamedesEventAttentionAdmission",
+  "description": "Experimental Cycle 201 separation of observed change from finite signal attention.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "admission_id",
+    "event_id",
+    "observed_change",
+    "observation_evidence_id",
+    "attention_budget_id",
+    "attention_capacity",
+    "attention_committed",
+    "attention_cost",
+    "every_change_is_signal",
+    "decision",
+    "admitted_as_signal",
+    "attention_reason",
+    "next_review_trigger",
+    "decision_rationale"
+  ],
+  "properties": {
+    "admission_id": {"type": "string", "minLength": 1},
+    "event_id": {"type": "string", "minLength": 1},
+    "observed_change": {"type": "string", "minLength": 1},
+    "observation_evidence_id": {"type": "string", "minLength": 1},
+    "attention_budget_id": {"type": "string", "minLength": 1},
+    "attention_capacity": {"type": "number", "minimum": 0},
+    "attention_committed": {"type": "number", "minimum": 0},
+    "attention_cost": {"type": "number", "exclusiveMinimum": 0},
+    "every_change_is_signal": {"const": false},
+    "decision": {"enum": ["ignore", "store_change", "admit_signal", "wake"]},
+    "admitted_as_signal": {"type": "boolean"},
+    "attention_reason": {"type": "string"},
+    "next_review_trigger": {"type": "string"},
+    "decision_rationale": {"type": "string", "minLength": 1}
+  }
+}

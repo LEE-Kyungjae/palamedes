@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/condition-capability-state-distinction.schema.json",
+  "title": "PalamedesConditionCapabilityStateDistinction",
+  "description": "Experimental Cycle 232 contract distinguishing condition repair from newly reachable capability states.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "state_distinction_id",
+    "mission_generation_id",
+    "condition_first_candidate",
+    "capability_first_candidate",
+    "selection_deferred_until_comparison"
+  ],
+  "properties": {
+    "state_distinction_id": {"type": "string", "minLength": 1},
+    "mission_generation_id": {"type": "string", "minLength": 1},
+    "condition_first_candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_id",
+        "beneficiary",
+        "current_condition",
+        "desired_condition",
+        "existing_condition_observed",
+        "condition_evidence_id",
+        "state_change_measure"
+      ],
+      "properties": {
+        "candidate_id": {"type": "string", "minLength": 1},
+        "beneficiary": {"type": "string", "minLength": 1},
+        "current_condition": {"type": "string", "minLength": 1},
+        "desired_condition": {"type": "string", "minLength": 1},
+        "existing_condition_observed": {"const": true},
+        "condition_evidence_id": {"type": "string", "minLength": 1},
+        "state_change_measure": {"type": "string", "minLength": 1}
+      }
+    },
+    "capability_first_candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_id",
+        "capability_id",
+        "capability_evidence_id",
+        "beneficiary",
+        "previously_unreachable_state",
+        "newly_reachable_state",
+        "state_previously_reachable",
+        "state_now_reachable",
+        "reachability_evidence_id",
+        "beneficiary_consequence",
+        "capability_without_beneficiary_consequence_is_mission"
+      ],
+      "properties": {
+        "candidate_id": {"type": "string", "minLength": 1},
+        "capability_id": {"type": "string", "minLength": 1},
+        "capability_evidence_id": {"type": "string", "minLength": 1},
+        "beneficiary": {"type": "string", "minLength": 1},
+        "previously_unreachable_state": {"type": "string", "minLength": 1},
+        "newly_reachable_state": {"type": "string", "minLength": 1},
+        "state_previously_reachable": {"const": false},
+        "state_now_reachable": {"const": true},
+        "reachability_evidence_id": {"type": "string", "minLength": 1},
+        "beneficiary_consequence": {"type": "string", "minLength": 1},
+        "capability_without_beneficiary_consequence_is_mission": {"const": false}
+      }
+    },
+    "selection_deferred_until_comparison": {"type": "string", "minLength": 1}
+  }
+}

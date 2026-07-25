@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/repository-pattern-opportunity.schema.json",
+  "title": "PalamedesRepositoryPatternOpportunity",
+  "description": "Experimental Cycle 125 contract connecting repository patterns to beneficiary condition change.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pattern_id",
+    "technical_pattern",
+    "enabled_capability",
+    "beneficiary_group_id",
+    "current_condition",
+    "possible_condition_change",
+    "causal_bridge",
+    "adoption_constraint",
+    "disconfirming_condition",
+    "repository_popularity_defines_opportunity",
+    "repositories",
+    "beneficiary_evidence_ids"
+  ],
+  "properties": {
+    "pattern_id": {"type": "string", "minLength": 1},
+    "technical_pattern": {"type": "string", "minLength": 1},
+    "enabled_capability": {"type": "string", "minLength": 1},
+    "beneficiary_group_id": {"type": "string", "minLength": 1},
+    "current_condition": {"type": "string", "minLength": 1},
+    "possible_condition_change": {"type": "string", "minLength": 1},
+    "causal_bridge": {"type": "string", "minLength": 1},
+    "adoption_constraint": {"type": "string", "minLength": 1},
+    "disconfirming_condition": {"type": "string", "minLength": 1},
+    "repository_popularity_defines_opportunity": {"const": false},
+    "repositories": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reference_id", "repository", "revision", "pattern_evidence"],
+        "properties": {
+          "reference_id": {"type": "string", "minLength": 1},
+          "repository": {"type": "string", "minLength": 1},
+          "revision": {"type": "string", "minLength": 1},
+          "pattern_evidence": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "beneficiary_evidence_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

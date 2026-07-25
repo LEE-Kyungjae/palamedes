@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/typed-epistemic-revision-envelope.schema.json",
+  "title": "PalamedesTypedEpistemicRevisionEnvelope",
+  "description": "Experimental Cycle 303 six typed purpose objects inside one kernel revision envelope.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["revision_envelope_id", "revision_id", "revision_fingerprint", "previous_revision_fingerprint", "created_at", "revision_source", "revision_reason", "provenance_record_id", "kernel_adapter_id", "typed_objects", "revision_metadata_owned_by_envelope", "provenance_owned_by_envelope", "independent_database_used", "untyped_plan_fields_used", "envelope_rationale"],
+  "properties": {
+    "revision_envelope_id": {"type": "string", "minLength": 1},
+    "revision_id": {"type": "string", "minLength": 1},
+    "revision_fingerprint": {"type": "string", "minLength": 1},
+    "previous_revision_fingerprint": {"type": "string", "minLength": 1},
+    "created_at": {"type": "string", "minLength": 1},
+    "revision_source": {"type": "string", "minLength": 1},
+    "revision_reason": {"type": "string", "minLength": 1},
+    "provenance_record_id": {"type": "string", "minLength": 1},
+    "kernel_adapter_id": {"type": "string", "minLength": 1},
+    "typed_objects": {
+      "type": "array", "minItems": 6, "maxItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["object_type", "object_id", "version", "object_fingerprint", "schema_id", "semantic_validator_id", "payload_reference", "revision_id", "owns_lifecycle_metadata"],
+        "properties": {
+          "object_type": {"enum": ["signal", "constitution", "interpretation", "mission_candidate", "tournament", "mission_contract"]},
+          "object_id": {"type": "string", "minLength": 1},
+          "version": {"type": "integer", "minimum": 1},
+          "object_fingerprint": {"type": "string", "minLength": 1},
+          "schema_id": {"type": "string", "minLength": 1},
+          "semantic_validator_id": {"type": "string", "minLength": 1},
+          "payload_reference": {"type": "string", "minLength": 1},
+          "revision_id": {"type": "string", "minLength": 1},
+          "owns_lifecycle_metadata": {"const": false}
+        }
+      }
+    },
+    "revision_metadata_owned_by_envelope": {"const": true},
+    "provenance_owned_by_envelope": {"const": true},
+    "independent_database_used": {"const": false},
+    "untyped_plan_fields_used": {"const": false},
+    "envelope_rationale": {"type": "string", "minLength": 1}
+  }
+}

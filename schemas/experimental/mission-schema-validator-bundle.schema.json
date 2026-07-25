@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/mission-schema-validator-bundle.schema.json",
+  "title": "PalamedesMissionSchemaValidatorBundle",
+  "description": "Cycle 393 first artifact bundle of mission contracts and validators.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bundle_report_id", "bundle", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "bundle_report_id": {"type": "string", "minLength": 1},
+    "bundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bundle_version", "artifact_kind", "artifacts", "autonomous_daemon_included", "scheduler_included", "external_action_authority_included", "background_loop_included", "bundle_entrypoint"],
+      "properties": {
+        "bundle_version": {"const": "mission-schema-validator-bundle/1"},
+        "artifact_kind": {"const": "schemas_and_validators"},
+        "artifacts": {
+          "type": "array", "minItems": 7, "maxItems": 7,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["domain", "schema_path", "schema_present", "validator_module", "validator_symbol", "validator_present"],
+            "properties": {
+              "domain": {"enum": ["signal", "constitution", "causal_sketches", "mission_candidates", "tournament", "selected_mission", "outcome_return"]},
+              "schema_path": {"type": "string", "minLength": 1},
+              "schema_present": {"const": true},
+              "validator_module": {"const": "palamedes_mission"},
+              "validator_symbol": {"type": "string", "minLength": 1},
+              "validator_present": {"const": true}
+            }
+          }
+        },
+        "autonomous_daemon_included": {"const": false},
+        "scheduler_included": {"const": false},
+        "external_action_authority_included": {"const": false},
+        "background_loop_included": {"const": false},
+        "bundle_entrypoint": {"const": "palamedes_mission.py"}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

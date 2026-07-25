@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/stable-purpose-planner-boundary.schema.json",
+  "title": "PalamedesStablePurposePlannerBoundary",
+  "description": "Experimental Cycle 296 stable why/what versus how ownership with evidence reopening.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["boundary_contract_id", "mission_contract_id", "planner_contract_id", "ownership", "cross_boundary_evidence", "planner_may_rewrite_why_or_what", "palamedes_may_prescribe_how", "boundary_rationale"],
+  "properties": {
+    "boundary_contract_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "planner_contract_id": {"type": "string", "minLength": 1},
+    "ownership": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["owner", "owned_artifacts", "return_trigger"],
+        "properties": {
+          "owner": {"enum": ["palamedes", "planner"]},
+          "owned_artifacts": {"type": "array", "minItems": 4, "maxItems": 4, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "return_trigger": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "cross_boundary_evidence": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["evidence_event_id", "evidence_type", "evidence_id", "observed_change", "reopen_owner", "directly_rewrites_owned_artifact", "reopening_rationale"],
+        "properties": {
+          "evidence_event_id": {"type": "string", "minLength": 1},
+          "evidence_type": {"enum": ["value_or_beneficiary_change", "causal_or_capability_change", "implementation_constraint_change"]},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "observed_change": {"type": "string", "minLength": 1},
+          "reopen_owner": {"enum": ["palamedes", "planner", "both"]},
+          "directly_rewrites_owned_artifact": {"const": false},
+          "reopening_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "planner_may_rewrite_why_or_what": {"const": false},
+    "palamedes_may_prescribe_how": {"const": false},
+    "boundary_rationale": {"type": "string", "minLength": 1}
+  }
+}

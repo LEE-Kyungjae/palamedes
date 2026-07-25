@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/expected-missing-observation.schema.json",
+  "title": "PalamedesExpectedMissingObservation",
+  "description": "Experimental Cycle 206 contract for treating an expected absence as an unresolved signal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "missing_signal_id",
+    "coverage_map_id",
+    "expected_observation_id",
+    "expected_observation",
+    "expectation_source_id",
+    "expected_by",
+    "checked_at",
+    "expected_channel_id",
+    "missingness_evidence_id",
+    "missing_observation_admitted_as_signal",
+    "absence_is_harm_evidence",
+    "meaning_resolved",
+    "alternative_explanations",
+    "next_discriminating_probe",
+    "wake_trigger",
+    "status"
+  ],
+  "properties": {
+    "missing_signal_id": {"type": "string", "minLength": 1},
+    "coverage_map_id": {"type": "string", "minLength": 1},
+    "expected_observation_id": {"type": "string", "minLength": 1},
+    "expected_observation": {"type": "string", "minLength": 1},
+    "expectation_source_id": {"type": "string", "minLength": 1},
+    "expected_by": {"type": "string", "minLength": 1},
+    "checked_at": {"type": "string", "minLength": 1},
+    "expected_channel_id": {"type": "string", "minLength": 1},
+    "missingness_evidence_id": {"type": "string", "minLength": 1},
+    "missing_observation_admitted_as_signal": {"const": true},
+    "absence_is_harm_evidence": {"const": false},
+    "meaning_resolved": {"const": false},
+    "alternative_explanations": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "claim", "evidence_for", "evidence_against", "discriminator"],
+        "properties": {
+          "kind": {
+            "enum": [
+              "harm_or_exclusion",
+              "collection_failure",
+              "reporting_delay",
+              "expectation_wrong"
+            ]
+          },
+          "claim": {"type": "string", "minLength": 1},
+          "evidence_for": {"type": "string", "minLength": 1},
+          "evidence_against": {"type": "string", "minLength": 1},
+          "discriminator": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "next_discriminating_probe": {"type": "string", "minLength": 1},
+    "wake_trigger": {"type": "string", "minLength": 1},
+    "status": {"const": "unresolved"}
+  }
+}

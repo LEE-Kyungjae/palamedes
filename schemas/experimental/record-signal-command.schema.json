@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/record-signal-command.schema.json",
+  "title": "PalamedesRecordSignalCommand",
+  "description": "Experimental Cycle 312 signal recording with provenance and no implicit interpretation or wake.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["command_id", "expected_revision_fingerprint", "authority_id", "revision_reason", "signal", "record_result", "command_rationale"],
+  "properties": {
+    "command_id": {"type": "string", "minLength": 1},
+    "expected_revision_fingerprint": {"type": "string", "minLength": 1},
+    "authority_id": {"type": "string", "minLength": 1},
+    "revision_reason": {"type": "string", "minLength": 1},
+    "signal": {"$ref": "observational-signal-state.schema.json"},
+    "record_result": {
+      "type": "object", "additionalProperties": false,
+      "required": ["signal_id", "revision_id", "revision_fingerprint", "provenance_record_id", "signal_object_fingerprint", "recorded_at", "write_status", "semantic_validator_id", "meaning_inferred", "wake_evaluated", "agent_woken", "wake_event_id", "interpretation_id", "mission_created", "constitution_changed", "implicit_side_effects", "provenance"],
+      "properties": {
+        "signal_id": {"type": "string", "minLength": 1},
+        "revision_id": {"type": "string", "minLength": 1},
+        "revision_fingerprint": {"type": "string", "minLength": 1},
+        "provenance_record_id": {"type": "string", "minLength": 1},
+        "signal_object_fingerprint": {"type": "string", "minLength": 1},
+        "recorded_at": {"type": "string", "minLength": 1},
+        "write_status": {"const": "recorded"},
+        "semantic_validator_id": {"const": "validate_observational_signal_state"},
+        "meaning_inferred": {"const": false},
+        "wake_evaluated": {"const": false},
+        "agent_woken": {"const": false},
+        "wake_event_id": {"const": ""},
+        "interpretation_id": {"const": ""},
+        "mission_created": {"const": false},
+        "constitution_changed": {"const": false},
+        "implicit_side_effects": {"const": []},
+        "provenance": {
+          "type": "object", "additionalProperties": false,
+          "required": ["source_identity", "observation_method", "received_at"],
+          "properties": {
+            "source_identity": {"type": "string", "minLength": 1},
+            "observation_method": {"type": "string", "minLength": 1},
+            "received_at": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "command_rationale": {"type": "string", "minLength": 1}
+  }
+}

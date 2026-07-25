@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/five-bounded-artifact-conclusion.schema.json",
+  "title": "PalamedesFiveBoundedArtifactConclusion",
+  "description": "Cycle 400 verified conclusion of five ordered bounded implementation artifacts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["conclusion_report_id", "conclusion", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "conclusion_report_id": {"type": "string", "minLength": 1},
+    "conclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["conclusion_version", "artifacts", "artifact_count", "order_is_authoritative", "smallest_reality_contact_claim", "agent_company_runtime_included", "autonomous_daemon_included", "execution_platform_included", "startup_success_claimed", "general_schema_expansion_authorized", "next_empirical_question"],
+      "properties": {
+        "conclusion_version": {"const": "five-bounded-artifacts/1"},
+        "artifacts": {
+          "type": "array", "minItems": 5, "maxItems": 5,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["order", "artifact_type", "schema_path", "schema_present", "validator_symbol", "validator_present", "implementation_status", "falsification_role"],
+            "properties": {
+              "order": {"type": "integer", "minimum": 1, "maximum": 5},
+              "artifact_type": {"enum": ["mission_schema_bundle", "intent_specific_state_commands", "provider_neutral_mission_cycle", "adversarial_sequential_replay", "traceable_planner_handoff"]},
+              "schema_path": {"type": "string", "minLength": 1},
+              "schema_present": {"const": true},
+              "validator_symbol": {"type": "string", "minLength": 1},
+              "validator_present": {"const": true},
+              "implementation_status": {"const": "completed"},
+              "falsification_role": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "artifact_count": {"const": 5},
+        "order_is_authoritative": {"const": true},
+        "smallest_reality_contact_claim": {"type": "string", "minLength": 1},
+        "agent_company_runtime_included": {"const": false},
+        "autonomous_daemon_included": {"const": false},
+        "execution_platform_included": {"const": false},
+        "startup_success_claimed": {"const": false},
+        "general_schema_expansion_authorized": {"const": false},
+        "next_empirical_question": {"const": "Can Palamedes independently originate a mission worth planning that equal-budget human and one-shot-agent baselines do not produce?"}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

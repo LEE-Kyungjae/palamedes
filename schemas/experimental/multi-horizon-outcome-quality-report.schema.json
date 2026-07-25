@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/multi-horizon-outcome-quality-report.schema.json",
+  "title": "PalamedesMultiHorizonOutcomeQualityReport",
+  "description": "Cycle 375 beneficiary change, side effects, sustainability, and option preservation across defined horizons.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outcome_quality_report_id", "mission_contract_id", "mission_contract_fingerprint", "strategy_version_id", "strategy_fingerprint", "outcome_protocol_id", "report_fingerprint", "horizon_assessments", "early_success_extrapolated_to_later_horizons", "side_effects_netted_into_beneficiary_change", "sustainability_assumed_from_initial_delivery", "lost_options_ignored", "dimensions_reported_separately", "report_rationale"],
+  "properties": {
+    "outcome_quality_report_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "mission_contract_fingerprint": {"type": "string", "minLength": 1},
+    "strategy_version_id": {"type": "string", "minLength": 1},
+    "strategy_fingerprint": {"type": "string", "minLength": 1},
+    "outcome_protocol_id": {"type": "string", "minLength": 1},
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "horizon_assessments": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["horizon", "day_from_strategy_start", "scheduled_at", "horizon_definition", "assessment_artifact_id", "horizon_reached", "dimensions"],
+        "properties": {
+          "horizon": {"enum": ["short", "medium", "long"]},
+          "day_from_strategy_start": {"type": "integer", "minimum": 1},
+          "scheduled_at": {"type": "string", "minLength": 1},
+          "horizon_definition": {"type": "string", "minLength": 1},
+          "assessment_artifact_id": {"type": "string", "minLength": 1},
+          "horizon_reached": {"type": "boolean"},
+          "dimensions": {
+            "type": "array", "minItems": 4, "maxItems": 4,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["dimension", "metric_or_question", "baseline_or_reference", "target_or_boundary", "measurement_status", "observed_value", "evidence_artifact_id", "evidence_fingerprint", "assessment", "uncertainty", "next_observation_at", "pending_reason"],
+              "properties": {
+                "dimension": {"enum": ["beneficiary_change", "side_effects", "sustainability", "option_preservation"]},
+                "metric_or_question": {"type": "string", "minLength": 1},
+                "baseline_or_reference": {"type": "string", "minLength": 1},
+                "target_or_boundary": {"type": "string", "minLength": 1},
+                "measurement_status": {"enum": ["observed", "pending"]},
+                "observed_value": {"type": "string"},
+                "evidence_artifact_id": {"type": "string"},
+                "evidence_fingerprint": {"type": "string"},
+                "assessment": {"type": "string"},
+                "uncertainty": {"type": "string", "minLength": 1},
+                "next_observation_at": {"type": "string"},
+                "pending_reason": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "early_success_extrapolated_to_later_horizons": {"const": false},
+    "side_effects_netted_into_beneficiary_change": {"const": false},
+    "sustainability_assumed_from_initial_delivery": {"const": false},
+    "lost_options_ignored": {"const": false},
+    "dimensions_reported_separately": {"const": true},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

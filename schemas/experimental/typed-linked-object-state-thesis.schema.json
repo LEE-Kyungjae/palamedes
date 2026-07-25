@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/typed-linked-object-state-thesis.schema.json",
+  "title": "PalamedesTypedLinkedObjectStateThesis",
+  "description": "Experimental Cycle 310 integrated state thesis preserving semantic boundaries on one revision kernel.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["state_thesis_id", "semantic_separation_manifest_id", "kernel_lifecycle_adapter_id", "revision_envelope_id", "signal_schema_id", "constitution_schema_id", "causal_sketch_schema_id", "mission_candidate_schema_id", "mission_tournament_schema_id", "mission_contract_revision_schema_id", "typed_links", "observation_remains_descriptive", "interpretation_remains_revisable", "selection_landscape_remains_reconstructable", "mission_contract_versions_remain_immutable", "downstream_plan_owns_only_implementation", "outcomes_return_as_evidence_not_authority", "shared_revision_conflict_restore_provenance", "independent_state_universe_created", "semantic_objects_collapsed_into_plan", "state_thesis_decision", "thesis_rationale"],
+  "properties": {
+    "state_thesis_id": {"type": "string", "minLength": 1},
+    "semantic_separation_manifest_id": {"type": "string", "minLength": 1},
+    "kernel_lifecycle_adapter_id": {"type": "string", "minLength": 1},
+    "revision_envelope_id": {"type": "string", "minLength": 1},
+    "signal_schema_id": {"type": "string", "minLength": 1},
+    "constitution_schema_id": {"type": "string", "minLength": 1},
+    "causal_sketch_schema_id": {"type": "string", "minLength": 1},
+    "mission_candidate_schema_id": {"type": "string", "minLength": 1},
+    "mission_tournament_schema_id": {"type": "string", "minLength": 1},
+    "mission_contract_revision_schema_id": {"type": "string", "minLength": 1},
+    "typed_links": {
+      "type": "array", "minItems": 7, "maxItems": 7,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["link_id", "from_type", "from_object_id", "to_type", "to_object_id", "link_semantics", "reference_mode", "payload_ownership_transferred", "authority_transferred"],
+        "properties": {
+          "link_id": {"type": "string", "minLength": 1},
+          "from_type": {"type": "string", "minLength": 1},
+          "from_object_id": {"type": "string", "minLength": 1},
+          "to_type": {"type": "string", "minLength": 1},
+          "to_object_id": {"type": "string", "minLength": 1},
+          "link_semantics": {"type": "string", "minLength": 1},
+          "reference_mode": {"const": "typed_identifier"},
+          "payload_ownership_transferred": {"const": false},
+          "authority_transferred": {"const": false}
+        }
+      }
+    },
+    "observation_remains_descriptive": {"const": true},
+    "interpretation_remains_revisable": {"const": true},
+    "selection_landscape_remains_reconstructable": {"const": true},
+    "mission_contract_versions_remain_immutable": {"const": true},
+    "downstream_plan_owns_only_implementation": {"const": true},
+    "outcomes_return_as_evidence_not_authority": {"const": true},
+    "shared_revision_conflict_restore_provenance": {"const": true},
+    "independent_state_universe_created": {"const": false},
+    "semantic_objects_collapsed_into_plan": {"const": false},
+    "state_thesis_decision": {"const": "integrated"},
+    "thesis_rationale": {"type": "string", "minLength": 1}
+  }
+}

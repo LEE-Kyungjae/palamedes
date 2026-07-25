@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/handoff-thesis-gate.schema.json",
+  "title": "PalamedesHandoffThesisGate",
+  "description": "Experimental Cycle 180 integration of purpose coherence, strategy ownership, and typed evidence exchange.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "handoff_gate_id",
+    "mission_contract_id",
+    "mission_meaning_boundary_id",
+    "tradeoff_interface_id",
+    "planner_return_protocol_id",
+    "constraint_reframing_protocol_id",
+    "meaning_invariant_protocol_id",
+    "downstream_status_protocol_id",
+    "conflict_jurisdiction_protocol_id",
+    "cumulative_failure_protocol_id",
+    "revision_invalidation_protocol_id",
+    "palamedes_ownership",
+    "planner_ownership",
+    "palamedes_owns_execution_strategy",
+    "planner_owns_mission_meaning",
+    "typed_bidirectional_evidence",
+    "evidence_exchange",
+    "ownership_rationale"
+  ],
+  "properties": {
+    "handoff_gate_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "mission_meaning_boundary_id": {"type": "string", "minLength": 1},
+    "tradeoff_interface_id": {"type": "string", "minLength": 1},
+    "planner_return_protocol_id": {"type": "string", "minLength": 1},
+    "constraint_reframing_protocol_id": {"type": "string", "minLength": 1},
+    "meaning_invariant_protocol_id": {"type": "string", "minLength": 1},
+    "downstream_status_protocol_id": {"type": "string", "minLength": 1},
+    "conflict_jurisdiction_protocol_id": {"type": "string", "minLength": 1},
+    "cumulative_failure_protocol_id": {"type": "string", "minLength": 1},
+    "revision_invalidation_protocol_id": {"type": "string", "minLength": 1},
+    "palamedes_ownership": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"enum": ["purpose_coherence", "mission_revision", "purpose_conflict"]}
+    },
+    "planner_ownership": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"enum": ["strategy_formation", "technical_tradeoffs", "delivery"]}
+    },
+    "palamedes_owns_execution_strategy": {"const": false},
+    "planner_owns_mission_meaning": {"const": false},
+    "typed_bidirectional_evidence": {"const": true},
+    "evidence_exchange": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["direction", "evidence_kind", "contract_field", "boundary_trigger"],
+        "properties": {
+          "direction": {"enum": ["palamedes_to_planner", "planner_to_palamedes"]},
+          "evidence_kind": {"type": "string", "minLength": 1},
+          "contract_field": {"type": "string", "minLength": 1},
+          "boundary_trigger": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "ownership_rationale": {"type": "string", "minLength": 1}
+  }
+}

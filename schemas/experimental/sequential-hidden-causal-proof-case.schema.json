@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/sequential-hidden-causal-proof-case.schema.json",
+  "title": "PalamedesSequentialHiddenCausalProofCase",
+  "description": "Cycle 361 proof case with sequential reveals, frozen checkpoints, and sealed causal structure.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["proof_case_id", "case_fingerprint", "case_domain", "initial_situation", "initial_information_packet_id", "initial_information_fingerprint", "sequential_events", "hidden_causal_structure", "evaluation_targets", "synthetic_idea_scoring_case", "purpose_change_possible", "future_events_visible_early", "case_rationale"],
+  "properties": {
+    "proof_case_id": {"type": "string", "minLength": 1},
+    "case_fingerprint": {"type": "string", "minLength": 1},
+    "case_domain": {"type": "string", "minLength": 1},
+    "initial_situation": {"type": "string", "minLength": 1},
+    "initial_information_packet_id": {"type": "string", "minLength": 1},
+    "initial_information_fingerprint": {"type": "string", "minLength": 1},
+    "sequential_events": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["event_id", "sequence", "event_fingerprint", "revealed_at", "observation", "source_artifact_id", "source_artifact_fingerprint", "new_information", "pre_next_event_checkpoint"],
+        "properties": {
+          "event_id": {"type": "string", "minLength": 1},
+          "sequence": {"type": "integer", "minimum": 1},
+          "event_fingerprint": {"type": "string", "minLength": 1},
+          "revealed_at": {"type": "string", "minLength": 1},
+          "observation": {"type": "string", "minLength": 1},
+          "source_artifact_id": {"type": "string", "minLength": 1},
+          "source_artifact_fingerprint": {"type": "string", "minLength": 1},
+          "new_information": {"type": "string", "minLength": 1},
+          "pre_next_event_checkpoint": {
+            "type": "object", "additionalProperties": false,
+            "required": ["checkpoint_id", "signal_interpretation", "current_purpose_state_id", "current_purpose_fingerprint", "selected_next_action", "uncertainty_statement", "frozen_at", "frozen_before_next_reveal"],
+            "properties": {
+              "checkpoint_id": {"type": "string", "minLength": 1},
+              "signal_interpretation": {"type": "string", "minLength": 1},
+              "current_purpose_state_id": {"type": "string", "minLength": 1},
+              "current_purpose_fingerprint": {"type": "string", "minLength": 1},
+              "selected_next_action": {"type": "string", "minLength": 1},
+              "uncertainty_statement": {"type": "string", "minLength": 1},
+              "frozen_at": {"type": "string", "minLength": 1},
+              "frozen_before_next_reveal": {"const": true}
+            }
+          }
+        }
+      }
+    },
+    "hidden_causal_structure": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sealed_structure_id", "sealed_structure_fingerprint", "ground_truth_artifact_id", "ground_truth_fingerprint", "seal_custodian_id", "reveal_condition", "causal_explanation", "sealed_before_case_start", "available_to_case_participants", "revealed_only_after_final_checkpoint"],
+      "properties": {
+        "sealed_structure_id": {"type": "string", "minLength": 1},
+        "sealed_structure_fingerprint": {"type": "string", "minLength": 1},
+        "ground_truth_artifact_id": {"type": "string", "minLength": 1},
+        "ground_truth_fingerprint": {"type": "string", "minLength": 1},
+        "seal_custodian_id": {"type": "string", "minLength": 1},
+        "reveal_condition": {"type": "string", "minLength": 1},
+        "causal_explanation": {"type": "string", "minLength": 1},
+        "sealed_before_case_start": {"const": true},
+        "available_to_case_participants": {"const": false},
+        "revealed_only_after_final_checkpoint": {"const": true}
+      }
+    },
+    "evaluation_targets": {"type": "array", "minItems": 4, "maxItems": 4, "uniqueItems": true, "items": {"enum": ["signal_interpretation", "purpose_state_change", "next_action_selection", "uncertainty_preservation"]}},
+    "synthetic_idea_scoring_case": {"const": false},
+    "purpose_change_possible": {"const": true},
+    "future_events_visible_early": {"const": false},
+    "case_rationale": {"type": "string", "minLength": 1}
+  }
+}

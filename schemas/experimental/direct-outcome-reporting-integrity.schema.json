@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/direct-outcome-reporting-integrity.schema.json",
+  "title": "PalamedesDirectOutcomeReportingIntegrity",
+  "description": "Experimental Cycle 274 direct outcome channels and exact alerts for missing downstream reports.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reporting_integrity_id",
+    "mission_id",
+    "downstream_agent_id",
+    "reporting_schedule_id",
+    "downstream_self_report_is_sufficient",
+    "direct_outcome_channels",
+    "expected_reports",
+    "received_report_ids",
+    "missing_report_alerts",
+    "direct_observations",
+    "alert_owner_id",
+    "integrity_rationale"
+  ],
+  "properties": {
+    "reporting_integrity_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "downstream_agent_id": {"type": "string", "minLength": 1},
+    "reporting_schedule_id": {"type": "string", "minLength": 1},
+    "downstream_self_report_is_sufficient": {"const": false},
+    "direct_outcome_channels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "channel_id",
+          "outcome_kind",
+          "source",
+          "custodian_id",
+          "controlled_by_downstream_agent",
+          "independence_evidence_id"
+        ],
+        "properties": {
+          "channel_id": {"type": "string", "minLength": 1},
+          "outcome_kind": {"type": "string", "minLength": 1},
+          "source": {"type": "string", "minLength": 1},
+          "custodian_id": {"type": "string", "minLength": 1},
+          "controlled_by_downstream_agent": {"const": false},
+          "independence_evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "expected_reports": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["report_id", "due_at", "required_outcome_kind"],
+        "properties": {
+          "report_id": {"type": "string", "minLength": 1},
+          "due_at": {"type": "string", "minLength": 1},
+          "required_outcome_kind": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "received_report_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "missing_report_alerts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["alert_id", "report_id", "detected_at", "escalation_action"],
+        "properties": {
+          "alert_id": {"type": "string", "minLength": 1},
+          "report_id": {"type": "string", "minLength": 1},
+          "detected_at": {"type": "string", "minLength": 1},
+          "escalation_action": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "direct_observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["observation_id", "channel_id", "observed_outcome", "evidence_id", "observed_at"],
+        "properties": {
+          "observation_id": {"type": "string", "minLength": 1},
+          "channel_id": {"type": "string", "minLength": 1},
+          "observed_outcome": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "observed_at": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "alert_owner_id": {"type": "string", "minLength": 1},
+    "integrity_rationale": {"type": "string", "minLength": 1}
+  }
+}

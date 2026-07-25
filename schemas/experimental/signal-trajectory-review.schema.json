@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/signal-trajectory-review.schema.json",
+  "title": "PalamedesSignalTrajectoryReview",
+  "description": "Experimental Cycle 165 review of moved, invariant, near-miss, and unexpectedly timed signals.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "review_id",
+    "mission_id",
+    "forecast_set_id",
+    "observation_window",
+    "trajectory_summary",
+    "calibration_update",
+    "binary_outcome_sufficient",
+    "signal_trajectories"
+  ],
+  "properties": {
+    "review_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "forecast_set_id": {"type": "string", "minLength": 1},
+    "observation_window": {"type": "string", "minLength": 1},
+    "trajectory_summary": {"type": "string", "minLength": 1},
+    "calibration_update": {"type": "string", "minLength": 1},
+    "binary_outcome_sufficient": {"const": false},
+    "signal_trajectories": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "signal_id",
+          "forecasted_direction",
+          "forecasted_window",
+          "forecasted_threshold",
+          "observed_value",
+          "observed_at",
+          "movement_status",
+          "timing_status",
+          "threshold_crossed",
+          "distance_to_threshold",
+          "evidence_id"
+        ],
+        "properties": {
+          "signal_id": {"type": "string", "minLength": 1},
+          "forecasted_direction": {"type": "string", "minLength": 1},
+          "forecasted_window": {"type": "string", "minLength": 1},
+          "forecasted_threshold": {"type": "string", "minLength": 1},
+          "observed_value": {"type": "string", "minLength": 1},
+          "observed_at": {"type": "string", "minLength": 1},
+          "movement_status": {"enum": ["moved", "invariant"]},
+          "timing_status": {"enum": ["expected", "early", "late", "unexpected", "not_applicable"]},
+          "threshold_crossed": {"type": "boolean"},
+          "distance_to_threshold": {"type": "number", "minimum": 0},
+          "evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

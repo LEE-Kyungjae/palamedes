@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/intent-specific-command-registry.schema.json",
+  "title": "PalamedesIntentSpecificCommandRegistry",
+  "description": "Experimental Cycle 311 type-specific command surface replacing generic object creation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["command_registry_id", "revision_envelope_adapter_id", "commands", "generic_create_object_exposed", "unknown_command_rejected", "validation_precedes_revision", "registry_rationale"],
+  "properties": {
+    "command_registry_id": {"type": "string", "minLength": 1},
+    "revision_envelope_adapter_id": {"type": "string", "minLength": 1},
+    "commands": {
+      "type": "array", "minItems": 8, "maxItems": 8,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["command", "intent", "input_type", "output_type", "semantic_validator_id", "required_authority_id", "revision_reason_field", "allowed_side_effects", "may_create_arbitrary_type"],
+        "properties": {
+          "command": {"enum": ["record_signal", "amend_constitution", "record_causal_sketch", "propose_mission_candidate", "conduct_mission_tournament", "issue_mission_contract", "revise_mission_contract", "return_outcome"]},
+          "intent": {"type": "string", "minLength": 1},
+          "input_type": {"type": "string", "minLength": 1},
+          "output_type": {"type": "string", "minLength": 1},
+          "semantic_validator_id": {"type": "string", "minLength": 1},
+          "required_authority_id": {"type": "string", "minLength": 1},
+          "revision_reason_field": {"type": "string", "minLength": 1},
+          "allowed_side_effects": {"type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": {"enum": ["append_revision", "append_provenance"]}},
+          "may_create_arbitrary_type": {"const": false}
+        }
+      }
+    },
+    "generic_create_object_exposed": {"const": false},
+    "unknown_command_rejected": {"const": true},
+    "validation_precedes_revision": {"const": true},
+    "registry_rationale": {"type": "string", "minLength": 1}
+  }
+}

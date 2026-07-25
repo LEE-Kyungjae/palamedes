@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/no-safe-probe-reversible-decision.schema.json",
+  "title": "PalamedesNoSafeProbeReversibleDecision",
+  "description": "Cycle 347 most reversible authority-bounded mission or deferral when no safe probe exists.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decision_record_id", "sensitivity_review_id", "authority_mandate_id", "authority_mandate_fingerprint", "safe_probe_available", "safe_probe_absence_rationale", "candidate_assessments", "decision", "mandate_exceeded_without_escalation", "decision_rationale"],
+  "properties": {
+    "decision_record_id": {"type": "string", "minLength": 1},
+    "sensitivity_review_id": {"type": "string", "minLength": 1},
+    "authority_mandate_id": {"type": "string", "minLength": 1},
+    "authority_mandate_fingerprint": {"type": "string", "minLength": 1},
+    "safe_probe_available": {"const": false},
+    "safe_probe_absence_rationale": {"type": "string", "minLength": 1},
+    "candidate_assessments": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["candidate_id", "candidate_fingerprint", "reversibility_rank", "rollback_mechanism", "rollback_time", "residual_harm_after_rollback", "authority_scope_assessment", "consequence_assessment", "within_authority_mandate", "consequences_within_mandate", "reversibility_claim_evidence_fingerprint"],
+        "properties": {
+          "candidate_id": {"type": "string", "minLength": 1},
+          "candidate_fingerprint": {"type": "string", "minLength": 1},
+          "reversibility_rank": {"type": "integer", "minimum": 1},
+          "rollback_mechanism": {"type": "string", "minLength": 1},
+          "rollback_time": {"type": "string", "minLength": 1},
+          "residual_harm_after_rollback": {"type": "string", "minLength": 1},
+          "authority_scope_assessment": {"type": "string", "minLength": 1},
+          "consequence_assessment": {"type": "string", "minLength": 1},
+          "within_authority_mandate": {"type": "boolean"},
+          "consequences_within_mandate": {"type": "boolean"},
+          "reversibility_claim_evidence_fingerprint": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": ["mode", "selected_candidate_id", "deferred", "irreversible_commitment_made"],
+      "properties": {
+        "mode": {"enum": ["bounded_reversible_mission", "defer"]},
+        "selected_candidate_id": {"type": "string"},
+        "commitment_scope": {"type": "string"},
+        "rollback_trigger": {"type": "string"},
+        "review_at": {"type": "string"},
+        "authority_return_trigger": {"type": "string"},
+        "defer_reason": {"type": "string"},
+        "required_authority_id": {"type": "string"},
+        "escalation_record_id": {"type": "string"},
+        "wake_trigger": {"type": "string"},
+        "deferred": {"type": "boolean"},
+        "irreversible_commitment_made": {"const": false}
+      }
+    },
+    "mandate_exceeded_without_escalation": {"const": false},
+    "decision_rationale": {"type": "string", "minLength": 1}
+  }
+}

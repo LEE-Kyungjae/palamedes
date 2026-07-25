@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/latent-desire-possibility.schema.json",
+  "title": "PalamedesLatentDesirePossibility",
+  "description": "Experimental Cycle 117 contract for possibility-enabled desires absent from current demand.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "possibility_id",
+    "beneficiary_group_id",
+    "possible_condition_change",
+    "enabling_capability",
+    "why_not_currently_expressible",
+    "non_demand_value_basis",
+    "disconfirming_condition",
+    "current_demand_defines_value",
+    "current_demand_status",
+    "source_ids"
+  ],
+  "properties": {
+    "possibility_id": {"type": "string", "minLength": 1},
+    "beneficiary_group_id": {"type": "string", "minLength": 1},
+    "possible_condition_change": {"type": "string", "minLength": 1},
+    "enabling_capability": {"type": "string", "minLength": 1},
+    "why_not_currently_expressible": {"type": "string", "minLength": 1},
+    "non_demand_value_basis": {"type": "string", "minLength": 1},
+    "disconfirming_condition": {"type": "string", "minLength": 1},
+    "current_demand_defines_value": {"const": false},
+    "current_demand_status": {
+      "enum": ["observed", "weak", "absent", "inexpressible"]
+    },
+    "source_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

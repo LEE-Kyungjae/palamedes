@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/nonmutating-mission-critique.schema.json",
+  "title": "PalamedesNonmutatingMissionCritique",
+  "description": "Experimental Cycle 316 seven-axis critique evidence with withdrawal conditions and immutable candidate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["critique_record_id", "mission_candidate_id", "candidate_fingerprint_before", "candidate_fingerprint_after", "critic_context_id", "axis_attacks", "candidate_mutated", "critique_auto_selects_or_rejects", "critique_epistemic_role", "critique_rationale"],
+  "properties": {
+    "critique_record_id": {"type": "string", "minLength": 1},
+    "mission_candidate_id": {"type": "string", "minLength": 1},
+    "candidate_fingerprint_before": {"type": "string", "minLength": 1},
+    "candidate_fingerprint_after": {"type": "string", "minLength": 1},
+    "critic_context_id": {"type": "string", "minLength": 1},
+    "axis_attacks": {
+      "type": "array", "minItems": 7, "maxItems": 7,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["attack_id", "axis", "attack", "evidence_id", "candidate_claim_addressed", "severity", "withdrawal_condition", "withdrawal_evidence_needed", "status"],
+        "properties": {
+          "attack_id": {"type": "string", "minLength": 1},
+          "axis": {"enum": ["beneficiary", "causal", "constitutional", "resource", "harm", "disconfirmation", "novelty"]},
+          "attack": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "candidate_claim_addressed": {"type": "string", "minLength": 1},
+          "severity": {"enum": ["low", "medium", "high", "critical"]},
+          "withdrawal_condition": {"type": "string", "minLength": 1},
+          "withdrawal_evidence_needed": {"type": "string", "minLength": 1},
+          "status": {"const": "active_until_withdrawal_condition"}
+        }
+      }
+    },
+    "candidate_mutated": {"const": false},
+    "critique_auto_selects_or_rejects": {"const": false},
+    "critique_epistemic_role": {"const": "evidence"},
+    "critique_rationale": {"type": "string", "minLength": 1}
+  }
+}

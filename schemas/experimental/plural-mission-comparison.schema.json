@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/plural-mission-comparison.schema.json",
+  "title": "PalamedesPluralMissionComparison",
+  "description": "Experimental Cycle 104 partial-order mission comparison.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "left_mission_id",
+    "right_mission_id",
+    "overall_relation",
+    "dimension_comparisons"
+  ],
+  "properties": {
+    "left_mission_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "right_mission_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "overall_relation": {
+      "enum": [
+        "left_dominates",
+        "right_dominates",
+        "equivalent",
+        "incomparable"
+      ]
+    },
+    "dimension_comparisons": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "dimension",
+          "relation",
+          "reason"
+        ],
+        "properties": {
+          "dimension": {
+            "enum": [
+              "beneficiary_change",
+              "harm",
+              "sustainability",
+              "option_value",
+              "resource_renewal"
+            ]
+          },
+          "relation": {
+            "enum": [
+              "left_better",
+              "right_better",
+              "equal",
+              "unknown"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

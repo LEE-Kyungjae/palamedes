@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/subordinate-internal-capability-work.schema.json",
+  "title": "PalamedesSubordinateInternalCapabilityWork",
+  "description": "Experimental Cycle 237 contract allowing internal capability work only as cheaper support for an external mission.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "capability_work_id",
+    "external_mission_id",
+    "internal_capability",
+    "internal_capability_is_independent_mission",
+    "mission_dependency",
+    "deliverable",
+    "cost_unit",
+    "internal_total_cost",
+    "available_alternatives",
+    "internal_work_is_cheaper",
+    "decision",
+    "expiry_at",
+    "stop_trigger"
+  ],
+  "properties": {
+    "capability_work_id": {"type": "string", "minLength": 1},
+    "external_mission_id": {"type": "string", "minLength": 1},
+    "internal_capability": {"type": "string", "minLength": 1},
+    "internal_capability_is_independent_mission": {"const": false},
+    "mission_dependency": {"type": "string", "minLength": 1},
+    "deliverable": {"type": "string", "minLength": 1},
+    "cost_unit": {"type": "string", "minLength": 1},
+    "internal_total_cost": {"type": "number", "exclusiveMinimum": 0},
+    "available_alternatives": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alternative_id",
+          "delivery_method",
+          "adequate_for_mission",
+          "adequacy_evidence_id",
+          "total_cost"
+        ],
+        "properties": {
+          "alternative_id": {"type": "string", "minLength": 1},
+          "delivery_method": {"type": "string", "minLength": 1},
+          "adequate_for_mission": {"type": "boolean"},
+          "adequacy_evidence_id": {"type": "string", "minLength": 1},
+          "total_cost": {"type": "number", "exclusiveMinimum": 0}
+        }
+      }
+    },
+    "internal_work_is_cheaper": {"type": "boolean"},
+    "decision": {"enum": ["approve_internal", "use_alternative"]},
+    "expiry_at": {"type": "string", "minLength": 1},
+    "stop_trigger": {"type": "string", "minLength": 1}
+  }
+}

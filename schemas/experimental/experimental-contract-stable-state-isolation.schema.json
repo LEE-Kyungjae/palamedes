@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/experimental-contract-stable-state-isolation.schema.json",
+  "title": "PalamedesExperimentalContractStableStateIsolation",
+  "description": "Cycle 381 proof that experimental defaults migrate outside stable plan state.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["isolation_report_id", "stable_plan_schema_version", "stable_plan_fingerprint_before", "stable_plan_fingerprint_after", "stable_core_before", "stable_core_after", "experimental_source_state", "experimental_migrated_state", "migration_evidence_artifact_id", "report_fingerprint", "experimental_payload_embedded_in_stable_plan", "stable_migration_function_changed", "stable_schema_required_fields_changed", "report_rationale"],
+  "properties": {
+    "isolation_report_id": {"type": "string", "minLength": 1},
+    "stable_plan_schema_version": {"type": "string", "minLength": 1},
+    "stable_plan_fingerprint_before": {"type": "string", "minLength": 1},
+    "stable_plan_fingerprint_after": {"type": "string", "minLength": 1},
+    "stable_core_before": {"type": "object"},
+    "stable_core_after": {"type": "object"},
+    "experimental_source_state": {"type": "object"},
+    "experimental_migrated_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["experimental_contract_version", "stable_plan_reference", "observations", "interpretations", "missions", "outcome_returns", "migration_metadata"],
+      "properties": {
+        "experimental_contract_version": {"const": "mission-experimental/1"},
+        "stable_plan_reference": {
+          "type": "object", "additionalProperties": false,
+          "required": ["plan_id", "schema_version", "fingerprint"],
+          "properties": {
+            "plan_id": {"type": "string"},
+            "schema_version": {"type": "string"},
+            "fingerprint": {"type": "string"}
+          }
+        },
+        "observations": {"type": "array"},
+        "interpretations": {"type": "array"},
+        "missions": {"type": "array"},
+        "outcome_returns": {"type": "array"},
+        "migration_metadata": {
+          "type": "object", "additionalProperties": false,
+          "required": ["defaults_applied", "stable_core_mutated", "migration_id"],
+          "properties": {
+            "defaults_applied": {"type": "boolean"},
+            "stable_core_mutated": {"const": false},
+            "migration_id": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "migration_evidence_artifact_id": {"type": "string", "minLength": 1},
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "experimental_payload_embedded_in_stable_plan": {"const": false},
+    "stable_migration_function_changed": {"const": false},
+    "stable_schema_required_fields_changed": {"const": false},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

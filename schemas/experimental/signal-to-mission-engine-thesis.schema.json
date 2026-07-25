@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/signal-to-mission-engine-thesis.schema.json",
+  "title": "PalamedesSignalToMissionEngineThesis",
+  "description": "Experimental Cycle 300 operational identity bounded to a verified signal-to-mission engine.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["engine_thesis_id", "versioned_mission_unit_id", "transformation_selection_id", "cognitive_separation_id", "autonomy_corrigibility_id", "anti_entrenchment_control_id", "planner_boundary_id", "state_manifest_id", "serial_runtime_cycle_id", "vertical_slice_run_id", "adversarial_comparison_case_id", "operational_sequence", "operation_artifacts", "operational_identity", "vertical_slice_status", "adversarial_comparison_status", "general_agent_company_proven", "production_runtime_proven", "business_success_proven", "empirical_outcome_advantage_proven", "further_philosophy_before_contact_is_allowed", "thesis_rationale"],
+  "properties": {
+    "engine_thesis_id": {"type": "string", "minLength": 1},
+    "versioned_mission_unit_id": {"type": "string", "minLength": 1},
+    "transformation_selection_id": {"type": "string", "minLength": 1},
+    "cognitive_separation_id": {"type": "string", "minLength": 1},
+    "autonomy_corrigibility_id": {"type": "string", "minLength": 1},
+    "anti_entrenchment_control_id": {"type": "string", "minLength": 1},
+    "planner_boundary_id": {"type": "string", "minLength": 1},
+    "state_manifest_id": {"type": "string", "minLength": 1},
+    "serial_runtime_cycle_id": {"type": "string", "minLength": 1},
+    "vertical_slice_run_id": {"type": "string", "minLength": 1},
+    "adversarial_comparison_case_id": {"type": "string", "minLength": 1},
+    "operational_sequence": {"const": ["wake_on_value_relevant_deviation", "interpret_competing_causal_frames", "invent_independent_missions", "conduct_plural_value_tournament", "emit_versioned_mission_contract", "revise_purpose_from_outcomes"]},
+    "operation_artifacts": {
+      "type": "array", "minItems": 6, "maxItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["operation", "artifact_id", "state_fingerprint"],
+        "properties": {
+          "operation": {"type": "string", "minLength": 1},
+          "artifact_id": {"type": "string", "minLength": 1},
+          "state_fingerprint": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "operational_identity": {"const": "signal_to_mission_engine"},
+    "vertical_slice_status": {"const": "executed"},
+    "adversarial_comparison_status": {"const": "specified_not_yet_observed"},
+    "general_agent_company_proven": {"const": false},
+    "production_runtime_proven": {"const": false},
+    "business_success_proven": {"const": false},
+    "empirical_outcome_advantage_proven": {"const": false},
+    "further_philosophy_before_contact_is_allowed": {"const": false},
+    "thesis_rationale": {"type": "string", "minLength": 1}
+  }
+}

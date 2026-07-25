@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/coordination-outcome-metrics.schema.json",
+  "title": "PalamedesCoordinationOutcomeMetrics",
+  "description": "Experimental Cycle 186 coordination metrics based on decision latency and contradiction resolution.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "metrics_id",
+    "portfolio_id",
+    "measurement_window",
+    "message_count",
+    "message_volume_is_coordination_quality",
+    "decision_latency_samples",
+    "contradiction_records",
+    "metrics_rationale"
+  ],
+  "properties": {
+    "metrics_id": {"type": "string", "minLength": 1},
+    "portfolio_id": {"type": "string", "minLength": 1},
+    "measurement_window": {"type": "string", "minLength": 1},
+    "message_count": {"type": "integer", "minimum": 0},
+    "message_volume_is_coordination_quality": {"const": false},
+    "decision_latency_samples": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["decision_id", "ready_at", "decided_at", "latency_hours", "evidence_id"],
+        "properties": {
+          "decision_id": {"type": "string", "minLength": 1},
+          "ready_at": {"type": "string", "minLength": 1},
+          "decided_at": {"type": "string", "minLength": 1},
+          "latency_hours": {"type": "number", "minimum": 0},
+          "evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "contradiction_records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contradiction_id",
+          "detected_at",
+          "status",
+          "resolved_at",
+          "resolution_latency_hours",
+          "resolution_evidence_id"
+        ],
+        "properties": {
+          "contradiction_id": {"type": "string", "minLength": 1},
+          "detected_at": {"type": "string", "minLength": 1},
+          "status": {"enum": ["resolved", "open"]},
+          "resolved_at": {"type": "string"},
+          "resolution_latency_hours": {"type": ["number", "null"], "minimum": 0},
+          "resolution_evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "metrics_rationale": {"type": "string", "minLength": 1}
+  }
+}

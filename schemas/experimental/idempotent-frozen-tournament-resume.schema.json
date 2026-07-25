@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/idempotent-frozen-tournament-resume.schema.json",
+  "title": "PalamedesIdempotentFrozenTournamentResume",
+  "description": "Cycle 382 proof that partial tournament resume preserves frozen candidates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["resume_report_id", "candidate_set_fingerprint_before", "candidate_set_fingerprint_after", "partial_tournament_state", "resumed_tournament_state", "resume_evidence_artifact_id", "report_fingerprint", "candidate_generation_invoked_on_resume", "completed_judgments_recomputed", "report_rationale"],
+  "properties": {
+    "resume_report_id": {"type": "string", "minLength": 1},
+    "candidate_set_fingerprint_before": {"type": "string", "minLength": 1},
+    "candidate_set_fingerprint_after": {"type": "string", "minLength": 1},
+    "partial_tournament_state": {"type": "object"},
+    "resumed_tournament_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tournament_contract_version", "tournament_id", "candidate_set_fingerprint", "comparison_protocol_fingerprint", "candidates", "judgments", "pending_candidate_ids", "tournament_status", "candidates_regenerated_on_resume"],
+      "properties": {
+        "tournament_contract_version": {"const": "tournament-experimental/1"},
+        "tournament_id": {"type": "string", "minLength": 1},
+        "candidate_set_fingerprint": {"type": "string", "minLength": 1},
+        "comparison_protocol_fingerprint": {"type": "string", "minLength": 1},
+        "candidates": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["candidate_id", "candidate_fingerprint", "frozen"],
+            "properties": {
+              "candidate_id": {"type": "string", "minLength": 1},
+              "candidate_fingerprint": {"type": "string", "minLength": 1},
+              "frozen": {"const": true}
+            }
+          }
+        },
+        "judgments": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["candidate_id", "status", "judge_id", "judgment_artifact_id", "judgment_fingerprint"],
+            "properties": {
+              "candidate_id": {"type": "string", "minLength": 1},
+              "status": {"enum": ["pending", "completed"]},
+              "judge_id": {"type": "string"},
+              "judgment_artifact_id": {"type": "string"},
+              "judgment_fingerprint": {"type": "string"}
+            }
+          }
+        },
+        "pending_candidate_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "tournament_status": {"enum": ["running", "completed"]},
+        "candidates_regenerated_on_resume": {"const": false}
+      }
+    },
+    "resume_evidence_artifact_id": {"type": "string", "minLength": 1},
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "candidate_generation_invoked_on_resume": {"const": false},
+    "completed_judgments_recomputed": {"const": false},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/integrated-mission-metric-thesis.schema.json",
+  "title": "PalamedesIntegratedMissionMetricThesis",
+  "description": "Cycle 380 seven-dimensional equal-information mission evidence scorecard.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["metric_thesis_id", "proof_dataset_id", "baseline_condition_id", "palamedes_condition_id", "measurement_protocol_id", "scorecard_fingerprint", "equal_information_verified", "dimensions", "constitutional_violation_count", "evidence_eligible", "single_composite_score_authoritative", "compute_or_labor_hidden", "harm_nettable_against_benefit", "replaceability_omitted", "scorecard_rationale"],
+  "properties": {
+    "metric_thesis_id": {"type": "string", "minLength": 1},
+    "proof_dataset_id": {"type": "string", "minLength": 1},
+    "baseline_condition_id": {"type": "string", "minLength": 1},
+    "palamedes_condition_id": {"type": "string", "minLength": 1},
+    "measurement_protocol_id": {"type": "string", "minLength": 1},
+    "scorecard_fingerprint": {"type": "string", "minLength": 1},
+    "equal_information_verified": {"const": true},
+    "dimensions": {
+      "type": "array", "minItems": 7, "maxItems": 7,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["dimension", "metric_definition", "unit", "baseline_value", "palamedes_value", "direction", "baseline_evidence_artifact_id", "palamedes_evidence_artifact_id", "measurement_rationale", "reported_separately", "disqualifying_boundary_crossed"],
+        "properties": {
+          "dimension": {"enum": ["mission_consequence", "retired_cognition", "compute", "total_human_labor", "calibration", "harm", "replaceability"]},
+          "metric_definition": {"type": "string", "minLength": 1},
+          "unit": {"type": "string", "minLength": 1},
+          "baseline_value": {"type": "number"},
+          "palamedes_value": {"type": "number"},
+          "direction": {"enum": ["higher_better", "lower_better", "diagnostic_only"]},
+          "baseline_evidence_artifact_id": {"type": "string", "minLength": 1},
+          "palamedes_evidence_artifact_id": {"type": "string", "minLength": 1},
+          "measurement_rationale": {"type": "string", "minLength": 1},
+          "reported_separately": {"const": true},
+          "disqualifying_boundary_crossed": {"type": "boolean"}
+        }
+      }
+    },
+    "constitutional_violation_count": {"type": "integer", "minimum": 0},
+    "evidence_eligible": {"type": "boolean"},
+    "single_composite_score_authoritative": {"const": false},
+    "compute_or_labor_hidden": {"const": false},
+    "harm_nettable_against_benefit": {"const": false},
+    "replaceability_omitted": {"const": false},
+    "scorecard_rationale": {"type": "string", "minLength": 1}
+  }
+}

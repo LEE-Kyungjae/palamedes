@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/communication-representation.schema.json",
+  "title": "PalamedesCommunicationRepresentation",
+  "description": "Experimental Cycle 145 distinction between private drafting and delegated publication.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "communication_id",
+    "content_hash",
+    "content_purpose",
+    "state",
+    "external_visibility",
+    "representation_delegation"
+  ],
+  "properties": {
+    "communication_id": {"type": "string", "minLength": 1},
+    "content_hash": {"type": "string", "minLength": 1},
+    "content_purpose": {"type": "string", "minLength": 1},
+    "state": {"enum": ["simulation", "private_draft", "publication"]},
+    "external_visibility": {"type": "boolean"},
+    "representation_delegation": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": [
+        "delegation_id",
+        "principal",
+        "audience",
+        "channel",
+        "permitted_topic",
+        "valid_until",
+        "retraction_mechanism",
+        "content_hash"
+      ],
+      "properties": {
+        "delegation_id": {"type": "string", "minLength": 1},
+        "principal": {"type": "string", "minLength": 1},
+        "audience": {"type": "string", "minLength": 1},
+        "channel": {"type": "string", "minLength": 1},
+        "permitted_topic": {"type": "string", "minLength": 1},
+        "valid_until": {"type": "string", "minLength": 1},
+        "retraction_mechanism": {"type": "string", "minLength": 1},
+        "content_hash": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

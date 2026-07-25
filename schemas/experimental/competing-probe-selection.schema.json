@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/competing-probe-selection.schema.json",
+  "title": "PalamedesCompetingProbeSelection",
+  "description": "Experimental Cycle 247 contract selecting the least harmful, then fastest, unanswered probe that separates leading missions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "probe_tournament_id",
+    "mission_tournament_id",
+    "leading_mission_ids",
+    "existing_evidence_review_id",
+    "probe_candidates",
+    "selection_status",
+    "selected_probe_id",
+    "selection_rationale"
+  ],
+  "properties": {
+    "probe_tournament_id": {"type": "string", "minLength": 1},
+    "mission_tournament_id": {"type": "string", "minLength": 1},
+    "leading_mission_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "existing_evidence_review_id": {"type": "string", "minLength": 1},
+    "probe_candidates": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "probe_id",
+          "observation",
+          "separates_mission_ids",
+          "answerable_by_existing_evidence",
+          "existing_evidence_gap",
+          "harm_score",
+          "time_to_observation_hours",
+          "safety_boundary",
+          "evidence_id"
+        ],
+        "properties": {
+          "probe_id": {"type": "string", "minLength": 1},
+          "observation": {"type": "string", "minLength": 1},
+          "separates_mission_ids": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "answerable_by_existing_evidence": {"type": "boolean"},
+          "existing_evidence_gap": {"type": "string", "minLength": 1},
+          "harm_score": {"type": "number", "minimum": 0, "maximum": 1},
+          "time_to_observation_hours": {"type": "number", "exclusiveMinimum": 0},
+          "safety_boundary": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "selection_status": {"enum": ["selected", "unresolved_tie"]},
+    "selected_probe_id": {"type": "string"},
+    "selection_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/plural-value-tournament-thesis.schema.json",
+  "title": "PalamedesPluralValueTournamentThesis",
+  "description": "Experimental Cycle 250 integration of commitment, bounded exploration, and discriminating-probe tournament outcomes without scalarizing plural values.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tournament_thesis_id",
+    "tournament_id",
+    "pre_reveal_commitments_id",
+    "seven_axis_criticism_id",
+    "nonscalar_selection_id",
+    "assumption_resolution_id",
+    "selection_record_id",
+    "single_scalar_score_used",
+    "stage_order",
+    "plural_value_boundaries",
+    "unresolved_tradeoffs_preserved",
+    "selection_outcome",
+    "dominance_evidence_id",
+    "minority_allocation_id",
+    "probe_selection_id",
+    "thesis_rationale"
+  ],
+  "properties": {
+    "tournament_thesis_id": {"type": "string", "minLength": 1},
+    "tournament_id": {"type": "string", "minLength": 1},
+    "pre_reveal_commitments_id": {"type": "string", "minLength": 1},
+    "seven_axis_criticism_id": {"type": "string", "minLength": 1},
+    "nonscalar_selection_id": {"type": "string", "minLength": 1},
+    "assumption_resolution_id": {"type": "string", "minLength": 1},
+    "selection_record_id": {"type": "string", "minLength": 1},
+    "single_scalar_score_used": {"const": false},
+    "stage_order": {
+      "const": [
+        "seal_forecasts",
+        "independent_criticism",
+        "constitutional_boundaries",
+        "shared_assumption_dominance",
+        "explicit_tradeoffs",
+        "outcome_selection"
+      ]
+    },
+    "plural_value_boundaries": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "unresolved_tradeoffs_preserved": {"const": true},
+    "selection_outcome": {"enum": ["commitment", "bounded_exploration", "discriminating_probe"]},
+    "dominance_evidence_id": {"type": "string"},
+    "minority_allocation_id": {"type": "string"},
+    "probe_selection_id": {"type": "string"},
+    "thesis_rationale": {"type": "string", "minLength": 1}
+  }
+}

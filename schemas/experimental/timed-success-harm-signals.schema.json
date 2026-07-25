@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/timed-success-harm-signals.schema.json",
+  "title": "PalamedesTimedSuccessHarmSignals",
+  "description": "Experimental Cycle 256 contract requiring baselined success ranges and earlier review for harms that can precede benefit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "signal_contract_id",
+    "planner_contract_id",
+    "success_signals",
+    "harm_signals",
+    "schedule_rationale"
+  ],
+  "properties": {
+    "signal_contract_id": {"type": "string", "minLength": 1},
+    "planner_contract_id": {"type": "string", "minLength": 1},
+    "success_signals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "signal_id",
+          "description",
+          "unit",
+          "baseline_value",
+          "baseline_evidence_id",
+          "target_range_min",
+          "target_range_max",
+          "improvement_direction",
+          "observation_start_day",
+          "observation_end_day",
+          "evidence_source_id"
+        ],
+        "properties": {
+          "signal_id": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "unit": {"type": "string", "minLength": 1},
+          "baseline_value": {"type": "number"},
+          "baseline_evidence_id": {"type": "string", "minLength": 1},
+          "target_range_min": {"type": "number"},
+          "target_range_max": {"type": "number"},
+          "improvement_direction": {"enum": ["increase", "decrease"]},
+          "observation_start_day": {"type": "integer", "minimum": 0},
+          "observation_end_day": {"type": "integer", "minimum": 1},
+          "evidence_source_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "harm_signals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "signal_id",
+          "description",
+          "threshold",
+          "first_review_day",
+          "damage_can_precede_benefit",
+          "evidence_source_id",
+          "response"
+        ],
+        "properties": {
+          "signal_id": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "threshold": {"type": "string", "minLength": 1},
+          "first_review_day": {"type": "integer", "minimum": 0},
+          "damage_can_precede_benefit": {"type": "boolean"},
+          "evidence_source_id": {"type": "string", "minLength": 1},
+          "response": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "schedule_rationale": {"type": "string", "minLength": 1}
+  }
+}

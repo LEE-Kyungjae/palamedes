@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/minimal-signal-to-mission-vertical-slice.schema.json",
+  "title": "PalamedesMinimalSignalToMissionVerticalSlice",
+  "description": "Experimental Cycle 299 executable input for one signal-to-mission-to-outcome vertical slice.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "runtime_id", "signal", "constitution", "interpretation", "mission_candidates", "selected_mission_id", "mission_contract", "bounded_probe", "planner_handoff", "outcome", "stage_times", "conceptual_expansions"],
+  "properties": {
+    "run_id": {"type": "string", "minLength": 1},
+    "runtime_id": {"type": "string", "minLength": 1},
+    "signal": {"type": "object"},
+    "constitution": {"type": "object"},
+    "interpretation": {"type": "object"},
+    "mission_candidates": {"type": "array", "minItems": 2, "items": {"type": "object"}},
+    "selected_mission_id": {"type": "string", "minLength": 1},
+    "mission_contract": {"type": "object"},
+    "bounded_probe": {"type": "object"},
+    "planner_handoff": {"type": "object"},
+    "outcome": {"type": "object"},
+    "stage_times": {"type": "array", "minItems": 8, "maxItems": 8, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "conceptual_expansions": {"const": []}
+  }
+}

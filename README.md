@@ -4,9 +4,14 @@
   <img src="assets/palamedes.png" alt="Palamedes" width="100%">
 </p>
 
-Palamedes is an experimental inquiry and plan-state kernel for work whose
-direction changes as people, models, references, implementation, and reality
-interact.
+> **Palamedes decides what mission is worth planning before execution agents
+> decide how to implement it.**
+
+Palamedes is a research-alpha autonomous pre-planner and plan-state kernel. It
+works before the familiar `planner -> task -> implementation` pipeline:
+noticing what matters, forming competing interpretations, originating a
+justified mission, attempting to falsify it, and handing only the surviving
+mission to downstream agents.
 
 It treats a plan as revisionable state rather than disposable text. Alongside
 goals, evidence, hypotheses, and restore points, Palamedes can preserve
@@ -16,20 +21,73 @@ It also distinguishes inquiry from commitment, reference collection from
 reference influence, and ordinary tasks from development steps intended to
 produce new information.
 
+Palamedes began with a question: if language models tend toward likely,
+average answers, where can originality come from? Its working answer is not
+"one brilliant generation." Originality can emerge through accumulated changes
+of view: many partial discoveries, explicit disagreement, contact with outside
+evidence, and a new frame that makes a previously invisible move possible.
+Retrieval, debate, and multi-agent competition are useful only when they change
+or challenge a decision—not when they merely add more text.
+
 Palamedes does not claim to manufacture originality or guarantee startup
-success. It provides an auditable surface for exploring those questions without
+success. It aims to automate more of the judgment that still precedes planning,
+but treats that authority as something to earn empirically rather than assume.
+It makes the reasoning before execution inspectable and testable without
 silently rewriting the path taken. The current inquiry, including counterpoints
 and unresolved tensions, is preserved in
 [`PALAMEDES_INQUIRY.md`](PALAMEDES_INQUIRY.md).
 
+The current pre-planner hypothesis and the mission contract passed to downstream
+agents are defined in
+[`docs/palamedes-pre-planner-contract.md`](docs/palamedes-pre-planner-contract.md).
+The first 400 dependent reasoning moves developed and pressure-tested this
+view. Cycle 401 then applied real retrieval pressure and exposed a concrete
+failure rather than declaring success. The records are
+available as [separate cycle records](docs/inquiry/reasoning-cycles/README.md).
+
+```text
+world signals and accumulated references
+  -> competing interpretations
+  -> candidate missions
+  -> evidence, criticism, and falsification
+  -> selected mission contract + non-goals
+  -> planner -> tasks -> implementation
+  -> outcome signals back to Palamedes
+```
+
 ## Current Status
 
-Palamedes is ready for alpha release and early adopter use.
+**Research Alpha.** The planning kernel is implemented and heavily tested. The
+autonomous pre-planner is an active, falsifiable product hypothesis.
 
 - `core` contract surfaces such as persisted plan state, fingerprint conflict semantics, restore behavior, and documented HTTP envelopes are treated as stable according to `STABILITY.md`
 - `reference` surfaces such as host orchestration contracts, reference adapters, and example integrations are still experimental
 - `inquiry` surfaces such as view-transition lineage and longitudinal evaluation are active product hypotheses, not settled doctrine
 - the repository currently ships a canonical Python reference surface plus a thin TypeScript HTTP consumer
+
+| Evidence level | Current result |
+| --- | --- |
+| Stable plan-state kernel | Implemented with revision, restore, conflict, QA, and conformance surfaces |
+| Bounded pre-planner contracts | Implemented and covered by 1,209 mission tests and 298 experimental schemas |
+| Internal reasoning development | 401 recorded dependent cycles |
+| First real retrieval contact | 1,624 evidence records and 837 components indexed |
+| Reference-treatment safety | Correctly blocked the first packet with 9 explicit reasons |
+| Equal-budget baseline vs treatment | Not yet run |
+| Better external decisions or outcomes | Not yet proven |
+
+The first cross-repository case targets `insight-rag`. Palamedes selected a
+counterfactual action-choice benchmark instead of immediately expanding its
+analyzer or corpus. Its first real treatment packet was low-confidence and
+contained unrelated cache/TTL/dedup guidance for a voice-turn tracing task.
+Palamedes therefore blocked the packet rather than laundering retrieval into
+authority. See the [preregistration](experiments/case-001-insight-rag/preregistration.md),
+[paired pilot task](experiments/case-001-insight-rag/pilot-task.md), and
+[cycle 401 record](docs/inquiry/reasoning-cycles/cycle-401.md).
+
+That is evidence that the safety protocol can reject a bad treatment. It is not
+evidence that Palamedes makes better decisions. Comparative superiority remains
+unknown until equal-budget control/treatment runs, blinded review, and
+longitudinal outcome records exist.
 
 Use it when:
 
@@ -56,13 +114,17 @@ Palamedes is organized around one planning kernel with a few integration surface
 ```text
 palamedes/
 ├── palamedes.py                    # Core planning kernel and CLI
+├── palamedes_mission.py            # Experimental pre-planner contracts and gates
 ├── palamedes_server.py             # Local HTTP transport
 ├── palamedes_sdk/                  # Packaged Python client surface
 ├── palamedes_reference_adapter.py  # Canonical Python reference adapter
 ├── palamedes_reference_host.py     # Canonical Python reference host
 ├── palamedes_reference_consumer.ts # Thin TypeScript HTTP consumer
-├── spec/                          # Public contract entrypoints
-└── tests/contracts/               # Fixture-backed conformance cases
+├── schemas/experimental/           # Machine-checkable research contracts
+├── experiments/                    # Preregistered empirical cases
+├── docs/inquiry/reasoning-cycles/  # Dependent reasoning lineage
+├── spec/                           # Public contract entrypoints
+└── tests/contracts/                # Fixture-backed conformance cases
 ```
 
 Separation of concerns:
@@ -70,18 +132,31 @@ Separation of concerns:
 | Layer | Responsibility |
 | --- | --- |
 | `core` | Persisted plan state, evidence, hypothesis log, revision history, QA, conflict and restore semantics |
+| `mission` | Candidate generation, criticism, falsification, selection, non-goals, and handoff contracts |
 | `transport` | CLI, HTTP, and agent wrapper access to the same planning kernel |
 | `reference` | Python host/adapter and TypeScript consumer for real integration examples |
+| `experiment` | Preregistration, paired comparison, evidence lineage, and outcome evaluation |
 | `conformance` | Contract fixtures and runners that verify stable adopter-facing behavior |
 
-The important design choice is that the plan is the source of truth. Everything else exists to read it, mutate it safely, or verify that another implementation behaves the same way.
+The important design choice is that a mission must earn the right to become a
+plan. Once accepted, the plan becomes the source of truth. Everything else
+exists to challenge the mission, improve the plan, mutate it safely, or verify
+that another implementation behaves the same way.
 
 ## Planning Flow
 
-Palamedes is easiest to understand as one stateful loop:
+The experimental pre-planner loop is:
 
 ```text
-choose direction
+notice signal -> frame interpretations -> generate rival missions
+      ↑                                      ↓
+outcomes <- learn from execution <- falsify and select
+```
+
+The stable plan-state loop is:
+
+```text
+accept mission contract
     ↓
 write plan state
     ↓
@@ -134,9 +209,10 @@ Palamedes is `plan-only` by design.
 
 Palamedes should own:
 
-- idea discovery
-- direction setting
-- planning logic
+- signal interpretation and idea discovery
+- competing frames and candidate missions
+- criticism, falsification, and direction selection
+- mission contracts, non-goals, and planning logic
 - success and failure criteria
 - evidence-backed replanning
 - revision-aware recovery
@@ -151,6 +227,26 @@ Palamedes should not own:
 
 Those layers can be built around Palamedes, but they should not blur the purpose of this repo.
 
+## Works With Execution Agents
+
+Palamedes is not a replacement for agent runtimes. LangGraph, Microsoft Agent
+Framework, CrewAI, GitHub Agentic Workflows, Codex, Claude, or other execution
+systems can consume a Palamedes mission contract and decide how to plan and
+implement it.
+
+```text
+Palamedes
+  mission / rationale / evidence / falsifiers / non-goals
+      ↓
+external planner or agent runtime
+  plan / tasks / tools / implementation
+      ↓
+observable outcomes returned to Palamedes
+```
+
+Its authority ends at the mission boundary. It may recommend, reject, or reopen
+a direction; it does not silently acquire delivery authority.
+
 ## What Makes It Different
 
 Palamedes is not:
@@ -163,6 +259,7 @@ Palamedes is not:
 
 Palamedes is:
 
+- a mission-origin and falsification layer before planning
 - a structured decision state in your repo
 - an evidence-backed planning loop
 - a versioned history of why the plan changed
@@ -198,24 +295,21 @@ The core guarantees across these surfaces are:
 - storage health and recovery diagnostics
 - fixture-backed conformance checks for stable public behavior
 
-## Example Outcome
+## First Empirical Case
 
-You start with three possible directions:
+The first case did not produce a triumph. It produced a useful refusal:
 
-- AI planning tool for founders
-- agent workflow layer for developers
-- local research memory for solo builders
+- signal: `insight-rag` had ranking benchmarks but no evidence that its output improved an action choice
+- rival missions: deepen the analyzer, expand the corpus, or test the causal link between retrieved insight and action
+- selected mission: build a counterfactual action-choice benchmark
+- treatment result: the retrieved guidance lacked positive task correlation and drifted into unrelated implementation advice
+- decision: block the treatment packet with 9 recorded reasons
+- next probe: repair or narrow retrieval before claiming decision value
 
-After one Palamedes loop, the output should be sharper:
-
-- chosen direction: AI planning tool for founders
-- rejected directions: workflow layer is crowded, research memory is less urgent
-- success metric: 5 founder users complete one weekly planning review
-- failure signal: users keep asking for task execution instead of planning help
-- next evidence to collect: 10 founder interviews, 3 weekly usage check-ins
-- replan point: revisit direction after 14 days or after 5 interviews contradict the core pain
-
-That is the job: force a better direction decision before more building happens.
+This is the intended behavior: references are not “internalized” merely because
+they were collected. Their influence must be recorded, relevant, challengeable,
+and removable. A blocked packet is a better result than a confident but
+unsupported mission.
 
 ## Who It Is For
 
@@ -308,6 +402,10 @@ Current stability boundary:
 | reference adapters and example integrations | experimental |
 
 ## Quick Start
+
+This quick start exercises the stable plan-state kernel. It does not by itself
+run or prove the full autonomous pre-planner; empirical mission origination is
+currently represented by the experimental contracts and preregistered cases.
 
 The first 5 to 10 minutes should produce:
 
@@ -627,15 +725,21 @@ python3 -m pip install -e .
 
 Palamedes favors:
 
-1. Strong references
-2. Actionable insights
-3. Audience interest detection
-4. Need intensity detection
-5. High information density
-6. Multiple viewpoints
+1. A worthwhile mission before a larger task list
+2. Competing interpretations before premature convergence
+3. References with recorded influence, not collection for its own sake
+4. View transitions that preserve what became visible and what may now be hidden
+5. Explicit falsifiers, non-goals, uncertainty, and reversible probes
+6. Reality pressure through paired comparisons and observable outcomes
+7. The simplest mechanism that survives the evidence, whether prompting, retrieval, debate, code, or a model
+8. Bounded authority: recommendation strength must not exceed evidence strength
 
-Humans bring context from experience and intent.
-AI should improve decision quality, not just generate more tasks.
+The project rejects a false choice between “the human is right” and “the model
+is right.” Both are provisional participants in a longer chain of discovery.
+Development is part of the inquiry: each implementation step should reveal
+something that can alter the next step. AI should eventually originate and
+challenge direction—not merely generate more tasks—but that capability must be
+demonstrated against baselines and outcomes.
 
 ## 📈 Star History
 

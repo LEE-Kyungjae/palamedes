@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/reference-treatment-packet-gate.schema.json",
+  "title": "PalamedesReferenceTreatmentPacketGate",
+  "description": "Cycle 401 gate preventing low-confidence or task-irrelevant reference guidance from reaching an experimental treatment agent.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "packet_gate_id",
+    "case_id",
+    "task_fingerprint",
+    "source_manifest_fingerprint",
+    "overall_confidence",
+    "required_capabilities",
+    "allowed_supporting_capabilities",
+    "candidates",
+    "selected_candidate_id",
+    "guidance_steps",
+    "handoff_authorized",
+    "treatment_status",
+    "report_fingerprint",
+    "report_rationale"
+  ],
+  "properties": {
+    "packet_gate_id": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "task_fingerprint": {"type": "string", "minLength": 1},
+    "source_manifest_fingerprint": {"type": "string", "minLength": 1},
+    "overall_confidence": {"enum": ["low", "medium", "high"]},
+    "required_capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "allowed_supporting_capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "candidates": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "selected_candidate_id": {"type": "string", "minLength": 1},
+    "guidance_steps": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "handoff_authorized": {"type": "boolean"},
+    "treatment_status": {"enum": ["ready", "unavailable_insufficient_evidence"]},
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

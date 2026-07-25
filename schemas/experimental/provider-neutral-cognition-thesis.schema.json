@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/provider-neutral-cognition-thesis.schema.json",
+  "title": "PalamedesProviderNeutralCognitionThesis",
+  "description": "Cycle 330 integration of provider-neutral semantic roles under deterministic independence and authority enforcement.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cognition_thesis_id", "narrow_command_api_id", "integration_fingerprint", "component_evidence", "integrated_invariants", "cognition_thesis_decision", "thesis_rationale"],
+  "properties": {
+    "cognition_thesis_id": {"type": "string", "minLength": 1},
+    "narrow_command_api_id": {"type": "string", "minLength": 1},
+    "integration_fingerprint": {"type": "string", "minLength": 1},
+    "component_evidence": {
+      "type": "array", "minItems": 9, "maxItems": 9,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["component", "validator_id", "evidence_artifact_id", "evidence_fingerprint", "schema_id", "verification_record_id", "verified"],
+        "properties": {
+          "component": {"enum": ["model_multiplicity_tradeoff", "provider_neutral_roles", "inventor_independence", "interpretation_routing", "blinded_adversary", "structured_selector", "ownership_boundary", "failure_recovery", "dependence_manifest"]},
+          "validator_id": {"type": "string", "minLength": 1},
+          "evidence_artifact_id": {"type": "string", "minLength": 1},
+          "evidence_fingerprint": {"type": "string", "minLength": 1},
+          "schema_id": {"type": "string", "minLength": 1},
+          "verification_record_id": {"type": "string", "minLength": 1},
+          "verified": {"const": true}
+        }
+      }
+    },
+    "integrated_invariants": {
+      "type": "object", "additionalProperties": false,
+      "required": ["semantic_roles_provider_neutral", "semantic_roles_structurally_separated", "independence_claims_deterministically_computed", "authority_boundaries_deterministically_enforced", "model_outputs_validated_before_state_change", "shared_model_dependence_disclosed", "semantic_failure_remains_explicit", "provider_count_defines_role_topology", "role_prompt_alone_proves_independence", "role_count_inflates_consensus", "deterministic_code_substitutes_semantic_judgment", "model_controls_its_own_authority"],
+      "properties": {
+        "semantic_roles_provider_neutral": {"const": true},
+        "semantic_roles_structurally_separated": {"const": true},
+        "independence_claims_deterministically_computed": {"const": true},
+        "authority_boundaries_deterministically_enforced": {"const": true},
+        "model_outputs_validated_before_state_change": {"const": true},
+        "shared_model_dependence_disclosed": {"const": true},
+        "semantic_failure_remains_explicit": {"const": true},
+        "provider_count_defines_role_topology": {"const": false},
+        "role_prompt_alone_proves_independence": {"const": false},
+        "role_count_inflates_consensus": {"const": false},
+        "deterministic_code_substitutes_semantic_judgment": {"const": false},
+        "model_controls_its_own_authority": {"const": false}
+      }
+    },
+    "cognition_thesis_decision": {"const": "integrated"},
+    "thesis_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/separated-causal-sketch.schema.json",
+  "title": "PalamedesSeparatedCausalSketch",
+  "description": "Experimental Cycle 306 causal claims, edges, predictions, surprises, signals, and separate normative assumptions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["causal_sketch_id", "interpretation_id", "normative_assumptions", "claims", "edges", "predictions", "normative_assumptions_embedded_as_causal_facts", "sketch_rationale"],
+  "properties": {
+    "causal_sketch_id": {"type": "string", "minLength": 1},
+    "interpretation_id": {"type": "string", "minLength": 1},
+    "normative_assumptions": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["assumption_id", "assumption", "constitution_clause_id", "effect_if_changed"],
+        "properties": {
+          "assumption_id": {"type": "string", "minLength": 1},
+          "assumption": {"type": "string", "minLength": 1},
+          "constitution_clause_id": {"type": "string", "minLength": 1},
+          "effect_if_changed": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "claims": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["claim_id", "epistemic_kind", "claim", "measurement", "normative_assumption_ids"],
+        "properties": {
+          "claim_id": {"type": "string", "minLength": 1},
+          "epistemic_kind": {"const": "empirical"},
+          "claim": {"type": "string", "minLength": 1},
+          "measurement": {"type": "string", "minLength": 1},
+          "normative_assumption_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "edges": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["edge_id", "source_claim_id", "target_claim_id", "mechanism", "confidence", "supporting_signal_ids", "opposing_signal_ids", "surprise_condition"],
+        "properties": {
+          "edge_id": {"type": "string", "minLength": 1},
+          "source_claim_id": {"type": "string", "minLength": 1},
+          "target_claim_id": {"type": "string", "minLength": 1},
+          "mechanism": {"type": "string", "minLength": 1},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+          "supporting_signal_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "opposing_signal_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "surprise_condition": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "predictions": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["prediction_id", "claim_id", "condition", "expected_observation", "time_horizon", "surprise_condition"],
+        "properties": {
+          "prediction_id": {"type": "string", "minLength": 1},
+          "claim_id": {"type": "string", "minLength": 1},
+          "condition": {"type": "string", "minLength": 1},
+          "expected_observation": {"type": "string", "minLength": 1},
+          "time_horizon": {"type": "string", "minLength": 1},
+          "surprise_condition": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "normative_assumptions_embedded_as_causal_facts": {"const": false},
+    "sketch_rationale": {"type": "string", "minLength": 1}
+  }
+}

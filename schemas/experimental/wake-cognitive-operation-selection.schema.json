@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/wake-cognitive-operation-selection.schema.json",
+  "title": "PalamedesWakeCognitiveOperationSelection",
+  "description": "Experimental Cycle 263 selection of one cognitive operation from the observed wake insufficiency.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation_selection_id",
+    "wake_event_id",
+    "frontier_entry_id",
+    "observed_insufficiency",
+    "insufficiency_evidence_id",
+    "fixed_pipeline_from_scratch",
+    "operation_options",
+    "selected_operation",
+    "operation_sequence",
+    "selection_rationale"
+  ],
+  "properties": {
+    "operation_selection_id": {"type": "string", "minLength": 1},
+    "wake_event_id": {"type": "string", "minLength": 1},
+    "frontier_entry_id": {"type": "string", "minLength": 1},
+    "observed_insufficiency": {"type": "string", "minLength": 1},
+    "insufficiency_evidence_id": {"type": "string", "minLength": 1},
+    "fixed_pipeline_from_scratch": {"const": false},
+    "operation_options": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation",
+          "directly_addresses_insufficiency",
+          "fit_rationale",
+          "expected_update",
+          "nonselection_reason"
+        ],
+        "properties": {
+          "operation": {
+            "enum": [
+              "observe",
+              "reinterpret",
+              "revise_causal_model",
+              "generate_candidate",
+              "compare_candidates",
+              "revise_contract",
+              "review_authority"
+            ]
+          },
+          "directly_addresses_insufficiency": {"type": "boolean"},
+          "fit_rationale": {"type": "string", "minLength": 1},
+          "expected_update": {"type": "string", "minLength": 1},
+          "nonselection_reason": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "selected_operation": {
+      "enum": [
+        "observe",
+        "reinterpret",
+        "revise_causal_model",
+        "generate_candidate",
+        "compare_candidates",
+        "revise_contract",
+        "review_authority"
+      ]
+    },
+    "operation_sequence": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "enum": [
+          "observe",
+          "reinterpret",
+          "revise_causal_model",
+          "generate_candidate",
+          "compare_candidates",
+          "revise_contract",
+          "review_authority"
+        ]
+      }
+    },
+    "selection_rationale": {"type": "string", "minLength": 1}
+  }
+}

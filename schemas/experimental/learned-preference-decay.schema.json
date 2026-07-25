@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/learned-preference-decay.schema.json",
+  "title": "PalamedesLearnedPreferenceDecay",
+  "description": "Experimental Cycle 215 contract for decaying preference weight while retaining lineage.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "preference_decay_id",
+    "preference_id",
+    "preference_statement",
+    "learned_environment_id",
+    "current_environment_id",
+    "environment_changed",
+    "learned_owner_identity_id",
+    "current_owner_identity_id",
+    "owner_identity_changed",
+    "change_evidence_id",
+    "original_weight",
+    "decay_factor",
+    "operational_weight",
+    "decay_rationale",
+    "lineage_deleted",
+    "lineage_records",
+    "status",
+    "review_trigger"
+  ],
+  "properties": {
+    "preference_decay_id": {"type": "string", "minLength": 1},
+    "preference_id": {"type": "string", "minLength": 1},
+    "preference_statement": {"type": "string", "minLength": 1},
+    "learned_environment_id": {"type": "string", "minLength": 1},
+    "current_environment_id": {"type": "string", "minLength": 1},
+    "environment_changed": {"type": "boolean"},
+    "learned_owner_identity_id": {"type": "string", "minLength": 1},
+    "current_owner_identity_id": {"type": "string", "minLength": 1},
+    "owner_identity_changed": {"type": "boolean"},
+    "change_evidence_id": {"type": "string", "minLength": 1},
+    "original_weight": {"type": "number", "minimum": 0, "maximum": 1},
+    "decay_factor": {"type": "number", "minimum": 0, "maximum": 1},
+    "operational_weight": {"type": "number", "minimum": 0, "maximum": 1},
+    "decay_rationale": {"type": "string", "minLength": 1},
+    "lineage_deleted": {"const": false},
+    "lineage_records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "status": {"const": "decayed"},
+    "review_trigger": {"type": "string", "minLength": 1}
+  }
+}

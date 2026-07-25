@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/self-expansion-temporal-lineage.schema.json",
+  "title": "PalamedesSelfExpansionTemporalLineage",
+  "description": "Experimental Cycle 153 temporal detection of post-hoc self-expansion rationalization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lineage_id",
+    "candidate_id",
+    "lineage_hash",
+    "events",
+    "rationalization_risk",
+    "decision"
+  ],
+  "properties": {
+    "lineage_id": {"type": "string", "minLength": 1},
+    "candidate_id": {"type": "string", "minLength": 1},
+    "lineage_hash": {"type": "string", "minLength": 1},
+    "events": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["event_id", "sequence", "type", "claim", "source_id", "recorded_at"],
+        "properties": {
+          "event_id": {"type": "string", "minLength": 1},
+          "sequence": {"type": "integer", "minimum": 1},
+          "type": {
+            "enum": [
+              "beneficiary_evidence",
+              "mission_hypothesis",
+              "self_expansion_proposal",
+              "review_decision"
+            ]
+          },
+          "claim": {"type": "string", "minLength": 1},
+          "source_id": {"type": "string", "minLength": 1},
+          "recorded_at": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "rationalization_risk": {"type": "boolean"},
+    "decision": {"enum": ["eligible_for_review", "reject_or_reframe"]}
+  }
+}

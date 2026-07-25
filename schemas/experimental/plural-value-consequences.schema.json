@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/plural-value-consequences.schema.json",
+  "title": "PalamedesPluralValueConsequences",
+  "description": "Experimental Cycle 103 contract that prevents one outcome reward from defining mission worth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "consequences"
+  ],
+  "properties": {
+    "consequences": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "dimension",
+          "direction",
+          "claim",
+          "evidence_ids"
+        ],
+        "properties": {
+          "dimension": {
+            "enum": [
+              "beneficiary_change",
+              "harm",
+              "sustainability",
+              "option_value",
+              "resource_renewal"
+            ]
+          },
+          "direction": {
+            "enum": [
+              "benefit",
+              "cost",
+              "uncertain"
+            ]
+          },
+          "claim": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

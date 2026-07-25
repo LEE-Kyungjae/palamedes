@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/upstream-human-cognition-retirement-ledger.schema.json",
+  "title": "PalamedesUpstreamHumanCognitionRetirementLedger",
+  "description": "Cycle 373 measured human framing, clarification, approval, correction, and intervention labor before planner action.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["labor_ledger_id", "proof_case_id", "baseline_condition_id", "palamedes_condition_id", "measurement_window_start", "planner_action_authorized_at", "measurement_protocol_id", "ledger_fingerprint", "labor_categories", "declared_totals", "post_planner_labor_included", "nondelegable_human_authority_counted_as_retired", "labor_retirement_claim_status", "ledger_rationale"],
+  "properties": {
+    "labor_ledger_id": {"type": "string", "minLength": 1},
+    "proof_case_id": {"type": "string", "minLength": 1},
+    "baseline_condition_id": {"type": "string", "minLength": 1},
+    "palamedes_condition_id": {"type": "string", "minLength": 1},
+    "measurement_window_start": {"type": "string", "minLength": 1},
+    "planner_action_authorized_at": {"type": "string", "minLength": 1},
+    "measurement_protocol_id": {"type": "string", "minLength": 1},
+    "ledger_fingerprint": {"type": "string", "minLength": 1},
+    "labor_categories": {
+      "type": "array", "minItems": 5, "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["category", "baseline_minutes", "palamedes_minutes", "baseline_event_count", "palamedes_event_count", "nondelegable_minutes", "retired_minutes", "added_minutes", "measurement_record_id", "measurement_method", "activity_definition", "evidence_artifact_id", "measured_before_planner_action"],
+        "properties": {
+          "category": {"enum": ["framing", "clarification", "approval", "correction", "intervention"]},
+          "baseline_minutes": {"type": "number", "minimum": 0},
+          "palamedes_minutes": {"type": "number", "minimum": 0},
+          "baseline_event_count": {"type": "number", "minimum": 0},
+          "palamedes_event_count": {"type": "number", "minimum": 0},
+          "nondelegable_minutes": {"type": "number", "minimum": 0},
+          "retired_minutes": {"type": "number", "minimum": 0},
+          "added_minutes": {"type": "number", "minimum": 0},
+          "measurement_record_id": {"type": "string", "minLength": 1},
+          "measurement_method": {"type": "string", "minLength": 1},
+          "activity_definition": {"type": "string", "minLength": 1},
+          "evidence_artifact_id": {"type": "string", "minLength": 1},
+          "measured_before_planner_action": {"const": true},
+          "nondelegable_approval_retired": {"const": false},
+          "approval_authority_boundary_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "declared_totals": {
+      "type": "object", "additionalProperties": false,
+      "required": ["baseline_minutes", "palamedes_minutes", "retired_minutes", "added_minutes", "net_minutes_retired"],
+      "properties": {
+        "baseline_minutes": {"type": "number"},
+        "palamedes_minutes": {"type": "number"},
+        "retired_minutes": {"type": "number"},
+        "added_minutes": {"type": "number"},
+        "net_minutes_retired": {"type": "number"}
+      }
+    },
+    "post_planner_labor_included": {"const": false},
+    "nondelegable_human_authority_counted_as_retired": {"const": false},
+    "labor_retirement_claim_status": {"const": "measured"},
+    "ledger_rationale": {"type": "string", "minLength": 1}
+  }
+}

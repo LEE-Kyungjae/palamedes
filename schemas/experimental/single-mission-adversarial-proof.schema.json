@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/single-mission-adversarial-proof.schema.json",
+  "title": "PalamedesSingleMissionAdversarialProof",
+  "description": "Experimental Cycle 198 one originated mission from evolving signals under adversarial comparison.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "proof_id",
+    "case_id",
+    "automates_entire_company",
+    "originated_mission_count",
+    "originated_mission_id",
+    "mission_contract_id",
+    "human_goal_injected",
+    "evolving_signals",
+    "origin_signal_ids",
+    "origin_evidence_id",
+    "adversarial_attacks",
+    "survived_adversarial_comparison",
+    "survival_rationale"
+  ],
+  "properties": {
+    "proof_id": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "automates_entire_company": {"const": false},
+    "originated_mission_count": {"const": 1},
+    "originated_mission_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "human_goal_injected": {"const": false},
+    "evolving_signals": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["signal_id", "revealed_at", "observation", "evidence_id"],
+        "properties": {
+          "signal_id": {"type": "string", "minLength": 1},
+          "revealed_at": {"type": "string", "minLength": 1},
+          "observation": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "origin_signal_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "origin_evidence_id": {"type": "string", "minLength": 1},
+    "adversarial_attacks": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "axis",
+          "attack",
+          "evidence_id",
+          "response",
+          "survival_criterion",
+          "criterion_met"
+        ],
+        "properties": {
+          "axis": {"enum": ["causal_thesis", "constitutional_fit", "replaceability"]},
+          "attack": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "response": {"type": "string", "minLength": 1},
+          "survival_criterion": {"type": "string", "minLength": 1},
+          "criterion_met": {"const": true}
+        }
+      }
+    },
+    "survived_adversarial_comparison": {"const": true},
+    "survival_rationale": {"type": "string", "minLength": 1}
+  }
+}

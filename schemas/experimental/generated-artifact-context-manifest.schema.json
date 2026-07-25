@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/generated-artifact-context-manifest.schema.json",
+  "title": "PalamedesGeneratedArtifactContextManifest",
+  "description": "Cycle 337 binding from a generated artifact to ordered context and model fingerprints.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["binding_record_id", "generated_artifact_id", "generated_artifact_type", "generated_artifact_fingerprint", "generated_at", "context_manifest", "model_runtime_manifest", "reproduction_comparison", "artifact_written_without_context_manifest", "artifact_written_without_model_manifest", "binding_rationale"],
+  "properties": {
+    "binding_record_id": {"type": "string", "minLength": 1},
+    "generated_artifact_id": {"type": "string", "minLength": 1},
+    "generated_artifact_type": {"type": "string", "minLength": 1},
+    "generated_artifact_fingerprint": {"type": "string", "minLength": 1},
+    "generated_at": {"type": "string", "minLength": 1},
+    "context_manifest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["manifest_id", "manifest_fingerprint", "assembly_id", "items", "ordered_content_fingerprints"],
+      "properties": {
+        "manifest_id": {"type": "string", "minLength": 1},
+        "manifest_fingerprint": {"type": "string", "minLength": 1},
+        "assembly_id": {"type": "string", "minLength": 1},
+        "items": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["ordinal", "artifact_id", "artifact_type", "content_fingerprint", "representation_fingerprint", "provenance_record_id", "raw_content_embedded_in_manifest"],
+            "properties": {
+              "ordinal": {"type": "integer", "minimum": 1},
+              "artifact_id": {"type": "string", "minLength": 1},
+              "artifact_type": {"type": "string", "minLength": 1},
+              "content_fingerprint": {"type": "string", "minLength": 1},
+              "representation_fingerprint": {"type": "string", "minLength": 1},
+              "provenance_record_id": {"type": "string", "minLength": 1},
+              "raw_content_embedded_in_manifest": {"const": false}
+            }
+          }
+        },
+        "ordered_content_fingerprints": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "model_runtime_manifest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["runtime_manifest_id", "provider_id", "model_id", "model_version", "model_configuration_fingerprint", "prompt_template_fingerprint", "role_assignment_id"],
+      "properties": {
+        "runtime_manifest_id": {"type": "string", "minLength": 1},
+        "provider_id": {"type": "string", "minLength": 1},
+        "model_id": {"type": "string", "minLength": 1},
+        "model_version": {"type": "string", "minLength": 1},
+        "model_configuration_fingerprint": {"type": "string", "minLength": 1},
+        "prompt_template_fingerprint": {"type": "string", "minLength": 1},
+        "role_assignment_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "reproduction_comparison": {
+      "type": "object", "additionalProperties": false,
+      "required": ["baseline_context_manifest_fingerprint", "current_context_manifest_fingerprint", "baseline_model_configuration_fingerprint", "current_model_configuration_fingerprint", "change_classification"],
+      "properties": {
+        "baseline_context_manifest_fingerprint": {"type": "string", "minLength": 1},
+        "current_context_manifest_fingerprint": {"type": "string", "minLength": 1},
+        "baseline_model_configuration_fingerprint": {"type": "string", "minLength": 1},
+        "current_model_configuration_fingerprint": {"type": "string", "minLength": 1},
+        "change_classification": {"enum": ["evidence_changed", "model_changed", "evidence_and_model_changed", "neither_changed"]}
+      }
+    },
+    "artifact_written_without_context_manifest": {"const": false},
+    "artifact_written_without_model_manifest": {"const": false},
+    "binding_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/planner-semantic-reconstruction-burden-report.schema.json",
+  "title": "PalamedesPlannerSemanticReconstructionBurdenReport",
+  "description": "Cycle 374 planner reconstruction and clarification burden after handoff.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["planner_burden_report_id", "proof_case_id", "measurement_protocol_id", "report_fingerprint", "condition_reports", "planner_satisfaction_substitutes_for_measurement", "unlogged_clarification_treated_as_zero", "condition_results_reported_separately", "report_rationale"],
+  "properties": {
+    "planner_burden_report_id": {"type": "string", "minLength": 1},
+    "proof_case_id": {"type": "string", "minLength": 1},
+    "measurement_protocol_id": {"type": "string", "minLength": 1},
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "condition_reports": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["condition", "source_handoff_artifact_id", "source_handoff_fingerprint", "planner_id", "session_id", "handoff_received_at", "strategy_ready_at", "session_evidence_artifact_id", "semantic_elements", "declared_totals", "minutes_to_strategy_ready", "burden_measured_after_handoff_before_strategy"],
+        "properties": {
+          "condition": {"enum": ["human", "one_shot_agent", "palamedes"]},
+          "source_handoff_artifact_id": {"type": "string", "minLength": 1},
+          "source_handoff_fingerprint": {"type": "string", "minLength": 1},
+          "planner_id": {"type": "string", "minLength": 1},
+          "session_id": {"type": "string", "minLength": 1},
+          "handoff_received_at": {"type": "string", "minLength": 1},
+          "strategy_ready_at": {"type": "string", "minLength": 1},
+          "session_evidence_artifact_id": {"type": "string", "minLength": 1},
+          "semantic_elements": {
+            "type": "array", "minItems": 6, "maxItems": 6,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["element", "status", "reconstruction_minutes", "clarification_question_count", "source_lookup_count", "semantic_correction_count", "measurement_record_id", "evidence_artifact_id", "burden_rationale"],
+              "properties": {
+                "element": {"enum": ["beneficiary", "invariant_meaning", "causal_thesis", "success_harm_signals", "non_goals", "authority"]},
+                "status": {"enum": ["directly_understood", "reconstructed", "clarified", "corrected"]},
+                "reconstruction_minutes": {"type": "number", "minimum": 0},
+                "clarification_question_count": {"type": "number", "minimum": 0},
+                "source_lookup_count": {"type": "number", "minimum": 0},
+                "semantic_correction_count": {"type": "number", "minimum": 0},
+                "measurement_record_id": {"type": "string", "minLength": 1},
+                "evidence_artifact_id": {"type": "string", "minLength": 1},
+                "burden_rationale": {"type": "string", "minLength": 1}
+              }
+            }
+          },
+          "declared_totals": {
+            "type": "object", "additionalProperties": false,
+            "required": ["reconstruction_minutes", "clarification_question_count", "source_lookup_count", "semantic_correction_count"],
+            "properties": {
+              "reconstruction_minutes": {"type": "number", "minimum": 0},
+              "clarification_question_count": {"type": "number", "minimum": 0},
+              "source_lookup_count": {"type": "number", "minimum": 0},
+              "semantic_correction_count": {"type": "number", "minimum": 0}
+            }
+          },
+          "minutes_to_strategy_ready": {"type": "number", "minimum": 0},
+          "burden_measured_after_handoff_before_strategy": {"const": true}
+        }
+      }
+    },
+    "planner_satisfaction_substitutes_for_measurement": {"const": false},
+    "unlogged_clarification_treated_as_zero": {"const": false},
+    "condition_results_reported_separately": {"const": true},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

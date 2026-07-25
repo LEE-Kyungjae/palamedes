@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/provider-timeout-frontier-preservation.schema.json",
+  "title": "PalamedesProviderTimeoutFrontierPreservation",
+  "description": "Cycle 383 unavailable provider operation with frozen tournament preservation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["timeout_report_id", "candidate_set_fingerprint_before", "candidate_set_fingerprint_after", "timeout_input", "timeout_record", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "timeout_report_id": {"type": "string", "minLength": 1},
+    "candidate_set_fingerprint_before": {"type": "string", "minLength": 1},
+    "candidate_set_fingerprint_after": {"type": "string", "minLength": 1},
+    "timeout_input": {"type": "object"},
+    "timeout_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timeout_record_version", "operation_id", "tournament_id", "candidate_id", "provider_id", "model_id", "attempt_number", "attempt_started_at", "timeout_recorded_at", "timeout_seconds", "timeout_class", "diagnostic_artifact_id", "retry_eligible", "operation_status", "candidate_set_fingerprint", "comparison_protocol_fingerprint", "candidates", "selection_status", "selected_candidate_id", "timed_out_candidate_disqualified", "remaining_candidate_auto_selected"],
+      "properties": {
+        "timeout_record_version": {"const": "provider-timeout/1"},
+        "operation_id": {"type": "string", "minLength": 1},
+        "tournament_id": {"type": "string", "minLength": 1},
+        "candidate_id": {"type": "string", "minLength": 1},
+        "provider_id": {"type": "string", "minLength": 1},
+        "model_id": {"type": "string", "minLength": 1},
+        "attempt_number": {"type": "integer", "minimum": 1},
+        "attempt_started_at": {"type": "string", "minLength": 1},
+        "timeout_recorded_at": {"type": "string", "minLength": 1},
+        "timeout_seconds": {"type": "number", "exclusiveMinimum": 0},
+        "timeout_class": {"type": "string", "minLength": 1},
+        "diagnostic_artifact_id": {"type": "string", "minLength": 1},
+        "retry_eligible": {"type": "boolean"},
+        "operation_status": {"const": "unavailable"},
+        "candidate_set_fingerprint": {"type": "string", "minLength": 1},
+        "comparison_protocol_fingerprint": {"type": "string", "minLength": 1},
+        "candidates": {"type": "array", "minItems": 1},
+        "selection_status": {"const": "blocked_no_selection"},
+        "selected_candidate_id": {"const": ""},
+        "timed_out_candidate_disqualified": {"const": false},
+        "remaining_candidate_auto_selected": {"const": false}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

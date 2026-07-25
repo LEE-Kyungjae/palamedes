@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/learning-thesis-gate.schema.json",
+  "title": "PalamedesLearningThesisGate",
+  "description": "Experimental Cycle 170 integration of separate model revision, counterfactual uncertainty, and purpose retirement.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "learning_cycle_id",
+    "mission_id",
+    "causal_outcome_attribution_id",
+    "failure_attribution_id",
+    "alternative_forecast_set_id",
+    "signal_trajectory_review_id",
+    "consequence_cadence_id",
+    "underlying_condition_review_id",
+    "cause_uncertainty_id",
+    "world_value_mechanism_collapsed",
+    "counterfactual_uncertainty_preserved",
+    "model_updates",
+    "underlying_purpose_completed",
+    "completed_purpose_retired",
+    "learning_decision",
+    "learning_decision_rationale"
+  ],
+  "properties": {
+    "learning_cycle_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "causal_outcome_attribution_id": {"type": "string", "minLength": 1},
+    "failure_attribution_id": {"type": "string", "minLength": 1},
+    "alternative_forecast_set_id": {"type": "string", "minLength": 1},
+    "signal_trajectory_review_id": {"type": "string", "minLength": 1},
+    "consequence_cadence_id": {"type": "string", "minLength": 1},
+    "underlying_condition_review_id": {"type": "string", "minLength": 1},
+    "cause_uncertainty_id": {"type": "string", "minLength": 1},
+    "world_value_mechanism_collapsed": {"const": false},
+    "counterfactual_uncertainty_preserved": {"const": true},
+    "model_updates": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["model", "update_id"],
+        "properties": {
+          "model": {"enum": ["world", "value", "mechanism"]},
+          "update_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "underlying_purpose_completed": {"type": "boolean"},
+    "completed_purpose_retired": {"type": "boolean"},
+    "learning_decision": {"enum": ["continue", "revise", "retire"]},
+    "learning_decision_rationale": {"type": "string", "minLength": 1}
+  }
+}

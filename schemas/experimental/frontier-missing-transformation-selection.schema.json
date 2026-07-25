@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/frontier-missing-transformation-selection.schema.json",
+  "title": "PalamedesFrontierMissingTransformationSelection",
+  "description": "Experimental Cycle 292 selection of the one cognitive transformation missing from a mission frontier.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["transformation_selection_id", "mission_artifact_id", "frontier_snapshot_id", "frontier_deficit", "frontier_claim", "current_state", "required_state_change", "deficit_evidence_id", "candidate_transformations", "selected_transformation", "execution_sequence", "reasoning_volume_is_objective", "selection_rationale"],
+  "properties": {
+    "transformation_selection_id": {"type": "string", "minLength": 1},
+    "mission_artifact_id": {"type": "string", "minLength": 1},
+    "frontier_snapshot_id": {"type": "string", "minLength": 1},
+    "frontier_deficit": {"enum": ["missing_observation", "ambiguous_meaning", "weak_causal_model", "missing_alternative", "unexamined_consequence", "unresolved_choice", "overspecified_handoff", "evidence_not_yet_available"]},
+    "frontier_claim": {"type": "string", "minLength": 1},
+    "current_state": {"type": "string", "minLength": 1},
+    "required_state_change": {"type": "string", "minLength": 1},
+    "deficit_evidence_id": {"type": "string", "minLength": 1},
+    "candidate_transformations": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["operation", "expected_frontier_change", "fit_rationale", "addresses_deficit"],
+        "properties": {
+          "operation": {"enum": ["expand_observation", "reinterpret_meaning", "revise_causal_model", "invent_mission", "criticize_consequence", "select_mission", "compress_contract", "wait_for_evidence"]},
+          "expected_frontier_change": {"type": "string", "minLength": 1},
+          "fit_rationale": {"type": "string", "minLength": 1},
+          "addresses_deficit": {"type": "boolean"}
+        }
+      }
+    },
+    "selected_transformation": {"enum": ["expand_observation", "reinterpret_meaning", "revise_causal_model", "invent_mission", "criticize_consequence", "select_mission", "compress_contract", "wait_for_evidence"]},
+    "execution_sequence": {"type": "array", "minItems": 1, "maxItems": 1},
+    "reasoning_volume_is_objective": {"const": false},
+    "selection_rationale": {"type": "string", "minLength": 1}
+  }
+}

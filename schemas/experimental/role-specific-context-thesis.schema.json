@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/role-specific-context-thesis.schema.json",
+  "title": "PalamedesRoleSpecificContextThesis",
+  "description": "Cycle 340 integration of role-specific hash-addressed evidence packets with mandatory opposition and explicit absence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["context_thesis_id", "cognition_thesis_id", "integration_fingerprint", "component_evidence", "role_packets", "context_invariants", "context_thesis_decision", "thesis_rationale"],
+  "properties": {
+    "context_thesis_id": {"type": "string", "minLength": 1},
+    "cognition_thesis_id": {"type": "string", "minLength": 1},
+    "integration_fingerprint": {"type": "string", "minLength": 1},
+    "component_evidence": {
+      "type": "array", "minItems": 9, "maxItems": 9,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["component", "validator_id", "evidence_artifact_id", "evidence_fingerprint", "verification_record_id", "verified"],
+        "properties": {
+          "component": {"enum": ["bounded_context_guard", "decision_anchors", "anti_lockin_slots", "explicit_absence", "preference_authority", "sensitive_minimization", "artifact_context_binding", "token_priority", "summary_boundary"]},
+          "validator_id": {"type": "string", "minLength": 1},
+          "evidence_artifact_id": {"type": "string", "minLength": 1},
+          "evidence_fingerprint": {"type": "string", "minLength": 1},
+          "verification_record_id": {"type": "string", "minLength": 1},
+          "verified": {"const": true}
+        }
+      }
+    },
+    "role_packets": {
+      "type": "array", "minItems": 5, "maxItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["role", "packet_id", "packet_fingerprint", "context_manifest_id", "context_manifest_fingerprint", "evidence_artifact_ids", "opposition_slot", "explicit_absence_markers", "role_specific_scope_enforced"],
+        "properties": {
+          "role": {"enum": ["interpreter", "inventor", "adversary", "selector", "outcome_analyst"]},
+          "packet_id": {"type": "string", "minLength": 1},
+          "packet_fingerprint": {"type": "string", "minLength": 1},
+          "context_manifest_id": {"type": "string", "minLength": 1},
+          "context_manifest_fingerprint": {"type": "string", "minLength": 1},
+          "evidence_artifact_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "opposition_slot": {
+            "type": "object", "additionalProperties": false,
+            "required": ["slot_id", "query_fingerprint", "status", "evidence_artifact_ids", "missing_evidence_marker"],
+            "properties": {
+              "slot_id": {"type": "string", "minLength": 1},
+              "query_fingerprint": {"type": "string", "minLength": 1},
+              "status": {"enum": ["filled", "empty"]},
+              "evidence_artifact_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+              "missing_evidence_marker": {"type": "string"}
+            }
+          },
+          "explicit_absence_markers": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "role_specific_scope_enforced": {"const": true}
+        }
+      }
+    },
+    "context_invariants": {
+      "type": "object", "additionalProperties": false,
+      "required": ["packets_hash_addressed", "opposition_mandatory", "absence_explicit", "role_scope_minimized", "summary_interpretation_visible", "sensitive_originals_controlled", "maximal_shared_context_used", "one_manifest_shared_by_all_roles"],
+      "properties": {
+        "packets_hash_addressed": {"const": true},
+        "opposition_mandatory": {"const": true},
+        "absence_explicit": {"const": true},
+        "role_scope_minimized": {"const": true},
+        "summary_interpretation_visible": {"const": true},
+        "sensitive_originals_controlled": {"const": true},
+        "maximal_shared_context_used": {"const": false},
+        "one_manifest_shared_by_all_roles": {"const": false}
+      }
+    },
+    "context_thesis_decision": {"const": "integrated"},
+    "thesis_rationale": {"type": "string", "minLength": 1}
+  }
+}

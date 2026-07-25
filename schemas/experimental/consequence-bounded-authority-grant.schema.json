@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/consequence-bounded-authority-grant.schema.json",
+  "title": "PalamedesConsequenceBoundedAuthorityGrant",
+  "description": "Experimental Cycle 217 authority grant bounded by consequences, resources, time, and representation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority_grant_id",
+    "grantor_id",
+    "grantee_id",
+    "tool_names_define_scope",
+    "allowed_consequence_classes",
+    "prohibited_consequence_classes",
+    "resource_ceilings",
+    "valid_from",
+    "valid_until",
+    "representation_rights",
+    "revocation_trigger",
+    "audit_owner"
+  ],
+  "properties": {
+    "authority_grant_id": {"type": "string", "minLength": 1},
+    "grantor_id": {"type": "string", "minLength": 1},
+    "grantee_id": {"type": "string", "minLength": 1},
+    "tool_names_define_scope": {"const": false},
+    "allowed_consequence_classes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "prohibited_consequence_classes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "resource_ceilings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compute_units", "currency_units", "elapsed_hours"],
+      "properties": {
+        "compute_units": {"type": "number", "exclusiveMinimum": 0},
+        "currency_units": {"type": "number", "exclusiveMinimum": 0},
+        "elapsed_hours": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "valid_from": {"type": "string", "minLength": 1},
+    "valid_until": {"type": "string", "minLength": 1},
+    "representation_rights": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "represented_group",
+          "representation_mode",
+          "consent_basis",
+          "may_make_binding_commitment",
+          "challenge_channel"
+        ],
+        "properties": {
+          "represented_group": {"type": "string", "minLength": 1},
+          "representation_mode": {"type": "string", "minLength": 1},
+          "consent_basis": {"type": "string", "minLength": 1},
+          "may_make_binding_commitment": {"type": "boolean"},
+          "challenge_channel": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "revocation_trigger": {"type": "string", "minLength": 1},
+    "audit_owner": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/authority-thesis-gate.schema.json",
+  "title": "PalamedesAuthorityThesisGate",
+  "description": "Experimental Cycle 150 integrated authority thesis gate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gate_id",
+    "authority_id",
+    "consequence_policy_id",
+    "action_lineage_id",
+    "decision_rationale",
+    "decision",
+    "bounded_delegation_verified",
+    "consequence_classified",
+    "action_lineage_ready",
+    "authority_ambiguous",
+    "safe_probe_available",
+    "genuinely_ungranted_power",
+    "sandbox_probe_id",
+    "escalation_reason"
+  ],
+  "properties": {
+    "gate_id": {"type": "string", "minLength": 1},
+    "authority_id": {"type": "string", "minLength": 1},
+    "consequence_policy_id": {"type": "string", "minLength": 1},
+    "action_lineage_id": {"type": "string", "minLength": 1},
+    "decision_rationale": {"type": "string", "minLength": 1},
+    "decision": {"enum": ["act", "sandbox_probe", "escalate"]},
+    "bounded_delegation_verified": {"type": "boolean"},
+    "consequence_classified": {"type": "boolean"},
+    "action_lineage_ready": {"type": "boolean"},
+    "authority_ambiguous": {"type": "boolean"},
+    "safe_probe_available": {"type": "boolean"},
+    "genuinely_ungranted_power": {"type": "boolean"},
+    "sandbox_probe_id": {"type": "string"},
+    "escalation_reason": {"type": "string"}
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/failure-thesis-integration.schema.json",
+  "title": "PalamedesFailureThesisIntegration",
+  "description": "Cycle 390 fail-closed commitment, bounded-open observation, and contradiction preservation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["failure_report_id", "failure_input", "failure_record", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "failure_report_id": {"type": "string", "minLength": 1},
+    "failure_input": {"type": "object"},
+    "failure_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["failure_record_version", "failure_decision_id", "failure_policy_id", "failure_policy_fingerprint", "unresolved_failures", "operation_decisions", "mission_commitment_gate", "external_effect_gate", "observation_gate", "maximum_observation_operations", "preserved_contradictory_evidence", "contradictory_evidence_count_before", "contradictory_evidence_count_after", "consistency_repaired_by_evidence_deletion"],
+      "properties": {
+        "failure_record_version": {"const": "failure-thesis/1"},
+        "failure_decision_id": {"type": "string", "minLength": 1},
+        "failure_policy_id": {"type": "string", "minLength": 1},
+        "failure_policy_fingerprint": {"type": "string", "minLength": 1},
+        "unresolved_failures": {"type": "array", "minItems": 1},
+        "operation_decisions": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["operation_id", "operation_type", "operation_fingerprint", "status", "external_effect_allowed"],
+            "properties": {
+              "operation_id": {"type": "string", "minLength": 1},
+              "operation_type": {"enum": ["mission_commitment", "external_effect", "observation"]},
+              "operation_fingerprint": {"type": "string", "minLength": 1},
+              "status": {"enum": ["blocked_unresolved_failure", "allowed_bounded_observation", "blocked_unbounded_observation"]},
+              "external_effect_allowed": {"const": false}
+            }
+          }
+        },
+        "mission_commitment_gate": {"const": "closed"},
+        "external_effect_gate": {"const": "closed"},
+        "observation_gate": {"const": "bounded_open"},
+        "maximum_observation_operations": {"type": "integer", "minimum": 0},
+        "preserved_contradictory_evidence": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["evidence_id", "evidence_fingerprint", "source_artifact_id", "contradicts_claim_id", "preserved", "deleted_for_consistency"],
+            "properties": {
+              "evidence_id": {"type": "string", "minLength": 1},
+              "evidence_fingerprint": {"type": "string", "minLength": 1},
+              "source_artifact_id": {"type": "string", "minLength": 1},
+              "contradicts_claim_id": {"type": "string", "minLength": 1},
+              "preserved": {"const": true},
+              "deleted_for_consistency": {"const": false}
+            }
+          }
+        },
+        "contradictory_evidence_count_before": {"type": "integer", "minimum": 1},
+        "contradictory_evidence_count_after": {"type": "integer", "minimum": 1},
+        "consistency_repaired_by_evidence_deletion": {"const": false}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

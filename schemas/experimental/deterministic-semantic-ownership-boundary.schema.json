@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/deterministic-semantic-ownership-boundary.schema.json",
+  "title": "PalamedesDeterministicSemanticOwnershipBoundary",
+  "description": "Cycle 327 ownership split between deterministic governance controls and bounded model semantic judgment.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ownership_boundary_id", "command_api_thesis_id", "role_topology_id", "responsibility_assignments", "handoff_invariants", "ownership_overlap_allowed", "unvalidated_model_output_may_mutate_state", "boundary_rationale"],
+  "properties": {
+    "ownership_boundary_id": {"type": "string", "minLength": 1},
+    "command_api_thesis_id": {"type": "string", "minLength": 1},
+    "role_topology_id": {"type": "string", "minLength": 1},
+    "responsibility_assignments": {
+      "type": "array", "minItems": 11, "maxItems": 11,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["responsibility", "owner", "input_contract_id", "output_contract_id", "failure_mode", "model_may_override", "requires_structured_model_output", "owner_may_assume_other_owner_responsibility"],
+        "properties": {
+          "responsibility": {"enum": ["schema_validation", "artifact_freezing", "context_separation", "budget_enforcement", "provenance_recording", "call_routing", "causal_interpretation", "mission_invention", "adversarial_critique", "mission_selection_judgment", "outcome_attribution_hypothesis"]},
+          "owner": {"enum": ["deterministic_code", "model"]},
+          "input_contract_id": {"type": "string", "minLength": 1},
+          "output_contract_id": {"type": "string", "minLength": 1},
+          "failure_mode": {"type": "string", "minLength": 1},
+          "model_may_override": {"type": "boolean"},
+          "requires_structured_model_output": {"type": "boolean"},
+          "owner_may_assume_other_owner_responsibility": {"const": false}
+        }
+      }
+    },
+    "handoff_invariants": {
+      "type": "object", "additionalProperties": false,
+      "required": ["code_validates_model_output_before_state_change", "model_receives_only_routed_context", "model_cannot_unfreeze_artifacts", "model_cannot_expand_budget", "model_cannot_edit_provenance", "code_does_not_invent_semantic_content", "code_does_not_score_purpose_semantically"],
+      "properties": {
+        "code_validates_model_output_before_state_change": {"const": true},
+        "model_receives_only_routed_context": {"const": true},
+        "model_cannot_unfreeze_artifacts": {"const": true},
+        "model_cannot_expand_budget": {"const": true},
+        "model_cannot_edit_provenance": {"const": true},
+        "code_does_not_invent_semantic_content": {"const": true},
+        "code_does_not_score_purpose_semantically": {"const": true}
+      }
+    },
+    "ownership_overlap_allowed": {"const": false},
+    "unvalidated_model_output_may_mutate_state": {"const": false},
+    "boundary_rationale": {"type": "string", "minLength": 1}
+  }
+}

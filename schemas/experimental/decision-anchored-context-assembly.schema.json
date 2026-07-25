@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/decision-anchored-context-assembly.schema.json",
+  "title": "PalamedesDecisionAnchoredContextAssembly",
+  "description": "Cycle 332 context assembly rooted in wake, constitution, beneficiary, frontier, and bounded lineage anchors.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["assembly_id", "context_guard_id", "assembly_fingerprint", "anchors", "assembled_manifest", "assembly_started_from_global_similarity_search", "missing_anchor_allowed", "bounded_context_guard_validated_first", "assembly_rationale"],
+  "properties": {
+    "assembly_id": {"type": "string", "minLength": 1},
+    "context_guard_id": {"type": "string", "minLength": 1},
+    "assembly_fingerprint": {"type": "string", "minLength": 1},
+    "anchors": {
+      "type": "array", "minItems": 5, "maxItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["anchor_type", "anchor_id", "source_type", "source_fingerprint", "selection_question", "scope_expression", "selected_artifact_ids", "maximum_hops", "unbounded_ancestry_allowed"],
+        "properties": {
+          "anchor_type": {"enum": ["wake_reason", "constitution_scope", "affected_beneficiary", "active_frontier", "lineage_neighborhood"]},
+          "anchor_id": {"type": "string", "minLength": 1},
+          "source_type": {"enum": ["wake_event", "constitution_clause", "beneficiary_record", "mission_frontier", "lineage_object"]},
+          "source_fingerprint": {"type": "string", "minLength": 1},
+          "selection_question": {"type": "string", "minLength": 1},
+          "scope_expression": {"type": "string", "minLength": 1},
+          "selected_artifact_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "maximum_hops": {"type": "integer", "minimum": 0, "maximum": 3},
+          "unbounded_ancestry_allowed": {"const": false}
+        }
+      }
+    },
+    "assembled_manifest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["manifest_id", "manifest_fingerprint", "assembled_at", "artifact_ids", "anchor_coverage"],
+      "properties": {
+        "manifest_id": {"type": "string", "minLength": 1},
+        "manifest_fingerprint": {"type": "string", "minLength": 1},
+        "assembled_at": {"type": "string", "minLength": 1},
+        "artifact_ids": {"type": "array", "minItems": 5, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "anchor_coverage": {
+          "type": "object", "additionalProperties": false,
+          "required": ["wake_reason", "constitution_scope", "affected_beneficiary", "active_frontier", "lineage_neighborhood"],
+          "properties": {
+            "wake_reason": {"const": true},
+            "constitution_scope": {"const": true},
+            "affected_beneficiary": {"const": true},
+            "active_frontier": {"const": true},
+            "lineage_neighborhood": {"const": true}
+          }
+        }
+      }
+    },
+    "assembly_started_from_global_similarity_search": {"const": false},
+    "missing_anchor_allowed": {"const": false},
+    "bounded_context_guard_validated_first": {"const": true},
+    "assembly_rationale": {"type": "string", "minLength": 1}
+  }
+}

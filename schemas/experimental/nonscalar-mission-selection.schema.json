@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/nonscalar-mission-selection.schema.json",
+  "title": "PalamedesNonscalarMissionSelection",
+  "description": "Experimental Cycle 243 contract selecting with boundaries, dominance, and unresolved tradeoffs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selection_record_id",
+    "tournament_id",
+    "single_scalar_reward_used",
+    "candidate_ids",
+    "boundary_evaluations",
+    "dominance_relations",
+    "unresolved_tradeoffs",
+    "selection_status",
+    "selection_protocol",
+    "next_resolution_step"
+  ],
+  "properties": {
+    "selection_record_id": {"type": "string", "minLength": 1},
+    "tournament_id": {"type": "string", "minLength": 1},
+    "single_scalar_reward_used": {"const": false},
+    "candidate_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "boundary_evaluations": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["candidate_id", "boundary_id", "boundary", "evidence_id", "verdict"],
+        "properties": {
+          "candidate_id": {"type": "string", "minLength": 1},
+          "boundary_id": {"type": "string", "minLength": 1},
+          "boundary": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "verdict": {"enum": ["pass", "disqualify"]}
+        }
+      }
+    },
+    "dominance_relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "dominator_candidate_id",
+          "dominated_candidate_id",
+          "shared_assumption_set_id",
+          "dominance_rationale"
+        ],
+        "properties": {
+          "dominator_candidate_id": {"type": "string", "minLength": 1},
+          "dominated_candidate_id": {"type": "string", "minLength": 1},
+          "shared_assumption_set_id": {"type": "string", "minLength": 1},
+          "dominance_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "unresolved_tradeoffs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["candidate_ids", "tradeoff", "axes_in_tension", "resolution_authority_id"],
+        "properties": {
+          "candidate_ids": {
+            "type": "array",
+            "minItems": 2,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "tradeoff": {"type": "string", "minLength": 1},
+          "axes_in_tension": {"type": "string", "minLength": 1},
+          "resolution_authority_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "selection_status": {"enum": ["selected", "unresolved", "selected_set"]},
+    "selection_protocol": {"type": "string", "minLength": 1},
+    "next_resolution_step": {"type": "string", "minLength": 1}
+  }
+}

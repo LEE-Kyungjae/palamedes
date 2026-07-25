@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/market-payment-evidence.schema.json",
+  "title": "PalamedesMarketPaymentEvidence",
+  "description": "Experimental Cycle 114 contract separating payment evidence from social worth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "evidence_id",
+    "payment_observation",
+    "mechanism_inference",
+    "purchasing_power_limit",
+    "social_worth_assessment",
+    "source_ids",
+    "payment_ranks_social_worth",
+    "revenue_is_mechanism_evidence",
+    "nonpaying_or_underpowered_groups"
+  ],
+  "properties": {
+    "evidence_id": {"type": "string", "minLength": 1},
+    "payment_observation": {"type": "string", "minLength": 1},
+    "mechanism_inference": {"type": "string", "minLength": 1},
+    "purchasing_power_limit": {"type": "string", "minLength": 1},
+    "social_worth_assessment": {"type": "string", "minLength": 1},
+    "source_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "payment_ranks_social_worth": {"const": false},
+    "revenue_is_mechanism_evidence": {"const": true},
+    "nonpaying_or_underpowered_groups": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["group_id", "payment_constraint", "independent_value_evidence"],
+        "properties": {
+          "group_id": {"type": "string", "minLength": 1},
+          "payment_constraint": {"type": "string", "minLength": 1},
+          "independent_value_evidence": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

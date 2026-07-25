@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/plural-correct-action-proof-case-set.schema.json",
+  "title": "PalamedesPluralCorrectActionProofCaseSet",
+  "description": "Cycle 364 proof cases balanced across commit, wait, reject, and minority preservation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["case_set_id", "case_set_fingerprint", "evaluation_contract_id", "evaluation_contract_fingerprint", "proof_cases", "scoring_contract", "all_cases_expect_mission", "mission_manufacturing_bias_allowed", "case_set_rationale"],
+  "properties": {
+    "case_set_id": {"type": "string", "minLength": 1},
+    "case_set_fingerprint": {"type": "string", "minLength": 1},
+    "evaluation_contract_id": {"type": "string", "minLength": 1},
+    "evaluation_contract_fingerprint": {"type": "string", "minLength": 1},
+    "proof_cases": {
+      "type": "array", "minItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["case_id", "case_fingerprint", "sequential_case_protocol_id", "correct_action_seal_id", "correct_action_seal_fingerprint", "precommitted_correct_action", "correctness_rationale", "decisive_evidence_fingerprint", "discriminating_observation", "incorrect_action_consequence", "correct_action_sealed_before_condition_outputs", "mission_creation_required"],
+        "properties": {
+          "case_id": {"type": "string", "minLength": 1},
+          "case_fingerprint": {"type": "string", "minLength": 1},
+          "sequential_case_protocol_id": {"type": "string", "minLength": 1},
+          "correct_action_seal_id": {"type": "string", "minLength": 1},
+          "correct_action_seal_fingerprint": {"type": "string", "minLength": 1},
+          "precommitted_correct_action": {"enum": ["commit_mission", "wait", "reject", "preserve_minority_option"]},
+          "correctness_rationale": {"type": "string", "minLength": 1},
+          "decisive_evidence_fingerprint": {"type": "string", "minLength": 1},
+          "discriminating_observation": {"type": "string", "minLength": 1},
+          "incorrect_action_consequence": {"type": "string", "minLength": 1},
+          "correct_action_sealed_before_condition_outputs": {"const": true},
+          "mission_creation_required": {"type": "boolean"}
+        }
+      }
+    },
+    "scoring_contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scoring_contract_id", "action_correctness_measure", "false_positive_mission_penalty", "false_negative_mission_penalty", "minority_option_loss_penalty", "wait_information_gain_measure", "mission_generation_receives_default_credit", "activity_volume_receives_credit", "correct_non_action_can_receive_full_credit"],
+      "properties": {
+        "scoring_contract_id": {"type": "string", "minLength": 1},
+        "action_correctness_measure": {"type": "string", "minLength": 1},
+        "false_positive_mission_penalty": {"type": "string", "minLength": 1},
+        "false_negative_mission_penalty": {"type": "string", "minLength": 1},
+        "minority_option_loss_penalty": {"type": "string", "minLength": 1},
+        "wait_information_gain_measure": {"type": "string", "minLength": 1},
+        "mission_generation_receives_default_credit": {"const": false},
+        "activity_volume_receives_credit": {"const": false},
+        "correct_non_action_can_receive_full_credit": {"const": true}
+      }
+    },
+    "all_cases_expect_mission": {"const": false},
+    "mission_manufacturing_bias_allowed": {"const": false},
+    "case_set_rationale": {"type": "string", "minLength": 1}
+  }
+}

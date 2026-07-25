@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/anti-entrenchment-evidence-authority-channels.schema.json",
+  "title": "PalamedesAntiEntrenchmentEvidenceAuthorityChannels",
+  "description": "Experimental Cycle 295 control preventing persistence-as-value and evidence-as-authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["control_record_id", "mission_artifact_id", "constitution_snapshot_id", "review_authority_id", "persistence_review", "evidence_channels", "evidence_can_self_authorize", "system_survival_has_implicit_priority", "control_rationale"],
+  "properties": {
+    "control_record_id": {"type": "string", "minLength": 1},
+    "mission_artifact_id": {"type": "string", "minLength": 1},
+    "constitution_snapshot_id": {"type": "string", "minLength": 1},
+    "review_authority_id": {"type": "string", "minLength": 1},
+    "persistence_review": {
+      "type": "object", "additionalProperties": false,
+      "required": ["review_id", "value_justification_id", "outcome_evidence_id", "authority_renewal_id", "termination_trigger", "replacement_trigger", "continued_existence_is_value", "past_selection_creates_presumption", "renewal_decision", "review_rationale"],
+      "properties": {
+        "review_id": {"type": "string", "minLength": 1},
+        "value_justification_id": {"type": "string", "minLength": 1},
+        "outcome_evidence_id": {"type": "string", "minLength": 1},
+        "authority_renewal_id": {"type": "string", "minLength": 1},
+        "termination_trigger": {"type": "string", "minLength": 1},
+        "replacement_trigger": {"type": "string", "minLength": 1},
+        "continued_existence_is_value": {"const": false},
+        "past_selection_creates_presumption": {"const": false},
+        "renewal_decision": {"enum": ["renew", "revise", "terminate", "replace"]},
+        "review_rationale": {"type": "string", "minLength": 1}
+      }
+    },
+    "evidence_channels": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["channel_id", "channel_type", "source_identity", "admission_policy_id", "review_trigger", "may_trigger_review", "may_select_mission", "may_amend_constitution", "may_grant_authority"],
+        "properties": {
+          "channel_id": {"type": "string", "minLength": 1},
+          "channel_type": {"enum": ["signal", "reference", "beneficiary_feedback"]},
+          "source_identity": {"type": "string", "minLength": 1},
+          "admission_policy_id": {"type": "string", "minLength": 1},
+          "review_trigger": {"type": "string", "minLength": 1},
+          "may_trigger_review": {"const": true},
+          "may_select_mission": {"const": false},
+          "may_amend_constitution": {"const": false},
+          "may_grant_authority": {"const": false}
+        }
+      }
+    },
+    "evidence_can_self_authorize": {"const": false},
+    "system_survival_has_implicit_priority": {"const": false},
+    "control_rationale": {"type": "string", "minLength": 1}
+  }
+}

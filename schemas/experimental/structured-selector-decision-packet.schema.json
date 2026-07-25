@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/structured-selector-decision-packet.schema.json",
+  "title": "PalamedesStructuredSelectorDecisionPacket",
+  "description": "Cycle 326 selector packet limited to structured candidates and critiques with decisive citations and unresolved conflicts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["selector_packet_id", "selector_assignment_id", "constitution_fingerprint", "candidate_set_fingerprint", "critique_set_fingerprint", "visible_input_types", "candidates", "critiques", "selection_decision", "raw_chain_of_thought_visible", "persuasive_discussion_history_visible", "uncited_decisive_reason_allowed", "decision_rationale"],
+  "properties": {
+    "selector_packet_id": {"type": "string", "minLength": 1},
+    "selector_assignment_id": {"type": "string", "minLength": 1},
+    "constitution_fingerprint": {"type": "string", "minLength": 1},
+    "candidate_set_fingerprint": {"type": "string", "minLength": 1},
+    "critique_set_fingerprint": {"type": "string", "minLength": 1},
+    "visible_input_types": {"type": "array", "prefixItems": [{"const": "constitution"}, {"const": "structured_candidates"}, {"const": "structured_critiques"}], "minItems": 3, "maxItems": 3},
+    "candidates": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/candidate"}},
+    "critiques": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/critique"}},
+    "selection_decision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "selected_candidate_ids", "decisive_field_citations", "unresolved_conflicts"],
+      "properties": {
+        "mode": {"enum": ["commit", "bounded_exploration", "discriminating_probe", "defer"]},
+        "selected_candidate_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "decisive_field_citations": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["source_type", "source_id", "field", "value_fingerprint", "decision_effect"],
+            "properties": {
+              "source_type": {"enum": ["candidate", "critique"]},
+              "source_id": {"type": "string", "minLength": 1},
+              "field": {"type": "string", "minLength": 1},
+              "value_fingerprint": {"type": "string", "minLength": 1},
+              "decision_effect": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "unresolved_conflicts": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["conflict_id", "candidate_ids", "claim_a", "claim_b", "decision_impact", "resolution_trigger"],
+            "properties": {
+              "conflict_id": {"type": "string", "minLength": 1},
+              "candidate_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+              "claim_a": {"type": "string", "minLength": 1},
+              "claim_b": {"type": "string", "minLength": 1},
+              "decision_impact": {"type": "string", "minLength": 1},
+              "resolution_trigger": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    },
+    "raw_chain_of_thought_visible": {"const": false},
+    "persuasive_discussion_history_visible": {"const": false},
+    "uncited_decisive_reason_allowed": {"const": false},
+    "decision_rationale": {"type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "candidate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["candidate_id", "candidate_fingerprint", "beneficiary", "desired_external_condition", "essential_causal_mechanism", "non_goal", "success_signal", "disconfirmation_condition"],
+      "properties": {
+        "candidate_id": {"type": "string", "minLength": 1},
+        "candidate_fingerprint": {"type": "string", "minLength": 1},
+        "beneficiary": {"type": "string", "minLength": 1},
+        "desired_external_condition": {"type": "string", "minLength": 1},
+        "essential_causal_mechanism": {"type": "string", "minLength": 1},
+        "non_goal": {"type": "string", "minLength": 1},
+        "success_signal": {"type": "string", "minLength": 1},
+        "disconfirmation_condition": {"type": "string", "minLength": 1}
+      }
+    },
+    "critique": {
+      "type": "object", "additionalProperties": false,
+      "required": ["critique_record_id", "candidate_id", "constitutional_tension", "causal_weakness", "beneficiary_harm", "disconfirming_observation", "critique_fingerprint"],
+      "properties": {
+        "critique_record_id": {"type": "string", "minLength": 1},
+        "candidate_id": {"type": "string", "minLength": 1},
+        "constitutional_tension": {"type": "string", "minLength": 1},
+        "causal_weakness": {"type": "string", "minLength": 1},
+        "beneficiary_harm": {"type": "string", "minLength": 1},
+        "disconfirming_observation": {"type": "string", "minLength": 1},
+        "critique_fingerprint": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/growth-mechanism-audit.schema.json",
+  "title": "PalamedesGrowthMechanismAudit",
+  "description": "Experimental Cycle 184 separation of durable benefit, switching friction, compulsion, and acquired distribution.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "audit_id",
+    "mission_id",
+    "growth_observation",
+    "growth_evidence_id",
+    "growth_is_value_proof",
+    "mechanism_assessments",
+    "classification",
+    "classification_rationale",
+    "decision"
+  ],
+  "properties": {
+    "audit_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "growth_observation": {"type": "string", "minLength": 1},
+    "growth_evidence_id": {"type": "string", "minLength": 1},
+    "growth_is_value_proof": {"const": false},
+    "mechanism_assessments": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mechanism", "status", "observation", "evidence_id", "discriminator"],
+        "properties": {
+          "mechanism": {
+            "enum": [
+              "voluntary_durable_benefit",
+              "switching_friction",
+              "compulsion",
+              "acquired_distribution"
+            ]
+          },
+          "status": {"enum": ["present", "absent", "unknown"]},
+          "observation": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "discriminator": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "classification": {"enum": ["durable_benefit", "mixed", "exploitative", "underdetermined"]},
+    "classification_rationale": {"type": "string", "minLength": 1},
+    "decision": {"enum": ["scale", "probe", "mitigate", "stop"]}
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/disconfirmation-stop-authority.schema.json",
+  "title": "PalamedesDisconfirmationStopAuthority",
+  "description": "Experimental Cycle 147 pre-registered disconfirmation stopping authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stop_evaluation_id",
+    "mission_id",
+    "authority_id",
+    "disconfirmation_id",
+    "pre_registered_condition",
+    "observed_evidence",
+    "threshold",
+    "evidence_source_id",
+    "stop_rationale",
+    "preservation_action",
+    "threshold_met",
+    "sunk_cost_can_override",
+    "decision",
+    "stop_actions"
+  ],
+  "properties": {
+    "stop_evaluation_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "authority_id": {"type": "string", "minLength": 1},
+    "disconfirmation_id": {"type": "string", "minLength": 1},
+    "pre_registered_condition": {"type": "string", "minLength": 1},
+    "observed_evidence": {"type": "string", "minLength": 1},
+    "threshold": {"type": "string", "minLength": 1},
+    "evidence_source_id": {"type": "string", "minLength": 1},
+    "stop_rationale": {"type": "string", "minLength": 1},
+    "preservation_action": {"type": "string", "minLength": 1},
+    "threshold_met": {"const": true},
+    "sunk_cost_can_override": {"const": false},
+    "decision": {"const": "stop"},
+    "stop_actions": {
+      "type": "array",
+      "minItems": 2,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

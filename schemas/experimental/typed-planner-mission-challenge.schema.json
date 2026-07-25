@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/typed-planner-mission-challenge.schema.json",
+  "title": "PalamedesTypedPlannerMissionChallenge",
+  "description": "Cycle 356 typed and evidenced planner challenge at the mission boundary.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["challenge_id", "challenge_fingerprint", "handoff_id", "mission_contract_id", "mission_contract_fingerprint", "planner_id", "raised_at", "challenge_type", "challenge_statement", "affected_contract_clause_id", "affected_contract_clause_fingerprint", "evidence_artifact_id", "decision_effect", "proposed_next_step", "typed_details", "freeform_untyped_challenge", "implementation_continues_before_resolution"],
+  "properties": {
+    "challenge_id": {"type": "string", "minLength": 1},
+    "challenge_fingerprint": {"type": "string", "minLength": 1},
+    "handoff_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "mission_contract_fingerprint": {"type": "string", "minLength": 1},
+    "planner_id": {"type": "string", "minLength": 1},
+    "raised_at": {"type": "string", "minLength": 1},
+    "challenge_type": {"enum": ["infeasibility", "ambiguity", "causal_objection", "resource_conflict", "alternative_mechanism"]},
+    "challenge_statement": {"type": "string", "minLength": 1},
+    "affected_contract_clause_id": {"type": "string", "minLength": 1},
+    "affected_contract_clause_fingerprint": {"type": "string", "minLength": 1},
+    "evidence_artifact_id": {"type": "string", "minLength": 1},
+    "decision_effect": {"type": "string", "minLength": 1},
+    "proposed_next_step": {"type": "string", "minLength": 1},
+    "typed_details": {"type": "object"},
+    "freeform_untyped_challenge": {"const": false},
+    "implementation_continues_before_resolution": {"const": false}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"challenge_type": {"const": "infeasibility"}}},
+      "then": {"properties": {"typed_details": {
+        "type": "object", "additionalProperties": false,
+        "required": ["blocking_constraint", "constraint_evidence_id", "affected_mission_outcome", "attempted_alternative", "alternative_test_result", "infeasibility_claimed_without_attempt"],
+        "properties": {
+          "blocking_constraint": {"type": "string", "minLength": 1}, "constraint_evidence_id": {"type": "string", "minLength": 1}, "affected_mission_outcome": {"type": "string", "minLength": 1}, "attempted_alternative": {"type": "string", "minLength": 1}, "alternative_test_result": {"type": "string", "minLength": 1}, "infeasibility_claimed_without_attempt": {"const": false}
+        }
+      }}}
+    },
+    {
+      "if": {"properties": {"challenge_type": {"const": "ambiguity"}}},
+      "then": {"properties": {"typed_details": {
+        "type": "object", "additionalProperties": false,
+        "required": ["ambiguous_text", "competing_interpretations", "clarifying_question", "decision_difference", "planner_selected_default_interpretation"],
+        "properties": {
+          "ambiguous_text": {"type": "string", "minLength": 1}, "competing_interpretations": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}, "clarifying_question": {"type": "string", "minLength": 1}, "decision_difference": {"type": "string", "minLength": 1}, "planner_selected_default_interpretation": {"const": false}
+        }
+      }}}
+    },
+    {
+      "if": {"properties": {"challenge_type": {"const": "causal_objection"}}},
+      "then": {"properties": {"typed_details": {
+        "type": "object", "additionalProperties": false,
+        "required": ["challenged_causal_thesis", "countermechanism", "contradicting_evidence_id", "discriminating_observation_or_probe", "withdrawal_condition"],
+        "properties": {
+          "challenged_causal_thesis": {"type": "string", "minLength": 1}, "countermechanism": {"type": "string", "minLength": 1}, "contradicting_evidence_id": {"type": "string", "minLength": 1}, "discriminating_observation_or_probe": {"type": "string", "minLength": 1}, "withdrawal_condition": {"type": "string", "minLength": 1}
+        }
+      }}}
+    },
+    {
+      "if": {"properties": {"challenge_type": {"const": "resource_conflict"}}},
+      "then": {"properties": {"typed_details": {
+        "type": "object", "additionalProperties": false,
+        "required": ["contested_resource", "competing_commitment_id", "available_amount", "required_amount", "shortfall", "allocation_authority_id", "planner_unilaterally_reallocated"],
+        "properties": {
+          "contested_resource": {"type": "string", "minLength": 1}, "competing_commitment_id": {"type": "string", "minLength": 1}, "available_amount": {"type": "string", "minLength": 1}, "required_amount": {"type": "string", "minLength": 1}, "shortfall": {"type": "string", "minLength": 1}, "allocation_authority_id": {"type": "string", "minLength": 1}, "planner_unilaterally_reallocated": {"const": false}
+        }
+      }}}
+    },
+    {
+      "if": {"properties": {"challenge_type": {"const": "alternative_mechanism"}}},
+      "then": {"properties": {"typed_details": {
+        "type": "object", "additionalProperties": false,
+        "required": ["proposed_mechanism", "comparative_basis", "affected_constraint", "meaning_preservation_evidence_id", "new_risk", "mission_meaning_preserved", "mechanism_substituted_without_review"],
+        "properties": {
+          "proposed_mechanism": {"type": "string", "minLength": 1}, "comparative_basis": {"type": "string", "minLength": 1}, "affected_constraint": {"type": "string", "minLength": 1}, "meaning_preservation_evidence_id": {"type": "string", "minLength": 1}, "new_risk": {"type": "string", "minLength": 1}, "mission_meaning_preserved": {"const": true}, "mechanism_substituted_without_review": {"const": false}
+        }
+      }}}
+    }
+  ]
+}

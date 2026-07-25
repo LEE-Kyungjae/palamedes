@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/post-decision-model-compression.schema.json",
+  "title": "PalamedesPostDecisionModelCompression",
+  "description": "Experimental Cycle 229 contract shrinking model state while retaining monitoring, disconfirmation, and reconstruction.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "compression_record_id",
+    "world_model_set_id",
+    "decision_id",
+    "component_ids_before",
+    "retained_relations",
+    "removed_components",
+    "lineage_deleted",
+    "lineage_archive_id",
+    "rehydration_trigger"
+  ],
+  "properties": {
+    "compression_record_id": {"type": "string", "minLength": 1},
+    "world_model_set_id": {"type": "string", "minLength": 1},
+    "decision_id": {"type": "string", "minLength": 1},
+    "component_ids_before": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "retained_relations": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["component_id", "retention_purpose", "relation", "retention_rationale"],
+        "properties": {
+          "component_id": {"type": "string", "minLength": 1},
+          "retention_purpose": {"enum": ["monitoring", "disconfirmation", "reconstruction"]},
+          "relation": {"type": "string", "minLength": 1},
+          "retention_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "removed_components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["component_id", "removal_rationale"],
+        "properties": {
+          "component_id": {"type": "string", "minLength": 1},
+          "removal_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "lineage_deleted": {"const": false},
+    "lineage_archive_id": {"type": "string", "minLength": 1},
+    "rehydration_trigger": {"type": "string", "minLength": 1}
+  }
+}

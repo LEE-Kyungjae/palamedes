@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/failure-layer-diagnosis.schema.json",
+  "title": "PalamedesFailureLayerDiagnosis",
+  "description": "Experimental Cycle 162 separation of mission selection, planning, execution, environment, and measurement failure.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "diagnosis_id",
+    "mission_id",
+    "failure_event",
+    "failure_evidence_id",
+    "pre_registered_forecast_id",
+    "conclusion",
+    "conclusion_rationale",
+    "failure_automatically_falsifies_mission",
+    "mission_thesis_falsified",
+    "layer_assessments"
+  ],
+  "properties": {
+    "diagnosis_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "failure_event": {"type": "string", "minLength": 1},
+    "failure_evidence_id": {"type": "string", "minLength": 1},
+    "pre_registered_forecast_id": {"type": "string", "minLength": 1},
+    "conclusion": {
+      "enum": [
+        "mission_selection_failure",
+        "planning_failure",
+        "execution_failure",
+        "environment_failure",
+        "measurement_failure",
+        "multiple_layers_unresolved",
+        "underdetermined"
+      ]
+    },
+    "conclusion_rationale": {"type": "string", "minLength": 1},
+    "failure_automatically_falsifies_mission": {"const": false},
+    "mission_thesis_falsified": {"type": "boolean"},
+    "layer_assessments": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "layer",
+          "assessment",
+          "expected_condition",
+          "observed_condition",
+          "evidence_id",
+          "discriminator"
+        ],
+        "properties": {
+          "layer": {
+            "enum": [
+              "mission_selection",
+              "planning",
+              "execution",
+              "environment",
+              "measurement"
+            ]
+          },
+          "assessment": {"enum": ["failed", "adequate", "unknown"]},
+          "expected_condition": {"type": "string", "minLength": 1},
+          "observed_condition": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "discriminator": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

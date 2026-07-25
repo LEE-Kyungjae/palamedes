@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/external-proof-dataset-thesis.schema.json",
+  "title": "PalamedesExternalProofDatasetThesis",
+  "description": "Cycle 370 integrated dynamic, adversarial, real-baseline, blinded external proof dataset.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["dataset_thesis_id", "dataset_id", "dataset_version", "dataset_fingerprint", "evaluation_contract_id", "evaluation_contract_fingerprint", "thesis_fingerprint", "component_evidence", "dataset_manifest", "claim_boundary", "dataset_thesis_status", "thesis_rationale"],
+  "properties": {
+    "dataset_thesis_id": {"type": "string", "minLength": 1},
+    "dataset_id": {"type": "string", "minLength": 1},
+    "dataset_version": {"type": "string", "minLength": 1},
+    "dataset_fingerprint": {"type": "string", "minLength": 1},
+    "evaluation_contract_id": {"type": "string", "minLength": 1},
+    "evaluation_contract_fingerprint": {"type": "string", "minLength": 1},
+    "thesis_fingerprint": {"type": "string", "minLength": 1},
+    "component_evidence": {
+      "type": "array", "minItems": 9, "maxItems": 9,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["component", "validator_id", "evidence_artifact_id", "evidence_fingerprint", "verification_record_id", "verified"],
+        "properties": {
+          "component": {"enum": ["sequential_hidden_cases", "historical_live_portfolio", "blinded_historical_replay", "plural_correct_actions", "adversarial_pressures", "historical_independent_evaluation", "actual_human_baseline", "one_shot_agent_baseline", "separate_axis_judging"]},
+          "validator_id": {"type": "string", "minLength": 1},
+          "evidence_artifact_id": {"type": "string", "minLength": 1},
+          "evidence_fingerprint": {"type": "string", "minLength": 1},
+          "verification_record_id": {"type": "string", "minLength": 1},
+          "verified": {"const": true}
+        }
+      }
+    },
+    "dataset_manifest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["manifest_id", "manifest_fingerprint", "historical_case_index_id", "prospective_case_registry_id", "adversarial_case_index_id", "baseline_registry_id", "blinding_registry_id", "outcome_registry_id", "sequential_events_required", "future_information_sealed", "historical_and_live_cases_present", "real_human_and_one_shot_agent_baselines_present", "plural_correct_actions_present", "adversarial_pressures_present", "outcome_aware_review_present", "axis_results_separate", "historical_decision_used_as_truth", "condition_identity_visible_to_judges", "synthetic_idea_score_used_as_primary_proof"],
+      "properties": {
+        "manifest_id": {"type": "string", "minLength": 1},
+        "manifest_fingerprint": {"type": "string", "minLength": 1},
+        "historical_case_index_id": {"type": "string", "minLength": 1},
+        "prospective_case_registry_id": {"type": "string", "minLength": 1},
+        "adversarial_case_index_id": {"type": "string", "minLength": 1},
+        "baseline_registry_id": {"type": "string", "minLength": 1},
+        "blinding_registry_id": {"type": "string", "minLength": 1},
+        "outcome_registry_id": {"type": "string", "minLength": 1},
+        "sequential_events_required": {"const": true},
+        "future_information_sealed": {"const": true},
+        "historical_and_live_cases_present": {"const": true},
+        "real_human_and_one_shot_agent_baselines_present": {"const": true},
+        "plural_correct_actions_present": {"const": true},
+        "adversarial_pressures_present": {"const": true},
+        "outcome_aware_review_present": {"const": true},
+        "axis_results_separate": {"const": true},
+        "historical_decision_used_as_truth": {"const": false},
+        "condition_identity_visible_to_judges": {"const": false},
+        "synthetic_idea_score_used_as_primary_proof": {"const": false}
+      }
+    },
+    "claim_boundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["claim_id", "supported_claim", "unsupported_claim", "generalization_limit", "next_evidence_required", "dataset_proves_universal_superiority", "dataset_supports_bounded_comparison"],
+      "properties": {
+        "claim_id": {"type": "string", "minLength": 1},
+        "supported_claim": {"type": "string", "minLength": 1},
+        "unsupported_claim": {"type": "string", "minLength": 1},
+        "generalization_limit": {"type": "string", "minLength": 1},
+        "next_evidence_required": {"type": "string", "minLength": 1},
+        "dataset_proves_universal_superiority": {"const": false},
+        "dataset_supports_bounded_comparison": {"const": true}
+      }
+    },
+    "dataset_thesis_status": {"const": "integrated"},
+    "thesis_rationale": {"type": "string", "minLength": 1}
+  }
+}

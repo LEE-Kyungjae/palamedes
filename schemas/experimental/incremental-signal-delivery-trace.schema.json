@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/incremental-signal-delivery-trace.schema.json",
+  "title": "PalamedesIncrementalSignalDeliveryTrace",
+  "description": "Experimental Cycle 284 trace proving event-by-event delivery with persistent purpose state.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "delivery_trace_id",
+    "comparison_system_id",
+    "case_id",
+    "events_delivered_as_single_packet",
+    "future_events_hidden_until_delivery",
+    "deliveries",
+    "trace_rationale"
+  ],
+  "properties": {
+    "delivery_trace_id": {"type": "string", "minLength": 1},
+    "comparison_system_id": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "events_delivered_as_single_packet": {"const": false},
+    "future_events_hidden_until_delivery": {"const": true},
+    "deliveries": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sequence",
+          "event_id",
+          "delivered_at",
+          "event_evidence_id",
+          "input_state_fingerprint",
+          "output_state_fingerprint",
+          "wake_reason",
+          "mission_before",
+          "mission_after",
+          "mission_decision",
+          "decision_rationale",
+          "future_event_count_visible"
+        ],
+        "properties": {
+          "sequence": {"type": "integer", "minimum": 1},
+          "event_id": {"type": "string", "minLength": 1},
+          "delivered_at": {"type": "string", "minLength": 1},
+          "event_evidence_id": {"type": "string", "minLength": 1},
+          "input_state_fingerprint": {"type": "string", "minLength": 1},
+          "output_state_fingerprint": {"type": "string", "minLength": 1},
+          "wake_reason": {"type": "string", "minLength": 1},
+          "mission_before": {"type": "string", "minLength": 1},
+          "mission_after": {"type": "string", "minLength": 1},
+          "mission_decision": {"enum": ["preserve", "revise"]},
+          "decision_rationale": {"type": "string", "minLength": 1},
+          "future_event_count_visible": {"const": 0}
+        }
+      }
+    },
+    "trace_rationale": {"type": "string", "minLength": 1}
+  }
+}

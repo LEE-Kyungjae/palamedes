@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/anti-entrenchment-simpler-alternative-decision.schema.json",
+  "title": "PalamedesAntiEntrenchmentSimplerAlternativeDecision",
+  "description": "Cycle 377 comparison of no action, simpler non-Palamedes action, and a Palamedes mission.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["anti_entrenchment_decision_id", "mission_candidate_id", "evaluation_protocol_id", "evaluation_fingerprint", "options", "selected_option_id", "mission_candidate_outcome", "palamedes_option_presumed", "self_expansion_score_used_as_beneficiary_value", "rejection_of_mission_allowed", "decision_rationale"],
+  "properties": {
+    "anti_entrenchment_decision_id": {"type": "string", "minLength": 1},
+    "mission_candidate_id": {"type": "string", "minLength": 1},
+    "evaluation_protocol_id": {"type": "string", "minLength": 1},
+    "evaluation_fingerprint": {"type": "string", "minLength": 1},
+    "options": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["option_id", "option_type", "description", "beneficiary_effect", "evidence_basis", "purpose_fit", "expected_beneficiary_value", "system_complexity_cost", "operator_burden", "irreversibility_risk", "palamedes_expansion_benefit", "combined_burden", "purpose_sufficient", "primary_effect_expands_palamedes", "scored_before_selection", "rejection_or_selection_rationale"],
+        "properties": {
+          "option_id": {"type": "string", "minLength": 1},
+          "option_type": {"enum": ["do_nothing", "simpler_non_palamedes", "palamedes_mission"]},
+          "description": {"type": "string", "minLength": 1},
+          "beneficiary_effect": {"type": "string", "minLength": 1},
+          "evidence_basis": {"type": "string", "minLength": 1},
+          "purpose_fit": {"type": "number", "minimum": 0, "maximum": 1},
+          "expected_beneficiary_value": {"type": "number", "minimum": 0, "maximum": 1},
+          "system_complexity_cost": {"type": "number", "minimum": 0, "maximum": 1},
+          "operator_burden": {"type": "number", "minimum": 0, "maximum": 1},
+          "irreversibility_risk": {"type": "number", "minimum": 0, "maximum": 1},
+          "palamedes_expansion_benefit": {"type": "number", "minimum": 0, "maximum": 1},
+          "combined_burden": {"type": "number", "minimum": 0},
+          "purpose_sufficient": {"type": "boolean"},
+          "primary_effect_expands_palamedes": {"const": false},
+          "scored_before_selection": {"const": true},
+          "rejection_or_selection_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "selected_option_id": {"type": "string", "minLength": 1},
+    "mission_candidate_outcome": {"enum": ["mission_rejected", "mission_accepted"]},
+    "palamedes_option_presumed": {"const": false},
+    "self_expansion_score_used_as_beneficiary_value": {"const": false},
+    "rejection_of_mission_allowed": {"const": true},
+    "decision_rationale": {"type": "string", "minLength": 1}
+  }
+}

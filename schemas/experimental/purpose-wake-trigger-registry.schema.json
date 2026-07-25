@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/purpose-wake-trigger-registry.schema.json",
+  "title": "PalamedesPurposeWakeTriggerRegistry",
+  "description": "Experimental Cycle 262 registry of six purpose-relevant wake trigger classes and evidenced frontier wake events.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wake_registry_id",
+    "frontier_id",
+    "unmatched_event_policy",
+    "trigger_definitions",
+    "frontier_entry_ids",
+    "wake_events"
+  ],
+  "properties": {
+    "wake_registry_id": {"type": "string", "minLength": 1},
+    "frontier_id": {"type": "string", "minLength": 1},
+    "unmatched_event_policy": {"const": "do_not_wake"},
+    "trigger_definitions": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "trigger_id",
+          "trigger_type",
+          "condition",
+          "threshold",
+          "required_evidence_kind"
+        ],
+        "properties": {
+          "trigger_id": {"type": "string", "minLength": 1},
+          "trigger_type": {
+            "enum": [
+              "signal_deviation",
+              "forecast_miss",
+              "authority_conflict",
+              "mission_review",
+              "expiring_opportunity",
+              "downstream_boundary_return"
+            ]
+          },
+          "condition": {"type": "string", "minLength": 1},
+          "threshold": {"type": "string", "minLength": 1},
+          "required_evidence_kind": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "frontier_entry_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "wake_events": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "event_id",
+          "matched_trigger_id",
+          "trigger_type",
+          "frontier_entry_id",
+          "observed_change",
+          "evidence_id",
+          "observed_at",
+          "wake_decision"
+        ],
+        "properties": {
+          "event_id": {"type": "string", "minLength": 1},
+          "matched_trigger_id": {"type": "string", "minLength": 1},
+          "trigger_type": {
+            "enum": [
+              "signal_deviation",
+              "forecast_miss",
+              "authority_conflict",
+              "mission_review",
+              "expiring_opportunity",
+              "downstream_boundary_return"
+            ]
+          },
+          "frontier_entry_id": {"type": "string", "minLength": 1},
+          "observed_change": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "observed_at": {"type": "string", "minLength": 1},
+          "wake_decision": {"const": "wake"}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/structured-constitution-state.schema.json",
+  "title": "PalamedesStructuredConstitutionState",
+  "description": "Experimental Cycle 305 versioned clauses, conflicts, authority, and outcome precedents.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["constitution_state_id", "version", "constitution_fingerprint", "previous_constitution_fingerprint", "amendment_authority_id", "clauses", "outcome_precedents", "constitution_is_single_editable_prompt", "amendments_require_authority", "state_rationale"],
+  "properties": {
+    "constitution_state_id": {"type": "string", "minLength": 1},
+    "version": {"type": "integer", "minimum": 1},
+    "constitution_fingerprint": {"type": "string", "minLength": 1},
+    "previous_constitution_fingerprint": {"type": ["string", "null"]},
+    "amendment_authority_id": {"type": "string", "minLength": 1},
+    "clauses": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["clause_id", "version", "kind", "precedence", "clause", "scope", "authority_source_id", "conflict_clause_ids", "outcome_precedent_ids"],
+        "properties": {
+          "clause_id": {"type": "string", "minLength": 1},
+          "version": {"type": "integer", "minimum": 1},
+          "kind": {"enum": ["prohibition", "principle", "preference", "authority"]},
+          "precedence": {"type": "integer", "minimum": 0},
+          "clause": {"type": "string", "minLength": 1},
+          "scope": {"type": "string", "minLength": 1},
+          "authority_source_id": {"type": "string", "minLength": 1},
+          "conflict_clause_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "outcome_precedent_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "outcome_precedents": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["precedent_id", "clause_id", "outcome_evidence_id", "finding", "interpretation_boundary", "recorded_at"],
+        "properties": {
+          "precedent_id": {"type": "string", "minLength": 1},
+          "clause_id": {"type": "string", "minLength": 1},
+          "outcome_evidence_id": {"type": "string", "minLength": 1},
+          "finding": {"type": "string", "minLength": 1},
+          "interpretation_boundary": {"type": "string", "minLength": 1},
+          "recorded_at": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "constitution_is_single_editable_prompt": {"const": false},
+    "amendments_require_authority": {"const": true},
+    "state_rationale": {"type": "string", "minLength": 1}
+  }
+}

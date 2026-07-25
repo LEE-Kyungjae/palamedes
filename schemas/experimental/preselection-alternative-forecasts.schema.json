@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/preselection-alternative-forecasts.schema.json",
+  "title": "PalamedesPreselectionAlternativeForecasts",
+  "description": "Experimental Cycle 164 forecasts frozen across selected and unselected missions before selection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "forecast_set_id",
+    "common_information_manifest_id",
+    "frozen_at",
+    "selection_at",
+    "common_observation_window",
+    "actual_outcome_evidence_id",
+    "retrospective_comparison",
+    "forecasts_immutable_after_selection",
+    "counterfactual_outcomes_claimed_observed",
+    "candidate_forecasts"
+  ],
+  "properties": {
+    "forecast_set_id": {"type": "string", "minLength": 1},
+    "common_information_manifest_id": {"type": "string", "minLength": 1},
+    "frozen_at": {"type": "string", "minLength": 1},
+    "selection_at": {"type": "string", "minLength": 1},
+    "common_observation_window": {"type": "string", "minLength": 1},
+    "actual_outcome_evidence_id": {"type": "string", "minLength": 1},
+    "retrospective_comparison": {"type": "string", "minLength": 1},
+    "forecasts_immutable_after_selection": {"const": true},
+    "counterfactual_outcomes_claimed_observed": {"const": false},
+    "candidate_forecasts": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mission_candidate_id",
+          "selection_status",
+          "forecasted_outcome",
+          "probability_range",
+          "causal_prediction",
+          "failure_signal",
+          "evidence_basis_id"
+        ],
+        "properties": {
+          "mission_candidate_id": {"type": "string", "minLength": 1},
+          "selection_status": {"enum": ["selected", "not_selected"]},
+          "forecasted_outcome": {"type": "string", "minLength": 1},
+          "probability_range": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["low", "high"],
+            "properties": {
+              "low": {"type": "number", "minimum": 0, "maximum": 1},
+              "high": {"type": "number", "minimum": 0, "maximum": 1}
+            }
+          },
+          "causal_prediction": {"type": "string", "minLength": 1},
+          "failure_signal": {"type": "string", "minLength": 1},
+          "evidence_basis_id": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

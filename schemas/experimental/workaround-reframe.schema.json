@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/workaround-reframe.schema.json",
+  "title": "PalamedesWorkaroundReframe",
+  "description": "Experimental Cycle 123 contract using workflow anomalies to test a different problem frame.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "anomaly_id",
+    "affected_group_id",
+    "intended_workflow",
+    "observed_workaround_or_violation",
+    "actor_reason",
+    "incremental_frame",
+    "alternative_problem_frame",
+    "frame_shift_rationale",
+    "distinguishing_observation",
+    "source_id",
+    "workaround_is_automatically_correct",
+    "anomaly_is_only_error",
+    "alternative_explanations"
+  ],
+  "properties": {
+    "anomaly_id": {"type": "string", "minLength": 1},
+    "affected_group_id": {"type": "string", "minLength": 1},
+    "intended_workflow": {"type": "string", "minLength": 1},
+    "observed_workaround_or_violation": {"type": "string", "minLength": 1},
+    "actor_reason": {"type": "string", "minLength": 1},
+    "incremental_frame": {"type": "string", "minLength": 1},
+    "alternative_problem_frame": {"type": "string", "minLength": 1},
+    "frame_shift_rationale": {"type": "string", "minLength": 1},
+    "distinguishing_observation": {"type": "string", "minLength": 1},
+    "source_id": {"type": "string", "minLength": 1},
+    "workaround_is_automatically_correct": {"const": false},
+    "anomaly_is_only_error": {"const": false},
+    "alternative_explanations": {
+      "type": "array",
+      "minItems": 2,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/changed-constraint-window.schema.json",
+  "title": "PalamedesChangedConstraintWindow",
+  "description": "Experimental Cycle 127 contract grounding timing in an evidenced constraint transition.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "window_id",
+    "opportunity_id",
+    "missing_condition_kind",
+    "constraint",
+    "before_state",
+    "after_state",
+    "change_date",
+    "change_evidence",
+    "why_previously_unviable",
+    "why_now_viable",
+    "durability_assessment",
+    "reversal_signal",
+    "source_id",
+    "generic_now_claim",
+    "change_confidence"
+  ],
+  "properties": {
+    "window_id": {"type": "string", "minLength": 1},
+    "opportunity_id": {"type": "string", "minLength": 1},
+    "missing_condition_kind": {"type": "string", "minLength": 1},
+    "constraint": {"type": "string", "minLength": 1},
+    "before_state": {"type": "string", "minLength": 1},
+    "after_state": {"type": "string", "minLength": 1},
+    "change_date": {"type": "string", "minLength": 1},
+    "change_evidence": {"type": "string", "minLength": 1},
+    "why_previously_unviable": {"type": "string", "minLength": 1},
+    "why_now_viable": {"type": "string", "minLength": 1},
+    "durability_assessment": {"type": "string", "minLength": 1},
+    "reversal_signal": {"type": "string", "minLength": 1},
+    "source_id": {"type": "string", "minLength": 1},
+    "generic_now_claim": {"const": false},
+    "change_confidence": {"type": "integer", "minimum": 0, "maximum": 100}
+  }
+}

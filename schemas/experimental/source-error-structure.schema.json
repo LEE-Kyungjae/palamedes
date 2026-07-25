@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/source-error-structure.schema.json",
+  "title": "PalamedesSourceErrorStructure",
+  "description": "Experimental Cycle 207 contract separating source variety from demonstrated independence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_structure_id",
+    "claim_id",
+    "source_diversity_proves_independence",
+    "sources",
+    "pairwise_dependencies",
+    "assessment_summary"
+  ],
+  "properties": {
+    "source_structure_id": {"type": "string", "minLength": 1},
+    "claim_id": {"type": "string", "minLength": 1},
+    "source_diversity_proves_independence": {"const": false},
+    "sources": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_id",
+          "source_class",
+          "observation_method",
+          "error_mechanisms",
+          "collection_incentive",
+          "known_blind_spot"
+        ],
+        "properties": {
+          "source_id": {"type": "string", "minLength": 1},
+          "source_class": {
+            "enum": ["human_report", "telemetry", "market", "research", "implementation_outcome"]
+          },
+          "observation_method": {"type": "string", "minLength": 1},
+          "error_mechanisms": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "collection_incentive": {"type": "string", "minLength": 1},
+          "known_blind_spot": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "pairwise_dependencies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "left_source_id",
+          "right_source_id",
+          "dependency_status",
+          "shared_upstream",
+          "shared_incentive",
+          "dependency_rationale",
+          "independence_evidence_ids"
+        ],
+        "properties": {
+          "left_source_id": {"type": "string", "minLength": 1},
+          "right_source_id": {"type": "string", "minLength": 1},
+          "dependency_status": {"enum": ["independent", "correlated", "unknown"]},
+          "shared_upstream": {"type": "string", "minLength": 1},
+          "shared_incentive": {"type": "string", "minLength": 1},
+          "dependency_rationale": {"type": "string", "minLength": 1},
+          "independence_evidence_ids": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "assessment_summary": {"type": "string", "minLength": 1}
+  }
+}

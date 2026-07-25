@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/decision-relevant-mission-compression.schema.json",
+  "title": "PalamedesDecisionRelevantMissionCompression",
+  "description": "Experimental Cycle 251 contract compressing mission reasoning while preserving selection-sensitive uncertainty.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "compression_id",
+    "mission_id",
+    "selection_record_id",
+    "source_reasoning_hash",
+    "source_argument_count",
+    "retained_item_count",
+    "full_reasoning_history_copied",
+    "decisive_assumption_ids",
+    "retained_uncertainties",
+    "preserved_reversal_trigger_ids",
+    "excluded_arguments",
+    "planner_summary",
+    "compression_rationale"
+  ],
+  "properties": {
+    "compression_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "selection_record_id": {"type": "string", "minLength": 1},
+    "source_reasoning_hash": {"type": "string", "minLength": 1},
+    "source_argument_count": {"type": "integer", "minimum": 1},
+    "retained_item_count": {"type": "integer", "minimum": 1},
+    "full_reasoning_history_copied": {"const": false},
+    "decisive_assumption_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "retained_uncertainties": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "assumption_id",
+          "uncertain_claim",
+          "evidence_id",
+          "decision_consequence",
+          "resolution_trigger",
+          "can_change_selection"
+        ],
+        "properties": {
+          "assumption_id": {"type": "string", "minLength": 1},
+          "uncertain_claim": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "decision_consequence": {"type": "string", "minLength": 1},
+          "resolution_trigger": {"type": "string", "minLength": 1},
+          "can_change_selection": {"const": true}
+        }
+      }
+    },
+    "preserved_reversal_trigger_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "excluded_arguments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["argument_id", "exclusion_reason", "can_change_selection"],
+        "properties": {
+          "argument_id": {"type": "string", "minLength": 1},
+          "exclusion_reason": {"type": "string", "minLength": 1},
+          "can_change_selection": {"const": false}
+        }
+      }
+    },
+    "planner_summary": {"type": "string", "minLength": 1},
+    "compression_rationale": {"type": "string", "minLength": 1}
+  }
+}

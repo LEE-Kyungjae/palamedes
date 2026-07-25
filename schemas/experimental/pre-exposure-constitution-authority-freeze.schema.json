@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/pre-exposure-constitution-authority-freeze.schema.json",
+  "title": "PalamedesPreExposureConstitutionAuthorityFreeze",
+  "description": "Experimental Cycle 283 record freezing constitution and authority before comparison evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "freeze_record_id",
+    "comparison_system_id",
+    "constitution_snapshot_id",
+    "constitution_fingerprint",
+    "constitutional_principles",
+    "authority_snapshot_id",
+    "authority_fingerprint",
+    "authority_grants",
+    "frozen_at",
+    "signal_exposure_at",
+    "candidate_generation_at",
+    "constitution_mutated_after_exposure",
+    "authority_mutated_after_exposure",
+    "candidate_conditioned_values_permitted",
+    "freeze_rationale"
+  ],
+  "properties": {
+    "freeze_record_id": {"type": "string", "minLength": 1},
+    "comparison_system_id": {"type": "string", "minLength": 1},
+    "constitution_snapshot_id": {"type": "string", "minLength": 1},
+    "constitution_fingerprint": {"type": "string", "minLength": 1},
+    "constitutional_principles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["principle_id", "principle", "decision_constraint"],
+        "properties": {
+          "principle_id": {"type": "string", "minLength": 1},
+          "principle": {"type": "string", "minLength": 1},
+          "decision_constraint": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "authority_snapshot_id": {"type": "string", "minLength": 1},
+    "authority_fingerprint": {"type": "string", "minLength": 1},
+    "authority_grants": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["grant_id", "actor_id", "allowed_action", "prohibited_action", "review_authority_id"],
+        "properties": {
+          "grant_id": {"type": "string", "minLength": 1},
+          "actor_id": {"type": "string", "minLength": 1},
+          "allowed_action": {"type": "string", "minLength": 1},
+          "prohibited_action": {"type": "string", "minLength": 1},
+          "review_authority_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "frozen_at": {"type": "string", "minLength": 1},
+    "signal_exposure_at": {"type": "string", "minLength": 1},
+    "candidate_generation_at": {"type": "string", "minLength": 1},
+    "constitution_mutated_after_exposure": {"const": false},
+    "authority_mutated_after_exposure": {"const": false},
+    "candidate_conditioned_values_permitted": {"const": false},
+    "freeze_rationale": {"type": "string", "minLength": 1}
+  }
+}

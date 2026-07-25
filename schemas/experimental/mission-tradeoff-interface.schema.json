@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/mission-tradeoff-interface.schema.json",
+  "title": "PalamedesMissionTradeoffInterface",
+  "description": "Experimental Cycle 172 causal thesis and consequence signals sufficient for planner tradeoffs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "interface_id",
+    "mission_contract_id",
+    "causal_thesis",
+    "causal_thesis_evidence_id",
+    "essential_mechanisms",
+    "causal_assumptions",
+    "consequence_signals",
+    "tradeoff_rule",
+    "return_condition",
+    "planner_must_reconstruct_upstream_reasoning"
+  ],
+  "properties": {
+    "interface_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "causal_thesis": {"type": "string", "minLength": 1},
+    "causal_thesis_evidence_id": {"type": "string", "minLength": 1},
+    "essential_mechanisms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "causal_assumptions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "consequence_signals": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "signal_id",
+          "kind",
+          "description",
+          "threshold",
+          "observation_window",
+          "evidence_source_id",
+          "planner_response"
+        ],
+        "properties": {
+          "signal_id": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["success", "harm"]},
+          "description": {"type": "string", "minLength": 1},
+          "threshold": {"type": "string", "minLength": 1},
+          "observation_window": {"type": "string", "minLength": 1},
+          "evidence_source_id": {"type": "string", "minLength": 1},
+          "planner_response": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "tradeoff_rule": {"type": "string", "minLength": 1},
+    "return_condition": {"type": "string", "minLength": 1},
+    "planner_must_reconstruct_upstream_reasoning": {"const": false}
+  }
+}

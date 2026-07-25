@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/historical-live-proof-case-portfolio.schema.json",
+  "title": "PalamedesHistoricalLiveProofCasePortfolio",
+  "description": "Cycle 362 combined historical replay and prospective live proof portfolio.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["proof_portfolio_id", "portfolio_fingerprint", "shared_evaluation_contract_id", "shared_evaluation_contract_fingerprint", "proof_cases", "complementarity_contract", "fully_real_case_only", "historical_replay_only", "combined_portfolio_required_for_claim", "portfolio_rationale"],
+  "properties": {
+    "proof_portfolio_id": {"type": "string", "minLength": 1},
+    "portfolio_fingerprint": {"type": "string", "minLength": 1},
+    "shared_evaluation_contract_id": {"type": "string", "minLength": 1},
+    "shared_evaluation_contract_fingerprint": {"type": "string", "minLength": 1},
+    "proof_cases": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["case_id", "case_type", "case_fingerprint", "case_domain", "sequential_case_protocol_id", "information_manifest_id", "evaluation_contract_id", "outcome_state", "information_replayable", "counterfactual_branch_count", "prospectively_registered", "case_contribution"],
+        "properties": {
+          "case_id": {"type": "string", "minLength": 1},
+          "case_type": {"enum": ["historical_replay", "prospective_live"]},
+          "case_fingerprint": {"type": "string", "minLength": 1},
+          "case_domain": {"type": "string", "minLength": 1},
+          "sequential_case_protocol_id": {"type": "string", "minLength": 1},
+          "information_manifest_id": {"type": "string", "minLength": 1},
+          "evaluation_contract_id": {"type": "string", "minLength": 1},
+          "outcome_state": {"enum": ["historical_outcome_sealed", "outcome_pending"]},
+          "information_replayable": {"type": "boolean"},
+          "counterfactual_branch_count": {"type": "integer", "minimum": 0},
+          "prospectively_registered": {"type": "boolean"},
+          "external_information_events_logged": {"type": "boolean"},
+          "case_contribution": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "complementarity_contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["contract_id", "historical_contribution", "live_contribution", "combined_inference", "residual_limitation", "historical_supplies_information_control", "historical_supplies_counterfactual_density", "live_supplies_temporal_validity", "live_supplies_ecological_validity", "either_case_type_sufficient_alone"],
+      "properties": {
+        "contract_id": {"type": "string", "minLength": 1},
+        "historical_contribution": {"type": "string", "minLength": 1},
+        "live_contribution": {"type": "string", "minLength": 1},
+        "combined_inference": {"type": "string", "minLength": 1},
+        "residual_limitation": {"type": "string", "minLength": 1},
+        "historical_supplies_information_control": {"const": true},
+        "historical_supplies_counterfactual_density": {"const": true},
+        "live_supplies_temporal_validity": {"const": true},
+        "live_supplies_ecological_validity": {"const": true},
+        "either_case_type_sufficient_alone": {"const": false}
+      }
+    },
+    "fully_real_case_only": {"const": false},
+    "historical_replay_only": {"const": false},
+    "combined_portfolio_required_for_claim": {"const": true},
+    "portfolio_rationale": {"type": "string", "minLength": 1}
+  }
+}

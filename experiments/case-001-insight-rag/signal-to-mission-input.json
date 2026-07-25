@@ -1,0 +1,60 @@
+{
+  "vertical_slice_id": "prospective-case-001-insight-rag",
+  "slice_protocol_id": "signal-to-mission-v1",
+  "slice_fingerprint": "sha256:prospective-case-001-insight-rag-frozen-2026-07-25",
+  "signal": {
+    "signal_id": "signal-insight-rag-action-proof-gap",
+    "signal_fingerprint": "sha256:insight-rag-source-manifest-224b3db",
+    "observed_at": "2026-07-25T05:00:00Z",
+    "evidence_artifact_id": "experiments/case-001-insight-rag/preregistration.md#frozen-source-manifest"
+  },
+  "interpretation": {
+    "interpretation_id": "interpretation-causal-proof-bottleneck",
+    "interpretation_fingerprint": "sha256:interpretation-causal-proof-bottleneck-v1",
+    "source_signal_id": "signal-insight-rag-action-proof-gap",
+    "created_at": "2026-07-25T05:01:00Z",
+    "causal_thesis": "Offline ranking quality does not establish that retrieved references improve an agent's implementation decision."
+  },
+  "mission_candidates": [
+    {
+      "candidate_id": "candidate-deepen-analyzer",
+      "candidate_fingerprint": "sha256:candidate-deepen-analyzer-v1",
+      "source_interpretation_id": "interpretation-causal-proof-bottleneck",
+      "beneficiary": "Developers seeking precise implementation references",
+      "desired_change": "Improve static evidence precision with deeper cross-file analysis."
+    },
+    {
+      "candidate_id": "candidate-expand-ingestion",
+      "candidate_fingerprint": "sha256:candidate-expand-ingestion-v1",
+      "source_interpretation_id": "interpretation-causal-proof-bottleneck",
+      "beneficiary": "Developers searching across the shared reference corpus",
+      "desired_change": "Increase candidate coverage and freshness across centralized repositories."
+    },
+    {
+      "candidate_id": "candidate-counterfactual-action-choice",
+      "candidate_fingerprint": "sha256:candidate-counterfactual-action-choice-v1",
+      "source_interpretation_id": "interpretation-causal-proof-bottleneck",
+      "beneficiary": "Developers delegating unfamiliar implementation work to coding agents",
+      "desired_change": "Establish whether a frozen recommendation causes a better equal-budget implementation decision."
+    }
+  ],
+  "selection": {
+    "selection_id": "selection-counterfactual-action-choice",
+    "selection_fingerprint": "sha256:selection-counterfactual-action-choice-v1",
+    "candidate_set_fingerprint": "sha256:insight-rag-candidate-set-v1",
+    "selected_candidate_id": "candidate-counterfactual-action-choice",
+    "selected_at": "2026-07-25T05:02:00Z",
+    "selection_rationale": "This reversible probe tests the causal assumption required before either analyzer depth or corpus breadth can be justified."
+  },
+  "mission_contract": {
+    "mission_contract_id": "mission-contract-insight-rag-action-proof-001",
+    "mission_contract_version": "v1",
+    "mission_contract_fingerprint": "sha256:mission-contract-insight-rag-action-proof-001",
+    "source_selection_id": "selection-counterfactual-action-choice",
+    "source_candidate_id": "candidate-counterfactual-action-choice",
+    "issued_at": "2026-07-25T05:03:00Z",
+    "planner_handoff_artifact_id": "experiments/case-001-insight-rag/preregistration.md#mission-contract",
+    "outcome_intake_contract_id": "outcome-intake-insight-rag-action-proof-001"
+  },
+  "outcome_intake": []
+}

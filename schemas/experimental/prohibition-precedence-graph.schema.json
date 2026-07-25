@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/prohibition-precedence-graph.schema.json",
+  "title": "PalamedesProhibitionPrecedenceGraph",
+  "description": "Experimental Cycle 213 graph for explicit or unresolved hard-prohibition conflicts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "precedence_graph_id",
+    "constitution_version_id",
+    "declaration_order_breaks_ties",
+    "prohibition_ids",
+    "precedence_edges",
+    "conflicts",
+    "unresolved_conflict_action"
+  ],
+  "properties": {
+    "precedence_graph_id": {"type": "string", "minLength": 1},
+    "constitution_version_id": {"type": "string", "minLength": 1},
+    "declaration_order_breaks_ties": {"const": false},
+    "prohibition_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "precedence_edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["higher_prohibition_id", "lower_prohibition_id", "precedence_rationale"],
+        "properties": {
+          "higher_prohibition_id": {"type": "string", "minLength": 1},
+          "lower_prohibition_id": {"type": "string", "minLength": 1},
+          "precedence_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "conflict_id",
+          "left_prohibition_id",
+          "right_prohibition_id",
+          "resolution",
+          "selected_prohibition_id",
+          "conflict_rationale"
+        ],
+        "properties": {
+          "conflict_id": {"type": "string", "minLength": 1},
+          "left_prohibition_id": {"type": "string", "minLength": 1},
+          "right_prohibition_id": {"type": "string", "minLength": 1},
+          "resolution": {"enum": ["precedence", "unresolved"]},
+          "selected_prohibition_id": {"type": "string"},
+          "conflict_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "unresolved_conflict_action": {"type": "string", "minLength": 1}
+  }
+}

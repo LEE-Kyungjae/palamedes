@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/forecast-calibration-failure-signal-report.schema.json",
+  "title": "PalamedesForecastCalibrationFailureSignalReport",
+  "description": "Cycle 376 prospective forecast-range and failure-signal calibration report.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["calibration_report_id", "mission_contract_id", "strategy_version_id", "forecast_protocol_id", "forecast_set_fingerprint", "forecast_frozen_at", "strategy_authorized_at", "report_fingerprint", "forecast_entries", "declared_scores", "confidence_prose_substitutes_for_numeric_forecast", "post_outcome_forecast_revision_allowed", "wide_intervals_rewarded_as_equally_informative", "missed_failure_signals_omitted", "report_rationale"],
+  "properties": {
+    "calibration_report_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "strategy_version_id": {"type": "string", "minLength": 1},
+    "forecast_protocol_id": {"type": "string", "minLength": 1},
+    "forecast_set_fingerprint": {"type": "string", "minLength": 1},
+    "forecast_frozen_at": {"type": "string", "minLength": 1},
+    "strategy_authorized_at": {"type": "string", "minLength": 1},
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "forecast_entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["forecast_id", "forecast_kind", "metric_or_signal", "horizon", "unit", "observed_value", "forecast_fingerprint", "observation_artifact_id", "observation_fingerprint", "scoring_rationale", "frozen_before_strategy", "edited_after_observation"],
+        "properties": {
+          "forecast_id": {"type": "string", "minLength": 1},
+          "forecast_kind": {"enum": ["outcome_range", "failure_signal"]},
+          "metric_or_signal": {"type": "string", "minLength": 1},
+          "horizon": {"enum": ["short", "medium", "long"]},
+          "unit": {"type": "string", "minLength": 1},
+          "forecast_lower": {"type": "number"},
+          "forecast_upper": {"type": "number"},
+          "forecast_probability": {"type": "number", "minimum": 0, "maximum": 1},
+          "observed_value": {},
+          "range_hit": {"type": "boolean"},
+          "interval_width": {"type": "number", "minimum": 0},
+          "signal_occurred": {"type": "boolean"},
+          "brier_score": {"type": "number", "minimum": 0, "maximum": 1},
+          "forecast_fingerprint": {"type": "string", "minLength": 1},
+          "observation_artifact_id": {"type": "string", "minLength": 1},
+          "observation_fingerprint": {"type": "string", "minLength": 1},
+          "scoring_rationale": {"type": "string", "minLength": 1},
+          "frozen_before_strategy": {"const": true},
+          "edited_after_observation": {"const": false}
+        }
+      }
+    },
+    "declared_scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["forecast_count", "outcome_range_count", "failure_signal_count", "range_hit_count", "mean_interval_width", "mean_failure_signal_brier"],
+      "properties": {
+        "forecast_count": {"type": "integer", "minimum": 1},
+        "outcome_range_count": {"type": "integer", "minimum": 0},
+        "failure_signal_count": {"type": "integer", "minimum": 0},
+        "range_hit_count": {"type": "integer", "minimum": 0},
+        "mean_interval_width": {"type": "number", "minimum": 0},
+        "mean_failure_signal_brier": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "confidence_prose_substitutes_for_numeric_forecast": {"const": false},
+    "post_outcome_forecast_revision_allowed": {"const": false},
+    "wide_intervals_rewarded_as_equally_informative": {"const": false},
+    "missed_failure_signals_omitted": {"const": false},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

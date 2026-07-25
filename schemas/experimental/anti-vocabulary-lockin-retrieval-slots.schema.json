@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/anti-vocabulary-lockin-retrieval-slots.schema.json",
+  "title": "PalamedesAntiVocabularyLockinRetrievalSlots",
+  "description": "Cycle 333 explicit counter-view, failure, remote-mechanism, and uncovered-beneficiary retrieval slots.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["retrieval_plan_id", "context_assembly_id", "anchor_set_fingerprint", "slots", "total_slot_token_budget", "global_similarity_ranking_controls_all_slots", "all_slots_attempted_before_context_freeze", "plan_rationale"],
+  "properties": {
+    "retrieval_plan_id": {"type": "string", "minLength": 1},
+    "context_assembly_id": {"type": "string", "minLength": 1},
+    "anchor_set_fingerprint": {"type": "string", "minLength": 1},
+    "slots": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["slot_id", "slot_type", "retrieval_operation", "search_question", "search_scope", "query_fingerprint", "inclusion_criterion", "token_budget", "retrieval_attempted", "result_artifact_ids", "lexical_similarity_only", "existing_vocabulary_required"],
+        "properties": {
+          "slot_id": {"type": "string", "minLength": 1},
+          "slot_type": {"enum": ["counter_view", "failure", "remote_mechanism", "uncovered_beneficiary"]},
+          "retrieval_operation": {"enum": ["contradiction_search", "failure_archive_search", "cross_domain_mechanism_search", "beneficiary_gap_search"]},
+          "search_question": {"type": "string", "minLength": 1},
+          "search_scope": {"type": "string", "minLength": 1},
+          "query_fingerprint": {"type": "string", "minLength": 1},
+          "inclusion_criterion": {"type": "string", "minLength": 1},
+          "token_budget": {"type": "integer", "minimum": 1},
+          "retrieval_attempted": {"const": true},
+          "result_artifact_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "lexical_similarity_only": {"const": false},
+          "existing_vocabulary_required": {"const": false}
+        }
+      }
+    },
+    "total_slot_token_budget": {"type": "integer", "minimum": 1},
+    "global_similarity_ranking_controls_all_slots": {"const": false},
+    "all_slots_attempted_before_context_freeze": {"const": true},
+    "plan_rationale": {"type": "string", "minLength": 1}
+  }
+}

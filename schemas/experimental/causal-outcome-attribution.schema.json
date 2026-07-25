@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/causal-outcome-attribution.schema.json",
+  "title": "PalamedesCausalOutcomeAttribution",
+  "description": "Experimental Cycle 161 separation of observed outcome from mission-thesis attribution.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attribution_id",
+    "mission_id",
+    "pre_registered_forecast_id",
+    "observed_outcome",
+    "outcome_evidence_id",
+    "outcome_status",
+    "thesis_status",
+    "thesis_discriminating_evidence",
+    "outcome_success_proves_thesis",
+    "forecasted_causal_chain",
+    "causal_chain_observations",
+    "execution_quality",
+    "exogenous_factors",
+    "attribution_hypotheses"
+  ],
+  "properties": {
+    "attribution_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "pre_registered_forecast_id": {"type": "string", "minLength": 1},
+    "observed_outcome": {"type": "string", "minLength": 1},
+    "outcome_evidence_id": {"type": "string", "minLength": 1},
+    "outcome_status": {"enum": ["success", "mixed", "failure"]},
+    "thesis_status": {"enum": ["supported", "challenged", "underdetermined"]},
+    "thesis_discriminating_evidence": {"type": "string", "minLength": 1},
+    "outcome_success_proves_thesis": {"const": false},
+    "forecasted_causal_chain": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["prediction_id", "cause", "mechanism", "predicted_effect"],
+        "properties": {
+          "prediction_id": {"type": "string", "minLength": 1},
+          "cause": {"type": "string", "minLength": 1},
+          "mechanism": {"type": "string", "minLength": 1},
+          "predicted_effect": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "causal_chain_observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["prediction_id", "matched", "evidence_id"],
+        "properties": {
+          "prediction_id": {"type": "string", "minLength": 1},
+          "matched": {"type": "boolean"},
+          "evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "execution_quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assessment", "evidence_id"],
+      "properties": {
+        "assessment": {"enum": ["adequate", "mixed", "inadequate"]},
+        "evidence_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "exogenous_factors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["factor_id", "description", "effect", "anticipated", "evidence_id"],
+        "properties": {
+          "factor_id": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "effect": {"enum": ["helped", "harmed", "neutral"]},
+          "anticipated": {"type": "boolean"},
+          "evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "attribution_hypotheses": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "evidence_for", "evidence_against"],
+        "properties": {
+          "kind": {"enum": ["mission_thesis", "execution_quality", "luck"]},
+          "evidence_for": {"type": "string", "minLength": 1},
+          "evidence_against": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

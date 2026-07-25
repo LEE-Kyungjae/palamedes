@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/consequence-review-cadence.schema.json",
+  "title": "PalamedesConsequenceReviewCadence",
+  "description": "Experimental Cycle 166 consequence-specific review cadence with early harm observation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cadence_id",
+    "mission_id",
+    "uniform_cadence",
+    "schedule_rationale",
+    "consequence_schedules"
+  ],
+  "properties": {
+    "cadence_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "uniform_cadence": {"const": false},
+    "schedule_rationale": {"type": "string", "minLength": 1},
+    "consequence_schedules": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "consequence_type",
+          "expected_latency",
+          "first_review_after_days",
+          "recurring_interval_days",
+          "wake_trigger",
+          "evidence_source_id",
+          "latency_rationale"
+        ],
+        "properties": {
+          "consequence_type": {
+            "enum": ["benefit", "harm", "sustainability", "option_preservation"]
+          },
+          "expected_latency": {
+            "enum": ["immediate", "early", "lagging", "long_horizon"]
+          },
+          "first_review_after_days": {"type": "integer", "minimum": 0},
+          "recurring_interval_days": {"type": "integer", "minimum": 1},
+          "wake_trigger": {"type": "string", "minLength": 1},
+          "evidence_source_id": {"type": "string", "minLength": 1},
+          "latency_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

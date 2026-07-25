@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/null-update-pressure-change.schema.json",
+  "title": "PalamedesNullUpdatePressureChange",
+  "description": "Experimental Cycle 264 contract changing one evidence, model, or representation pressure dimension after repeated null updates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pressure_change_id",
+    "frontier_entry_id",
+    "cognitive_operation_id",
+    "consecutive_null_updates",
+    "null_update_threshold",
+    "null_update_evidence_ids",
+    "null_diagnosis",
+    "diagnosis_evidence_id",
+    "pressure_dimensions",
+    "decision",
+    "pressure_change_type",
+    "decision_rationale"
+  ],
+  "properties": {
+    "pressure_change_id": {"type": "string", "minLength": 1},
+    "frontier_entry_id": {"type": "string", "minLength": 1},
+    "cognitive_operation_id": {"type": "string", "minLength": 1},
+    "consecutive_null_updates": {"type": "integer", "minimum": 1},
+    "null_update_threshold": {"type": "integer", "minimum": 1},
+    "null_update_evidence_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "null_diagnosis": {"enum": ["stability", "weak_pressure", "underdetermined"]},
+    "diagnosis_evidence_id": {"type": "string", "minLength": 1},
+    "pressure_dimensions": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dimension", "previous_id", "current_id", "changed"],
+        "properties": {
+          "dimension": {"enum": ["evidence_source", "causal_model", "stakeholder_representation"]},
+          "previous_id": {"type": "string", "minLength": 1},
+          "current_id": {"type": "string", "minLength": 1},
+          "changed": {"type": "boolean"}
+        }
+      }
+    },
+    "decision": {"enum": ["change_pressure", "continue_current_pressure"]},
+    "pressure_change_type": {"type": "string"},
+    "decision_rationale": {"type": "string", "minLength": 1}
+  }
+}

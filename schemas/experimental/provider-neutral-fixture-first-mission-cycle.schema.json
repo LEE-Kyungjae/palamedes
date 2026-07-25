@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/provider-neutral-fixture-first-mission-cycle.schema.json",
+  "title": "PalamedesProviderNeutralFixtureFirstMissionCycle",
+  "description": "Cycle 395 provider-neutral MissionCycle proven with static fixtures before live calls.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mission_cycle_report_id", "fixture_commands", "cycle_output", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "mission_cycle_report_id": {"type": "string", "minLength": 1},
+    "fixture_commands": {"type": "array", "minItems": 7, "maxItems": 7},
+    "cycle_output": {
+      "type": "object",
+      "required": ["semantic_command_state_version", "artifacts", "command_log", "execution_commands_emitted", "all_artifacts_frozen", "mission_cycle_metadata"],
+      "properties": {
+        "semantic_command_state_version": {"const": "semantic-command-state/1"},
+        "artifacts": {"type": "array", "minItems": 7, "maxItems": 7},
+        "command_log": {"type": "array", "minItems": 7, "maxItems": 7},
+        "execution_commands_emitted": {"const": 0},
+        "all_artifacts_frozen": {"const": true},
+        "mission_cycle_metadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["orchestrator", "provider_kind", "provider_interface", "live_provider_explicitly_allowed", "live_model_call_count", "provider_specific_branch_count"],
+          "properties": {
+            "orchestrator": {"const": "MissionCycle"},
+            "provider_kind": {"const": "static_fixture"},
+            "provider_interface": {"const": "generate(command_type, context)"},
+            "live_provider_explicitly_allowed": {"const": false},
+            "live_model_call_count": {"const": 0},
+            "provider_specific_branch_count": {"const": 0}
+          }
+        }
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

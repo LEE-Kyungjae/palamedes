@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/selection-thesis-gate.schema.json",
+  "title": "PalamedesSelectionThesisGate",
+  "description": "Experimental Cycle 140 integrated mission selection thesis gate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gate_id",
+    "generation_batch_id",
+    "normalization_id",
+    "plural_comparison_id",
+    "capacity_allocation_id",
+    "reversible_selection_id",
+    "gate_rationale",
+    "independent_formation_verified",
+    "common_pressure_verified",
+    "explicit_budget_verified",
+    "reversibility_verified",
+    "single_winner_erases_portfolio",
+    "gate_decision"
+  ],
+  "properties": {
+    "gate_id": {"type": "string", "minLength": 1},
+    "generation_batch_id": {"type": "string", "minLength": 1},
+    "normalization_id": {"type": "string", "minLength": 1},
+    "plural_comparison_id": {"type": "string", "minLength": 1},
+    "capacity_allocation_id": {"type": "string", "minLength": 1},
+    "reversible_selection_id": {"type": "string", "minLength": 1},
+    "gate_rationale": {"type": "string", "minLength": 1},
+    "independent_formation_verified": {"const": true},
+    "common_pressure_verified": {"const": true},
+    "explicit_budget_verified": {"const": true},
+    "reversibility_verified": {"const": true},
+    "single_winner_erases_portfolio": {"const": false},
+    "gate_decision": {"const": "eligible"}
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/bidirectional-mission-planner-handoff-implementation.schema.json",
+  "title": "PalamedesBidirectionalMissionPlannerHandoffImplementation",
+  "description": "Cycle 360 integrated traceable, reconstructed, versioned, bidirectional planner handoff.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["handoff_implementation_id", "mission_contract_id", "mission_contract_version", "mission_contract_fingerprint", "implementation_fingerprint", "component_evidence", "forward_dependency", "reverse_dependency", "handoff_invariants", "handoff_status", "implementation_rationale"],
+  "properties": {
+    "handoff_implementation_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "mission_contract_version": {"type": "string", "minLength": 1},
+    "mission_contract_fingerprint": {"type": "string", "minLength": 1},
+    "implementation_fingerprint": {"type": "string", "minLength": 1},
+    "component_evidence": {
+      "type": "array", "minItems": 9, "maxItems": 9,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["component", "validator_id", "evidence_artifact_id", "evidence_fingerprint", "verification_record_id", "verified"],
+        "properties": {
+          "component": {"enum": ["linked_compilation", "semantic_mapping", "first_handoff", "explicit_acknowledgment", "reconstruction_review", "typed_challenge", "challenge_jurisdiction", "revision_acceptance", "mission_signal_return"]},
+          "validator_id": {"type": "string", "minLength": 1},
+          "evidence_artifact_id": {"type": "string", "minLength": 1},
+          "evidence_fingerprint": {"type": "string", "minLength": 1},
+          "verification_record_id": {"type": "string", "minLength": 1},
+          "verified": {"const": true}
+        }
+      }
+    },
+    "forward_dependency": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dependency_record_id", "source_mission_contract_fingerprint", "compilation_id", "semantic_mapping_id", "acknowledgment_id", "reconstruction_review_id", "strategy_version_id", "strategy_fingerprint", "strategy_acceptance_id", "strategy_explicitly_accepted", "tasks_generated_before_strategy_acceptance"],
+      "properties": {
+        "dependency_record_id": {"type": "string", "minLength": 1},
+        "source_mission_contract_fingerprint": {"type": "string", "minLength": 1},
+        "compilation_id": {"type": "string", "minLength": 1},
+        "semantic_mapping_id": {"type": "string", "minLength": 1},
+        "acknowledgment_id": {"type": "string", "minLength": 1},
+        "reconstruction_review_id": {"type": "string", "minLength": 1},
+        "strategy_version_id": {"type": "string", "minLength": 1},
+        "strategy_fingerprint": {"type": "string", "minLength": 1},
+        "strategy_acceptance_id": {"type": "string", "minLength": 1},
+        "strategy_explicitly_accepted": {"const": true},
+        "tasks_generated_before_strategy_acceptance": {"const": false}
+      }
+    },
+    "reverse_dependency": {
+      "type": "object", "additionalProperties": false,
+      "required": ["dependency_record_id", "source_strategy_version_id", "source_strategy_fingerprint", "target_mission_contract_fingerprint", "outcome_return_id", "mission_signal_registry_id", "palamedes_outcome_queue_id", "outcome_bound_to_registered_mission_signals", "task_completion_substitutes_for_outcome"],
+      "properties": {
+        "dependency_record_id": {"type": "string", "minLength": 1},
+        "source_strategy_version_id": {"type": "string", "minLength": 1},
+        "source_strategy_fingerprint": {"type": "string", "minLength": 1},
+        "target_mission_contract_fingerprint": {"type": "string", "minLength": 1},
+        "outcome_return_id": {"type": "string", "minLength": 1},
+        "mission_signal_registry_id": {"type": "string", "minLength": 1},
+        "palamedes_outcome_queue_id": {"type": "string", "minLength": 1},
+        "outcome_bound_to_registered_mission_signals": {"const": true},
+        "task_completion_substitutes_for_outcome": {"const": false}
+      }
+    },
+    "handoff_invariants": {
+      "type": "object", "additionalProperties": false,
+      "required": ["thin_envelope_traceable", "semantic_mapping_exact", "planner_reconstruction_measured", "purpose_challenges_returned", "implementation_judgment_preserved", "mission_revision_invalidates_strategy", "strategy_outcomes_return_to_mission", "version_dependency_bidirectional", "compiled_goal_replaces_mission", "planner_silently_rewrites_purpose", "palamedes_chooses_implementation", "stale_strategy_remains_executable", "delivery_completion_closes_mission"],
+      "properties": {
+        "thin_envelope_traceable": {"const": true},
+        "semantic_mapping_exact": {"const": true},
+        "planner_reconstruction_measured": {"const": true},
+        "purpose_challenges_returned": {"const": true},
+        "implementation_judgment_preserved": {"const": true},
+        "mission_revision_invalidates_strategy": {"const": true},
+        "strategy_outcomes_return_to_mission": {"const": true},
+        "version_dependency_bidirectional": {"const": true},
+        "compiled_goal_replaces_mission": {"const": false},
+        "planner_silently_rewrites_purpose": {"const": false},
+        "palamedes_chooses_implementation": {"const": false},
+        "stale_strategy_remains_executable": {"const": false},
+        "delivery_completion_closes_mission": {"const": false}
+      }
+    },
+    "handoff_status": {"const": "integrated"},
+    "implementation_rationale": {"type": "string", "minLength": 1}
+  }
+}

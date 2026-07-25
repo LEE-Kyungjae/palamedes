@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/sensitive-signal-minimized-context.schema.json",
+  "title": "PalamedesSensitiveSignalMinimizedContext",
+  "description": "Cycle 336 minimized sensitive signal representation with access-controlled original provenance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["minimized_context_id", "signal_id", "signal_fingerprint", "context_manifest_id", "sensitivity", "controlled_original", "context_representation", "context_access", "model_can_dereference_original", "provenance_preserved", "minimum_necessary_representation", "minimization_rationale"],
+  "properties": {
+    "minimized_context_id": {"type": "string", "minLength": 1},
+    "signal_id": {"type": "string", "minLength": 1},
+    "signal_fingerprint": {"type": "string", "minLength": 1},
+    "context_manifest_id": {"type": "string", "minLength": 1},
+    "sensitivity": {"enum": ["restricted", "confidential", "highly_sensitive"]},
+    "controlled_original": {
+      "type": "object", "additionalProperties": false,
+      "required": ["original_locator", "original_content_fingerprint", "access_policy_id", "custodian_id", "provenance_record_id", "access_controlled", "raw_content_embedded_in_record"],
+      "properties": {
+        "original_locator": {"type": "string", "minLength": 1},
+        "original_content_fingerprint": {"type": "string", "minLength": 1},
+        "access_policy_id": {"type": "string", "minLength": 1},
+        "custodian_id": {"type": "string", "minLength": 1},
+        "provenance_record_id": {"type": "string", "minLength": 1},
+        "access_controlled": {"const": true},
+        "raw_content_embedded_in_record": {"const": false}
+      }
+    },
+    "context_representation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "representation_id", "representation_fingerprint", "transform_record_id", "created_at", "bounded_text", "local_embedding_locator", "embedding_leaves_local_boundary", "raw_sensitive_content_included", "reidentification_fields_included"],
+      "properties": {
+        "mode": {"enum": ["summary", "redacted", "local_embedding"]},
+        "representation_id": {"type": "string", "minLength": 1},
+        "representation_fingerprint": {"type": "string", "minLength": 1},
+        "transform_record_id": {"type": "string", "minLength": 1},
+        "created_at": {"type": "string", "minLength": 1},
+        "bounded_text": {"type": "string"},
+        "local_embedding_locator": {"type": "string"},
+        "embedding_leaves_local_boundary": {"const": false},
+        "raw_sensitive_content_included": {"const": false},
+        "reidentification_fields_included": {"const": false}
+      }
+    },
+    "context_access": {
+      "type": "object", "additionalProperties": false,
+      "required": ["allowed_role_ids", "purpose_limitation", "expires_at", "deletion_trigger", "access_log_id", "downstream_redistribution_allowed"],
+      "properties": {
+        "allowed_role_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "purpose_limitation": {"type": "string", "minLength": 1},
+        "expires_at": {"type": "string", "minLength": 1},
+        "deletion_trigger": {"type": "string", "minLength": 1},
+        "access_log_id": {"type": "string", "minLength": 1},
+        "downstream_redistribution_allowed": {"const": false}
+      }
+    },
+    "model_can_dereference_original": {"const": false},
+    "provenance_preserved": {"const": true},
+    "minimum_necessary_representation": {"const": true},
+    "minimization_rationale": {"type": "string", "minLength": 1}
+  }
+}

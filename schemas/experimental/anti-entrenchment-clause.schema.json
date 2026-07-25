@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/anti-entrenchment-clause.schema.json",
+  "title": "PalamedesAntiEntrenchmentClause",
+  "description": "Experimental Cycle 159 constitutional preference for the smallest adequate system.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "clause_id",
+    "constitution_id",
+    "targeted_cognitive_labor",
+    "adequacy_threshold",
+    "selected_system_id",
+    "replacement_trigger",
+    "retirement_plan",
+    "palamedes_preferred_by_default",
+    "candidate_systems"
+  ],
+  "properties": {
+    "clause_id": {"type": "string", "minLength": 1},
+    "constitution_id": {"type": "string", "minLength": 1},
+    "targeted_cognitive_labor": {"type": "string", "minLength": 1},
+    "adequacy_threshold": {"type": "string", "minLength": 1},
+    "selected_system_id": {"type": "string", "minLength": 1},
+    "replacement_trigger": {"type": "string", "minLength": 1},
+    "retirement_plan": {"type": "string", "minLength": 1},
+    "palamedes_preferred_by_default": {"const": false},
+    "candidate_systems": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["system_id", "complexity_units", "adequate", "evidence_id"],
+        "properties": {
+          "system_id": {"type": "string", "minLength": 1},
+          "complexity_units": {"type": "integer", "minimum": 0},
+          "adequate": {"type": "boolean"},
+          "evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/historical-decision-independent-evaluation.schema.json",
+  "title": "PalamedesHistoricalDecisionIndependentEvaluation",
+  "description": "Cycle 366 evaluation of contemporaneous reasoning independently from historical choice.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["evaluation_record_id", "historical_case_id", "historical_case_fingerprint", "condition_output_id", "condition_output_fingerprint", "evaluator_id", "evaluation_fingerprint", "historical_record", "dimension_evaluations", "historical_decision_match_receives_credit", "later_success_erases_bad_reasoning", "later_failure_erases_good_contemporaneous_reasoning", "dimensions_reported_separately", "evaluation_rationale"],
+  "properties": {
+    "evaluation_record_id": {"type": "string", "minLength": 1},
+    "historical_case_id": {"type": "string", "minLength": 1},
+    "historical_case_fingerprint": {"type": "string", "minLength": 1},
+    "condition_output_id": {"type": "string", "minLength": 1},
+    "condition_output_fingerprint": {"type": "string", "minLength": 1},
+    "evaluator_id": {"type": "string", "minLength": 1},
+    "evaluation_fingerprint": {"type": "string", "minLength": 1},
+    "historical_record": {
+      "type": "object", "additionalProperties": false,
+      "required": ["historical_decision_artifact_id", "historical_decision_fingerprint", "later_outcome_artifact_id", "later_outcome_fingerprint", "contemporaneous_information_packet_id", "contemporaneous_information_fingerprint", "historical_decision_is_ground_truth", "decision_and_outcome_separately_sealed"],
+      "properties": {
+        "historical_decision_artifact_id": {"type": "string", "minLength": 1},
+        "historical_decision_fingerprint": {"type": "string", "minLength": 1},
+        "later_outcome_artifact_id": {"type": "string", "minLength": 1},
+        "later_outcome_fingerprint": {"type": "string", "minLength": 1},
+        "contemporaneous_information_packet_id": {"type": "string", "minLength": 1},
+        "contemporaneous_information_fingerprint": {"type": "string", "minLength": 1},
+        "historical_decision_is_ground_truth": {"const": false},
+        "decision_and_outcome_separately_sealed": {"const": true}
+      }
+    },
+    "dimension_evaluations": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": ["dimension", "score", "rubric_anchor", "evidence_artifact_id", "assessment_rationale", "uncertainty", "typed_details"],
+        "properties": {
+          "dimension": {"enum": ["contemporaneous_justification", "missed_alternatives", "forecast_calibration", "later_consequence"]},
+          "score": {"type": "integer", "minimum": 0, "maximum": 4},
+          "rubric_anchor": {"type": "string", "minLength": 1},
+          "evidence_artifact_id": {"type": "string", "minLength": 1},
+          "assessment_rationale": {"type": "string", "minLength": 1},
+          "uncertainty": {"type": "string", "minLength": 1},
+          "typed_details": {"type": "object"}
+        }
+      }
+    },
+    "historical_decision_match_receives_credit": {"const": false},
+    "later_success_erases_bad_reasoning": {"const": false},
+    "later_failure_erases_good_contemporaneous_reasoning": {"const": false},
+    "dimensions_reported_separately": {"const": true},
+    "evaluation_rationale": {"type": "string", "minLength": 1}
+  }
+}

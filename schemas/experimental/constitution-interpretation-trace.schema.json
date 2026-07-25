@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/constitution-interpretation-trace.schema.json",
+  "title": "PalamedesConstitutionInterpretationTrace",
+  "description": "Experimental Cycle 218 trace from mission features to clauses, conflicts, overrides, and uncertainty.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "interpretation_trace_id",
+    "mission_id",
+    "mission_version_id",
+    "constitution_version_id",
+    "mission_features",
+    "clause_applications",
+    "conflicts",
+    "overrides",
+    "uncertainties",
+    "interpretation_conclusion",
+    "decision_status",
+    "review_trigger"
+  ],
+  "properties": {
+    "interpretation_trace_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "mission_version_id": {"type": "string", "minLength": 1},
+    "constitution_version_id": {"type": "string", "minLength": 1},
+    "mission_features": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["feature_id", "dimension", "value"],
+        "properties": {
+          "feature_id": {"type": "string", "minLength": 1},
+          "dimension": {"type": "string", "minLength": 1},
+          "value": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "clause_applications": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["feature_id", "clause_id", "layer_type", "interpretation", "decision_effect"],
+        "properties": {
+          "feature_id": {"type": "string", "minLength": 1},
+          "clause_id": {"type": "string", "minLength": 1},
+          "layer_type": {"type": "string", "minLength": 1},
+          "interpretation": {"type": "string", "minLength": 1},
+          "decision_effect": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["conflict_id", "left_clause_id", "right_clause_id", "resolution_record_id"],
+        "properties": {
+          "conflict_id": {"type": "string", "minLength": 1},
+          "left_clause_id": {"type": "string", "minLength": 1},
+          "right_clause_id": {"type": "string", "minLength": 1},
+          "resolution_record_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "overrides": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["override_id", "clause_id", "evidence_id", "predicted_consequence_id"],
+        "properties": {
+          "override_id": {"type": "string", "minLength": 1},
+          "clause_id": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "predicted_consequence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "uncertainties": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["uncertainty_id", "clause_id", "uncertainty_statement", "decision_effect"],
+        "properties": {
+          "uncertainty_id": {"type": "string", "minLength": 1},
+          "clause_id": {"type": "string", "minLength": 1},
+          "uncertainty_statement": {"type": "string", "minLength": 1},
+          "decision_effect": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "interpretation_conclusion": {"type": "string", "minLength": 1},
+    "decision_status": {"enum": ["allowed", "blocked", "contested"]},
+    "review_trigger": {"type": "string", "minLength": 1}
+  }
+}

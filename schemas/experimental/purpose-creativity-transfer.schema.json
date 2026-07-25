@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/purpose-creativity-transfer.schema.json",
+  "title": "PalamedesPurposeCreativityTransfer",
+  "description": "Experimental Cycle 194 beneficiary-condition discovery and cross-context mechanism transfer.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "creativity_record_id",
+    "mission_candidate_id",
+    "discovered_beneficiary_condition",
+    "beneficiary_condition_evidence_id",
+    "beneficiary_condition_was_previously_explicit",
+    "source_context",
+    "source_mechanism",
+    "source_mechanism_evidence_id",
+    "target_context",
+    "transferred_mechanism",
+    "transfer_invariant",
+    "target_adaptation",
+    "opened_action",
+    "constitutional_trace_id",
+    "product_form_novelty_is_sufficient",
+    "obvious_product_form_alternatives",
+    "usefulness_tests"
+  ],
+  "properties": {
+    "creativity_record_id": {"type": "string", "minLength": 1},
+    "mission_candidate_id": {"type": "string", "minLength": 1},
+    "discovered_beneficiary_condition": {"type": "string", "minLength": 1},
+    "beneficiary_condition_evidence_id": {"type": "string", "minLength": 1},
+    "beneficiary_condition_was_previously_explicit": {"const": false},
+    "source_context": {"type": "string", "minLength": 1},
+    "source_mechanism": {"type": "string", "minLength": 1},
+    "source_mechanism_evidence_id": {"type": "string", "minLength": 1},
+    "target_context": {"type": "string", "minLength": 1},
+    "transferred_mechanism": {"type": "string", "minLength": 1},
+    "transfer_invariant": {"type": "string", "minLength": 1},
+    "target_adaptation": {"type": "string", "minLength": 1},
+    "opened_action": {"type": "string", "minLength": 1},
+    "constitutional_trace_id": {"type": "string", "minLength": 1},
+    "product_form_novelty_is_sufficient": {"const": false},
+    "obvious_product_form_alternatives": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "usefulness_tests": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["test_id", "criterion", "evidence_id", "passed"],
+        "properties": {
+          "test_id": {"type": "string", "minLength": 1},
+          "criterion": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "passed": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

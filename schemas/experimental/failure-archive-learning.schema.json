@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/failure-archive-learning.schema.json",
+  "title": "PalamedesFailureArchiveLearning",
+  "description": "Experimental Cycle 126 contract learning missing viability conditions from failures.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "analysis_id",
+    "opportunity_hypothesis",
+    "cross_failure_synthesis",
+    "surviving_assumption",
+    "disconfirming_condition",
+    "success_cases_are_sufficient",
+    "failed_predecessors"
+  ],
+  "properties": {
+    "analysis_id": {"type": "string", "minLength": 1},
+    "opportunity_hypothesis": {"type": "string", "minLength": 1},
+    "cross_failure_synthesis": {"type": "string", "minLength": 1},
+    "surviving_assumption": {"type": "string", "minLength": 1},
+    "disconfirming_condition": {"type": "string", "minLength": 1},
+    "success_cases_are_sufficient": {"const": false},
+    "failed_predecessors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "predecessor_id",
+          "plausible_thesis",
+          "observed_failure",
+          "missing_condition_kind",
+          "missing_condition_evidence",
+          "archive_limit",
+          "source_id"
+        ],
+        "properties": {
+          "predecessor_id": {"type": "string", "minLength": 1},
+          "plausible_thesis": {"type": "string", "minLength": 1},
+          "observed_failure": {"type": "string", "minLength": 1},
+          "missing_condition_kind": {
+            "enum": [
+              "timing",
+              "trust",
+              "distribution",
+              "economics",
+              "capability",
+              "institutional_fit"
+            ]
+          },
+          "missing_condition_evidence": {"type": "string", "minLength": 1},
+          "archive_limit": {"type": "string", "minLength": 1},
+          "source_id": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/mission-cognition-wake.schema.json",
+  "title": "PalamedesMissionCognitionWake",
+  "description": "Experimental Cycle 209 contract for waking only on plausible mission-changing cognition.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wake_decision_id",
+    "signal_claim_id",
+    "mission_id",
+    "interestingness_is_sufficient",
+    "candidate_mission_changes",
+    "wake_threshold",
+    "cognition_operation",
+    "decision",
+    "wake_rationale",
+    "reassessment_trigger"
+  ],
+  "properties": {
+    "wake_decision_id": {"type": "string", "minLength": 1},
+    "signal_claim_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "interestingness_is_sufficient": {"const": false},
+    "candidate_mission_changes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "candidate_change_id",
+          "mission_dimension",
+          "current_state",
+          "possible_revision",
+          "signal_to_revision_link",
+          "mission_change_probability",
+          "consequence_magnitude",
+          "cognition_leverage"
+        ],
+        "properties": {
+          "candidate_change_id": {"type": "string", "minLength": 1},
+          "mission_dimension": {
+            "enum": ["beneficiary", "desired_change", "mechanism", "constraint", "stop_condition"]
+          },
+          "current_state": {"type": "string", "minLength": 1},
+          "possible_revision": {"type": "string", "minLength": 1},
+          "signal_to_revision_link": {"type": "string", "minLength": 1},
+          "mission_change_probability": {"type": "number", "minimum": 0, "maximum": 1},
+          "consequence_magnitude": {"type": "number", "minimum": 0, "maximum": 1},
+          "cognition_leverage": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }
+    },
+    "wake_threshold": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+    "cognition_operation": {"type": "string", "minLength": 1},
+    "decision": {"enum": ["wake", "wait"]},
+    "wake_rationale": {"type": "string", "minLength": 1},
+    "reassessment_trigger": {"type": "string", "minLength": 1}
+  }
+}

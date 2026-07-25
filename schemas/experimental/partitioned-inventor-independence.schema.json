@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/partitioned-inventor-independence.schema.json",
+  "title": "PalamedesPartitionedInventorIndependence",
+  "description": "Cycle 323 inventor independence through distinct evidence partitions and pre-rival candidate freezing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["independence_run_id", "role_topology_id", "frozen_frontier_fingerprint", "shared_evidence_ids", "inventors", "rival_reveal", "role_prompt_treated_as_independence", "partition_manifest_frozen_before_generation", "partition_rationale"],
+  "properties": {
+    "independence_run_id": {"type": "string", "minLength": 1},
+    "role_topology_id": {"type": "string", "minLength": 1},
+    "frozen_frontier_fingerprint": {"type": "string", "minLength": 1},
+    "shared_evidence_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "inventors": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["inventor_assignment_id", "evidence_partition_id", "partition_fingerprint", "shared_evidence_ids", "exclusive_evidence_ids", "partition_intent", "candidate_generation_instruction", "candidate_id", "candidate_fingerprint", "generation_started_at", "candidate_frozen_at", "other_candidate_ids_visible_before_freeze", "other_candidate_content_visible_before_freeze", "candidate_frozen_before_rival_access", "post_freeze_mutation_allowed"],
+        "properties": {
+          "inventor_assignment_id": {"type": "string", "minLength": 1},
+          "evidence_partition_id": {"type": "string", "minLength": 1},
+          "partition_fingerprint": {"type": "string", "minLength": 1},
+          "shared_evidence_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "exclusive_evidence_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "partition_intent": {"type": "string", "minLength": 1},
+          "candidate_generation_instruction": {"type": "string", "minLength": 1},
+          "candidate_id": {"type": "string", "minLength": 1},
+          "candidate_fingerprint": {"type": "string", "minLength": 1},
+          "generation_started_at": {"type": "string", "minLength": 1},
+          "candidate_frozen_at": {"type": "string", "minLength": 1},
+          "other_candidate_ids_visible_before_freeze": {"type": "array", "maxItems": 0},
+          "other_candidate_content_visible_before_freeze": {"const": false},
+          "candidate_frozen_before_rival_access": {"const": true},
+          "post_freeze_mutation_allowed": {"const": false}
+        }
+      }
+    },
+    "rival_reveal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["reveal_event_id", "candidate_ids", "all_candidates_frozen", "revealed_at"],
+      "properties": {
+        "reveal_event_id": {"type": "string", "minLength": 1},
+        "candidate_ids": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "all_candidates_frozen": {"const": true},
+        "revealed_at": {"type": "string", "minLength": 1}
+      }
+    },
+    "role_prompt_treated_as_independence": {"const": false},
+    "partition_manifest_frozen_before_generation": {"const": true},
+    "partition_rationale": {"type": "string", "minLength": 1}
+  }
+}

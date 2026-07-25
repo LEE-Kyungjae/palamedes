@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/disqualification-dominance-decision-structure.schema.json",
+  "title": "PalamedesDisqualificationDominanceDecisionStructure",
+  "description": "Cycle 341 disqualification and plural-dimension dominance before residual candidate comparison.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decision_structure_id", "candidate_set_fingerprint", "constitution_fingerprint", "candidate_ids", "value_dimensions", "disqualification_assessments", "dominance_assessments", "comparison_candidate_ids", "stage_order", "global_pairwise_ranking_performed_first", "transitive_preference_inferred_across_values", "structure_rationale"],
+  "properties": {
+    "decision_structure_id": {"type": "string", "minLength": 1},
+    "candidate_set_fingerprint": {"type": "string", "minLength": 1},
+    "constitution_fingerprint": {"type": "string", "minLength": 1},
+    "candidate_ids": {"type": "array", "minItems": 3, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "value_dimensions": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "disqualification_assessments": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["candidate_id", "criterion_checks", "status"],
+        "properties": {
+          "candidate_id": {"type": "string", "minLength": 1},
+          "criterion_checks": {
+            "type": "array", "minItems": 1,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["criterion_id", "result", "evidence_fingerprint", "assessment_rationale"],
+              "properties": {
+                "criterion_id": {"type": "string", "minLength": 1},
+                "result": {"enum": ["satisfied", "violated"]},
+                "evidence_fingerprint": {"type": "string", "minLength": 1},
+                "assessment_rationale": {"type": "string", "minLength": 1}
+              }
+            }
+          },
+          "status": {"enum": ["eligible", "disqualified"]}
+        }
+      }
+    },
+    "dominance_assessments": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["dominance_id", "dominant_candidate_id", "dominated_candidate_id", "dimension_comparisons", "dominance_established"],
+        "properties": {
+          "dominance_id": {"type": "string", "minLength": 1},
+          "dominant_candidate_id": {"type": "string", "minLength": 1},
+          "dominated_candidate_id": {"type": "string", "minLength": 1},
+          "dimension_comparisons": {
+            "type": "array", "minItems": 2,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["dimension", "relation", "evidence_fingerprint"],
+              "properties": {
+                "dimension": {"type": "string", "minLength": 1},
+                "relation": {"enum": ["better", "equal", "worse", "unknown"]},
+                "evidence_fingerprint": {"type": "string", "minLength": 1}
+              }
+            }
+          },
+          "dominance_established": {"type": "boolean"}
+        }
+      }
+    },
+    "comparison_candidate_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "stage_order": {"type": "array", "prefixItems": [{"const": "disqualification"}, {"const": "dominance"}, {"const": "comparison"}], "minItems": 3, "maxItems": 3},
+    "global_pairwise_ranking_performed_first": {"const": false},
+    "transitive_preference_inferred_across_values": {"const": false},
+    "structure_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/constitution-authorized-preference-history.schema.json",
+  "title": "PalamedesConstitutionAuthorizedPreferenceHistory",
+  "description": "Cycle 335 constitution-scoped owner preference history with confirming and disconfirming precedents.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["preference_context_id", "context_manifest_id", "preference_domain", "constitutional_authorization", "owner_precedents", "preference_summary", "repetition_count_used_as_authority", "disconfirming_precedents_filtered_out", "context_rationale"],
+  "properties": {
+    "preference_context_id": {"type": "string", "minLength": 1},
+    "context_manifest_id": {"type": "string", "minLength": 1},
+    "preference_domain": {"type": "string", "minLength": 1},
+    "constitutional_authorization": {
+      "type": "object",
+      "required": ["authorized", "constitution_state_id", "constitution_fingerprint", "clause_id", "authorized_domain", "allowed_decision_use", "authority_rationale", "may_override_beneficiary_evidence", "may_override_observed_outcome"],
+      "properties": {
+        "authorized": {"type": "boolean"},
+        "constitution_state_id": {"type": "string"},
+        "constitution_fingerprint": {"type": "string"},
+        "clause_id": {"type": "string"},
+        "authorized_domain": {"type": "string"},
+        "allowed_decision_use": {"type": "string"},
+        "authority_rationale": {"type": "string"},
+        "may_override_beneficiary_evidence": {"const": false},
+        "may_override_observed_outcome": {"const": false}
+      }
+    },
+    "owner_precedents": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["precedent_id", "stance", "domain", "recorded_preference", "decision_context", "observed_outcome", "outcome_observed", "source_provenance_id", "precedent_fingerprint"],
+        "properties": {
+          "precedent_id": {"type": "string", "minLength": 1},
+          "stance": {"enum": ["confirming", "disconfirming"]},
+          "domain": {"type": "string", "minLength": 1},
+          "recorded_preference": {"type": "string", "minLength": 1},
+          "decision_context": {"type": "string", "minLength": 1},
+          "observed_outcome": {"type": "string", "minLength": 1},
+          "outcome_observed": {"const": true},
+          "source_provenance_id": {"type": "string", "minLength": 1},
+          "precedent_fingerprint": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "preference_summary": {"type": "object"},
+    "repetition_count_used_as_authority": {"const": false},
+    "disconfirming_precedents_filtered_out": {"const": false},
+    "context_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/complete-mission-candidate-basis.schema.json",
+  "title": "PalamedesCompleteMissionCandidateBasis",
+  "description": "Experimental Cycle 307 mission candidate linked to beneficiary, causal, constitutional, resource, harm, and disconfirmation bases.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mission_candidate_id", "mission", "changed_external_condition", "beneficiary_condition", "causal_sketch_id", "constitutional_interpretation", "resource_thesis", "harm_model", "disconfirmation", "candidate_can_self_authorize", "candidate_rationale"],
+  "properties": {
+    "mission_candidate_id": {"type": "string", "minLength": 1},
+    "mission": {"type": "string", "minLength": 1},
+    "changed_external_condition": {"type": "string", "minLength": 1},
+    "beneficiary_condition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["beneficiary_condition_id", "beneficiary_population", "current_external_condition", "desired_external_condition", "condition_evidence_id"],
+      "properties": {
+        "beneficiary_condition_id": {"type": "string", "minLength": 1},
+        "beneficiary_population": {"type": "string", "minLength": 1},
+        "current_external_condition": {"type": "string", "minLength": 1},
+        "desired_external_condition": {"type": "string", "minLength": 1},
+        "condition_evidence_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "causal_sketch_id": {"type": "string", "minLength": 1},
+    "constitutional_interpretation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["interpretation_id", "constitution_state_id", "clause_ids", "interpretation"],
+      "properties": {
+        "interpretation_id": {"type": "string", "minLength": 1},
+        "constitution_state_id": {"type": "string", "minLength": 1},
+        "clause_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "interpretation": {"type": "string", "minLength": 1}
+      }
+    },
+    "resource_thesis": {
+      "type": "object", "additionalProperties": false,
+      "required": ["resource_thesis_id", "resource_source", "renewal_mechanism", "resource_evidence_id", "resource_failure_condition"],
+      "properties": {
+        "resource_thesis_id": {"type": "string", "minLength": 1},
+        "resource_source": {"type": "string", "minLength": 1},
+        "renewal_mechanism": {"type": "string", "minLength": 1},
+        "resource_evidence_id": {"type": "string", "minLength": 1},
+        "resource_failure_condition": {"type": "string", "minLength": 1}
+      }
+    },
+    "harm_model": {
+      "type": "object", "additionalProperties": false,
+      "required": ["harm_model_id", "harms"],
+      "properties": {
+        "harm_model_id": {"type": "string", "minLength": 1},
+        "harms": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["harm_id", "affected_population", "potential_harm", "detection_signal_id", "harm_threshold", "mitigation"],
+            "properties": {
+              "harm_id": {"type": "string", "minLength": 1},
+              "affected_population": {"type": "string", "minLength": 1},
+              "potential_harm": {"type": "string", "minLength": 1},
+              "detection_signal_id": {"type": "string", "minLength": 1},
+              "harm_threshold": {"type": "string", "minLength": 1},
+              "mitigation": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    },
+    "disconfirmation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["disconfirmation_id", "condition", "required_observation", "evidence_channel_id", "evaluation_deadline", "decision_if_met"],
+      "properties": {
+        "disconfirmation_id": {"type": "string", "minLength": 1},
+        "condition": {"type": "string", "minLength": 1},
+        "required_observation": {"type": "string", "minLength": 1},
+        "evidence_channel_id": {"type": "string", "minLength": 1},
+        "evaluation_deadline": {"type": "string", "minLength": 1},
+        "decision_if_met": {"enum": ["revise", "stop", "replace"]}
+      }
+    },
+    "candidate_can_self_authorize": {"const": false},
+    "candidate_rationale": {"type": "string", "minLength": 1}
+  }
+}

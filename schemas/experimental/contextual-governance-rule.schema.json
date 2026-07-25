@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/contextual-governance-rule.schema.json",
+  "title": "PalamedesContextualGovernanceRule",
+  "description": "Experimental Cycle 211 contract balancing natural-language principles and formal rules.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "governance_rule_id",
+    "principle_text",
+    "natural_language_alone_is_authoritative",
+    "formal_condition",
+    "formal_action",
+    "formal_rule_is_context_complete",
+    "intended_scope",
+    "principle_rationale",
+    "known_loopholes",
+    "context_review_question",
+    "exception_test",
+    "application_cases",
+    "revision_trigger"
+  ],
+  "properties": {
+    "governance_rule_id": {"type": "string", "minLength": 1},
+    "principle_text": {"type": "string", "minLength": 1},
+    "natural_language_alone_is_authoritative": {"const": false},
+    "formal_condition": {"type": "string", "minLength": 1},
+    "formal_action": {"type": "string", "minLength": 1},
+    "formal_rule_is_context_complete": {"const": false},
+    "intended_scope": {"type": "string", "minLength": 1},
+    "principle_rationale": {"type": "string", "minLength": 1},
+    "known_loopholes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "context_review_question": {"type": "string", "minLength": 1},
+    "exception_test": {"type": "string", "minLength": 1},
+    "application_cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "application_case_id",
+          "formal_condition_matched",
+          "case_context",
+          "contextual_factor",
+          "principle_alignment",
+          "decision",
+          "decision_rationale"
+        ],
+        "properties": {
+          "application_case_id": {"type": "string", "minLength": 1},
+          "formal_condition_matched": {"type": "boolean"},
+          "case_context": {"type": "string", "minLength": 1},
+          "contextual_factor": {"type": "string", "minLength": 1},
+          "principle_alignment": {"type": "string", "minLength": 1},
+          "decision": {"enum": ["apply", "decline", "escalate"]},
+          "decision_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "revision_trigger": {"type": "string", "minLength": 1}
+  }
+}

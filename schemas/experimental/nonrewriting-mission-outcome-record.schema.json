@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/nonrewriting-mission-outcome-record.schema.json",
+  "title": "PalamedesNonrewritingMissionOutcomeRecord",
+  "description": "Experimental Cycle 319 observed mission consequence separated from attribution and history-preserving review.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outcome_record_id", "mission_contract_id", "mission_contract_fingerprint", "execution_plan_id", "outcome_channel_id", "observation_method", "baseline", "observed_consequence", "affected_entity_ids", "observed_at", "received_at", "sensitivity", "attribution_hypotheses", "purpose_review_trigger", "observed_consequence_is_attribution", "historical_contract_rewritten", "historical_plan_rewritten", "historical_outcome_rewritten", "mission_revised_automatically", "record_rationale"],
+  "properties": {
+    "outcome_record_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "mission_contract_fingerprint": {"type": "string", "minLength": 1},
+    "execution_plan_id": {"type": "string", "minLength": 1},
+    "outcome_channel_id": {"type": "string", "minLength": 1},
+    "observation_method": {"type": "string", "minLength": 1},
+    "baseline": {"type": "string", "minLength": 1},
+    "observed_consequence": {"type": "string", "minLength": 1},
+    "affected_entity_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "observed_at": {"type": "string", "minLength": 1},
+    "received_at": {"type": "string", "minLength": 1},
+    "sensitivity": {"enum": ["public", "internal", "confidential", "restricted"]},
+    "attribution_hypotheses": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["attribution_id", "layer", "hypothesis", "confidence", "supporting_signal_ids", "opposing_signal_ids", "discriminating_observation", "status"],
+        "properties": {
+          "attribution_id": {"type": "string", "minLength": 1},
+          "layer": {"enum": ["mission", "planner", "implementation", "measurement", "timing"]},
+          "hypothesis": {"type": "string", "minLength": 1},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+          "supporting_signal_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "opposing_signal_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "discriminating_observation": {"type": "string", "minLength": 1},
+          "status": {"const": "unresolved"}
+        }
+      }
+    },
+    "purpose_review_trigger": {
+      "type": "object",
+      "required": ["trigger_id", "threshold", "observed_value", "triggered", "evaluation_rationale"],
+      "properties": {
+        "trigger_id": {"type": "string", "minLength": 1},
+        "threshold": {"type": "string", "minLength": 1},
+        "observed_value": {"type": "string", "minLength": 1},
+        "triggered": {"type": "boolean"},
+        "purpose_review_event_id": {"type": "string"},
+        "review_authority_id": {"type": "string"},
+        "wake_insufficiency": {"type": "string"},
+        "evaluation_rationale": {"type": "string", "minLength": 1}
+      }
+    },
+    "observed_consequence_is_attribution": {"const": false},
+    "historical_contract_rewritten": {"const": false},
+    "historical_plan_rewritten": {"const": false},
+    "historical_outcome_rewritten": {"const": false},
+    "mission_revised_automatically": {"const": false},
+    "record_rationale": {"type": "string", "minLength": 1}
+  }
+}

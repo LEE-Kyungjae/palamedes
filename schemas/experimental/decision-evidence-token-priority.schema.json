@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/decision-evidence-token-priority.schema.json",
+  "title": "PalamedesDecisionEvidenceTokenPriority",
+  "description": "Cycle 338 token allocation prioritizing primary observation, constitutional conflict, and rival mechanism.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["allocation_id", "context_manifest_id", "allocation_fingerprint", "total_token_budget", "allocations", "truncation_order", "primary_observation_dropped_before_background", "equal_category_allocation_required", "allocation_rationale"],
+  "properties": {
+    "allocation_id": {"type": "string", "minLength": 1},
+    "context_manifest_id": {"type": "string", "minLength": 1},
+    "allocation_fingerprint": {"type": "string", "minLength": 1},
+    "total_token_budget": {"type": "integer", "minimum": 1},
+    "allocations": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["category", "priority", "requested_tokens", "allocated_tokens", "artifact_ids", "allocation_basis", "truncation_effect"],
+        "properties": {
+          "category": {"enum": ["primary_observation", "constitutional_conflict", "rival_mechanism", "narrative_background"]},
+          "priority": {"type": "integer", "minimum": 1, "maximum": 4},
+          "requested_tokens": {"type": "integer", "minimum": 0},
+          "allocated_tokens": {"type": "integer", "minimum": 0},
+          "artifact_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "allocation_basis": {"type": "string", "minLength": 1},
+          "truncation_effect": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "truncation_order": {"type": "array", "prefixItems": [{"const": "narrative_background"}, {"const": "rival_mechanism"}, {"const": "constitutional_conflict"}, {"const": "primary_observation"}], "minItems": 4, "maxItems": 4},
+    "primary_observation_dropped_before_background": {"const": false},
+    "equal_category_allocation_required": {"const": false},
+    "allocation_rationale": {"type": "string", "minLength": 1}
+  }
+}

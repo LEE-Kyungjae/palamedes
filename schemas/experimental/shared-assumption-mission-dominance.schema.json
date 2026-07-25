@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/shared-assumption-mission-dominance.schema.json",
+  "title": "PalamedesSharedAssumptionMissionDominance",
+  "description": "Experimental Cycle 244 contract proving mission dominance across five normalized axes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dominance_record_id",
+    "shared_assumption_set_id",
+    "comparison_evidence_id",
+    "candidates",
+    "dominance_status",
+    "dominator_candidate_id",
+    "dominated_candidate_id",
+    "dominance_rationale"
+  ],
+  "properties": {
+    "dominance_record_id": {"type": "string", "minLength": 1},
+    "shared_assumption_set_id": {"type": "string", "minLength": 1},
+    "comparison_evidence_id": {"type": "string", "minLength": 1},
+    "candidates": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "candidate_id",
+          "constitutional_fit",
+          "beneficiary_consequence",
+          "evidence_strength",
+          "reversibility",
+          "resource_efficiency"
+        ],
+        "properties": {
+          "candidate_id": {"type": "string", "minLength": 1},
+          "constitutional_fit": {"type": "number", "minimum": 0, "maximum": 1},
+          "beneficiary_consequence": {"type": "number", "minimum": 0, "maximum": 1},
+          "evidence_strength": {"type": "number", "minimum": 0, "maximum": 1},
+          "reversibility": {"type": "number", "minimum": 0, "maximum": 1},
+          "resource_efficiency": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }
+    },
+    "dominance_status": {"enum": ["dominated", "non_dominated"]},
+    "dominator_candidate_id": {"type": "string"},
+    "dominated_candidate_id": {"type": "string"},
+    "dominance_rationale": {"type": "string", "minLength": 1}
+  }
+}

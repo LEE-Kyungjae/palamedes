@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/linked-planner-interface-compilation.schema.json",
+  "title": "PalamedesLinkedPlannerInterfaceCompilation",
+  "description": "Cycle 351 planner-compatible goal and metric compilation with immutable mission lineage.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["compilation_id", "compiler_version", "compiled_at", "compilation_fingerprint", "source_mission_contract", "planner_input", "compiled_field_lineage", "loss_manifest", "compiled_input_replaces_source_contract", "compilation_rationale"],
+  "properties": {
+    "compilation_id": {"type": "string", "minLength": 1},
+    "compiler_version": {"type": "string", "minLength": 1},
+    "compiled_at": {"type": "string", "minLength": 1},
+    "compilation_fingerprint": {"type": "string", "minLength": 1},
+    "source_mission_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mission_contract_id", "mission_contract_version", "mission_contract_fingerprint", "immutable_address", "lineage_index_id", "retained_after_compilation", "mutated_by_compilation"],
+      "properties": {
+        "mission_contract_id": {"type": "string", "minLength": 1},
+        "mission_contract_version": {"type": "string", "minLength": 1},
+        "mission_contract_fingerprint": {"type": "string", "minLength": 1},
+        "immutable_address": {"type": "string", "minLength": 1},
+        "lineage_index_id": {"type": "string", "minLength": 1},
+        "retained_after_compilation": {"const": true},
+        "mutated_by_compilation": {"const": false}
+      }
+    },
+    "planner_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["goal", "success_metric", "source_mission_contract_id", "source_mission_contract_fingerprint", "authoritative_source"],
+      "properties": {
+        "goal": {"type": "string", "minLength": 1},
+        "success_metric": {"type": "string", "minLength": 1},
+        "source_mission_contract_id": {"type": "string", "minLength": 1},
+        "source_mission_contract_fingerprint": {"type": "string", "minLength": 1},
+        "authoritative_source": {"const": "source_mission_contract"}
+      }
+    },
+    "compiled_field_lineage": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["lineage_id", "compiled_field", "source_object_id", "source_field_pointer", "source_value_fingerprint", "transform_description", "reconstructable"],
+        "properties": {
+          "lineage_id": {"type": "string", "minLength": 1},
+          "compiled_field": {"enum": ["goal", "success_metric"]},
+          "source_object_id": {"type": "string", "minLength": 1},
+          "source_field_pointer": {"type": "string", "minLength": 1},
+          "source_value_fingerprint": {"type": "string", "minLength": 1},
+          "transform_description": {"type": "string", "minLength": 1},
+          "reconstructable": {"const": true}
+        }
+      }
+    },
+    "loss_manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["omitted_source_fields", "omissions_explicit", "omitted_fields_retrievable_from_source", "compilation_declared_lossless"],
+      "properties": {
+        "omitted_source_fields": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "omissions_explicit": {"const": true},
+        "omitted_fields_retrievable_from_source": {"const": true},
+        "compilation_declared_lossless": {"const": false}
+      }
+    },
+    "compiled_input_replaces_source_contract": {"const": false},
+    "compilation_rationale": {"type": "string", "minLength": 1}
+  }
+}

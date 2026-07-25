@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/company-constitution-governance.schema.json",
+  "title": "PalamedesCompanyConstitutionGovernance",
+  "description": "Experimental Cycle 189 versioned company constitution with dissent and outcome linkage.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "amendment_id",
+    "constitution_id",
+    "predecessor_version",
+    "successor_version",
+    "amendment_authority_id",
+    "independent_ratifier_id",
+    "amendment_reason",
+    "activation_at",
+    "outcome_review_at",
+    "founder_preference_is_implicit_authority",
+    "dissent_erased",
+    "dissent_records",
+    "outcome_links"
+  ],
+  "properties": {
+    "amendment_id": {"type": "string", "minLength": 1},
+    "constitution_id": {"type": "string", "minLength": 1},
+    "predecessor_version": {"type": "integer", "minimum": 1},
+    "successor_version": {"type": "integer", "minimum": 2},
+    "amendment_authority_id": {"type": "string", "minLength": 1},
+    "independent_ratifier_id": {"type": "string", "minLength": 1},
+    "amendment_reason": {"type": "string", "minLength": 1},
+    "activation_at": {"type": "string", "minLength": 1},
+    "outcome_review_at": {"type": "string", "minLength": 1},
+    "founder_preference_is_implicit_authority": {"const": false},
+    "dissent_erased": {"const": false},
+    "dissent_records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "dissent_id",
+          "represented_party",
+          "objection",
+          "evidence_id",
+          "disposition",
+          "disposition_rationale"
+        ],
+        "properties": {
+          "dissent_id": {"type": "string", "minLength": 1},
+          "represented_party": {"type": "string", "minLength": 1},
+          "objection": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "disposition": {"enum": ["accepted", "rejected", "unresolved"]},
+          "disposition_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "outcome_links": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "clause_id",
+          "predicted_outcome",
+          "observed_outcome",
+          "outcome_evidence_id",
+          "update_trigger"
+        ],
+        "properties": {
+          "clause_id": {"type": "string", "minLength": 1},
+          "predicted_outcome": {"type": "string", "minLength": 1},
+          "observed_outcome": {"type": "string", "minLength": 1},
+          "outcome_evidence_id": {"type": "string", "minLength": 1},
+          "update_trigger": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

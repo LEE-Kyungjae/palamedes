@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/six-dimension-mission-quality-report.schema.json",
+  "title": "PalamedesSixDimensionMissionQualityReport",
+  "description": "Cycle 372 six separate non-substitutable mission-quality dimensions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mission_quality_report_id", "mission_contract_id", "mission_contract_fingerprint", "condition_output_id", "condition_output_fingerprint", "evaluation_contract_id", "report_fingerprint", "dimension_assessments", "dimensions_reported_separately", "aggregate_quality_score", "high_dimension_compensates_for_missing_dimension", "quality_status", "report_rationale"],
+  "properties": {
+    "mission_quality_report_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "mission_contract_fingerprint": {"type": "string", "minLength": 1},
+    "condition_output_id": {"type": "string", "minLength": 1},
+    "condition_output_fingerprint": {"type": "string", "minLength": 1},
+    "evaluation_contract_id": {"type": "string", "minLength": 1},
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "dimension_assessments": {
+      "type": "array", "minItems": 6, "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["dimension", "score", "rubric_id", "rubric_anchor", "evidence_artifact_id", "evidence_fingerprint", "assessment_rationale", "uncertainty", "improvement_required", "typed_details"],
+        "properties": {
+          "dimension": {"enum": ["beneficiary_relevance", "causal_defensibility", "constitutional_fit", "useful_frame_originality", "feasibility", "disconfirmation"]},
+          "score": {"type": "integer", "minimum": 0, "maximum": 4},
+          "rubric_id": {"type": "string", "minLength": 1},
+          "rubric_anchor": {"type": "string", "minLength": 1},
+          "evidence_artifact_id": {"type": "string", "minLength": 1},
+          "evidence_fingerprint": {"type": "string", "minLength": 1},
+          "assessment_rationale": {"type": "string", "minLength": 1},
+          "uncertainty": {"type": "string", "minLength": 1},
+          "improvement_required": {"type": "string", "minLength": 1},
+          "typed_details": {"type": "object"}
+        }
+      }
+    },
+    "dimensions_reported_separately": {"const": true},
+    "aggregate_quality_score": {"type": ["null", "string"], "maxLength": 0},
+    "high_dimension_compensates_for_missing_dimension": {"const": false},
+    "quality_status": {"const": "complete"},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

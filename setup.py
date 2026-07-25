@@ -16,6 +16,7 @@ setup(
         "palamedes",
         "palamedes_agent",
         "palamedes_client",
+        "palamedes_mission",
         "palamedes_server",
         "palamedes_store",
     ],

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/cognitive-budget-allocation.schema.json",
+  "title": "PalamedesCognitiveBudgetAllocation",
+  "description": "Experimental Cycle 267 finite cognitive budget allocation by uncertainty, consequence, irreversibility, opportunity expiry, and expected information gain.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "budget_allocation_id",
+    "frontier_id",
+    "budget_unit",
+    "total_budget",
+    "unweighted_equal_allocation",
+    "factor_weights",
+    "cognitive_candidates",
+    "allocation_rationale"
+  ],
+  "properties": {
+    "budget_allocation_id": {"type": "string", "minLength": 1},
+    "frontier_id": {"type": "string", "minLength": 1},
+    "budget_unit": {"type": "string", "minLength": 1},
+    "total_budget": {"type": "number", "exclusiveMinimum": 0},
+    "unweighted_equal_allocation": {"const": false},
+    "factor_weights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "uncertainty",
+        "consequence",
+        "irreversibility",
+        "opportunity_expiry",
+        "expected_information_gain"
+      ],
+      "properties": {
+        "uncertainty": {"type": "number", "minimum": 0, "maximum": 1},
+        "consequence": {"type": "number", "minimum": 0, "maximum": 1},
+        "irreversibility": {"type": "number", "minimum": 0, "maximum": 1},
+        "opportunity_expiry": {"type": "number", "minimum": 0, "maximum": 1},
+        "expected_information_gain": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "cognitive_candidates": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "candidate_id",
+          "operation",
+          "factor_scores",
+          "computed_priority",
+          "allocated_budget"
+        ],
+        "properties": {
+          "candidate_id": {"type": "string", "minLength": 1},
+          "operation": {"type": "string", "minLength": 1},
+          "factor_scores": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "uncertainty",
+              "consequence",
+              "irreversibility",
+              "opportunity_expiry",
+              "expected_information_gain"
+            ],
+            "properties": {
+              "uncertainty": {"type": "number", "minimum": 0, "maximum": 1},
+              "consequence": {"type": "number", "minimum": 0, "maximum": 1},
+              "irreversibility": {"type": "number", "minimum": 0, "maximum": 1},
+              "opportunity_expiry": {"type": "number", "minimum": 0, "maximum": 1},
+              "expected_information_gain": {"type": "number", "minimum": 0, "maximum": 1}
+            }
+          },
+          "computed_priority": {"type": "number", "minimum": 0, "maximum": 1},
+          "allocated_budget": {"type": "number", "minimum": 0}
+        }
+      }
+    },
+    "allocation_rationale": {"type": "string", "minLength": 1}
+  }
+}

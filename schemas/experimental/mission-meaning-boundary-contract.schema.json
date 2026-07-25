@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/mission-meaning-boundary-contract.schema.json",
+  "title": "PalamedesMissionMeaningBoundaryContract",
+  "description": "Experimental Cycle 171 mission meaning and boundary contract without execution shape.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_id",
+    "mission_id",
+    "contract_version",
+    "situation",
+    "mission_meaning",
+    "beneficiary_condition",
+    "desired_condition",
+    "planner_owns_strategy",
+    "execution_shape_locked",
+    "scope_boundaries",
+    "planner_freedoms",
+    "detailed_tasks",
+    "prescribed_tools",
+    "implementation_sequence"
+  ],
+  "properties": {
+    "contract_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "contract_version": {"type": "string", "minLength": 1},
+    "situation": {"type": "string", "minLength": 1},
+    "mission_meaning": {"type": "string", "minLength": 1},
+    "beneficiary_condition": {"type": "string", "minLength": 1},
+    "desired_condition": {"type": "string", "minLength": 1},
+    "planner_owns_strategy": {"const": true},
+    "execution_shape_locked": {"const": false},
+    "scope_boundaries": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["boundary_id", "description", "rationale", "return_trigger"],
+        "properties": {
+          "boundary_id": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "rationale": {"type": "string", "minLength": 1},
+          "return_trigger": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "planner_freedoms": {
+      "type": "array",
+      "minItems": 2,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "detailed_tasks": {"type": "array", "maxItems": 0},
+    "prescribed_tools": {"type": "array", "maxItems": 0},
+    "implementation_sequence": {"type": "array", "maxItems": 0}
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/mission-tournament-selection-record.schema.json",
+  "title": "PalamedesMissionTournamentSelectionRecord",
+  "description": "Experimental Cycle 249 complete record of a mission tournament selection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selection_record_id",
+    "tournament_id",
+    "selection_outcome",
+    "winner_id",
+    "winner_rationale",
+    "preserved_alternatives",
+    "decisive_assumptions",
+    "constitutional_review_id",
+    "constitutional_conflicts",
+    "budget_unit",
+    "budget",
+    "reversal_triggers",
+    "review_authority_id"
+  ],
+  "properties": {
+    "selection_record_id": {"type": "string", "minLength": 1},
+    "tournament_id": {"type": "string", "minLength": 1},
+    "selection_outcome": {"enum": ["commitment", "bounded_exploration", "discriminating_probe"]},
+    "winner_id": {"type": "string", "minLength": 1},
+    "winner_rationale": {"type": "string", "minLength": 1},
+    "preserved_alternatives": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["alternative_id", "preservation_action", "preserved_evidence_id"],
+        "properties": {
+          "alternative_id": {"type": "string", "minLength": 1},
+          "preservation_action": {"type": "string", "minLength": 1},
+          "preserved_evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "decisive_assumptions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["assumption_id", "claim", "evidence_id", "selection_consequence"],
+        "properties": {
+          "assumption_id": {"type": "string", "minLength": 1},
+          "claim": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "selection_consequence": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "constitutional_review_id": {"type": "string", "minLength": 1},
+    "constitutional_conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["conflict_id", "clause_id", "disposition", "authority_id", "evidence_id", "status"],
+        "properties": {
+          "conflict_id": {"type": "string", "minLength": 1},
+          "clause_id": {"type": "string", "minLength": 1},
+          "disposition": {"type": "string", "minLength": 1},
+          "authority_id": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "status": {"enum": ["resolved", "bounded_exception"]}
+        }
+      }
+    },
+    "budget_unit": {"type": "string", "minLength": 1},
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "winner_allocation", "preservation_allocation", "probe_allocation"],
+      "properties": {
+        "total": {"type": "number", "exclusiveMinimum": 0},
+        "winner_allocation": {"type": "number", "minimum": 0},
+        "preservation_allocation": {"type": "number", "minimum": 0},
+        "probe_allocation": {"type": "number", "minimum": 0}
+      }
+    },
+    "reversal_triggers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["trigger_id", "signal", "threshold", "switch_to_alternative_id", "action"],
+        "properties": {
+          "trigger_id": {"type": "string", "minLength": 1},
+          "signal": {"type": "string", "minLength": 1},
+          "threshold": {"type": "string", "minLength": 1},
+          "switch_to_alternative_id": {"type": "string", "minLength": 1},
+          "action": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "review_authority_id": {"type": "string", "minLength": 1}
+  }
+}

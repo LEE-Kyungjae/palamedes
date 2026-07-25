@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/reconstructable-external-action-kill-switch.schema.json",
+  "title": "PalamedesReconstructableExternalActionKillSwitch",
+  "description": "Cycle 389 externally authorized effect stop with retained state.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kill_switch_report_id", "activation_input", "activation_record", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "kill_switch_report_id": {"type": "string", "minLength": 1},
+    "activation_input": {"type": "object"},
+    "activation_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kill_switch_record_version", "kill_switch_activation_id", "kill_switch_policy_id", "trigger_id", "trigger_evidence_artifact_id", "activated_at", "authorizing_principals", "action_records", "stopped_external_action_ids", "retained_completed_action_ids", "continuing_internal_observation_ids", "retained_state_artifacts", "external_action_dispatch_enabled", "state_deleted", "palamedes_can_self_reenable", "reenable_requires_external_authority"],
+      "properties": {
+        "kill_switch_record_version": {"const": "external-action-kill-switch/1"},
+        "kill_switch_activation_id": {"type": "string", "minLength": 1},
+        "kill_switch_policy_id": {"type": "string", "minLength": 1},
+        "trigger_id": {"type": "string", "minLength": 1},
+        "trigger_evidence_artifact_id": {"type": "string", "minLength": 1},
+        "activated_at": {"type": "string", "minLength": 1},
+        "authorizing_principals": {"type": "array", "minItems": 1, "items": {"enum": ["human_operator", "independent_governance", "palamedes"]}},
+        "action_records": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["action_id", "scope", "prior_status", "resulting_status", "action_fingerprint", "record_retained"],
+            "properties": {
+              "action_id": {"type": "string", "minLength": 1},
+              "scope": {"enum": ["external_effect", "internal_observation"]},
+              "prior_status": {"enum": ["queued", "running", "completed"]},
+              "resulting_status": {"enum": ["cancelled_by_kill_switch", "stopped_by_kill_switch", "completed_immutable", "queued", "running", "completed"]},
+              "action_fingerprint": {"type": "string", "minLength": 1},
+              "record_retained": {"const": true}
+            }
+          }
+        },
+        "stopped_external_action_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "retained_completed_action_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "continuing_internal_observation_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "retained_state_artifacts": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["artifact_id", "artifact_fingerprint", "artifact_role", "retained_for_reconstruction"],
+            "properties": {
+              "artifact_id": {"type": "string", "minLength": 1},
+              "artifact_fingerprint": {"type": "string", "minLength": 1},
+              "artifact_role": {"type": "string", "minLength": 1},
+              "retained_for_reconstruction": {"const": true}
+            }
+          }
+        },
+        "external_action_dispatch_enabled": {"const": false},
+        "state_deleted": {"const": false},
+        "palamedes_can_self_reenable": {"const": false},
+        "reenable_requires_external_authority": {"const": true}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

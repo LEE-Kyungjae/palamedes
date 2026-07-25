@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/early-causal-signal.schema.json",
+  "title": "PalamedesEarlyCausalSignal",
+  "description": "Experimental Cycle 134 contract requiring an early diagnostic signal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "signal_id",
+    "candidate_id",
+    "causal_thesis",
+    "signal",
+    "observation_window",
+    "measurement",
+    "expected_if_true",
+    "expected_if_false",
+    "why_unlikely_if_false",
+    "decision_threshold",
+    "action_if_absent",
+    "baseline_source_id",
+    "signal_is_output_proxy",
+    "absence_can_be_explained_away"
+  ],
+  "properties": {
+    "signal_id": {"type": "string", "minLength": 1},
+    "candidate_id": {"type": "string", "minLength": 1},
+    "causal_thesis": {"type": "string", "minLength": 1},
+    "signal": {"type": "string", "minLength": 1},
+    "observation_window": {"type": "string", "minLength": 1},
+    "measurement": {"type": "string", "minLength": 1},
+    "expected_if_true": {"type": "string", "minLength": 1},
+    "expected_if_false": {"type": "string", "minLength": 1},
+    "why_unlikely_if_false": {"type": "string", "minLength": 1},
+    "decision_threshold": {"type": "string", "minLength": 1},
+    "action_if_absent": {"type": "string", "minLength": 1},
+    "baseline_source_id": {"type": "string", "minLength": 1},
+    "signal_is_output_proxy": {"const": false},
+    "absence_can_be_explained_away": {"const": false}
+  }
+}

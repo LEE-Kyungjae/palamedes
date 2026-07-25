@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/beneficiary-external-condition-contract.schema.json",
+  "title": "PalamedesBeneficiaryExternalConditionContract",
+  "description": "Experimental Cycle 253 planner contract anchoring success in a represented beneficiary's observable external condition.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "condition_contract_id",
+    "planner_contract_id",
+    "situation_evidence_id",
+    "meaning_evidence_id",
+    "beneficiary",
+    "desired_condition",
+    "technical_outputs",
+    "success_requires_observed_beneficiary_change",
+    "success_rationale"
+  ],
+  "properties": {
+    "condition_contract_id": {"type": "string", "minLength": 1},
+    "planner_contract_id": {"type": "string", "minLength": 1},
+    "situation_evidence_id": {"type": "string", "minLength": 1},
+    "meaning_evidence_id": {"type": "string", "minLength": 1},
+    "beneficiary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "beneficiary_id",
+        "population",
+        "current_condition",
+        "representation_evidence_id",
+        "recourse_channel",
+        "directly_affected",
+        "internal_delivery_team"
+      ],
+      "properties": {
+        "beneficiary_id": {"type": "string", "minLength": 1},
+        "population": {"type": "string", "minLength": 1},
+        "current_condition": {"type": "string", "minLength": 1},
+        "representation_evidence_id": {"type": "string", "minLength": 1},
+        "recourse_channel": {"type": "string", "minLength": 1},
+        "directly_affected": {"const": true},
+        "internal_delivery_team": {"const": false}
+      }
+    },
+    "desired_condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "external_condition",
+        "observable_difference",
+        "observation_window",
+        "beneficiary_verification_method",
+        "evidence_source_id",
+        "implementation_form_locked",
+        "technical_output_counts_as_success"
+      ],
+      "properties": {
+        "external_condition": {"type": "string", "minLength": 1},
+        "observable_difference": {"type": "string", "minLength": 1},
+        "observation_window": {"type": "string", "minLength": 1},
+        "beneficiary_verification_method": {"type": "string", "minLength": 1},
+        "evidence_source_id": {"type": "string", "minLength": 1},
+        "implementation_form_locked": {"const": false},
+        "technical_output_counts_as_success": {"const": false}
+      }
+    },
+    "technical_outputs": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "success_requires_observed_beneficiary_change": {"const": true},
+    "success_rationale": {"type": "string", "minLength": 1}
+  }
+}

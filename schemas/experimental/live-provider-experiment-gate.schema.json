@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/live-provider-experiment-gate.schema.json",
+  "title": "PalamedesLiveProviderExperimentGate",
+  "description": "Cycle 398 deterministic-replay gate for bounded provider experiments.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["provider_report_id", "experiment_input", "experiment_record", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "provider_report_id": {"type": "string", "minLength": 1},
+    "experiment_input": {"type": "object"},
+    "experiment_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider_experiment_record_version", "provider_experiment_id", "experiment_protocol_id", "deterministic_fixture_set_fingerprint", "shared_context_manifest_fingerprint", "shared_evaluation_rubric_fingerprint", "deterministic_replay_gate", "provider_arms", "provider_arm_count", "provider_plurality_experiment", "live_experiment_authorized", "provider_plurality_architectural_requirement", "provider_output_can_bypass_validators", "provider_output_can_select_mission"],
+      "properties": {
+        "provider_experiment_record_version": {"const": "live-provider-experiment-gate/1"},
+        "provider_experiment_id": {"type": "string", "minLength": 1},
+        "experiment_protocol_id": {"type": "string", "minLength": 1},
+        "deterministic_fixture_set_fingerprint": {"type": "string", "minLength": 1},
+        "shared_context_manifest_fingerprint": {"type": "string", "minLength": 1},
+        "shared_evaluation_rubric_fingerprint": {"type": "string", "minLength": 1},
+        "deterministic_replay_gate": {"type": "object"},
+        "provider_arms": {"type": "array", "minItems": 1},
+        "provider_arm_count": {"type": "integer", "minimum": 1},
+        "provider_plurality_experiment": {"type": "boolean"},
+        "live_experiment_authorized": {"const": true},
+        "provider_plurality_architectural_requirement": {"const": false},
+        "provider_output_can_bypass_validators": {"const": false},
+        "provider_output_can_select_mission": {"const": false}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

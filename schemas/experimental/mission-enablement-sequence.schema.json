@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/mission-enablement-sequence.schema.json",
+  "title": "PalamedesMissionEnablementSequence",
+  "description": "Experimental Cycle 137 contract for directional mission enablement.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["sequence_id", "portfolio_id", "sequence_rationale", "mission_ids", "enablement_edges"],
+  "properties": {
+    "sequence_id": {"type": "string", "minLength": 1},
+    "portfolio_id": {"type": "string", "minLength": 1},
+    "sequence_rationale": {"type": "string", "minLength": 1},
+    "mission_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "enablement_edges": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from_mission_id",
+          "to_mission_id",
+          "enabled_capability_or_option",
+          "counterfactual_without_predecessor",
+          "evidence_id"
+        ],
+        "properties": {
+          "from_mission_id": {"type": "string", "minLength": 1},
+          "to_mission_id": {"type": "string", "minLength": 1},
+          "enabled_capability_or_option": {"type": "string", "minLength": 1},
+          "counterfactual_without_predecessor": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

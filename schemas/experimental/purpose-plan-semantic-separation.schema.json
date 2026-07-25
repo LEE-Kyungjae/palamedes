@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/purpose-plan-semantic-separation.schema.json",
+  "title": "PalamedesPurposePlanSemanticSeparation",
+  "description": "Experimental Cycle 301 separation of observation, interpretation, mission, and execution plan state.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["separation_manifest_id", "existing_plan_schema_version", "state_domains", "cross_domain_links", "purpose_state_embedded_in_plan", "plan_object_role", "separation_rationale"],
+  "properties": {
+    "separation_manifest_id": {"type": "string", "minLength": 1},
+    "existing_plan_schema_version": {"type": "string", "minLength": 1},
+    "state_domains": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["domain", "semantic_role", "storage_namespace", "schema_id", "uses_existing_plan_object", "transition_authority_id"],
+        "properties": {
+          "domain": {"enum": ["observation", "interpretation", "mission", "execution_plan"]},
+          "semantic_role": {"enum": ["signal", "meaning", "purpose", "execution"]},
+          "storage_namespace": {"type": "string", "minLength": 1},
+          "schema_id": {"type": "string", "minLength": 1},
+          "uses_existing_plan_object": {"type": "boolean"},
+          "transition_authority_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "cross_domain_links": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["from_domain", "to_domain", "reference_field", "link_mode", "payload_embedded"],
+        "properties": {
+          "from_domain": {"enum": ["observation", "interpretation", "mission", "execution_plan"]},
+          "to_domain": {"enum": ["observation", "interpretation", "mission", "execution_plan"]},
+          "reference_field": {"type": "string", "minLength": 1},
+          "link_mode": {"const": "identifier_only"},
+          "payload_embedded": {"const": false}
+        }
+      }
+    },
+    "purpose_state_embedded_in_plan": {"const": false},
+    "plan_object_role": {"const": "execution_coordination_only"},
+    "separation_rationale": {"type": "string", "minLength": 1}
+  }
+}

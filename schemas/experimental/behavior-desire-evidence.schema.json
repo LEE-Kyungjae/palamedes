@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/behavior-desire-evidence.schema.json",
+  "title": "PalamedesBehaviorDesireEvidence",
+  "description": "Experimental Cycle 112 contract preventing behavior from becoming proof of authentic desire.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "observation_id",
+    "group_id",
+    "observed_behavior",
+    "context",
+    "source_ids",
+    "behavior_equals_authentic_desire",
+    "confounds",
+    "counterfactual_observation"
+  ],
+  "properties": {
+    "observation_id": {"type": "string", "minLength": 1},
+    "group_id": {"type": "string", "minLength": 1},
+    "observed_behavior": {"type": "string", "minLength": 1},
+    "context": {"type": "string", "minLength": 1},
+    "source_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "behavior_equals_authentic_desire": {"const": false},
+    "confounds": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "possibility", "check"],
+        "properties": {
+          "kind": {
+            "enum": ["constraint", "habit", "manipulation", "missing_alternative"]
+          },
+          "possibility": {"type": "string", "minLength": 1},
+          "check": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "counterfactual_observation": {"type": "string", "minLength": 1}
+  }
+}

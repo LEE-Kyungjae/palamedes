@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/lineage-opposition-mission-generation.schema.json",
+  "title": "PalamedesLineageOppositionMissionGeneration",
+  "description": "Experimental Cycle 233 contract generating missions by lineage transfer and framing opposition.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "generation_record_id",
+    "mission_generation_id",
+    "dominant_framing",
+    "lineage_transfer_candidate",
+    "opposition_candidate",
+    "comparison_question"
+  ],
+  "properties": {
+    "generation_record_id": {"type": "string", "minLength": 1},
+    "mission_generation_id": {"type": "string", "minLength": 1},
+    "dominant_framing": {"type": "string", "minLength": 1},
+    "lineage_transfer_candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_id",
+        "source_lineage_id",
+        "source_condition",
+        "source_mechanism",
+        "target_analogous_condition",
+        "material_difference",
+        "transferred_mission_hypothesis",
+        "source_outcome_is_target_forecast",
+        "local_probe"
+      ],
+      "properties": {
+        "candidate_id": {"type": "string", "minLength": 1},
+        "source_lineage_id": {"type": "string", "minLength": 1},
+        "source_condition": {"type": "string", "minLength": 1},
+        "source_mechanism": {"type": "string", "minLength": 1},
+        "target_analogous_condition": {"type": "string", "minLength": 1},
+        "material_difference": {"type": "string", "minLength": 1},
+        "transferred_mission_hypothesis": {"type": "string", "minLength": 1},
+        "source_outcome_is_target_forecast": {"const": false},
+        "local_probe": {"type": "string", "minLength": 1}
+      }
+    },
+    "opposition_candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_id",
+        "dominant_assumption",
+        "hidden_beneficiary_or_condition",
+        "why_framing_hides_it",
+        "opposed_mission_hypothesis",
+        "supporting_evidence_id",
+        "frame_failure_signal",
+        "merely_negates_dominant_mission"
+      ],
+      "properties": {
+        "candidate_id": {"type": "string", "minLength": 1},
+        "dominant_assumption": {"type": "string", "minLength": 1},
+        "hidden_beneficiary_or_condition": {"type": "string", "minLength": 1},
+        "why_framing_hides_it": {"type": "string", "minLength": 1},
+        "opposed_mission_hypothesis": {"type": "string", "minLength": 1},
+        "supporting_evidence_id": {"type": "string", "minLength": 1},
+        "frame_failure_signal": {"type": "string", "minLength": 1},
+        "merely_negates_dominant_mission": {"const": false}
+      }
+    },
+    "comparison_question": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/deterministic-model-tournament-implementation.schema.json",
+  "title": "PalamedesDeterministicModelTournamentImplementation",
+  "description": "Cycle 350 deterministic tournament gates surrounding model criticism and selection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tournament_implementation_id", "candidate_set_fingerprint", "constitution_fingerprint", "implementation_fingerprint", "component_evidence", "stage_boundaries", "selection_frontier", "tournament_invariants", "tournament_status", "implementation_rationale"],
+  "properties": {
+    "tournament_implementation_id": {"type": "string", "minLength": 1},
+    "candidate_set_fingerprint": {"type": "string", "minLength": 1},
+    "constitution_fingerprint": {"type": "string", "minLength": 1},
+    "implementation_fingerprint": {"type": "string", "minLength": 1},
+    "component_evidence": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["component", "validator_id", "evidence_artifact_id", "evidence_fingerprint", "verification_record_id", "verified"],
+        "properties": {
+          "component": {"enum": ["decision_structure", "constitutional_gate", "completeness_gate", "assumption_frontier", "adversarial_sensitivity", "probe_branches", "no_safe_probe", "exploration_allocation", "atomic_issue"]},
+          "validator_id": {"type": "string", "minLength": 1},
+          "evidence_artifact_id": {"type": "string", "minLength": 1},
+          "evidence_fingerprint": {"type": "string", "minLength": 1},
+          "verification_record_id": {"type": "string", "minLength": 1},
+          "verified": {"const": true}
+        }
+      }
+    },
+    "stage_boundaries": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["stage", "owner", "input_artifact_id", "output_artifact_id", "boundary_rule", "may_bypass_prior_gate"],
+        "properties": {
+          "stage": {"enum": ["structural_completeness", "constitutional_eligibility", "shared_assumption_dominance", "adversarial_criticism", "semantic_selection", "selection_constraint_check", "atomic_authority_reversal_issue"]},
+          "owner": {"enum": ["deterministic", "model"]},
+          "input_artifact_id": {"type": "string", "minLength": 1},
+          "output_artifact_id": {"type": "string", "minLength": 1},
+          "boundary_rule": {"type": "string", "minLength": 1},
+          "may_bypass_prior_gate": {"const": false}
+        }
+      }
+    },
+    "selection_frontier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["frontier_record_id", "frontier_fingerprint", "eligible_non_dominated_candidate_ids", "selected_candidate_id", "selected_candidate_fingerprint", "selection_rationale", "unresolved_tradeoffs"],
+      "properties": {
+        "frontier_record_id": {"type": "string", "minLength": 1},
+        "frontier_fingerprint": {"type": "string", "minLength": 1},
+        "eligible_non_dominated_candidate_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "selected_candidate_id": {"type": "string", "minLength": 1},
+        "selected_candidate_fingerprint": {"type": "string", "minLength": 1},
+        "selection_rationale": {"type": "string", "minLength": 1},
+        "unresolved_tradeoffs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["tradeoff_id", "value_a", "value_b", "tension", "evidence_fingerprint", "selection_effect", "revisit_trigger", "resolved_by_aggregation"],
+            "properties": {
+              "tradeoff_id": {"type": "string", "minLength": 1},
+              "value_a": {"type": "string", "minLength": 1},
+              "value_b": {"type": "string", "minLength": 1},
+              "tension": {"type": "string", "minLength": 1},
+              "evidence_fingerprint": {"type": "string", "minLength": 1},
+              "selection_effect": {"type": "string", "minLength": 1},
+              "revisit_trigger": {"type": "string", "minLength": 1},
+              "resolved_by_aggregation": {"const": false}
+            }
+          }
+        }
+      }
+    },
+    "tournament_invariants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["incomplete_candidates_excluded_before_model", "constitution_violators_excluded_before_model", "dominance_computed_only_on_shared_assumptions", "model_criticism_receives_only_frontier", "model_selection_checked_against_frontier", "unresolved_tradeoffs_preserved", "authority_and_reversal_issued_atomically", "model_may_restore_disqualified_candidate", "model_may_invent_eligibility", "deterministic_code_semantically_scores_candidates", "scalar_aggregation_used", "unresolved_tradeoffs_erased"],
+      "properties": {
+        "incomplete_candidates_excluded_before_model": {"const": true},
+        "constitution_violators_excluded_before_model": {"const": true},
+        "dominance_computed_only_on_shared_assumptions": {"const": true},
+        "model_criticism_receives_only_frontier": {"const": true},
+        "model_selection_checked_against_frontier": {"const": true},
+        "unresolved_tradeoffs_preserved": {"const": true},
+        "authority_and_reversal_issued_atomically": {"const": true},
+        "model_may_restore_disqualified_candidate": {"const": false},
+        "model_may_invent_eligibility": {"const": false},
+        "deterministic_code_semantically_scores_candidates": {"const": false},
+        "scalar_aggregation_used": {"const": false},
+        "unresolved_tradeoffs_erased": {"const": false}
+      }
+    },
+    "tournament_status": {"const": "integrated"},
+    "implementation_rationale": {"type": "string", "minLength": 1}
+  }
+}

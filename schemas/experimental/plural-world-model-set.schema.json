@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/plural-world-model-set.schema.json",
+  "title": "PalamedesPluralWorldModelSet",
+  "description": "Experimental Cycle 221 contract preserving explicit plurality around a signal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "world_model_set_id",
+    "signal_claim_id",
+    "affected_condition",
+    "monolithic_model_is_authoritative",
+    "models",
+    "unresolved_disagreements",
+    "model_comparison_question",
+    "next_discriminating_observation",
+    "status"
+  ],
+  "properties": {
+    "world_model_set_id": {"type": "string", "minLength": 1},
+    "signal_claim_id": {"type": "string", "minLength": 1},
+    "affected_condition": {"type": "string", "minLength": 1},
+    "monolithic_model_is_authoritative": {"const": false},
+    "models": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "model_id",
+          "causal_claim",
+          "supporting_evidence_ids",
+          "opposing_evidence_ids",
+          "prediction",
+          "mission_implication",
+          "uncertainty",
+          "uncertainty_rationale"
+        ],
+        "properties": {
+          "model_id": {"type": "string", "minLength": 1},
+          "causal_claim": {"type": "string", "minLength": 1},
+          "supporting_evidence_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "opposing_evidence_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "prediction": {"type": "string", "minLength": 1},
+          "mission_implication": {"type": "string", "minLength": 1},
+          "uncertainty": {"type": "number", "minimum": 0, "maximum": 1},
+          "uncertainty_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "unresolved_disagreements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "model_comparison_question": {"type": "string", "minLength": 1},
+    "next_discriminating_observation": {"type": "string", "minLength": 1},
+    "status": {"const": "plural_unresolved"}
+  }
+}

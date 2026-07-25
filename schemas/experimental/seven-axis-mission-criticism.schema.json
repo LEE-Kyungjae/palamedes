@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/seven-axis-mission-criticism.schema.json",
+  "title": "PalamedesSevenAxisMissionCriticism",
+  "description": "Experimental Cycle 242 contract separating criticism across seven mission axes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "criticism_packet_id",
+    "tournament_id",
+    "candidate_id",
+    "sealed_commitment_id",
+    "single_aggregated_criticism",
+    "criticisms",
+    "cross_axis_review_protocol"
+  ],
+  "properties": {
+    "criticism_packet_id": {"type": "string", "minLength": 1},
+    "tournament_id": {"type": "string", "minLength": 1},
+    "candidate_id": {"type": "string", "minLength": 1},
+    "sealed_commitment_id": {"type": "string", "minLength": 1},
+    "single_aggregated_criticism": {"const": false},
+    "criticisms": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "axis",
+          "critic_id",
+          "target_claim",
+          "criticism",
+          "evidence_id",
+          "verdict",
+          "required_response"
+        ],
+        "properties": {
+          "axis": {
+            "enum": [
+              "causal_thesis",
+              "beneficiary_representation",
+              "constitutional_fit",
+              "authority",
+              "resource_renewal",
+              "externalities",
+              "replaceability"
+            ]
+          },
+          "critic_id": {"type": "string", "minLength": 1},
+          "target_claim": {"type": "string", "minLength": 1},
+          "criticism": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "verdict": {"enum": ["pass", "concern", "disqualify"]},
+          "required_response": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "cross_axis_review_protocol": {"type": "string", "minLength": 1}
+  }
+}

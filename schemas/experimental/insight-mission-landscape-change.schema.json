@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/insight-mission-landscape-change.schema.json",
+  "title": "PalamedesInsightMissionLandscapeChange",
+  "description": "Experimental Cycle 195 mission-landscape consequence required for insight.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "insight_id",
+    "insight_claim",
+    "insight_evidence_id",
+    "prior_landscape_fingerprint",
+    "resulting_landscape_fingerprint",
+    "interesting_without_landscape_change_is_insight",
+    "landscape_operations",
+    "landscape_change_summary"
+  ],
+  "properties": {
+    "insight_id": {"type": "string", "minLength": 1},
+    "insight_claim": {"type": "string", "minLength": 1},
+    "insight_evidence_id": {"type": "string", "minLength": 1},
+    "prior_landscape_fingerprint": {"type": "string", "minLength": 1},
+    "resulting_landscape_fingerprint": {"type": "string", "minLength": 1},
+    "interesting_without_landscape_change_is_insight": {"const": false},
+    "landscape_operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation_id",
+          "kind",
+          "affected_mission_ids",
+          "before_state",
+          "after_state",
+          "reason",
+          "evidence_id",
+          "removed_lineage_preserved"
+        ],
+        "properties": {
+          "operation_id": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["create", "remove", "sequence", "reprioritize"]},
+          "affected_mission_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "before_state": {"type": "string", "minLength": 1},
+          "after_state": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "removed_lineage_preserved": {"type": "boolean"}
+        }
+      }
+    },
+    "landscape_change_summary": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/minority-exploration-expiry.schema.json",
+  "title": "PalamedesMinorityExplorationExpiry",
+  "description": "Experimental Cycle 187 expiry and evidence thresholds for protected minority exploration.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "allocation_id",
+    "mission_id",
+    "starts_at",
+    "expires_at",
+    "protected_budget",
+    "maximum_cost",
+    "permanent_protection",
+    "automatic_renewal",
+    "reviewed_at",
+    "status",
+    "evidence_thresholds",
+    "decision",
+    "decision_rationale",
+    "independent_review_id",
+    "renewed_expires_at"
+  ],
+  "properties": {
+    "allocation_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "starts_at": {"type": "string", "minLength": 1},
+    "expires_at": {"type": "string", "minLength": 1},
+    "protected_budget": {"type": "string", "minLength": 1},
+    "maximum_cost": {"type": "number", "exclusiveMinimum": 0},
+    "permanent_protection": {"const": false},
+    "automatic_renewal": {"const": false},
+    "reviewed_at": {"type": "string", "minLength": 1},
+    "status": {"enum": ["active", "expired"]},
+    "evidence_thresholds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["threshold_id", "criterion", "observed_result", "evidence_id", "met"],
+        "properties": {
+          "threshold_id": {"type": "string", "minLength": 1},
+          "criterion": {"type": "string", "minLength": 1},
+          "observed_result": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "met": {"type": "boolean"}
+        }
+      }
+    },
+    "decision": {"enum": ["continue_until_expiry", "stop", "graduate", "renew_bounded"]},
+    "decision_rationale": {"type": "string", "minLength": 1},
+    "independent_review_id": {"type": "string"},
+    "renewed_expires_at": {"type": "string"}
+  }
+}

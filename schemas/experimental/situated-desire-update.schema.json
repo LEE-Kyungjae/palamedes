@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/situated-desire-update.schema.json",
+  "title": "PalamedesSituatedDesireUpdate",
+  "description": "Experimental Cycle 119 contract updating a generative desire hypothesis from situated response.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "update_id",
+    "possibility_id",
+    "exposure_id",
+    "prior_hypothesis",
+    "revised_hypothesis",
+    "update_rationale",
+    "remaining_uncertainty",
+    "operation",
+    "prior_confidence",
+    "revised_confidence",
+    "situated_responses"
+  ],
+  "properties": {
+    "update_id": {"type": "string", "minLength": 1},
+    "possibility_id": {"type": "string", "minLength": 1},
+    "exposure_id": {"type": "string", "minLength": 1},
+    "prior_hypothesis": {"type": "string", "minLength": 1},
+    "revised_hypothesis": {"type": "string", "minLength": 1},
+    "update_rationale": {"type": "string", "minLength": 1},
+    "remaining_uncertainty": {"type": "string", "minLength": 1},
+    "operation": {"enum": ["strengthen", "weaken", "revise", "retire"]},
+    "prior_confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+    "revised_confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+    "situated_responses": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "response_id",
+          "direction",
+          "demonstrated_comprehension",
+          "context",
+          "response",
+          "source_id"
+        ],
+        "properties": {
+          "response_id": {"type": "string", "minLength": 1},
+          "direction": {"enum": ["supports", "challenges", "uncertain"]},
+          "demonstrated_comprehension": {"const": true},
+          "context": {"type": "string", "minLength": 1},
+          "response": {"type": "string", "minLength": 1},
+          "source_id": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

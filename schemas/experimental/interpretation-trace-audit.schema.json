@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/interpretation-trace-audit.schema.json",
+  "title": "PalamedesInterpretationTraceAudit",
+  "description": "Experimental Cycle 219 audit for convenient interpretation and systematic blind spots.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trace_audit_id",
+    "constitution_version_id",
+    "independent_reviewer_id",
+    "audit_window",
+    "interpretation_trace_is_alignment_proof",
+    "interpretation_trace_ids",
+    "outcome_evidence_ids",
+    "findings",
+    "audit_conclusion",
+    "correction_trigger"
+  ],
+  "properties": {
+    "trace_audit_id": {"type": "string", "minLength": 1},
+    "constitution_version_id": {"type": "string", "minLength": 1},
+    "independent_reviewer_id": {"type": "string", "minLength": 1},
+    "audit_window": {"type": "string", "minLength": 1},
+    "interpretation_trace_is_alignment_proof": {"const": false},
+    "interpretation_trace_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "outcome_evidence_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "findings": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "finding_id",
+          "finding_type",
+          "supporting_trace_ids",
+          "observed_pattern",
+          "counterevidence",
+          "required_correction"
+        ],
+        "properties": {
+          "finding_id": {"type": "string", "minLength": 1},
+          "finding_type": {"enum": ["convenient_interpretation", "systematic_blind_spot"]},
+          "supporting_trace_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "observed_pattern": {"type": "string", "minLength": 1},
+          "counterevidence": {"type": "string", "minLength": 1},
+          "required_correction": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "audit_conclusion": {
+      "enum": ["no_alignment_claim", "correction_required", "further_evidence_required"]
+    },
+    "correction_trigger": {"type": "string", "minLength": 1}
+  }
+}

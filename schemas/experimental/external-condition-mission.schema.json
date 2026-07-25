@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/external-condition-mission.schema.json",
+  "title": "PalamedesExternalConditionMission",
+  "description": "Experimental Cycle 236 contract requiring missions to describe observable external condition change.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mission_candidate_id",
+    "mission_statement",
+    "mission_object_type",
+    "external_beneficiary",
+    "beneficiary_is_internal_system",
+    "current_external_condition",
+    "target_external_condition",
+    "observable_measure",
+    "baseline",
+    "target",
+    "evaluation_horizon",
+    "failure_condition",
+    "internal_activity_is_mission",
+    "supporting_activity_ids"
+  ],
+  "properties": {
+    "mission_candidate_id": {"type": "string", "minLength": 1},
+    "mission_statement": {"type": "string", "minLength": 1},
+    "mission_object_type": {"const": "external_condition_change"},
+    "external_beneficiary": {"type": "string", "minLength": 1},
+    "beneficiary_is_internal_system": {"const": false},
+    "current_external_condition": {"type": "string", "minLength": 1},
+    "target_external_condition": {"type": "string", "minLength": 1},
+    "observable_measure": {"type": "string", "minLength": 1},
+    "baseline": {"type": "string", "minLength": 1},
+    "target": {"type": "string", "minLength": 1},
+    "evaluation_horizon": {"type": "string", "minLength": 1},
+    "failure_condition": {"type": "string", "minLength": 1},
+    "internal_activity_is_mission": {"const": false},
+    "supporting_activity_ids": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

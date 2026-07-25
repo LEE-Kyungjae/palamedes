@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/single-serial-purpose-runtime-cycle.schema.json",
+  "title": "PalamedesSingleSerialPurposeRuntimeCycle",
+  "description": "Experimental Cycle 298 one-at-a-time wake, probe, handoff, and outcome runtime.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["runtime_cycle_id", "runtime_id", "mission_artifact_id", "stages", "concurrent_cycles_supported", "scaled_orchestration_claimed", "cycle_rationale"],
+  "properties": {
+    "runtime_cycle_id": {"type": "string", "minLength": 1},
+    "runtime_id": {"type": "string", "minLength": 1},
+    "mission_artifact_id": {"type": "string", "minLength": 1},
+    "stages": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": ["stage_type", "stage_id", "started_at", "completed_at", "input_artifact_id", "output_artifact_id", "depends_on_stage_id"],
+        "properties": {
+          "stage_type": {"enum": ["wake", "bounded_probe", "planner_handoff", "outcome_return"]},
+          "stage_id": {"type": "string", "minLength": 1},
+          "started_at": {"type": "string", "minLength": 1},
+          "completed_at": {"type": "string", "minLength": 1},
+          "input_artifact_id": {"type": "string", "minLength": 1},
+          "output_artifact_id": {"type": "string", "minLength": 1},
+          "depends_on_stage_id": {"type": "string"},
+          "probe_budget": {"type": "number", "exclusiveMinimum": 0},
+          "maximum_harm": {"type": "number", "exclusiveMinimum": 0},
+          "expires_at": {"type": "string", "minLength": 1},
+          "stop_condition": {"type": "string", "minLength": 1},
+          "outcome_evidence_id": {"type": "string", "minLength": 1},
+          "returned_to_mission_frontier": {"type": "boolean"}
+        }
+      }
+    },
+    "concurrent_cycles_supported": {"const": false},
+    "scaled_orchestration_claimed": {"const": false},
+    "cycle_rationale": {"type": "string", "minLength": 1}
+  }
+}

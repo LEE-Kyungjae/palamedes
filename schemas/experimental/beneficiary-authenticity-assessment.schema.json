@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/beneficiary-authenticity-assessment.schema.json",
+  "title": "PalamedesBeneficiaryAuthenticityAssessment",
+  "description": "Experimental Cycle 273 provisional beneficiary authenticity assessment across identity, cost, recurrence, independent context, and coordinated synthetic behavior risk.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authenticity_assessment_id",
+    "beneficiary_claim_id",
+    "behavior_cluster_id",
+    "authenticity_dimensions",
+    "coordinated_synthetic_behavior_risk",
+    "coordination_risk_evidence_id",
+    "provisional_authenticity_confidence",
+    "provisional_weight_threshold",
+    "authenticity_guaranteed",
+    "residual_uncertainty",
+    "monitoring_trigger",
+    "decision",
+    "assessment_rationale"
+  ],
+  "properties": {
+    "authenticity_assessment_id": {"type": "string", "minLength": 1},
+    "beneficiary_claim_id": {"type": "string", "minLength": 1},
+    "behavior_cluster_id": {"type": "string", "minLength": 1},
+    "authenticity_dimensions": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dimension", "observation", "evidence_id", "strength", "limitation"],
+        "properties": {
+          "dimension": {"enum": ["identity", "cost", "recurrence", "independent_context"]},
+          "observation": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "strength": {"type": "number", "minimum": 0, "maximum": 1},
+          "limitation": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "coordinated_synthetic_behavior_risk": {"type": "number", "minimum": 0, "maximum": 1},
+    "coordination_risk_evidence_id": {"type": "string", "minLength": 1},
+    "provisional_authenticity_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "provisional_weight_threshold": {"type": "number", "minimum": 0, "maximum": 1},
+    "authenticity_guaranteed": {"const": false},
+    "residual_uncertainty": {"type": "string", "minLength": 1},
+    "monitoring_trigger": {"type": "string", "minLength": 1},
+    "decision": {"enum": ["provisionally_weight", "downweight_and_probe"]},
+    "assessment_rationale": {"type": "string", "minLength": 1}
+  }
+}

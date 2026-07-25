@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/equal-information-one-shot-agent-baseline.schema.json",
+  "title": "PalamedesEqualInformationOneShotAgentBaseline",
+  "description": "Cycle 368 strong fresh-context one-shot agent baseline under equal visible information.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["one_shot_baseline_protocol_id", "proof_case_id", "visible_information_manifest_id", "visible_information_manifest_fingerprint", "constitution_id", "constitution_fingerprint", "model_runtime_fingerprint", "baseline_prompt_id", "baseline_prompt_fingerprint", "output_contract_id", "protocol_fingerprint", "checkpoint_calls", "resource_contract", "persistent_frontier_available", "staged_independent_operations_available", "same_visible_events_and_constitution", "baseline_rationale"],
+  "properties": {
+    "one_shot_baseline_protocol_id": {"type": "string", "minLength": 1},
+    "proof_case_id": {"type": "string", "minLength": 1},
+    "visible_information_manifest_id": {"type": "string", "minLength": 1},
+    "visible_information_manifest_fingerprint": {"type": "string", "minLength": 1},
+    "constitution_id": {"type": "string", "minLength": 1},
+    "constitution_fingerprint": {"type": "string", "minLength": 1},
+    "model_runtime_fingerprint": {"type": "string", "minLength": 1},
+    "baseline_prompt_id": {"type": "string", "minLength": 1},
+    "baseline_prompt_fingerprint": {"type": "string", "minLength": 1},
+    "output_contract_id": {"type": "string", "minLength": 1},
+    "protocol_fingerprint": {"type": "string", "minLength": 1},
+    "checkpoint_calls": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["event_id", "sequence", "cumulative_visible_packet_id", "cumulative_visible_packet_fingerprint", "constitution_fingerprint", "call_record_id", "call_input_fingerprint", "model_call_count", "output_artifact_id", "output_fingerprint", "completed_at", "fresh_context_started", "all_current_visible_events_included", "output_frozen_before_next_event", "prior_output_included", "persistent_memory_loaded", "persistent_frontier_loaded", "staged_independent_roles_used", "intermediate_model_calls_used"],
+        "properties": {
+          "event_id": {"type": "string", "minLength": 1},
+          "sequence": {"type": "integer", "minimum": 1},
+          "cumulative_visible_packet_id": {"type": "string", "minLength": 1},
+          "cumulative_visible_packet_fingerprint": {"type": "string", "minLength": 1},
+          "constitution_fingerprint": {"type": "string", "minLength": 1},
+          "call_record_id": {"type": "string", "minLength": 1},
+          "call_input_fingerprint": {"type": "string", "minLength": 1},
+          "model_call_count": {"const": 1},
+          "output_artifact_id": {"type": "string", "minLength": 1},
+          "output_fingerprint": {"type": "string", "minLength": 1},
+          "completed_at": {"type": "string", "minLength": 1},
+          "fresh_context_started": {"const": true},
+          "all_current_visible_events_included": {"const": true},
+          "output_frozen_before_next_event": {"const": true},
+          "prior_output_included": {"const": false},
+          "persistent_memory_loaded": {"const": false},
+          "persistent_frontier_loaded": {"const": false},
+          "staged_independent_roles_used": {"const": false},
+          "intermediate_model_calls_used": {"const": false}
+        }
+      }
+    },
+    "resource_contract": {
+      "type": "object", "additionalProperties": false,
+      "required": ["resource_contract_id", "time_limit", "input_token_limit", "output_token_limit", "tool_policy", "same_visible_information_as_palamedes", "same_constitution_as_palamedes", "weakened_prompt_for_baseline"],
+      "properties": {
+        "resource_contract_id": {"type": "string", "minLength": 1},
+        "time_limit": {"type": "string", "minLength": 1},
+        "input_token_limit": {"type": "string", "minLength": 1},
+        "output_token_limit": {"type": "string", "minLength": 1},
+        "tool_policy": {"type": "string", "minLength": 1},
+        "same_visible_information_as_palamedes": {"const": true},
+        "same_constitution_as_palamedes": {"const": true},
+        "weakened_prompt_for_baseline": {"const": false}
+      }
+    },
+    "persistent_frontier_available": {"const": false},
+    "staged_independent_operations_available": {"const": false},
+    "same_visible_events_and_constitution": {"const": true},
+    "baseline_rationale": {"type": "string", "minLength": 1}
+  }
+}

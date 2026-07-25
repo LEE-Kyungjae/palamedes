@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/atomic-selection-authority-reversal-issue.schema.json",
+  "title": "PalamedesAtomicSelectionAuthorityReversalIssue",
+  "description": "Cycle 349 atomic issue of winner, downstream authority, and evidence-triggered reversal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["issue_transaction_id", "issue_transaction_fingerprint", "selection_record_id", "selection_record_fingerprint", "winner_candidate_id", "winner_candidate_fingerprint", "issued_at", "downstream_authority", "reversal_triggers", "atomic_issue", "selection_status", "winner_executable_before_atomic_commit", "issue_rationale"],
+  "properties": {
+    "issue_transaction_id": {"type": "string", "minLength": 1},
+    "issue_transaction_fingerprint": {"type": "string", "minLength": 1},
+    "selection_record_id": {"type": "string", "minLength": 1},
+    "selection_record_fingerprint": {"type": "string", "minLength": 1},
+    "winner_candidate_id": {"type": "string", "minLength": 1},
+    "winner_candidate_fingerprint": {"type": "string", "minLength": 1},
+    "issued_at": {"type": "string", "minLength": 1},
+    "downstream_authority": {
+      "type": "object", "additionalProperties": false,
+      "required": ["authority_grant_id", "grantee_id", "mission_contract_id", "mission_contract_fingerprint", "scope", "budget", "expires_at", "allowed_actions", "forbidden_actions", "authority_return_trigger", "may_redefine_mission", "may_expand_own_authority"],
+      "properties": {
+        "authority_grant_id": {"type": "string", "minLength": 1},
+        "grantee_id": {"type": "string", "minLength": 1},
+        "mission_contract_id": {"type": "string", "minLength": 1},
+        "mission_contract_fingerprint": {"type": "string", "minLength": 1},
+        "scope": {"type": "string", "minLength": 1},
+        "budget": {"type": "string", "minLength": 1},
+        "expires_at": {"type": "string", "minLength": 1},
+        "allowed_actions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "forbidden_actions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "authority_return_trigger": {"type": "string", "minLength": 1},
+        "may_redefine_mission": {"const": false},
+        "may_expand_own_authority": {"const": false}
+      }
+    },
+    "reversal_triggers": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["trigger_id", "evidence_signal_id", "threshold", "measurement_method", "reversal_action", "rollback_authority_id", "wake_event_type", "review_owner_id", "automatic_mission_rewrite"],
+        "properties": {
+          "trigger_id": {"type": "string", "minLength": 1},
+          "evidence_signal_id": {"type": "string", "minLength": 1},
+          "threshold": {"type": "string", "minLength": 1},
+          "measurement_method": {"type": "string", "minLength": 1},
+          "reversal_action": {"type": "string", "minLength": 1},
+          "rollback_authority_id": {"type": "string", "minLength": 1},
+          "wake_event_type": {"type": "string", "minLength": 1},
+          "review_owner_id": {"type": "string", "minLength": 1},
+          "automatic_mission_rewrite": {"const": false}
+        }
+      }
+    },
+    "atomic_issue": {
+      "type": "object", "additionalProperties": false,
+      "required": ["winner_written", "authority_written", "reversal_triggers_written", "partial_commit_allowed", "commit_record_id", "commit_fingerprint"],
+      "properties": {
+        "winner_written": {"const": true},
+        "authority_written": {"const": true},
+        "reversal_triggers_written": {"const": true},
+        "partial_commit_allowed": {"const": false},
+        "commit_record_id": {"type": "string", "minLength": 1},
+        "commit_fingerprint": {"type": "string", "minLength": 1}
+      }
+    },
+    "selection_status": {"const": "complete"},
+    "winner_executable_before_atomic_commit": {"const": false},
+    "issue_rationale": {"type": "string", "minLength": 1}
+  }
+}

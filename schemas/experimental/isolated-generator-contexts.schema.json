@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/isolated-generator-contexts.schema.json",
+  "title": "PalamedesIsolatedGeneratorContexts",
+  "description": "Experimental Cycle 235 contract isolating generation contexts and reference slices before reveal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "isolation_record_id",
+    "mission_generation_id",
+    "shared_preselection_context",
+    "generator_contexts",
+    "reveal_after_all_generators_complete",
+    "comparison_context_id",
+    "reveal_protocol"
+  ],
+  "properties": {
+    "isolation_record_id": {"type": "string", "minLength": 1},
+    "mission_generation_id": {"type": "string", "minLength": 1},
+    "shared_preselection_context": {"const": false},
+    "generator_contexts": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "generator_type",
+          "context_id",
+          "reference_slice_ids",
+          "context_sealed_before_generation",
+          "other_candidate_ids_visible_during_generation",
+          "candidate_id"
+        ],
+        "properties": {
+          "generator_type": {
+            "enum": [
+              "condition_first",
+              "capability_first",
+              "lineage_transfer",
+              "opposition",
+              "temporal",
+              "no_mission_counterfactual"
+            ]
+          },
+          "context_id": {"type": "string", "minLength": 1},
+          "reference_slice_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "context_sealed_before_generation": {"const": true},
+          "other_candidate_ids_visible_during_generation": {"type": "array", "maxItems": 0},
+          "candidate_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "reveal_after_all_generators_complete": {"const": true},
+    "comparison_context_id": {"type": "string", "minLength": 1},
+    "reveal_protocol": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/opportunity-record.schema.json",
+  "title": "PalamedesOpportunityRecord",
+  "description": "Experimental Cycle 129 complete opportunity evidence record.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "opportunity_id",
+    "anomaly_id",
+    "affected_group_id",
+    "current_condition",
+    "possible_condition_change",
+    "enabling_change_id",
+    "window_id",
+    "act_wait_comparison_id",
+    "opportunity_hypothesis",
+    "fashionable_capability_defines_opportunity",
+    "failed_predecessor_ids",
+    "cheapest_discriminating_exposure"
+  ],
+  "properties": {
+    "opportunity_id": {"type": "string", "minLength": 1},
+    "anomaly_id": {"type": "string", "minLength": 1},
+    "affected_group_id": {"type": "string", "minLength": 1},
+    "current_condition": {"type": "string", "minLength": 1},
+    "possible_condition_change": {"type": "string", "minLength": 1},
+    "enabling_change_id": {"type": "string", "minLength": 1},
+    "window_id": {"type": "string", "minLength": 1},
+    "act_wait_comparison_id": {"type": "string", "minLength": 1},
+    "opportunity_hypothesis": {"type": "string", "minLength": 1},
+    "fashionable_capability_defines_opportunity": {"const": false},
+    "failed_predecessor_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "cheapest_discriminating_exposure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "description",
+        "cost",
+        "risk",
+        "rollback",
+        "why_cheapest",
+        "reversible",
+        "distinguishing_outcomes",
+        "costlier_alternatives_rejected"
+      ],
+      "properties": {
+        "description": {"type": "string", "minLength": 1},
+        "cost": {"type": "string", "minLength": 1},
+        "risk": {"type": "string", "minLength": 1},
+        "rollback": {"type": "string", "minLength": 1},
+        "why_cheapest": {"type": "string", "minLength": 1},
+        "reversible": {"const": true},
+        "distinguishing_outcomes": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "costlier_alternatives_rejected": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

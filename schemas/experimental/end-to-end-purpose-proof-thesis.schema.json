@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/end-to-end-purpose-proof-thesis.schema.json",
+  "title": "PalamedesEndToEndPurposeProofThesis",
+  "description": "Experimental Cycle 290 signal-to-mission-to-outcome proof with human labor retirement.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["proof_thesis_id", "comparison_system_id", "case_id", "single_case_contract_id", "competition_design_id", "freeze_record_id", "delivery_trace_id", "information_control_id", "handoff_control_id", "ordered_evaluation_id", "labor_ledger_id", "failure_protocol_id", "selected_mission_id", "evidence_lineage", "outcome_comparison", "upstream_labor_retirement", "no_failure_criterion_triggered", "mission_defensibly_better", "outcome_advantage_demonstrated", "upstream_labor_retired", "independently_verified", "proof_decision", "proof_rationale"],
+  "properties": {
+    "proof_thesis_id": {"type": "string", "minLength": 1},
+    "comparison_system_id": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "single_case_contract_id": {"type": "string", "minLength": 1},
+    "competition_design_id": {"type": "string", "minLength": 1},
+    "freeze_record_id": {"type": "string", "minLength": 1},
+    "delivery_trace_id": {"type": "string", "minLength": 1},
+    "information_control_id": {"type": "string", "minLength": 1},
+    "handoff_control_id": {"type": "string", "minLength": 1},
+    "ordered_evaluation_id": {"type": "string", "minLength": 1},
+    "labor_ledger_id": {"type": "string", "minLength": 1},
+    "failure_protocol_id": {"type": "string", "minLength": 1},
+    "selected_mission_id": {"type": "string", "minLength": 1},
+    "evidence_lineage": {
+      "type": "array", "minItems": 6, "maxItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["stage", "artifact_id", "evidence_id", "observed_at", "claim"],
+        "properties": {
+          "stage": {"enum": ["signal", "interpretation", "selection", "planning", "action", "outcome"]},
+          "artifact_id": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "observed_at": {"type": "string", "minLength": 1},
+          "claim": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "outcome_comparison": {
+      "type": "object", "additionalProperties": false,
+      "required": ["outcome_metric_id", "palamedes_value", "palamedes_outcome_evidence_id", "best_baseline_condition_id", "best_baseline_value", "baseline_outcome_evidence_id", "minimum_advantage", "advantage_threshold_rationale"],
+      "properties": {
+        "outcome_metric_id": {"type": "string", "minLength": 1},
+        "palamedes_value": {"type": "number"},
+        "palamedes_outcome_evidence_id": {"type": "string", "minLength": 1},
+        "best_baseline_condition_id": {"type": "string", "minLength": 1},
+        "best_baseline_value": {"type": "number"},
+        "baseline_outcome_evidence_id": {"type": "string", "minLength": 1},
+        "minimum_advantage": {"type": "number", "exclusiveMinimum": 0},
+        "advantage_threshold_rationale": {"type": "string", "minLength": 1}
+      }
+    },
+    "upstream_labor_retirement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["best_baseline_human_seconds", "baseline_labor_evidence_id", "palamedes_human_seconds", "palamedes_labor_evidence_id", "retired_human_seconds", "retirement_rationale"],
+      "properties": {
+        "best_baseline_human_seconds": {"type": "number", "minimum": 0},
+        "baseline_labor_evidence_id": {"type": "string", "minLength": 1},
+        "palamedes_human_seconds": {"type": "number", "minimum": 0},
+        "palamedes_labor_evidence_id": {"type": "string", "minLength": 1},
+        "retired_human_seconds": {"type": "number", "exclusiveMinimum": 0},
+        "retirement_rationale": {"type": "string", "minLength": 1}
+      }
+    },
+    "no_failure_criterion_triggered": {"const": true},
+    "mission_defensibly_better": {"const": true},
+    "outcome_advantage_demonstrated": {"const": true},
+    "upstream_labor_retired": {"const": true},
+    "independently_verified": {"const": true},
+    "proof_decision": {"const": "demonstrated"},
+    "proof_rationale": {"type": "string", "minLength": 1}
+  }
+}

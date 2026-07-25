@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/independent-evaluation-custody.schema.json",
+  "title": "PalamedesIndependentEvaluationCustody",
+  "description": "Experimental Cycle 157 separation of evidence preparation from evaluation control.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "custody_id",
+    "evaluation_id",
+    "evidence_preparer",
+    "packet_controller",
+    "outcome_label_controller",
+    "sealed_packet_hash",
+    "sealed_label_manifest_hash",
+    "blinding_protocol",
+    "chain_of_custody",
+    "palamedes_can_modify_after_sealing",
+    "palamedes_can_assign_outcome_labels",
+    "independent_controls"
+  ],
+  "properties": {
+    "custody_id": {"type": "string", "minLength": 1},
+    "evaluation_id": {"type": "string", "minLength": 1},
+    "evidence_preparer": {"const": "palamedes"},
+    "packet_controller": {"type": "string", "minLength": 1},
+    "outcome_label_controller": {"type": "string", "minLength": 1},
+    "sealed_packet_hash": {"type": "string", "minLength": 1},
+    "sealed_label_manifest_hash": {"type": "string", "minLength": 1},
+    "blinding_protocol": {"type": "string", "minLength": 1},
+    "chain_of_custody": {"type": "string", "minLength": 1},
+    "palamedes_can_modify_after_sealing": {"const": false},
+    "palamedes_can_assign_outcome_labels": {"const": false},
+    "independent_controls": {
+      "type": "array",
+      "minItems": 3,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

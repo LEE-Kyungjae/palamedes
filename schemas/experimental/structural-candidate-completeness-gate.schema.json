@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/structural-candidate-completeness-gate.schema.json",
+  "title": "PalamedesStructuralCandidateCompletenessGate",
+  "description": "Cycle 343 candidate completeness gate for beneficiary, causal thesis, disconfirmation, and resource renewal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["completeness_gate_id", "candidate_set_fingerprint", "required_structural_fields", "candidate_assessments", "complete_candidate_ids", "incomplete_candidate_ids", "incomplete_candidates_ranked", "gate_rationale"],
+  "properties": {
+    "completeness_gate_id": {"type": "string", "minLength": 1},
+    "candidate_set_fingerprint": {"type": "string", "minLength": 1},
+    "required_structural_fields": {"type": "array", "prefixItems": [{"const": "beneficiary"}, {"const": "causal_thesis"}, {"const": "disconfirmation_condition"}, {"const": "resource_renewal_plan"}], "minItems": 4, "maxItems": 4},
+    "candidate_assessments": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["candidate_id", "candidate_fingerprint", "mission_structure", "missing_fields", "completeness_status", "eligible_for_scoring", "eligible_for_dominance", "completion_request", "low_score_assigned_for_missingness"],
+        "properties": {
+          "candidate_id": {"type": "string", "minLength": 1},
+          "candidate_fingerprint": {"type": "string", "minLength": 1},
+          "mission_structure": {
+            "type": "object", "additionalProperties": false,
+            "required": ["beneficiary", "causal_thesis", "disconfirmation_condition", "resource_renewal_plan"],
+            "properties": {
+              "beneficiary": {"type": "string"},
+              "causal_thesis": {"type": "string"},
+              "disconfirmation_condition": {"type": "string"},
+              "resource_renewal_plan": {"type": "string"}
+            }
+          },
+          "missing_fields": {"type": "array", "uniqueItems": true, "items": {"enum": ["beneficiary", "causal_thesis", "disconfirmation_condition", "resource_renewal_plan"]}},
+          "completeness_status": {"enum": ["complete", "incomplete"]},
+          "eligible_for_scoring": {"type": "boolean"},
+          "eligible_for_dominance": {"type": "boolean"},
+          "completion_request": {"type": "object"},
+          "low_score_assigned_for_missingness": {"const": false}
+        }
+      }
+    },
+    "complete_candidate_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "incomplete_candidate_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "incomplete_candidates_ranked": {"const": false},
+    "gate_rationale": {"type": "string", "minLength": 1}
+  }
+}

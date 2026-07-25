@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/desire-triangulation.schema.json",
+  "title": "PalamedesDesireTriangulation",
+  "description": "Experimental Cycle 115 contract triangulating six heterogeneous desire signals.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "model_id",
+    "group_id",
+    "desire_hypothesis",
+    "synthesis",
+    "tension",
+    "single_signal_is_decisive",
+    "confidence",
+    "signals"
+  ],
+  "properties": {
+    "model_id": {"type": "string", "minLength": 1},
+    "group_id": {"type": "string", "minLength": 1},
+    "desire_hypothesis": {"type": "string", "minLength": 1},
+    "synthesis": {"type": "string", "minLength": 1},
+    "tension": {"type": "string", "minLength": 1},
+    "single_signal_is_decisive": {"const": false},
+    "confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+    "signals": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "direction", "observation", "limitation", "source_ids"],
+        "properties": {
+          "kind": {
+            "enum": [
+              "speech",
+              "behavior",
+              "sacrifice",
+              "recurrence",
+              "counterfactual_choice",
+              "emotional_consequence"
+            ]
+          },
+          "direction": {"enum": ["supports", "challenges", "uncertain"]},
+          "observation": {"type": "string", "minLength": 1},
+          "limitation": {"type": "string", "minLength": 1},
+          "source_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    }
+  }
+}

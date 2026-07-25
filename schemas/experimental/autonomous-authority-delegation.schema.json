@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/autonomous-authority-delegation.schema.json",
+  "title": "PalamedesAutonomousAuthorityDelegation",
+  "description": "Experimental Cycle 141 bounded autonomous mission authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority_id",
+    "constitution_id",
+    "constitution_version",
+    "delegated_by",
+    "valid_from",
+    "valid_until",
+    "delegated_domains",
+    "forbidden_domains",
+    "allowed_action_kinds",
+    "resource_envelopes",
+    "affected_party_scope",
+    "maximum_reversibility",
+    "escalation_conditions"
+  ],
+  "properties": {
+    "authority_id": {"type": "string", "minLength": 1},
+    "constitution_id": {"type": "string", "minLength": 1},
+    "constitution_version": {"type": "integer", "minimum": 1},
+    "delegated_by": {"type": "string", "minLength": 1},
+    "valid_from": {"type": "string", "minLength": 1},
+    "valid_until": {"type": "string", "minLength": 1},
+    "delegated_domains": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "forbidden_domains": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "allowed_action_kinds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "resource_envelopes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["resource_id", "unit", "limit"],
+        "properties": {
+          "resource_id": {"type": "string", "minLength": 1},
+          "unit": {"type": "string", "minLength": 1},
+          "limit": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "affected_party_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["group_id", "allowed_effect", "excluded_effect"],
+        "properties": {
+          "group_id": {"type": "string", "minLength": 1},
+          "allowed_effect": {"type": "string", "minLength": 1},
+          "excluded_effect": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "maximum_reversibility": {"enum": ["reversible", "partially_reversible"]},
+    "escalation_conditions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

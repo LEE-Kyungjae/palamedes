@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/mission-revision-invalidation.schema.json",
+  "title": "PalamedesMissionRevisionInvalidation",
+  "description": "Experimental Cycle 179 versioned mission revision with downstream invalidation notices.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "revision_id",
+    "mission_id",
+    "predecessor_contract_id",
+    "predecessor_version",
+    "successor_contract_id",
+    "successor_version",
+    "predecessor_immutable",
+    "silent_plan_drift",
+    "revision_evidence_id",
+    "revision_summary",
+    "revision_reasons",
+    "changed_fields",
+    "downstream_dependencies"
+  ],
+  "properties": {
+    "revision_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "predecessor_contract_id": {"type": "string", "minLength": 1},
+    "predecessor_version": {"type": "string", "minLength": 1},
+    "successor_contract_id": {"type": "string", "minLength": 1},
+    "successor_version": {"type": "string", "minLength": 1},
+    "predecessor_immutable": {"const": true},
+    "silent_plan_drift": {"const": false},
+    "revision_evidence_id": {"type": "string", "minLength": 1},
+    "revision_summary": {"type": "string", "minLength": 1},
+    "revision_reasons": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "changed_fields": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "downstream_dependencies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact_id",
+          "artifact_kind",
+          "depended_on_version",
+          "disposition",
+          "invalidation_notice_id",
+          "notice_reason",
+          "notice_delivered"
+        ],
+        "properties": {
+          "artifact_id": {"type": "string", "minLength": 1},
+          "artifact_kind": {"type": "string", "minLength": 1},
+          "depended_on_version": {"type": "string", "minLength": 1},
+          "disposition": {"enum": ["invalidated", "review_required", "confirmed_compatible"]},
+          "invalidation_notice_id": {"type": "string", "minLength": 1},
+          "notice_reason": {"type": "string", "minLength": 1},
+          "notice_delivered": {"const": true}
+        }
+      }
+    }
+  }
+}

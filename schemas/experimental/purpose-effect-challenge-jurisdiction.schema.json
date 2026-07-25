@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/purpose-effect-challenge-jurisdiction.schema.json",
+  "title": "PalamedesPurposeEffectChallengeJurisdiction",
+  "description": "Cycle 357 challenge jurisdiction determined by purpose effect rather than implementation preference.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["jurisdiction_record_id", "challenge_id", "challenge_fingerprint", "mission_contract_id", "mission_contract_fingerprint", "challenge_type", "assessment_fingerprint", "assessor_id", "impact_assessments", "purpose_affecting", "decision_jurisdiction", "resolution_boundary", "assessment_rationale"],
+  "properties": {
+    "jurisdiction_record_id": {"type": "string", "minLength": 1},
+    "challenge_id": {"type": "string", "minLength": 1},
+    "challenge_fingerprint": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "mission_contract_fingerprint": {"type": "string", "minLength": 1},
+    "challenge_type": {"enum": ["infeasibility", "ambiguity", "causal_objection", "resource_conflict", "alternative_mechanism"]},
+    "assessment_fingerprint": {"type": "string", "minLength": 1},
+    "assessor_id": {"type": "string", "minLength": 1},
+    "impact_assessments": {
+      "type": "array", "minItems": 6, "maxItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["dimension", "affected", "evidence_artifact_id", "effect_description"],
+        "properties": {
+          "dimension": {"enum": ["beneficiary", "invariant_meaning", "constitution", "authority", "causal_thesis", "execution_form"]},
+          "affected": {"type": "boolean"},
+          "evidence_artifact_id": {"type": "string", "minLength": 1},
+          "effect_description": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "purpose_affecting": {"type": "boolean"},
+    "decision_jurisdiction": {"enum": ["palamedes", "planner"]},
+    "resolution_boundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["resolution_record_id", "resolution_owner_id", "resolution_owner_role", "response_mode", "mission_response_artifact_id", "next_action", "palamedes_prescribes_implementation_choice", "planner_may_rewrite_purpose", "palamedes_implementation_opinion_is_advisory"],
+      "properties": {
+        "resolution_record_id": {"type": "string", "minLength": 1},
+        "resolution_owner_id": {"type": "string", "minLength": 1},
+        "resolution_owner_role": {"enum": ["palamedes", "planner"]},
+        "response_mode": {"enum": ["clarify_mission", "confirm_mission", "revise_mission", "reject_challenge", "planner_decides_implementation"]},
+        "mission_response_artifact_id": {"type": "string"},
+        "next_action": {"type": "string", "minLength": 1},
+        "palamedes_prescribes_implementation_choice": {"const": false},
+        "planner_may_rewrite_purpose": {"const": false},
+        "palamedes_implementation_opinion_is_advisory": {"const": true}
+      }
+    },
+    "assessment_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/quality-resource-budget-report.schema.json",
+  "title": "PalamedesQualityResourceBudgetReport",
+  "description": "Cycle 371 condition quality reported beside information, compute, latency, and human labor.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["budget_report_id", "proof_case_id", "evaluation_contract_id", "visible_information_manifest_id", "visible_information_manifest_fingerprint", "report_fingerprint", "condition_reports", "quality_and_resources_reported_together", "win_rate_reported_alone", "human_correction_hidden", "compute_advantage_hidden", "resource_missingness_treated_as_zero", "report_rationale"],
+  "properties": {
+    "budget_report_id": {"type": "string", "minLength": 1},
+    "proof_case_id": {"type": "string", "minLength": 1},
+    "evaluation_contract_id": {"type": "string", "minLength": 1},
+    "visible_information_manifest_id": {"type": "string", "minLength": 1},
+    "visible_information_manifest_fingerprint": {"type": "string", "minLength": 1},
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "condition_reports": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["condition", "condition_runtime_fingerprint", "quality_result_artifact_id", "quality_result_fingerprint", "quality_summary", "information_budget", "compute_budget", "latency_budget", "human_labor_budget", "declared_budget_totals"],
+        "properties": {
+          "condition": {"enum": ["human", "one_shot_agent", "palamedes"]},
+          "condition_runtime_fingerprint": {"type": "string", "minLength": 1},
+          "quality_result_artifact_id": {"type": "string", "minLength": 1},
+          "quality_result_fingerprint": {"type": "string", "minLength": 1},
+          "quality_summary": {"type": "string", "minLength": 1},
+          "information_budget": {"$ref": "#/$defs/informationBudget"},
+          "compute_budget": {"$ref": "#/$defs/computeBudget"},
+          "latency_budget": {"$ref": "#/$defs/latencyBudget"},
+          "human_labor_budget": {"$ref": "#/$defs/humanLaborBudget"},
+          "declared_budget_totals": {
+            "type": "object", "additionalProperties": false,
+            "required": ["compute_tokens", "human_labor_minutes"],
+            "properties": {
+              "compute_tokens": {"type": "number", "minimum": 0},
+              "human_labor_minutes": {"type": "number", "minimum": 0}
+            }
+          }
+        }
+      }
+    },
+    "quality_and_resources_reported_together": {"const": true},
+    "win_rate_reported_alone": {"const": false},
+    "human_correction_hidden": {"const": false},
+    "compute_advantage_hidden": {"const": false},
+    "resource_missingness_treated_as_zero": {"const": false},
+    "report_rationale": {"type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "informationBudget": {
+      "type": "object", "additionalProperties": false,
+      "required": ["visible_artifact_count", "visible_input_tokens", "privileged_artifact_count", "measurement_record_id", "measurement_method", "visible_information_manifest_fingerprint", "units"],
+      "properties": {
+        "visible_artifact_count": {"type": "number", "minimum": 0},
+        "visible_input_tokens": {"type": "number", "minimum": 0},
+        "privileged_artifact_count": {"type": "number", "minimum": 0},
+        "measurement_record_id": {"type": "string", "minLength": 1},
+        "measurement_method": {"type": "string", "minLength": 1},
+        "visible_information_manifest_fingerprint": {"type": "string", "minLength": 1},
+        "units": {"type": "object"}
+      }
+    },
+    "computeBudget": {
+      "type": "object", "additionalProperties": false,
+      "required": ["model_call_count", "input_token_count", "output_token_count", "accelerator_seconds", "estimated_cost", "measurement_record_id", "measurement_method", "units"],
+      "properties": {
+        "model_call_count": {"type": "number", "minimum": 0},
+        "input_token_count": {"type": "number", "minimum": 0},
+        "output_token_count": {"type": "number", "minimum": 0},
+        "accelerator_seconds": {"type": "number", "minimum": 0},
+        "estimated_cost": {"type": "number", "minimum": 0},
+        "measurement_record_id": {"type": "string", "minLength": 1},
+        "measurement_method": {"type": "string", "minLength": 1},
+        "units": {"type": "object"}
+      }
+    },
+    "latencyBudget": {
+      "type": "object", "additionalProperties": false,
+      "required": ["wall_clock_seconds", "decision_latency_seconds", "measurement_record_id", "measurement_method", "units"],
+      "properties": {
+        "wall_clock_seconds": {"type": "number", "minimum": 0},
+        "decision_latency_seconds": {"type": "number", "minimum": 0},
+        "measurement_record_id": {"type": "string", "minLength": 1},
+        "measurement_method": {"type": "string", "minLength": 1},
+        "units": {"type": "object"}
+      }
+    },
+    "humanLaborBudget": {
+      "type": "object", "additionalProperties": false,
+      "required": ["participant_minutes", "operator_intervention_minutes", "developer_correction_minutes", "evaluation_minutes", "intervention_count", "correction_count", "measurement_record_id", "measurement_method", "units"],
+      "properties": {
+        "participant_minutes": {"type": "number", "minimum": 0},
+        "operator_intervention_minutes": {"type": "number", "minimum": 0},
+        "developer_correction_minutes": {"type": "number", "minimum": 0},
+        "evaluation_minutes": {"type": "number", "minimum": 0},
+        "intervention_count": {"type": "number", "minimum": 0},
+        "correction_count": {"type": "number", "minimum": 0},
+        "measurement_record_id": {"type": "string", "minLength": 1},
+        "measurement_method": {"type": "string", "minLength": 1},
+        "units": {"type": "object"}
+      }
+    }
+  }
+}

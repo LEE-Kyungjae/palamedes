@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/beneficiary-first-portfolio-review.schema.json",
+  "title": "PalamedesBeneficiaryFirstPortfolioReview",
+  "description": "Experimental Cycle 181 portfolio review beginning with beneficiary and world change.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "review_id",
+    "portfolio_id",
+    "review_period",
+    "throughput_is_primary",
+    "review_order",
+    "mission_reviews",
+    "portfolio_decision_rationale"
+  ],
+  "properties": {
+    "review_id": {"type": "string", "minLength": 1},
+    "portfolio_id": {"type": "string", "minLength": 1},
+    "review_period": {"type": "string", "minLength": 1},
+    "throughput_is_primary": {"const": false},
+    "review_order": {
+      "type": "array",
+      "prefixItems": [
+        {"const": "beneficiary_change"},
+        {"const": "world_change"},
+        {"const": "assumption_change"},
+        {"const": "delivery"}
+      ],
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "mission_reviews": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mission_id",
+          "beneficiary_condition_before",
+          "beneficiary_condition_now",
+          "beneficiary_change_evidence_id",
+          "world_change",
+          "world_change_evidence_id",
+          "assumption_change",
+          "delivery_summary",
+          "task_velocity",
+          "task_velocity_determines_decision",
+          "decision",
+          "decision_rationale"
+        ],
+        "properties": {
+          "mission_id": {"type": "string", "minLength": 1},
+          "beneficiary_condition_before": {"type": "string", "minLength": 1},
+          "beneficiary_condition_now": {"type": "string", "minLength": 1},
+          "beneficiary_change_evidence_id": {"type": "string", "minLength": 1},
+          "world_change": {"type": "string", "minLength": 1},
+          "world_change_evidence_id": {"type": "string", "minLength": 1},
+          "assumption_change": {"type": "string", "minLength": 1},
+          "delivery_summary": {"type": "string", "minLength": 1},
+          "task_velocity": {"type": "number"},
+          "task_velocity_determines_decision": {"const": false},
+          "decision": {"enum": ["continue", "revise", "stop"]},
+          "decision_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "portfolio_decision_rationale": {"type": "string", "minLength": 1}
+  }
+}

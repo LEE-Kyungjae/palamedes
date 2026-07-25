@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/relational-signal-importance.schema.json",
+  "title": "PalamedesRelationalSignalImportance",
+  "description": "Experimental Cycle 202 importance as a change-condition-value-capability-time relation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "importance_record_id",
+    "event_id",
+    "observed_change",
+    "affected_condition",
+    "constitution_clause_id",
+    "available_capability_id",
+    "time_window",
+    "event_has_intrinsic_importance",
+    "relations",
+    "importance",
+    "importance_rationale"
+  ],
+  "properties": {
+    "importance_record_id": {"type": "string", "minLength": 1},
+    "event_id": {"type": "string", "minLength": 1},
+    "observed_change": {"type": "string", "minLength": 1},
+    "affected_condition": {"type": "string", "minLength": 1},
+    "constitution_clause_id": {"type": "string", "minLength": 1},
+    "available_capability_id": {"type": "string", "minLength": 1},
+    "time_window": {"type": "string", "minLength": 1},
+    "event_has_intrinsic_importance": {"const": false},
+    "relations": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["relation", "status", "claim", "evidence_id", "uncertainty"],
+        "properties": {
+          "relation": {
+            "enum": [
+              "change_to_condition",
+              "condition_to_value",
+              "value_to_capability",
+              "capability_to_time"
+            ]
+          },
+          "status": {"enum": ["relevant", "irrelevant", "unknown"]},
+          "claim": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "uncertainty": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "importance": {"enum": ["low", "moderate", "high", "unknown"]},
+    "importance_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/explicit-planner-mission-acknowledgment.schema.json",
+  "title": "PalamedesExplicitPlannerMissionAcknowledgment",
+  "description": "Cycle 354 explicit planner reconstruction of mission beneficiary, meaning, authority, and ambiguity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["acknowledgment_id", "acknowledgment_fingerprint", "handoff_id", "mission_contract_id", "mission_contract_fingerprint", "planner_id", "acknowledged_at", "interpreted_beneficiary", "invariant_meaning", "assumed_authority", "unclear_mission_clauses", "acknowledgment_precedes_strategy", "execution_withheld_until_strategy_review", "generic_acknowledgment_only", "acknowledgment_rationale"],
+  "properties": {
+    "acknowledgment_id": {"type": "string", "minLength": 1},
+    "acknowledgment_fingerprint": {"type": "string", "minLength": 1},
+    "handoff_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "mission_contract_fingerprint": {"type": "string", "minLength": 1},
+    "planner_id": {"type": "string", "minLength": 1},
+    "acknowledged_at": {"type": "string", "minLength": 1},
+    "interpreted_beneficiary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["beneficiary_identity", "current_condition", "desired_external_condition", "source_clause_id", "source_clause_fingerprint", "interpretation_statement"],
+      "properties": {
+        "beneficiary_identity": {"type": "string", "minLength": 1},
+        "current_condition": {"type": "string", "minLength": 1},
+        "desired_external_condition": {"type": "string", "minLength": 1},
+        "source_clause_id": {"type": "string", "minLength": 1},
+        "source_clause_fingerprint": {"type": "string", "minLength": 1},
+        "interpretation_statement": {"type": "string", "minLength": 1}
+      }
+    },
+    "invariant_meaning": {
+      "type": "object", "additionalProperties": false,
+      "required": ["meaning_statement", "meaning_fingerprint", "source_clause_ids", "planner_may_reinterpret_meaning"],
+      "properties": {
+        "meaning_statement": {"type": "string", "minLength": 1},
+        "meaning_fingerprint": {"type": "string", "minLength": 1},
+        "source_clause_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "planner_may_reinterpret_meaning": {"const": false}
+      }
+    },
+    "assumed_authority": {
+      "type": "object", "additionalProperties": false,
+      "required": ["authority_grant_id", "authority_grant_fingerprint", "scope", "budget", "expires_at", "allowed_actions", "forbidden_actions", "authority_return_trigger", "assumption_statement", "may_expand_own_authority"],
+      "properties": {
+        "authority_grant_id": {"type": "string", "minLength": 1},
+        "authority_grant_fingerprint": {"type": "string", "minLength": 1},
+        "scope": {"type": "string", "minLength": 1},
+        "budget": {"type": "string", "minLength": 1},
+        "expires_at": {"type": "string", "minLength": 1},
+        "allowed_actions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "forbidden_actions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "authority_return_trigger": {"type": "string", "minLength": 1},
+        "assumption_statement": {"type": "string", "minLength": 1},
+        "may_expand_own_authority": {"const": false}
+      }
+    },
+    "unclear_mission_clauses": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "assessments", "none_identified_rationale"],
+      "properties": {
+        "status": {"enum": ["identified", "none_identified"]},
+        "assessments": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["clause_id", "clause_fingerprint", "ambiguity", "clarifying_question", "strategy_effect_if_unresolved"],
+            "properties": {
+              "clause_id": {"type": "string", "minLength": 1},
+              "clause_fingerprint": {"type": "string", "minLength": 1},
+              "ambiguity": {"type": "string", "minLength": 1},
+              "clarifying_question": {"type": "string", "minLength": 1},
+              "strategy_effect_if_unresolved": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "none_identified_rationale": {"type": "string"}
+      }
+    },
+    "acknowledgment_precedes_strategy": {"const": true},
+    "execution_withheld_until_strategy_review": {"const": true},
+    "generic_acknowledgment_only": {"const": false},
+    "acknowledgment_rationale": {"type": "string", "minLength": 1}
+  }
+}

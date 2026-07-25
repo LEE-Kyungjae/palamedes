@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/aggregate-action-chain-consequences.schema.json",
+  "title": "PalamedesAggregateActionChainConsequences",
+  "description": "Experimental Cycle 277 constitutional evaluation of aggregate foreseeable consequences across individually permitted action chains.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "chain_review_id",
+    "mission_id",
+    "constitution_id",
+    "foreseeability_horizon",
+    "stepwise_compliance_is_sufficient",
+    "action_steps",
+    "aggregate_forecasts",
+    "prohibition_evaluations",
+    "decision",
+    "review_rationale"
+  ],
+  "properties": {
+    "chain_review_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "constitution_id": {"type": "string", "minLength": 1},
+    "foreseeability_horizon": {"type": "string", "minLength": 1},
+    "stepwise_compliance_is_sufficient": {"const": false},
+    "action_steps": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "step_id",
+          "sequence",
+          "action",
+          "immediate_consequence",
+          "step_authority_id",
+          "individually_permitted",
+          "depends_on_step_ids"
+        ],
+        "properties": {
+          "step_id": {"type": "string", "minLength": 1},
+          "sequence": {"type": "integer", "minimum": 1},
+          "action": {"type": "string", "minLength": 1},
+          "immediate_consequence": {"type": "string", "minLength": 1},
+          "step_authority_id": {"type": "string", "minLength": 1},
+          "individually_permitted": {"const": true},
+          "depends_on_step_ids": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    },
+    "aggregate_forecasts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "forecast_id",
+          "affected_party_or_system",
+          "cumulative_consequence",
+          "time_horizon",
+          "likelihood",
+          "severity",
+          "evidence_id"
+        ],
+        "properties": {
+          "forecast_id": {"type": "string", "minLength": 1},
+          "affected_party_or_system": {"type": "string", "minLength": 1},
+          "cumulative_consequence": {"type": "string", "minLength": 1},
+          "time_horizon": {"type": "string", "minLength": 1},
+          "likelihood": {"type": "number", "minimum": 0, "maximum": 1},
+          "severity": {"type": "number", "minimum": 0, "maximum": 1},
+          "evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "prohibition_evaluations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "clause_id",
+          "prohibition",
+          "aggregate_application",
+          "forecast_ids",
+          "evidence_id",
+          "verdict"
+        ],
+        "properties": {
+          "clause_id": {"type": "string", "minLength": 1},
+          "prohibition": {"type": "string", "minLength": 1},
+          "aggregate_application": {"type": "string", "minLength": 1},
+          "forecast_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "evidence_id": {"type": "string", "minLength": 1},
+          "verdict": {"enum": ["pass", "violate"]}
+        }
+      }
+    },
+    "decision": {"enum": ["block_chain", "allow_chain"]},
+    "review_rationale": {"type": "string", "minLength": 1}
+  }
+}

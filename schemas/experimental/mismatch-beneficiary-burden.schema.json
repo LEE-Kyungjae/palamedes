@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/mismatch-beneficiary-burden.schema.json",
+  "title": "PalamedesMismatchBeneficiaryBurden",
+  "description": "Experimental Cycle 122 contract grounding capability mismatches in beneficiary burden.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assessment_id",
+    "mismatch_id",
+    "why_capability_is_relevant",
+    "capability_novelty_defines_value",
+    "beneficiary_burdens",
+    "disconfirming_condition"
+  ],
+  "properties": {
+    "assessment_id": {"type": "string", "minLength": 1},
+    "mismatch_id": {"type": "string", "minLength": 1},
+    "why_capability_is_relevant": {"type": "string", "minLength": 1},
+    "capability_novelty_defines_value": {"const": false},
+    "beneficiary_burdens": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "burden_id",
+          "kind",
+          "affected_group_id",
+          "observed_cost",
+          "recurrence",
+          "context",
+          "source_id"
+        ],
+        "properties": {
+          "burden_id": {"type": "string", "minLength": 1},
+          "kind": {
+            "enum": ["recurring_friction", "exclusion", "delay", "unrealized_possibility"]
+          },
+          "affected_group_id": {"type": "string", "minLength": 1},
+          "observed_cost": {"type": "string", "minLength": 1},
+          "recurrence": {"type": "string", "minLength": 1},
+          "context": {"type": "string", "minLength": 1},
+          "source_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "disconfirming_condition": {"type": "string", "minLength": 1}
+  }
+}

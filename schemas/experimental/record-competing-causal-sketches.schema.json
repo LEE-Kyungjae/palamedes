@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/record-competing-causal-sketches.schema.json",
+  "title": "PalamedesRecordCompetingCausalSketches",
+  "description": "Experimental Cycle 314 recording plural causal sketches with explicit signal links and no truth selection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["command_id", "expected_revision_fingerprint", "authority_id", "revision_reason", "causal_sketches", "signal_links", "sketch_statuses", "truth_selected", "selected_causal_sketch_id", "rival_visibility_during_recording", "command_rationale"],
+  "properties": {
+    "command_id": {"type": "string", "minLength": 1},
+    "expected_revision_fingerprint": {"type": "string", "minLength": 1},
+    "authority_id": {"type": "string", "minLength": 1},
+    "revision_reason": {"type": "string", "minLength": 1},
+    "causal_sketches": {"type": "array", "minItems": 2, "items": {"$ref": "separated-causal-sketch.schema.json"}},
+    "signal_links": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["link_id", "causal_sketch_id", "edge_id", "signal_id", "relation"],
+        "properties": {
+          "link_id": {"type": "string", "minLength": 1},
+          "causal_sketch_id": {"type": "string", "minLength": 1},
+          "edge_id": {"type": "string", "minLength": 1},
+          "signal_id": {"type": "string", "minLength": 1},
+          "relation": {"enum": ["supports", "opposes"]}
+        }
+      }
+    },
+    "sketch_statuses": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["causal_sketch_id", "status", "uncertainty_rationale"],
+        "properties": {
+          "causal_sketch_id": {"type": "string", "minLength": 1},
+          "status": {"const": "plausible_unresolved"},
+          "uncertainty_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "truth_selected": {"const": false},
+    "selected_causal_sketch_id": {"const": ""},
+    "rival_visibility_during_recording": {"const": false},
+    "command_rationale": {"type": "string", "minLength": 1}
+  }
+}

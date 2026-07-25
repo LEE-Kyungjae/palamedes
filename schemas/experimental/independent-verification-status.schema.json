@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/independent-verification-status.schema.json",
+  "title": "PalamedesIndependentVerificationStatus",
+  "description": "Experimental Cycle 158 explicit unverified status without independent certification.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "claim_id",
+    "claim",
+    "internal_evidence_summary",
+    "independent_verification_available",
+    "internal_coherence_counts_as_validation",
+    "status",
+    "verification_limit",
+    "required_independent_process",
+    "wake_trigger",
+    "custody_id"
+  ],
+  "properties": {
+    "claim_id": {"type": "string", "minLength": 1},
+    "claim": {"type": "string", "minLength": 1},
+    "internal_evidence_summary": {"type": "string", "minLength": 1},
+    "independent_verification_available": {"type": "boolean"},
+    "internal_coherence_counts_as_validation": {"const": false},
+    "status": {"enum": ["unverified", "independently_verified"]},
+    "verification_limit": {"type": "string"},
+    "required_independent_process": {"type": "string"},
+    "wake_trigger": {"type": "string"},
+    "custody_id": {"type": "string"}
+  }
+}

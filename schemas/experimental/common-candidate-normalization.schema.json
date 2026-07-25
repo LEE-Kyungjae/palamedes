@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/common-candidate-normalization.schema.json",
+  "title": "PalamedesCommonCandidateNormalization",
+  "description": "Experimental Cycle 132 contract normalizing sealed candidates against common constraints.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "normalization_id",
+    "generation_batch_id",
+    "constitution_id",
+    "constitution_version",
+    "resource_envelope_id",
+    "evaluation_as_of",
+    "common_context_hash",
+    "candidate_theses_may_be_rewritten",
+    "normalized_candidates"
+  ],
+  "properties": {
+    "normalization_id": {"type": "string", "minLength": 1},
+    "generation_batch_id": {"type": "string", "minLength": 1},
+    "constitution_id": {"type": "string", "minLength": 1},
+    "constitution_version": {"type": "integer", "minimum": 1},
+    "resource_envelope_id": {"type": "string", "minLength": 1},
+    "evaluation_as_of": {"type": "string", "minLength": 1},
+    "common_context_hash": {"type": "string", "minLength": 1},
+    "candidate_theses_may_be_rewritten": {"const": false},
+    "normalized_candidates": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "candidate_id",
+          "sealed_candidate_hash",
+          "common_context_hash",
+          "constitutional_fit",
+          "resource_demand",
+          "constraint_tensions",
+          "original_thesis_preserved"
+        ],
+        "properties": {
+          "candidate_id": {"type": "string", "minLength": 1},
+          "sealed_candidate_hash": {"type": "string", "minLength": 1},
+          "common_context_hash": {"type": "string", "minLength": 1},
+          "constitutional_fit": {"type": "string", "minLength": 1},
+          "resource_demand": {"type": "string", "minLength": 1},
+          "constraint_tensions": {"type": "string", "minLength": 1},
+          "original_thesis_preserved": {"const": true}
+        }
+      }
+    }
+  }
+}

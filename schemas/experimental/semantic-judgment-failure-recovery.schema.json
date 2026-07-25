@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/semantic-judgment-failure-recovery.schema.json",
+  "title": "PalamedesSemanticJudgmentFailureRecovery",
+  "description": "Cycle 328 bounded model recovery or unavailable-judgment deferral without rule-based purpose scoring.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["failure_recovery_id", "semantic_operation", "input_artifact_fingerprint", "prior_state_fingerprint", "initial_failure", "maximum_recovery_attempts", "recovery_attempts", "recovery_result", "rule_based_purpose_scoring_invoked", "deterministic_semantic_substitute_invoked", "failure_rationale"],
+  "properties": {
+    "failure_recovery_id": {"type": "string", "minLength": 1},
+    "semantic_operation": {"type": "string", "minLength": 1},
+    "input_artifact_fingerprint": {"type": "string", "minLength": 1},
+    "prior_state_fingerprint": {"type": "string", "minLength": 1},
+    "initial_failure": {
+      "type": "object", "additionalProperties": false,
+      "required": ["call_id", "provider_id", "model_id", "failure_type", "failed_at"],
+      "properties": {
+        "call_id": {"type": "string", "minLength": 1},
+        "provider_id": {"type": "string", "minLength": 1},
+        "model_id": {"type": "string", "minLength": 1},
+        "failure_type": {"type": "string", "minLength": 1},
+        "failed_at": {"type": "string", "minLength": 1}
+      }
+    },
+    "maximum_recovery_attempts": {"type": "integer", "minimum": 0},
+    "recovery_attempts": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["attempt_id", "ordinal", "action", "provider_id", "model_id", "input_fingerprint", "started_at", "completed_at", "status", "judgment_artifact_id", "judgment_fingerprint", "semantic_validator_id"],
+        "properties": {
+          "attempt_id": {"type": "string", "minLength": 1},
+          "ordinal": {"type": "integer", "minimum": 1},
+          "action": {"enum": ["retry", "switch_provider", "narrow_context"]},
+          "provider_id": {"type": "string", "minLength": 1},
+          "model_id": {"type": "string", "minLength": 1},
+          "input_fingerprint": {"type": "string", "minLength": 1},
+          "started_at": {"type": "string", "minLength": 1},
+          "completed_at": {"type": "string", "minLength": 1},
+          "status": {"enum": ["failed", "valid_judgment"]},
+          "judgment_artifact_id": {"type": "string"},
+          "judgment_fingerprint": {"type": "string"},
+          "semantic_validator_id": {"type": "string"}
+        }
+      }
+    },
+    "recovery_result": {
+      "type": "object",
+      "required": ["status", "accepted_attempt_id", "deferred", "prior_state_fingerprint", "state_mutated_without_valid_judgment"],
+      "properties": {
+        "status": {"enum": ["recovered", "unavailable_judgment"]},
+        "accepted_attempt_id": {"type": "string"},
+        "judgment_artifact_id": {"type": "string"},
+        "unavailable_state_id": {"type": "string"},
+        "pending_semantic_operation": {"type": "string"},
+        "wake_trigger": {"type": "string"},
+        "review_at": {"type": "string"},
+        "deferred": {"type": "boolean"},
+        "prior_state_fingerprint": {"type": "string", "minLength": 1},
+        "state_mutated_without_valid_judgment": {"const": false}
+      }
+    },
+    "rule_based_purpose_scoring_invoked": {"const": false},
+    "deterministic_semantic_substitute_invoked": {"const": false},
+    "failure_rationale": {"type": "string", "minLength": 1}
+  }
+}

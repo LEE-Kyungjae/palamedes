@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/probe-over-mission-selection.schema.json",
+  "title": "PalamedesProbeOverMissionSelection",
+  "description": "Experimental Cycle 246 contract choosing an information-producing probe when its option value exceeds commitment.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "probe_selection_id",
+    "tournament_id",
+    "leading_mission_ids",
+    "probe_id",
+    "probe_observation",
+    "probe_separates_mission_ids",
+    "selection_update_rule",
+    "probe_option_value",
+    "immediate_commitment_value",
+    "decision",
+    "premature_mission_commitment",
+    "decision_rationale"
+  ],
+  "properties": {
+    "probe_selection_id": {"type": "string", "minLength": 1},
+    "tournament_id": {"type": "string", "minLength": 1},
+    "leading_mission_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "probe_id": {"type": "string", "minLength": 1},
+    "probe_observation": {"type": "string", "minLength": 1},
+    "probe_separates_mission_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "selection_update_rule": {"type": "string", "minLength": 1},
+    "probe_option_value": {"type": "number", "minimum": 0, "maximum": 1},
+    "immediate_commitment_value": {"type": "number", "minimum": 0, "maximum": 1},
+    "decision": {"enum": ["select_probe", "commit_mission"]},
+    "premature_mission_commitment": {"type": "boolean"},
+    "decision_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/plural-mission-horizons.schema.json",
+  "title": "PalamedesPluralMissionHorizons",
+  "description": "Experimental Cycle 133 comparison across output, options, learning, and beneficiary change.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["comparison_id", "normalization_id", "evaluation_window", "candidates"],
+  "properties": {
+    "comparison_id": {"type": "string", "minLength": 1},
+    "normalization_id": {"type": "string", "minLength": 1},
+    "evaluation_window": {"type": "string", "minLength": 1},
+    "candidates": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["candidate_id", "assessments"],
+        "properties": {
+          "candidate_id": {"type": "string", "minLength": 1},
+          "assessments": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["dimension", "claim", "evidence_id", "uncertainty"],
+              "properties": {
+                "dimension": {
+                  "enum": [
+                    "near_term_output",
+                    "option_creation",
+                    "learning",
+                    "beneficiary_change"
+                  ]
+                },
+                "claim": {"type": "string", "minLength": 1},
+                "evidence_id": {"type": "string", "minLength": 1},
+                "uncertainty": {"type": "string", "minLength": 1}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

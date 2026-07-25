@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/portfolio-capacity-allocation.schema.json",
+  "title": "PalamedesPortfolioCapacityAllocation",
+  "description": "Experimental Cycle 136 explicit finite execution and exploration allocation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "portfolio_id",
+    "capacity_unit",
+    "allocation_window",
+    "total_capacity",
+    "reserve_capacity",
+    "hidden_parallel_commitments_allowed",
+    "allocations"
+  ],
+  "properties": {
+    "portfolio_id": {"type": "string", "minLength": 1},
+    "capacity_unit": {"type": "string", "minLength": 1},
+    "allocation_window": {"type": "string", "minLength": 1},
+    "total_capacity": {"type": "integer", "minimum": 0},
+    "reserve_capacity": {"type": "integer", "minimum": 0},
+    "hidden_parallel_commitments_allowed": {"const": false},
+    "allocations": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["candidate_id", "mode", "capacity", "scope", "stop_condition"],
+        "properties": {
+          "candidate_id": {"type": "string", "minLength": 1},
+          "mode": {"enum": ["explore", "commit", "hold"]},
+          "capacity": {"type": "integer", "minimum": 0},
+          "scope": {"type": "string", "minLength": 1},
+          "stop_condition": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

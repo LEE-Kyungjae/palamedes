@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/analogical-authority-precedent.schema.json",
+  "title": "PalamedesAnalogicalAuthorityPrecedent",
+  "description": "Experimental Cycle 143 novel-action authority reasoning by exposed analogy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reasoning_id",
+    "authority_id",
+    "novel_action",
+    "why_unclassified",
+    "inferred_consequence_class",
+    "analogy_limit",
+    "analogy_strength",
+    "confidence",
+    "authority_decision",
+    "precedents"
+  ],
+  "properties": {
+    "reasoning_id": {"type": "string", "minLength": 1},
+    "authority_id": {"type": "string", "minLength": 1},
+    "novel_action": {"type": "string", "minLength": 1},
+    "why_unclassified": {"type": "string", "minLength": 1},
+    "inferred_consequence_class": {"type": "string", "minLength": 1},
+    "analogy_limit": {"type": "string", "minLength": 1},
+    "analogy_strength": {"enum": ["weak", "moderate", "strong"]},
+    "confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+    "authority_decision": {"enum": ["within_authority", "outside_authority", "uncertain"]},
+    "precedents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "precedent_id",
+          "prior_action",
+          "prior_authority_decision",
+          "material_similarity",
+          "material_difference",
+          "source_id"
+        ],
+        "properties": {
+          "precedent_id": {"type": "string", "minLength": 1},
+          "prior_action": {"type": "string", "minLength": 1},
+          "prior_authority_decision": {"type": "string", "minLength": 1},
+          "material_similarity": {"type": "string", "minLength": 1},
+          "material_difference": {"type": "string", "minLength": 1},
+          "source_id": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

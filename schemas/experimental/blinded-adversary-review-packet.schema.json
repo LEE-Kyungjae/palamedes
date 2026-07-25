@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/blinded-adversary-review-packet.schema.json",
+  "title": "PalamedesBlindedAdversaryReviewPacket",
+  "description": "Cycle 325 adversarial review packet withholding author identity and persuasive history.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["review_packet_id", "adversary_assignment_id", "constitution_state_id", "constitution_fingerprint", "candidate_id", "candidate_fingerprint", "packet_fingerprint", "visible_input_types", "structured_candidate", "withheld_fields", "redaction_attestation", "critique_output", "identity_visible_to_adversary", "persuasive_history_visible_to_adversary", "review_rationale"],
+  "properties": {
+    "review_packet_id": {"type": "string", "minLength": 1},
+    "adversary_assignment_id": {"type": "string", "minLength": 1},
+    "constitution_state_id": {"type": "string", "minLength": 1},
+    "constitution_fingerprint": {"type": "string", "minLength": 1},
+    "candidate_id": {"type": "string", "minLength": 1},
+    "candidate_fingerprint": {"type": "string", "minLength": 1},
+    "packet_fingerprint": {"type": "string", "minLength": 1},
+    "visible_input_types": {"type": "array", "prefixItems": [{"const": "constitution"}, {"const": "structured_candidate"}], "minItems": 2, "maxItems": 2},
+    "structured_candidate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["situation", "meaning", "beneficiary", "desired_external_condition", "essential_causal_mechanism", "non_goal", "success_signal", "disconfirmation_condition"],
+      "properties": {
+        "situation": {"type": "string", "minLength": 1},
+        "meaning": {"type": "string", "minLength": 1},
+        "beneficiary": {"type": "string", "minLength": 1},
+        "desired_external_condition": {"type": "string", "minLength": 1},
+        "essential_causal_mechanism": {"type": "string", "minLength": 1},
+        "non_goal": {"type": "string", "minLength": 1},
+        "success_signal": {"type": "string", "minLength": 1},
+        "disconfirmation_condition": {"type": "string", "minLength": 1}
+      }
+    },
+    "withheld_fields": {"type": "array", "minItems": 7, "maxItems": 7, "uniqueItems": true, "items": {"enum": ["author_identity", "inventor_assignment", "model_identity", "provider_identity", "persuasive_discussion_history", "raw_chain_of_thought", "candidate_popularity"]}},
+    "redaction_attestation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["attestation_id", "sanitizer_version", "sanitized_at", "sanitized_packet_fingerprint", "forbidden_fields_absent", "candidate_substance_preserved"],
+      "properties": {
+        "attestation_id": {"type": "string", "minLength": 1},
+        "sanitizer_version": {"type": "string", "minLength": 1},
+        "sanitized_at": {"type": "string", "minLength": 1},
+        "sanitized_packet_fingerprint": {"type": "string", "minLength": 1},
+        "forbidden_fields_absent": {"const": true},
+        "candidate_substance_preserved": {"const": true}
+      }
+    },
+    "critique_output": {
+      "type": "object", "additionalProperties": false,
+      "required": ["critique_record_id", "candidate_id", "constitutional_tension", "causal_weakness", "beneficiary_harm", "disconfirming_observation", "critique_fingerprint", "author_guess_recorded", "candidate_mutated"],
+      "properties": {
+        "critique_record_id": {"type": "string", "minLength": 1},
+        "candidate_id": {"type": "string", "minLength": 1},
+        "constitutional_tension": {"type": "string", "minLength": 1},
+        "causal_weakness": {"type": "string", "minLength": 1},
+        "beneficiary_harm": {"type": "string", "minLength": 1},
+        "disconfirming_observation": {"type": "string", "minLength": 1},
+        "critique_fingerprint": {"type": "string", "minLength": 1},
+        "author_guess_recorded": {"const": false},
+        "candidate_mutated": {"const": false}
+      }
+    },
+    "identity_visible_to_adversary": {"const": false},
+    "persuasive_history_visible_to_adversary": {"const": false},
+    "review_rationale": {"type": "string", "minLength": 1}
+  }
+}

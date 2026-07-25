@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/sensitive-prompt-context-policy-gate.schema.json",
+  "title": "PalamedesSensitivePromptContextPolicyGate",
+  "description": "Cycle 388 auditable prompt-context policy evaluation and redaction.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["context_report_id", "context_input", "context_record", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "context_report_id": {"type": "string", "minLength": 1},
+    "context_input": {"type": "object"},
+    "context_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prompt_context_record_version", "prompt_context_id", "policy_version_id", "policy_fingerprint", "model_operation_id", "evaluation_recorded_at", "prompt_items", "audit_decisions", "prompt_assembly_status", "unevaluated_context_count", "raw_confidential_or_restricted_content_embedded"],
+      "properties": {
+        "prompt_context_record_version": {"const": "policy-gated-context/1"},
+        "prompt_context_id": {"type": "string", "minLength": 1},
+        "policy_version_id": {"type": "string", "minLength": 1},
+        "policy_fingerprint": {"type": "string", "minLength": 1},
+        "model_operation_id": {"type": "string", "minLength": 1},
+        "evaluation_recorded_at": {"type": "string", "minLength": 1},
+        "prompt_items": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["context_item_id", "source_classification", "prompt_artifact_id", "prompt_artifact_fingerprint", "policy_decision"],
+            "properties": {
+              "context_item_id": {"type": "string", "minLength": 1},
+              "source_classification": {"enum": ["public", "internal", "confidential", "restricted"]},
+              "prompt_artifact_id": {"type": "string", "minLength": 1},
+              "prompt_artifact_fingerprint": {"type": "string", "minLength": 1},
+              "policy_decision": {"enum": ["allow", "redact"]}
+            }
+          }
+        },
+        "audit_decisions": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["context_item_id", "classification", "decision", "policy_rule_id", "decision_rationale", "redaction_method", "sanitized_artifact_id", "sanitized_fingerprint", "evaluated_before_prompt_assembly"],
+            "properties": {
+              "context_item_id": {"type": "string", "minLength": 1},
+              "classification": {"enum": ["public", "internal", "confidential", "restricted"]},
+              "decision": {"enum": ["allow", "redact", "deny"]},
+              "policy_rule_id": {"type": "string", "minLength": 1},
+              "decision_rationale": {"type": "string", "minLength": 1},
+              "redaction_method": {"type": "string"},
+              "sanitized_artifact_id": {"type": "string"},
+              "sanitized_fingerprint": {"type": "string"},
+              "evaluated_before_prompt_assembly": {"const": true}
+            }
+          }
+        },
+        "prompt_assembly_status": {"enum": ["ready", "blocked_no_authorized_context"]},
+        "unevaluated_context_count": {"const": 0},
+        "raw_confidential_or_restricted_content_embedded": {"const": false}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

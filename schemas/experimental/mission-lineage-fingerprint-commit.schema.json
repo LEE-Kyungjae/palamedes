@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/mission-lineage-fingerprint-commit.schema.json",
+  "title": "PalamedesMissionLineageFingerprintCommit",
+  "description": "Experimental Cycle 265 compare-and-swap protection of mission lineage against concurrent wake races.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lineage_commit_id",
+    "lineage_id",
+    "wake_event_id",
+    "concurrent_wake_ids",
+    "writer_id",
+    "wake_base_version",
+    "current_stored_version",
+    "proposed_version",
+    "wake_base_fingerprint",
+    "current_stored_fingerprint",
+    "proposed_lineage_fingerprint",
+    "lineage_patch_hash",
+    "commit_status",
+    "resulting_stored_fingerprint",
+    "stale_write_overwrote_lineage",
+    "retry_from_current_required"
+  ],
+  "properties": {
+    "lineage_commit_id": {"type": "string", "minLength": 1},
+    "lineage_id": {"type": "string", "minLength": 1},
+    "wake_event_id": {"type": "string", "minLength": 1},
+    "concurrent_wake_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "writer_id": {"type": "string", "minLength": 1},
+    "wake_base_version": {"type": "integer", "minimum": 1},
+    "current_stored_version": {"type": "integer", "minimum": 1},
+    "proposed_version": {"type": "integer", "minimum": 1},
+    "wake_base_fingerprint": {"type": "string", "minLength": 1},
+    "current_stored_fingerprint": {"type": "string", "minLength": 1},
+    "proposed_lineage_fingerprint": {"type": "string", "minLength": 1},
+    "lineage_patch_hash": {"type": "string", "minLength": 1},
+    "commit_status": {"enum": ["committed", "rejected_stale"]},
+    "resulting_stored_fingerprint": {"type": "string", "minLength": 1},
+    "stale_write_overwrote_lineage": {"type": "boolean"},
+    "retry_from_current_required": {"type": "boolean"}
+  }
+}

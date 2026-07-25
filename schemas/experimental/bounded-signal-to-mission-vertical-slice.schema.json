@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/bounded-signal-to-mission-vertical-slice.schema.json",
+  "title": "PalamedesBoundedSignalToMissionVerticalSlice",
+  "description": "Cycle 391 linked signal-to-mission contract slice ending before execution.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["slice_report_id", "slice_input", "slice_record", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "slice_report_id": {"type": "string", "minLength": 1},
+    "slice_input": {"type": "object"},
+    "slice_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vertical_slice_record_version", "vertical_slice_id", "slice_protocol_id", "slice_fingerprint", "signal", "interpretation", "mission_candidates", "selection", "mission_contract", "outcome_intake", "ordered_stage_ids", "authority_endpoint", "execution_platform_capability", "execution_objects_emitted"],
+      "properties": {
+        "vertical_slice_record_version": {"const": "signal-to-mission-slice/1"},
+        "vertical_slice_id": {"type": "string", "minLength": 1},
+        "slice_protocol_id": {"type": "string", "minLength": 1},
+        "slice_fingerprint": {"type": "string", "minLength": 1},
+        "signal": {"type": "object"},
+        "interpretation": {"type": "object"},
+        "mission_candidates": {"type": "array", "minItems": 1},
+        "selection": {"type": "object"},
+        "mission_contract": {"type": "object"},
+        "outcome_intake": {"type": "array"},
+        "ordered_stage_ids": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "string", "minLength": 1}},
+        "authority_endpoint": {"const": "mission_contract_and_outcome_intake"},
+        "execution_platform_capability": {"const": false},
+        "execution_objects_emitted": {"const": 0}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

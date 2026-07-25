@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/constitution-thesis-integration.schema.json",
+  "title": "PalamedesConstitutionThesisIntegration",
+  "description": "Experimental Cycle 220 integration of layered, contestable, outcome-linked constitutional execution.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "constitution_thesis_id",
+    "constitution_version_id",
+    "layer_registry_id",
+    "contextual_rule_id",
+    "precedence_graph_id",
+    "principle_override_id",
+    "preference_decay_id",
+    "precedent_record_id",
+    "authority_grant_id",
+    "interpretation_trace_id",
+    "trace_audit_id",
+    "outcome_record_id",
+    "layered_state_present",
+    "conflict_awareness_present",
+    "versioned_state_present",
+    "application_is_contestable",
+    "application_is_outcome_linked",
+    "interpretation_trace_is_alignment_proof",
+    "contestation_channel",
+    "outcome_links",
+    "revision_trigger",
+    "conclusion"
+  ],
+  "properties": {
+    "constitution_thesis_id": {"type": "string", "minLength": 1},
+    "constitution_version_id": {"type": "string", "minLength": 1},
+    "layer_registry_id": {"type": "string", "minLength": 1},
+    "contextual_rule_id": {"type": "string", "minLength": 1},
+    "precedence_graph_id": {"type": "string", "minLength": 1},
+    "principle_override_id": {"type": "string", "minLength": 1},
+    "preference_decay_id": {"type": "string", "minLength": 1},
+    "precedent_record_id": {"type": "string", "minLength": 1},
+    "authority_grant_id": {"type": "string", "minLength": 1},
+    "interpretation_trace_id": {"type": "string", "minLength": 1},
+    "trace_audit_id": {"type": "string", "minLength": 1},
+    "outcome_record_id": {"type": "string", "minLength": 1},
+    "layered_state_present": {"const": true},
+    "conflict_awareness_present": {"const": true},
+    "versioned_state_present": {"const": true},
+    "application_is_contestable": {"const": true},
+    "application_is_outcome_linked": {"const": true},
+    "interpretation_trace_is_alignment_proof": {"const": false},
+    "contestation_channel": {"type": "string", "minLength": 1},
+    "outcome_links": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["link_type", "governance_record_id", "outcome_evidence_id", "observed_relation"],
+        "properties": {
+          "link_type": {"enum": ["clause_application", "override_prediction", "authority_consequence"]},
+          "governance_record_id": {"type": "string", "minLength": 1},
+          "outcome_evidence_id": {"type": "string", "minLength": 1},
+          "observed_relation": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "revision_trigger": {"type": "string", "minLength": 1},
+    "conclusion": {"const": "constitution_thesis_supported"}
+  }
+}

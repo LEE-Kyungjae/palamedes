@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/plural-value-state.schema.json",
+  "title": "PalamedesPluralValueState",
+  "description": "Experimental Cycle 109 contract for an inspectable, non-scalarized value state.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "state_id",
+    "as_of",
+    "principles",
+    "preference_claims",
+    "prohibitions",
+    "uncertainties",
+    "precedents"
+  ],
+  "properties": {
+    "state_id": {"type": "string", "minLength": 1},
+    "as_of": {"type": "string", "minLength": 1},
+    "constitution_id": {"type": "string", "minLength": 1},
+    "constitution_version": {"type": "integer", "minimum": 1},
+    "decision_rule": {"const": "plural_deliberation"},
+    "principles": {"$ref": "#/$defs/component"},
+    "preference_claims": {"$ref": "#/$defs/component"},
+    "prohibitions": {"$ref": "#/$defs/component"},
+    "uncertainties": {"$ref": "#/$defs/component"},
+    "precedents": {"$ref": "#/$defs/component"}
+  },
+  "$defs": {
+    "component": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "claim", "source_ids"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "claim": {"type": "string", "minLength": 1},
+          "source_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    }
+  }
+}

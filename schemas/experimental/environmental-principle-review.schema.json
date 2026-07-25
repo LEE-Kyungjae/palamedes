@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/environmental-principle-review.schema.json",
+  "title": "PalamedesEnvironmentalPrincipleReview",
+  "description": "Experimental Cycle 188 invalidation of successful principles under environmental change.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "review_id",
+    "principle_id",
+    "principle_statement",
+    "successful_precedent_id",
+    "successful_outcome",
+    "original_environment_assumptions",
+    "environmental_invalidation_search_performed",
+    "past_success_overrides_current_environment",
+    "environmental_changes",
+    "principle_status",
+    "decision",
+    "review_rationale"
+  ],
+  "properties": {
+    "review_id": {"type": "string", "minLength": 1},
+    "principle_id": {"type": "string", "minLength": 1},
+    "principle_statement": {"type": "string", "minLength": 1},
+    "successful_precedent_id": {"type": "string", "minLength": 1},
+    "successful_outcome": {"type": "string", "minLength": 1},
+    "original_environment_assumptions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "environmental_invalidation_search_performed": {"const": true},
+    "past_success_overrides_current_environment": {"const": false},
+    "environmental_changes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["change_id", "observation", "evidence_id", "affected_assumption", "impact"],
+        "properties": {
+          "change_id": {"type": "string", "minLength": 1},
+          "observation": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "affected_assumption": {"type": "string", "minLength": 1},
+          "impact": {"enum": ["none", "weakens", "invalidates"]}
+        }
+      }
+    },
+    "principle_status": {"enum": ["valid", "weakened", "invalidated"]},
+    "decision": {"enum": ["retain", "limit_scope", "retire"]},
+    "review_rationale": {"type": "string", "minLength": 1}
+  }
+}

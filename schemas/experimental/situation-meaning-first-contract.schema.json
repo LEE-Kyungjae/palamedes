@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/situation-meaning-first-contract.schema.json",
+  "title": "PalamedesSituationMeaningFirstContract",
+  "description": "Experimental Cycle 252 planner contract beginning with evidenced situation and interpreted meaning.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_id",
+    "mission_id",
+    "compression_id",
+    "section_order",
+    "situation",
+    "meaning",
+    "downstream_sections",
+    "downstream_objective_precedes_meaning",
+    "contract_rationale"
+  ],
+  "properties": {
+    "contract_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "compression_id": {"type": "string", "minLength": 1},
+    "section_order": {
+      "const": [
+        "situation",
+        "meaning",
+        "beneficiary",
+        "desired_condition",
+        "causal_thesis",
+        "boundaries",
+        "signals"
+      ]
+    },
+    "situation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "current_condition",
+        "observation_scope",
+        "evidence_id",
+        "observed_at",
+        "contains_prescribed_solution"
+      ],
+      "properties": {
+        "current_condition": {"type": "string", "minLength": 1},
+        "observation_scope": {"type": "string", "minLength": 1},
+        "evidence_id": {"type": "string", "minLength": 1},
+        "observed_at": {"type": "string", "minLength": 1},
+        "contains_prescribed_solution": {"const": false}
+      }
+    },
+    "meaning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "why_condition_matters",
+        "stake_at_risk",
+        "interpretation_evidence_id",
+        "selection_connection",
+        "reduced_to_metric_target"
+      ],
+      "properties": {
+        "why_condition_matters": {"type": "string", "minLength": 1},
+        "stake_at_risk": {"type": "string", "minLength": 1},
+        "interpretation_evidence_id": {"type": "string", "minLength": 1},
+        "selection_connection": {"type": "string", "minLength": 1},
+        "reduced_to_metric_target": {"const": false}
+      }
+    },
+    "downstream_sections": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "enum": ["beneficiary", "desired_condition", "causal_thesis", "boundaries", "signals"]
+      }
+    },
+    "downstream_objective_precedes_meaning": {"const": false},
+    "contract_rationale": {"type": "string", "minLength": 1}
+  }
+}

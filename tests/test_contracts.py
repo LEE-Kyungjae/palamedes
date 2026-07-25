@@ -161,7 +161,13 @@ class ContractFixtureTests(unittest.TestCase):
             palamedes.ensure_state()
             with PalamedesHTTPServerIsolation() as server:
                 transport = build_http_transport(server.base_url)
-                report = run_manifest(transport)
+                report = run_manifest(
+                    transport,
+                    reset_state=lambda: (
+                        shutil.rmtree(palamedes.STATE_DIR, ignore_errors=True),
+                        palamedes.ensure_state(),
+                    ),
+                )
 
         self.assertTrue(report["ok"])
         self.assertEqual(report["passed"], report["case_count"])
@@ -190,5 +196,12 @@ class ContractFixtureTests(unittest.TestCase):
         check_names = [item["name"] for item in report["checks"]]
         self.assertEqual(
             check_names,
-            ["plan_envelope", "etag_write", "cycle_snapshot", "stale_conflict", "contracts_catalog"],
+            [
+                "plan_envelope",
+                "etag_write",
+                "cycle_snapshot",
+                "stale_conflict",
+                "contracts_catalog",
+                "tool_catalog",
+            ],
         )

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/mission-resource-renewal.schema.json",
+  "title": "PalamedesMissionResourceRenewal",
+  "description": "Experimental Cycle 183 resource-renewal thesis or explicit subsidy mandate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "resource_record_id",
+    "mission_id",
+    "resource_mode",
+    "resource_envelope",
+    "runway",
+    "renewal_review_trigger",
+    "stop_condition",
+    "unsupported_noble_intent_is_sufficient",
+    "resource_renewal_thesis",
+    "subsidy_mandate"
+  ],
+  "properties": {
+    "resource_record_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "resource_mode": {"enum": ["earned_revenue", "subsidy", "hybrid"]},
+    "resource_envelope": {"type": "string", "minLength": 1},
+    "runway": {"type": "string", "minLength": 1},
+    "renewal_review_trigger": {"type": "string", "minLength": 1},
+    "stop_condition": {"type": "string", "minLength": 1},
+    "unsupported_noble_intent_is_sufficient": {"const": false},
+    "resource_renewal_thesis": {
+      "type": ["object", "null"],
+      "properties": {
+        "payer": {"type": "string", "minLength": 1},
+        "payer_benefit": {"type": "string", "minLength": 1},
+        "renewal_mechanism": {"type": "string", "minLength": 1},
+        "pricing_evidence_id": {"type": "string", "minLength": 1},
+        "causal_thesis": {"type": "string", "minLength": 1}
+      }
+    },
+    "subsidy_mandate": {
+      "type": ["object", "null"],
+      "properties": {
+        "mandate_id": {"type": "string", "minLength": 1},
+        "authority_id": {"type": "string", "minLength": 1},
+        "resource_limit": {"type": "string", "minLength": 1},
+        "purpose_scope": {"type": "string", "minLength": 1},
+        "expires_at": {"type": "string", "minLength": 1},
+        "renewal_authority": {"type": "string", "minLength": 1},
+        "open_ended": {"const": false}
+      }
+    }
+  }
+}

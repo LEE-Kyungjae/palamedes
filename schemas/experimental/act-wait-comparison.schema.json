@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/act-wait-comparison.schema.json",
+  "title": "PalamedesActWaitComparison",
+  "description": "Experimental Cycle 128 contract comparing action with waiting and natural uncertainty reduction.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "comparison_id",
+    "opportunity_id",
+    "window_id",
+    "act_now_consequence",
+    "wait_consequence",
+    "act_now_cost",
+    "wait_cost",
+    "decision_rationale",
+    "decision",
+    "uncertainty_reducing_naturally",
+    "options_closed_by_delay",
+    "wake_trigger",
+    "probe"
+  ],
+  "properties": {
+    "comparison_id": {"type": "string", "minLength": 1},
+    "opportunity_id": {"type": "string", "minLength": 1},
+    "window_id": {"type": "string", "minLength": 1},
+    "act_now_consequence": {"type": "string", "minLength": 1},
+    "wait_consequence": {"type": "string", "minLength": 1},
+    "act_now_cost": {"type": "string", "minLength": 1},
+    "wait_cost": {"type": "string", "minLength": 1},
+    "decision_rationale": {"type": "string", "minLength": 1},
+    "decision": {"enum": ["act_now", "wait", "probe"]},
+    "uncertainty_reducing_naturally": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "options_closed_by_delay": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "wake_trigger": {"type": "string"},
+    "probe": {"type": "string"}
+  }
+}

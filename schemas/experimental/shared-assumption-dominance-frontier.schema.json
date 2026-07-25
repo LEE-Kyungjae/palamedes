@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/shared-assumption-dominance-frontier.schema.json",
+  "title": "PalamedesSharedAssumptionDominanceFrontier",
+  "description": "Cycle 344 dominance only under shared assumptions with explicit unresolved assumption frontiers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["assumption_gate_id", "decision_structure_id", "candidate_set_fingerprint", "candidate_assumptions", "pair_assessments", "cross_assumption_dominance_allowed", "unresolved_frontiers_visible_to_selector", "gate_rationale"],
+  "properties": {
+    "assumption_gate_id": {"type": "string", "minLength": 1},
+    "decision_structure_id": {"type": "string", "minLength": 1},
+    "candidate_set_fingerprint": {"type": "string", "minLength": 1},
+    "candidate_assumptions": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["candidate_id", "assumptions"],
+        "properties": {
+          "candidate_id": {"type": "string", "minLength": 1},
+          "assumptions": {
+            "type": "array", "minItems": 1,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["assumption_id", "assumed_value", "assumption_fingerprint", "evidence_fingerprint"],
+              "properties": {
+                "assumption_id": {"type": "string", "minLength": 1},
+                "assumed_value": {"type": "string", "minLength": 1},
+                "assumption_fingerprint": {"type": "string", "minLength": 1},
+                "evidence_fingerprint": {"type": "string", "minLength": 1}
+              }
+            }
+          }
+        }
+      }
+    },
+    "pair_assessments": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["pair_id", "left_candidate_id", "right_candidate_id", "assumptions_shared", "dominance_computation_allowed", "dominance_assessment_id", "assumption_frontier", "assumption_difference_treated_as_value_difference"],
+        "properties": {
+          "pair_id": {"type": "string", "minLength": 1},
+          "left_candidate_id": {"type": "string", "minLength": 1},
+          "right_candidate_id": {"type": "string", "minLength": 1},
+          "assumptions_shared": {"type": "boolean"},
+          "dominance_computation_allowed": {"type": "boolean"},
+          "dominance_assessment_id": {"type": "string"},
+          "assumption_frontier": {"type": "object"},
+          "assumption_difference_treated_as_value_difference": {"const": false}
+        }
+      }
+    },
+    "cross_assumption_dominance_allowed": {"const": false},
+    "unresolved_frontiers_visible_to_selector": {"const": true},
+    "gate_rationale": {"type": "string", "minLength": 1}
+  }
+}

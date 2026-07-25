@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/strategy-only-first-planner-handoff.schema.json",
+  "title": "PalamedesStrategyOnlyFirstPlannerHandoff",
+  "description": "Cycle 353 first planner handoff ending at acknowledgment and strategy return.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["handoff_id", "compilation_id", "semantic_mapping_id", "mission_contract_id", "mission_contract_fingerprint", "planner_id", "handoff_fingerprint", "handoff_events", "boundary_state", "first_handoff_complete", "first_handoff_generated_tasks", "handoff_rationale"],
+  "properties": {
+    "handoff_id": {"type": "string", "minLength": 1},
+    "compilation_id": {"type": "string", "minLength": 1},
+    "semantic_mapping_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "mission_contract_fingerprint": {"type": "string", "minLength": 1},
+    "planner_id": {"type": "string", "minLength": 1},
+    "handoff_fingerprint": {"type": "string", "minLength": 1},
+    "handoff_events": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["event_id", "event_type", "actor", "recipient", "artifact_id", "artifact_fingerprint", "occurred_at", "task_artifacts_created", "execution_command_issued"],
+        "properties": {
+          "event_id": {"type": "string", "minLength": 1},
+          "event_type": {"enum": ["dispatch_compiled_mission", "acknowledge_mission", "propose_strategy", "return_for_mission_review"]},
+          "actor": {"enum": ["palamedes", "planner"]},
+          "recipient": {"enum": ["palamedes", "planner"]},
+          "artifact_id": {"type": "string", "minLength": 1},
+          "artifact_fingerprint": {"type": "string", "minLength": 1},
+          "occurred_at": {"type": "string", "minLength": 1},
+          "task_artifacts_created": {"const": false},
+          "execution_command_issued": {"const": false}
+        }
+      }
+    },
+    "boundary_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["planner_acknowledgment_artifact_id", "strategy_proposal_artifact_id", "palamedes_review_queue_id", "status", "next_authorized_transition", "task_plan_present", "implementation_sequence_present", "execution_authority_issued", "implementation_started", "planner_self_approved_strategy"],
+      "properties": {
+        "planner_acknowledgment_artifact_id": {"type": "string", "minLength": 1},
+        "strategy_proposal_artifact_id": {"type": "string", "minLength": 1},
+        "palamedes_review_queue_id": {"type": "string", "minLength": 1},
+        "status": {"const": "awaiting_palamedes_strategy_review"},
+        "next_authorized_transition": {"const": "review_strategy_meaning_and_constraints"},
+        "task_plan_present": {"const": false},
+        "implementation_sequence_present": {"const": false},
+        "execution_authority_issued": {"const": false},
+        "implementation_started": {"const": false},
+        "planner_self_approved_strategy": {"const": false}
+      }
+    },
+    "first_handoff_complete": {"const": true},
+    "first_handoff_generated_tasks": {"const": false},
+    "handoff_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/decision-relevant-causal-complexity.schema.json",
+  "title": "PalamedesDecisionRelevantCausalComplexity",
+  "description": "Experimental Cycle 223 contract admitting causal detail only when it changes a decision branch.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "complexity_review_id",
+    "causal_sketch_id",
+    "target_decision",
+    "decorative_complexity_allowed",
+    "component_budget",
+    "components",
+    "pruning_rule"
+  ],
+  "properties": {
+    "complexity_review_id": {"type": "string", "minLength": 1},
+    "causal_sketch_id": {"type": "string", "minLength": 1},
+    "target_decision": {"type": "string", "minLength": 1},
+    "decorative_complexity_allowed": {"const": false},
+    "component_budget": {"type": "integer", "minimum": 5},
+    "components": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "component_id",
+          "component_type",
+          "description",
+          "decision_relevance",
+          "changed_decision_branch",
+          "evidence_id",
+          "removal_consequence",
+          "removal_leaves_decision_unchanged"
+        ],
+        "properties": {
+          "component_id": {"type": "string", "minLength": 1},
+          "component_type": {"enum": ["actor", "incentive", "constraint", "mechanism", "feedback_loop"]},
+          "description": {"type": "string", "minLength": 1},
+          "decision_relevance": {"type": "string", "minLength": 1},
+          "changed_decision_branch": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "removal_consequence": {"type": "string", "minLength": 1},
+          "removal_leaves_decision_unchanged": {"const": false}
+        }
+      }
+    },
+    "pruning_rule": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/one-case-stop-and-inspect.schema.json",
+  "title": "PalamedesOneCaseStopAndInspect",
+  "description": "Cycle 399 one end-to-end case inspection before schema or runtime generalization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["inspection_report_id", "inspection_input", "inspection_record", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "inspection_report_id": {"type": "string", "minLength": 1},
+    "inspection_input": {"type": "object"},
+    "inspection_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inspection_record_version", "inspection_id", "inspection_protocol_id", "end_to_end_case_id", "case_evidence_bundle_fingerprint", "inspection_recorded_at", "completed_end_to_end_case_count", "newly_visible_findings", "covered_surfaces", "proposed_expansions", "implementation_decision", "schema_generalization_authorized", "agent_company_runtime_authorized", "autonomous_daemon_authorized", "next_authorized_work"],
+      "properties": {
+        "inspection_record_version": {"const": "one-case-stop-and-inspect/1"},
+        "inspection_id": {"type": "string", "minLength": 1},
+        "inspection_protocol_id": {"type": "string", "minLength": 1},
+        "end_to_end_case_id": {"type": "string", "minLength": 1},
+        "case_evidence_bundle_fingerprint": {"type": "string", "minLength": 1},
+        "inspection_recorded_at": {"type": "string", "minLength": 1},
+        "completed_end_to_end_case_count": {"const": 1},
+        "newly_visible_findings": {"type": "array", "minItems": 5},
+        "covered_surfaces": {
+          "type": "array", "minItems": 5, "maxItems": 5,
+          "items": {"enum": ["semantic_state", "cognition_order", "adversarial_pressure", "planner_handoff", "outcome_intake"]}
+        },
+        "proposed_expansions": {"type": "array", "minItems": 3, "maxItems": 3},
+        "implementation_decision": {"const": "stop_and_inspect"},
+        "schema_generalization_authorized": {"const": false},
+        "agent_company_runtime_authorized": {"const": false},
+        "autonomous_daemon_authorized": {"const": false},
+        "next_authorized_work": {"const": "run_registered_case_specific_probes"}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

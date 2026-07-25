@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/living-constitution-runtime.schema.json",
+  "title": "PalamedesLivingConstitutionRuntime",
+  "description": "Experimental Cycle 193 living constitution for routine autonomous purpose decisions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "runtime_id",
+    "constitution_id",
+    "constitution_version",
+    "interpreted_at",
+    "decision_id",
+    "interpretation_trace_id",
+    "human_approval_is_default",
+    "routine_decision_within_constitution",
+    "constitution_is_live_state",
+    "constitutional_layers",
+    "decision",
+    "ungranted_power",
+    "runtime_rationale"
+  ],
+  "properties": {
+    "runtime_id": {"type": "string", "minLength": 1},
+    "constitution_id": {"type": "string", "minLength": 1},
+    "constitution_version": {"type": "string", "minLength": 1},
+    "interpreted_at": {"type": "string", "minLength": 1},
+    "decision_id": {"type": "string", "minLength": 1},
+    "interpretation_trace_id": {"type": "string", "minLength": 1},
+    "human_approval_is_default": {"const": false},
+    "routine_decision_within_constitution": {"const": true},
+    "constitution_is_live_state": {"const": true},
+    "constitutional_layers": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["layer", "state_id", "current_state", "source_id", "review_trigger"],
+        "properties": {
+          "layer": {"enum": ["values", "uncertainty", "authority", "representation", "correction"]},
+          "state_id": {"type": "string", "minLength": 1},
+          "current_state": {"type": "string", "minLength": 1},
+          "source_id": {"type": "string", "minLength": 1},
+          "review_trigger": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "decision": {"enum": ["act", "probe", "defer", "escalate_power_gap"]},
+    "ungranted_power": {"type": "string"},
+    "runtime_rationale": {"type": "string", "minLength": 1}
+  }
+}

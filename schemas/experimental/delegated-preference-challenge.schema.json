@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/delegated-preference-challenge.schema.json",
+  "title": "PalamedesDelegatedPreferenceChallenge",
+  "description": "Experimental Cycle 192 inherited preference challenge within delegated authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "challenge_id",
+    "inherited_preference_id",
+    "preference_source_id",
+    "preference_statement",
+    "challenge_hypothesis",
+    "counterevidence_id",
+    "beneficiary_evidence_id",
+    "withdrawal_condition",
+    "delegation_id",
+    "delegated_domain",
+    "delegated_consequence_class",
+    "constitutional_clause_ids",
+    "within_delegated_authority",
+    "copying_founder_behavior_is_sufficient",
+    "authority_expanded_by_challenge",
+    "independent_perspectives",
+    "decision",
+    "decision_rationale"
+  ],
+  "properties": {
+    "challenge_id": {"type": "string", "minLength": 1},
+    "inherited_preference_id": {"type": "string", "minLength": 1},
+    "preference_source_id": {"type": "string", "minLength": 1},
+    "preference_statement": {"type": "string", "minLength": 1},
+    "challenge_hypothesis": {"type": "string", "minLength": 1},
+    "counterevidence_id": {"type": "string", "minLength": 1},
+    "beneficiary_evidence_id": {"type": "string", "minLength": 1},
+    "withdrawal_condition": {"type": "string", "minLength": 1},
+    "delegation_id": {"type": "string", "minLength": 1},
+    "delegated_domain": {"type": "string", "minLength": 1},
+    "delegated_consequence_class": {"type": "string", "minLength": 1},
+    "constitutional_clause_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "within_delegated_authority": {"type": "boolean"},
+    "copying_founder_behavior_is_sufficient": {"const": false},
+    "authority_expanded_by_challenge": {"const": false},
+    "independent_perspectives": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["perspective_id", "claim", "evidence_id"],
+        "properties": {
+          "perspective_id": {"type": "string", "minLength": 1},
+          "claim": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "decision": {
+      "enum": [
+        "uphold_preference",
+        "revise_preference",
+        "preserve_uncertainty",
+        "return_for_constitution_review"
+      ]
+    },
+    "decision_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/upstream-labor-retirement-success.schema.json",
+  "title": "PalamedesUpstreamLaborRetirementSuccess",
+  "description": "Experimental Cycle 199 material upstream labor retirement without governance regression.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "success_record_id",
+    "case_id",
+    "baseline_condition_id",
+    "palamedes_condition_id",
+    "baseline_labor",
+    "palamedes_labor",
+    "minimum_labor_reduction_fraction",
+    "labor_evidence_id",
+    "proxy_harm_audit_id",
+    "proxy_harm_not_increased",
+    "authority_audit_id",
+    "hidden_authority_absent",
+    "rationale_audit_id",
+    "rationales_action_linked",
+    "mission_quality_noninferior",
+    "success_claimed",
+    "success_rationale"
+  ],
+  "properties": {
+    "success_record_id": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "baseline_condition_id": {"type": "string", "minLength": 1},
+    "palamedes_condition_id": {"type": "string", "minLength": 1},
+    "baseline_labor": {"$ref": "#/$defs/labor"},
+    "palamedes_labor": {"$ref": "#/$defs/labor"},
+    "minimum_labor_reduction_fraction": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+    "labor_evidence_id": {"type": "string", "minLength": 1},
+    "proxy_harm_audit_id": {"type": "string", "minLength": 1},
+    "proxy_harm_not_increased": {"type": "boolean"},
+    "authority_audit_id": {"type": "string", "minLength": 1},
+    "hidden_authority_absent": {"type": "boolean"},
+    "rationale_audit_id": {"type": "string", "minLength": 1},
+    "rationales_action_linked": {"type": "boolean"},
+    "mission_quality_noninferior": {"type": "boolean"},
+    "success_claimed": {"type": "boolean"},
+    "success_rationale": {"type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "labor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "framing_minutes",
+        "clarification_count",
+        "approval_count",
+        "correction_count",
+        "intervention_count"
+      ],
+      "properties": {
+        "framing_minutes": {"type": "number", "minimum": 0},
+        "clarification_count": {"type": "number", "minimum": 0},
+        "approval_count": {"type": "number", "minimum": 0},
+        "correction_count": {"type": "number", "minimum": 0},
+        "intervention_count": {"type": "number", "minimum": 0}
+      }
+    }
+  }
+}

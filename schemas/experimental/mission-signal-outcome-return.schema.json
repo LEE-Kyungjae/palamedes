@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/mission-signal-outcome-return.schema.json",
+  "title": "PalamedesMissionSignalOutcomeReturn",
+  "description": "Cycle 359 beneficiary outcome return against registered mission signals.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["outcome_return_id", "mission_contract_id", "mission_contract_version", "mission_contract_fingerprint", "strategy_version_id", "strategy_fingerprint", "planner_id", "returned_at", "outcome_return_fingerprint", "registered_mission_signals", "mission_signal_observations", "planner_delivery_report", "mission_outcome_status", "task_completion_determines_mission_success", "planner_may_close_mission", "outcome_returned_to_palamedes", "return_rationale"],
+  "properties": {
+    "outcome_return_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "mission_contract_version": {"type": "string", "minLength": 1},
+    "mission_contract_fingerprint": {"type": "string", "minLength": 1},
+    "strategy_version_id": {"type": "string", "minLength": 1},
+    "strategy_fingerprint": {"type": "string", "minLength": 1},
+    "planner_id": {"type": "string", "minLength": 1},
+    "returned_at": {"type": "string", "minLength": 1},
+    "outcome_return_fingerprint": {"type": "string", "minLength": 1},
+    "registered_mission_signals": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["signal_id", "kind", "signal_fingerprint", "definition", "threshold", "observation_window"],
+        "properties": {
+          "signal_id": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["success", "harm"]},
+          "signal_fingerprint": {"type": "string", "minLength": 1},
+          "definition": {"type": "string", "minLength": 1},
+          "threshold": {"type": "string", "minLength": 1},
+          "observation_window": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "mission_signal_observations": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["signal_id", "kind", "signal_fingerprint", "status", "observed_value", "observed_at", "evidence_artifact_id", "evidence_fingerprint", "beneficiary_scope", "assessment_rationale"],
+        "properties": {
+          "signal_id": {"type": "string", "minLength": 1},
+          "kind": {"enum": ["success", "harm"]},
+          "signal_fingerprint": {"type": "string", "minLength": 1},
+          "status": {"enum": ["met", "not_met", "clear", "triggered", "inconclusive"]},
+          "observed_value": {"type": "string", "minLength": 1},
+          "observed_at": {"type": "string", "minLength": 1},
+          "evidence_artifact_id": {"type": "string", "minLength": 1},
+          "evidence_fingerprint": {"type": "string", "minLength": 1},
+          "beneficiary_scope": {"type": "string", "minLength": 1},
+          "assessment_rationale": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "planner_delivery_report": {
+      "type": "object", "additionalProperties": false,
+      "required": ["delivery_report_id", "delivery_status", "completion_evidence_id", "tasks_completed"],
+      "properties": {
+        "delivery_report_id": {"type": "string", "minLength": 1},
+        "delivery_status": {"type": "string", "minLength": 1},
+        "completion_evidence_id": {"type": "string", "minLength": 1},
+        "tasks_completed": {"type": "boolean"}
+      }
+    },
+    "mission_outcome_status": {"enum": ["supported", "adverse_or_unsupported", "inconclusive"]},
+    "task_completion_determines_mission_success": {"const": false},
+    "planner_may_close_mission": {"const": false},
+    "outcome_returned_to_palamedes": {"const": true},
+    "return_rationale": {"type": "string", "minLength": 1}
+  }
+}

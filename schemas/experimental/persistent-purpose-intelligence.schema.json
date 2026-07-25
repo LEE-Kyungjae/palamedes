@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/persistent-purpose-intelligence.schema.json",
+  "title": "PalamedesPersistentPurposeIntelligence",
+  "description": "Experimental Cycle 197 persistent world, value, and mechanism revision beyond mission-contract output.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "intelligence_record_id",
+    "mission_contract_id",
+    "mission_contract_version",
+    "previous_frontier_fingerprint",
+    "current_frontier_fingerprint",
+    "mission_contract_is_entire_product_intelligence",
+    "model_state_persists_across_handoffs",
+    "wake_reason",
+    "worthwhile_change_test",
+    "different_mission_became_worthwhile",
+    "next_wake_trigger",
+    "model_revisions"
+  ],
+  "properties": {
+    "intelligence_record_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "mission_contract_version": {"type": "string", "minLength": 1},
+    "previous_frontier_fingerprint": {"type": "string", "minLength": 1},
+    "current_frontier_fingerprint": {"type": "string", "minLength": 1},
+    "mission_contract_is_entire_product_intelligence": {"const": false},
+    "model_state_persists_across_handoffs": {"const": true},
+    "wake_reason": {"type": "string", "minLength": 1},
+    "worthwhile_change_test": {"type": "string", "minLength": 1},
+    "different_mission_became_worthwhile": {"type": "boolean"},
+    "next_wake_trigger": {"type": "string", "minLength": 1},
+    "model_revisions": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "model",
+          "previous_state_id",
+          "current_state_id",
+          "revision_evidence_id",
+          "revision_reason",
+          "changed"
+        ],
+        "properties": {
+          "model": {"enum": ["world", "value", "mechanism"]},
+          "previous_state_id": {"type": "string", "minLength": 1},
+          "current_state_id": {"type": "string", "minLength": 1},
+          "revision_evidence_id": {"type": "string", "minLength": 1},
+          "revision_reason": {"type": "string", "minLength": 1},
+          "changed": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/semantic-repetition-review.schema.json",
+  "title": "PalamedesSemanticRepetitionReview",
+  "description": "Experimental Cycle 266 warning on semantically repeated thought without automatic suppression of evidenced revisits.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "repetition_review_id",
+    "proposed_thought_id",
+    "proposed_thought",
+    "closest_prior_thought_id",
+    "semantic_similarity",
+    "warning_threshold",
+    "similarity_method_id",
+    "similarity_evidence_id",
+    "repetition_warning",
+    "automatic_suppression",
+    "revisit_ground",
+    "revisit_evidence_id",
+    "material_difference",
+    "decision",
+    "review_rationale"
+  ],
+  "properties": {
+    "repetition_review_id": {"type": "string", "minLength": 1},
+    "proposed_thought_id": {"type": "string", "minLength": 1},
+    "proposed_thought": {"type": "string", "minLength": 1},
+    "closest_prior_thought_id": {"type": "string", "minLength": 1},
+    "semantic_similarity": {"type": "number", "minimum": 0, "maximum": 1},
+    "warning_threshold": {"type": "number", "minimum": 0, "maximum": 1},
+    "similarity_method_id": {"type": "string", "minLength": 1},
+    "similarity_evidence_id": {"type": "string", "minLength": 1},
+    "repetition_warning": {"type": "boolean"},
+    "automatic_suppression": {"const": false},
+    "revisit_ground": {"enum": ["none", "new_evidence", "changed_context", "expired_conclusion"]},
+    "revisit_evidence_id": {"type": "string"},
+    "material_difference": {"type": "string"},
+    "decision": {
+      "enum": ["allow_revisit_with_warning", "revise_or_merge_repetition", "allow_new_thought"]
+    },
+    "review_rationale": {"type": "string", "minLength": 1}
+  }
+}

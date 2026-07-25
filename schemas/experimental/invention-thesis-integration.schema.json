@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/invention-thesis-integration.schema.json",
+  "title": "PalamedesInventionThesisIntegration",
+  "description": "Experimental Cycle 240 integration of six independent mission transformations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "invention_thesis_id",
+    "mission_generation_id",
+    "generator_isolation_id",
+    "external_condition_gate_id",
+    "internal_capability_gate_id",
+    "implementation_open_gate_id",
+    "translation_test_id",
+    "comparison_gate_id",
+    "invention_is_novelty_label",
+    "selection_deferred_until_independent_generation_complete",
+    "transformations",
+    "all_candidates_describe_external_change",
+    "implementation_choice_remains_open",
+    "skeptical_translation_passed",
+    "conclusion"
+  ],
+  "properties": {
+    "invention_thesis_id": {"type": "string", "minLength": 1},
+    "mission_generation_id": {"type": "string", "minLength": 1},
+    "generator_isolation_id": {"type": "string", "minLength": 1},
+    "external_condition_gate_id": {"type": "string", "minLength": 1},
+    "internal_capability_gate_id": {"type": "string", "minLength": 1},
+    "implementation_open_gate_id": {"type": "string", "minLength": 1},
+    "translation_test_id": {"type": "string", "minLength": 1},
+    "comparison_gate_id": {"type": "string", "minLength": 1},
+    "invention_is_novelty_label": {"const": false},
+    "selection_deferred_until_independent_generation_complete": {"const": true},
+    "transformations": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "transformation_type",
+          "isolated_context_id",
+          "candidate_id",
+          "evidence_id",
+          "external_condition_contract_id",
+          "generated_before_rival_reveal"
+        ],
+        "properties": {
+          "transformation_type": {
+            "enum": ["condition", "capability", "lineage", "opposition", "temporal", "counterfactual"]
+          },
+          "isolated_context_id": {"type": "string", "minLength": 1},
+          "candidate_id": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "external_condition_contract_id": {"type": "string", "minLength": 1},
+          "generated_before_rival_reveal": {"const": true}
+        }
+      }
+    },
+    "all_candidates_describe_external_change": {"const": true},
+    "implementation_choice_remains_open": {"const": true},
+    "skeptical_translation_passed": {"const": true},
+    "conclusion": {"const": "invention_thesis_supported"}
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/shared-model-dependence-manifest.schema.json",
+  "title": "PalamedesSharedModelDependenceManifest",
+  "description": "Cycle 329 manifest disclosing shared-model dependence across provider-neutral cognitive roles.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["assignment_manifest_id", "role_topology_id", "run_id", "manifest_fingerprint", "role_assignments", "shared_model_groups", "evaluation_claims", "local_single_model_testing_allowed", "role_count_used_as_independence_count", "manifest_rationale"],
+  "properties": {
+    "assignment_manifest_id": {"type": "string", "minLength": 1},
+    "role_topology_id": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "manifest_fingerprint": {"type": "string", "minLength": 1},
+    "role_assignments": {
+      "type": "array", "minItems": 5, "maxItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["assignment_id", "role", "provider_id", "model_id", "context_partition_id", "role_boundary_preserved"],
+        "properties": {
+          "assignment_id": {"type": "string", "minLength": 1},
+          "role": {"enum": ["interpreter", "inventor", "adversary", "selector", "outcome_analyst"]},
+          "provider_id": {"type": "string", "minLength": 1},
+          "model_id": {"type": "string", "minLength": 1},
+          "context_partition_id": {"type": "string", "minLength": 1},
+          "role_boundary_preserved": {"const": true}
+        }
+      }
+    },
+    "shared_model_groups": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["dependence_group_id", "model_id", "roles", "independent_consensus_source_count", "correlated_error_risk_disclosed"],
+        "properties": {
+          "dependence_group_id": {"type": "string", "minLength": 1},
+          "model_id": {"type": "string", "minLength": 1},
+          "roles": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"enum": ["interpreter", "inventor", "adversary", "selector", "outcome_analyst"]}},
+          "independent_consensus_source_count": {"const": 1},
+          "correlated_error_risk_disclosed": {"const": true}
+        }
+      }
+    },
+    "evaluation_claims": {
+      "type": "object", "additionalProperties": false,
+      "required": ["shared_model_dependence", "independent_model_source_count", "independent_provider_source_count", "role_output_count", "independent_consensus_claimed", "consensus_label"],
+      "properties": {
+        "shared_model_dependence": {"type": "boolean"},
+        "independent_model_source_count": {"type": "integer", "minimum": 1},
+        "independent_provider_source_count": {"type": "integer", "minimum": 1},
+        "role_output_count": {"const": 5},
+        "independent_consensus_claimed": {"type": "boolean"},
+        "consensus_label": {"enum": ["correlated_role_agreement", "independent_role_agreement"]}
+      }
+    },
+    "local_single_model_testing_allowed": {"const": true},
+    "role_count_used_as_independence_count": {"const": false},
+    "manifest_rationale": {"type": "string", "minLength": 1}
+  }
+}

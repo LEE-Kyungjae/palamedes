@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/preimplementation-semantic-reconstruction-review.schema.json",
+  "title": "PalamedesPreimplementationSemanticReconstructionReview",
+  "description": "Cycle 355 comparison of mission source and planner acknowledgment before implementation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["reconstruction_review_id", "mission_contract_id", "mission_contract_fingerprint", "acknowledgment_id", "acknowledgment_fingerprint", "reviewer_id", "reviewed_at", "review_fingerprint", "dimension_comparisons", "reconstruction_burden", "review_decision", "blocking_dimensions", "implementation_started", "semantic_loss_ignored", "review_rationale"],
+  "properties": {
+    "reconstruction_review_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "mission_contract_fingerprint": {"type": "string", "minLength": 1},
+    "acknowledgment_id": {"type": "string", "minLength": 1},
+    "acknowledgment_fingerprint": {"type": "string", "minLength": 1},
+    "reviewer_id": {"type": "string", "minLength": 1},
+    "reviewed_at": {"type": "string", "minLength": 1},
+    "review_fingerprint": {"type": "string", "minLength": 1},
+    "dimension_comparisons": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["dimension", "status", "source_value_fingerprint", "acknowledged_value_fingerprint", "comparison_evidence_id", "difference_description", "decision_effect", "required_correction"],
+        "properties": {
+          "dimension": {"enum": ["beneficiary", "invariant_meaning", "authority", "unclear_clauses"]},
+          "status": {"enum": ["exact_match", "clarified", "loss", "contradiction"]},
+          "source_value_fingerprint": {"type": "string", "minLength": 1},
+          "acknowledged_value_fingerprint": {"type": "string", "minLength": 1},
+          "comparison_evidence_id": {"type": "string", "minLength": 1},
+          "difference_description": {"type": "string", "minLength": 1},
+          "decision_effect": {"type": "string", "minLength": 1},
+          "required_correction": {"type": "string"}
+        }
+      }
+    },
+    "reconstruction_burden": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_lookup_count", "clarification_question_count", "reinterpretation_count", "unresolved_clause_count", "measurement_method", "burden_rationale", "measured_before_implementation"],
+      "properties": {
+        "source_lookup_count": {"type": "integer", "minimum": 0},
+        "clarification_question_count": {"type": "integer", "minimum": 0},
+        "reinterpretation_count": {"type": "integer", "minimum": 0},
+        "unresolved_clause_count": {"type": "integer", "minimum": 0},
+        "measurement_method": {"type": "string", "minLength": 1},
+        "burden_rationale": {"type": "string", "minLength": 1},
+        "measured_before_implementation": {"const": true}
+      }
+    },
+    "review_decision": {"enum": ["ready_for_strategy_review", "clarification_required"]},
+    "blocking_dimensions": {"type": "array", "uniqueItems": true, "items": {"enum": ["beneficiary", "invariant_meaning", "authority", "unclear_clauses"]}},
+    "implementation_started": {"const": false},
+    "semantic_loss_ignored": {"const": false},
+    "review_rationale": {"type": "string", "minLength": 1}
+  }
+}

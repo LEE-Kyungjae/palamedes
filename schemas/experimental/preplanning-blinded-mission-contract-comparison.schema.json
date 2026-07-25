@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/preplanning-blinded-mission-contract-comparison.schema.json",
+  "title": "PalamedesPreplanningBlindedMissionContractComparison",
+  "description": "Experimental Cycle 286 handoff requiring mission contracts before origin-blinded planning.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["handoff_control_id", "case_id", "capability_constraint_id", "capability_constraint_fingerprint", "condition_outputs", "planner_can_observe_condition_origin", "planner_constraints_identical", "handoff_rationale"],
+  "properties": {
+    "handoff_control_id": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "capability_constraint_id": {"type": "string", "minLength": 1},
+    "capability_constraint_fingerprint": {"type": "string", "minLength": 1},
+    "condition_outputs": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["condition_id", "mission_contract_id", "contract_created_at", "planner_handoff_at", "blinded_contract_id", "mission_contract", "origin_metadata_removed", "downstream_plan_created_before_contract", "capability_constraint_id", "capability_constraint_fingerprint"],
+        "properties": {
+          "condition_id": {"enum": ["human", "one_shot_agent", "palamedes"]},
+          "mission_contract_id": {"type": "string", "minLength": 1},
+          "contract_created_at": {"type": "string", "minLength": 1},
+          "planner_handoff_at": {"type": "string", "minLength": 1},
+          "blinded_contract_id": {"type": "string", "minLength": 1},
+          "mission_contract": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["situation", "meaning", "beneficiary", "desired_external_condition", "essential_causal_mechanism", "non_goal", "success_signal", "disconfirmation_condition", "authority_return_trigger"],
+            "properties": {
+              "situation": {"type": "string", "minLength": 1},
+              "meaning": {"type": "string", "minLength": 1},
+              "beneficiary": {"type": "string", "minLength": 1},
+              "desired_external_condition": {"type": "string", "minLength": 1},
+              "essential_causal_mechanism": {"type": "string", "minLength": 1},
+              "non_goal": {"type": "string", "minLength": 1},
+              "success_signal": {"type": "string", "minLength": 1},
+              "disconfirmation_condition": {"type": "string", "minLength": 1},
+              "authority_return_trigger": {"type": "string", "minLength": 1}
+            }
+          },
+          "origin_metadata_removed": {"const": true},
+          "downstream_plan_created_before_contract": {"const": false},
+          "capability_constraint_id": {"type": "string", "minLength": 1},
+          "capability_constraint_fingerprint": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "planner_can_observe_condition_origin": {"const": false},
+    "planner_constraints_identical": {"const": true},
+    "handoff_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/budget-exhaustion-deferral.schema.json",
+  "title": "PalamedesBudgetExhaustionDeferral",
+  "description": "Experimental Cycle 268 honest deferral with one missing condition and next wake trigger when cognitive budget is exhausted.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "deferral_id",
+    "budget_allocation_id",
+    "frontier_entry_id",
+    "cognitive_budget_exhausted",
+    "remaining_budget",
+    "unresolved_decision",
+    "missing_condition_ids",
+    "missing_condition_id",
+    "missing_condition",
+    "why_condition_is_decisive",
+    "required_evidence",
+    "next_wake_trigger_id",
+    "next_wake_trigger_type",
+    "next_wake_threshold",
+    "interim_safe_state",
+    "option_preservation_action",
+    "fabricated_closure",
+    "claimed_resolved",
+    "decision_status",
+    "deferral_rationale"
+  ],
+  "properties": {
+    "deferral_id": {"type": "string", "minLength": 1},
+    "budget_allocation_id": {"type": "string", "minLength": 1},
+    "frontier_entry_id": {"type": "string", "minLength": 1},
+    "cognitive_budget_exhausted": {"const": true},
+    "remaining_budget": {"const": 0},
+    "unresolved_decision": {"type": "string", "minLength": 1},
+    "missing_condition_ids": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "missing_condition_id": {"type": "string", "minLength": 1},
+    "missing_condition": {"type": "string", "minLength": 1},
+    "why_condition_is_decisive": {"type": "string", "minLength": 1},
+    "required_evidence": {"type": "string", "minLength": 1},
+    "next_wake_trigger_id": {"type": "string", "minLength": 1},
+    "next_wake_trigger_type": {
+      "enum": [
+        "signal_deviation",
+        "forecast_miss",
+        "authority_conflict",
+        "mission_review",
+        "expiring_opportunity",
+        "downstream_boundary_return"
+      ]
+    },
+    "next_wake_threshold": {"type": "string", "minLength": 1},
+    "interim_safe_state": {"type": "string", "minLength": 1},
+    "option_preservation_action": {"type": "string", "minLength": 1},
+    "fabricated_closure": {"const": false},
+    "claimed_resolved": {"const": false},
+    "decision_status": {"const": "deferred"},
+    "deferral_rationale": {"type": "string", "minLength": 1}
+  }
+}

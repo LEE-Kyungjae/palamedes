@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/correlational-mission-authority.schema.json",
+  "title": "PalamedesCorrelationalMissionAuthority",
+  "description": "Experimental Cycle 224 contract lowering authority and preferring mechanism-discriminating probes under correlation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority_review_id",
+    "signal_claim_id",
+    "evidence_status",
+    "correlation_claim",
+    "suggested_mission",
+    "mission_authority",
+    "correlation_can_authorize_mission_commitment",
+    "competing_mechanism_ids",
+    "probe_id",
+    "probe_manipulation",
+    "probe_outcome",
+    "probe_window",
+    "probe_distinguishes_mechanism_ids",
+    "probe_preferred",
+    "decision",
+    "decision_rationale"
+  ],
+  "properties": {
+    "authority_review_id": {"type": "string", "minLength": 1},
+    "signal_claim_id": {"type": "string", "minLength": 1},
+    "evidence_status": {"const": "correlational"},
+    "correlation_claim": {"type": "string", "minLength": 1},
+    "suggested_mission": {"type": "string", "minLength": 1},
+    "mission_authority": {"const": "hypothesis_only"},
+    "correlation_can_authorize_mission_commitment": {"const": false},
+    "competing_mechanism_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "probe_id": {"type": "string", "minLength": 1},
+    "probe_manipulation": {"type": "string", "minLength": 1},
+    "probe_outcome": {"type": "string", "minLength": 1},
+    "probe_window": {"type": "string", "minLength": 1},
+    "probe_distinguishes_mechanism_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "probe_preferred": {"const": true},
+    "decision": {"const": "run_probe"},
+    "decision_rationale": {"type": "string", "minLength": 1}
+  }
+}

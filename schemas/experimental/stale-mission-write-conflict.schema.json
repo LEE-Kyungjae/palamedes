@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/stale-mission-write-conflict.schema.json",
+  "title": "PalamedesStaleMissionWriteConflict",
+  "description": "Cycle 386 mission write fingerprint conflict with newer-wake evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["write_report_id", "write_request", "write_resolution", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "write_report_id": {"type": "string", "minLength": 1},
+    "write_request": {"type": "object"},
+    "write_resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["write_resolution_version", "write_request_id", "mission_id", "write_status", "expected_frontier_fingerprint", "current_frontier_fingerprint", "proposed_mission_fingerprint", "write_applied", "canonical_mission_fingerprint_after", "newer_wake", "rebase_required"],
+      "properties": {
+        "write_resolution_version": {"const": "mission-write-conflict/1"},
+        "write_request_id": {"type": "string", "minLength": 1},
+        "mission_id": {"type": "string", "minLength": 1},
+        "write_status": {"enum": ["accepted", "stale_write_conflict"]},
+        "expected_frontier_fingerprint": {"type": "string", "minLength": 1},
+        "current_frontier_fingerprint": {"type": "string", "minLength": 1},
+        "proposed_mission_fingerprint": {"type": "string", "minLength": 1},
+        "write_applied": {"type": "boolean"},
+        "canonical_mission_fingerprint_after": {"type": "string", "minLength": 1},
+        "newer_wake": {"type": "object"},
+        "rebase_required": {"type": "boolean"}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

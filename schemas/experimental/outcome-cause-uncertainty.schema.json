@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/outcome-cause-uncertainty.schema.json",
+  "title": "PalamedesOutcomeCauseUncertainty",
+  "description": "Experimental Cycle 168 uncertainty across value fit, mechanism, timing, and luck.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "uncertainty_record_id",
+    "mission_id",
+    "outcome_evidence_id",
+    "single_cause_certainty",
+    "exploration_budget_preserved",
+    "learned_preference_scope",
+    "next_discriminating_observation",
+    "cause_assessments"
+  ],
+  "properties": {
+    "uncertainty_record_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "outcome_evidence_id": {"type": "string", "minLength": 1},
+    "single_cause_certainty": {"const": false},
+    "exploration_budget_preserved": {"const": true},
+    "learned_preference_scope": {"type": "string", "minLength": 1},
+    "next_discriminating_observation": {"type": "string", "minLength": 1},
+    "cause_assessments": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "cause",
+          "status",
+          "causal_identification",
+          "evidence_for",
+          "evidence_against",
+          "uncertainty",
+          "confidence_range"
+        ],
+        "properties": {
+          "cause": {"enum": ["value_fit", "mechanism", "timing", "luck"]},
+          "status": {"enum": ["supported", "plausible", "challenged", "unknown"]},
+          "causal_identification": {"enum": ["none", "weak", "moderate", "strong"]},
+          "evidence_for": {"type": "string", "minLength": 1},
+          "evidence_against": {"type": "string", "minLength": 1},
+          "uncertainty": {"type": "string", "minLength": 1},
+          "confidence_range": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["low", "high"],
+            "properties": {
+              "low": {"type": "number", "minimum": 0, "maximum": 1},
+              "high": {"type": "number", "minimum": 0, "maximum": 1}
+            }
+          }
+        }
+      }
+    }
+  }
+}

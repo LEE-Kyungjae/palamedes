@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/disconfirmation-layer-attribution.schema.json",
+  "title": "PalamedesDisconfirmationLayerAttribution",
+  "description": "Experimental Cycle 257 attribution of disconfirmation across mission, planner, implementation, measurement, and timing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attribution_id",
+    "mission_id",
+    "signal_contract_id",
+    "disconfirming_observation",
+    "observation_evidence_id",
+    "outcome_shortfall_automatically_falsifies_mission",
+    "layer_assessments",
+    "primary_attribution",
+    "mission_disconfirmed",
+    "attribution_rationale"
+  ],
+  "properties": {
+    "attribution_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "signal_contract_id": {"type": "string", "minLength": 1},
+    "disconfirming_observation": {"type": "string", "minLength": 1},
+    "observation_evidence_id": {"type": "string", "minLength": 1},
+    "outcome_shortfall_automatically_falsifies_mission": {"const": false},
+    "layer_assessments": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "layer",
+          "failure_hypothesis",
+          "discriminating_test",
+          "evidence_id",
+          "status",
+          "next_action"
+        ],
+        "properties": {
+          "layer": {"enum": ["mission", "planner", "implementation", "measurement", "timing"]},
+          "failure_hypothesis": {"type": "string", "minLength": 1},
+          "discriminating_test": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "status": {"enum": ["supported", "ruled_out", "unresolved"]},
+          "next_action": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "primary_attribution": {
+      "enum": ["mission", "planner", "implementation", "measurement", "timing", "underdetermined"]
+    },
+    "mission_disconfirmed": {"type": "boolean"},
+    "attribution_rationale": {"type": "string", "minLength": 1}
+  }
+}

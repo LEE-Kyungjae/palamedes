@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/six-distinct-purpose-state-materialization.schema.json",
+  "title": "PalamedesSixDistinctPurposeStateMaterialization",
+  "description": "Experimental Cycle 297 manifest for six distinct versioned purpose state types.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["state_manifest_id", "runtime_id", "state_records", "states_embedded_as_one_blob", "manifest_rationale"],
+  "properties": {
+    "state_manifest_id": {"type": "string", "minLength": 1},
+    "runtime_id": {"type": "string", "minLength": 1},
+    "state_records": {
+      "type": "array", "minItems": 6, "maxItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["state_type", "artifact_id", "version", "storage_key", "state_fingerprint", "created_at", "payload_reference", "depends_on_artifact_ids"],
+        "properties": {
+          "state_type": {"enum": ["signal", "constitution", "interpretation", "mission_candidate", "tournament", "mission_contract"]},
+          "artifact_id": {"type": "string", "minLength": 1},
+          "version": {"type": "integer", "minimum": 1},
+          "storage_key": {"type": "string", "minLength": 1},
+          "state_fingerprint": {"type": "string", "minLength": 1},
+          "created_at": {"type": "string", "minLength": 1},
+          "payload_reference": {"type": "string", "minLength": 1},
+          "depends_on_artifact_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "states_embedded_as_one_blob": {"const": false},
+    "manifest_rationale": {"type": "string", "minLength": 1}
+  }
+}

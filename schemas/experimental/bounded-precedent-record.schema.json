@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/bounded-precedent-record.schema.json",
+  "title": "PalamedesBoundedPrecedentRecord",
+  "description": "Experimental Cycle 216 precedent with scope, analogy, dissent, and environmental invalidation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "precedent_record_id",
+    "origin_decision_id",
+    "origin_environment_id",
+    "current_environment_id",
+    "decision_summary",
+    "observed_outcome",
+    "scope",
+    "precedent_is_universally_binding",
+    "analogical_features",
+    "material_differences",
+    "dissent_records",
+    "invalidating_environmental_changes",
+    "detected_environmental_changes",
+    "analogy_rationale",
+    "status",
+    "review_trigger"
+  ],
+  "properties": {
+    "precedent_record_id": {"type": "string", "minLength": 1},
+    "origin_decision_id": {"type": "string", "minLength": 1},
+    "origin_environment_id": {"type": "string", "minLength": 1},
+    "current_environment_id": {"type": "string", "minLength": 1},
+    "decision_summary": {"type": "string", "minLength": 1},
+    "observed_outcome": {"type": "string", "minLength": 1},
+    "scope": {"type": "string", "minLength": 1},
+    "precedent_is_universally_binding": {"const": false},
+    "analogical_features": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "material_differences": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "dissent_records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "invalidating_environmental_changes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "detected_environmental_changes": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "analogy_rationale": {"type": "string"},
+    "status": {"enum": ["applicable", "suspended", "invalidated"]},
+    "review_trigger": {"type": "string", "minLength": 1}
+  }
+}

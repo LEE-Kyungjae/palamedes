@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/planner-envelope-acknowledgment-loss.schema.json",
+  "title": "PalamedesPlannerEnvelopeAcknowledgmentLoss",
+  "description": "Cycle 397 planner-envelope compilation and element-level acknowledgment loss.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["loss_report_id", "compilation_input", "compilation_record", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "loss_report_id": {"type": "string", "minLength": 1},
+    "compilation_input": {"type": "object"},
+    "compilation_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compilation_record_version", "compilation_id", "mission_contract_id", "mission_contract_fingerprint", "planner_id", "planner_envelope_fingerprint", "acknowledgment_id", "acknowledgment_fingerprint", "planner_envelope", "dimension_comparisons", "semantic_dimension_count", "semantic_loss_count", "semantic_loss_rate", "acknowledgment_accepted", "correction_required_before_strategy"],
+      "properties": {
+        "compilation_record_version": {"const": "planner-envelope-ack-loss/1"},
+        "compilation_id": {"type": "string", "minLength": 1},
+        "mission_contract_id": {"type": "string", "minLength": 1},
+        "mission_contract_fingerprint": {"type": "string", "minLength": 1},
+        "planner_id": {"type": "string", "minLength": 1},
+        "planner_envelope_fingerprint": {"type": "string", "minLength": 1},
+        "acknowledgment_id": {"type": "string", "minLength": 1},
+        "acknowledgment_fingerprint": {"type": "string", "minLength": 1},
+        "planner_envelope": {"type": "object"},
+        "dimension_comparisons": {
+          "type": "array", "minItems": 7, "maxItems": 7,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["dimension", "source_value_fingerprint", "acknowledged_value_fingerprint", "ack_evidence_id", "status", "correction_required"],
+            "properties": {
+              "dimension": {"enum": ["beneficiary", "mission_outcome", "success_signals", "harm_signals", "causal_thesis", "non_goals", "authority"]},
+              "source_value_fingerprint": {"type": "string", "minLength": 1},
+              "acknowledged_value_fingerprint": {"type": "string", "minLength": 1},
+              "ack_evidence_id": {"type": "string", "minLength": 1},
+              "status": {"enum": ["exact_match", "semantic_loss"]},
+              "correction_required": {"type": "boolean"}
+            }
+          }
+        },
+        "semantic_dimension_count": {"const": 7},
+        "semantic_loss_count": {"type": "integer", "minimum": 0, "maximum": 7},
+        "semantic_loss_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "acknowledgment_accepted": {"type": "boolean"},
+        "correction_required_before_strategy": {"type": "boolean"}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

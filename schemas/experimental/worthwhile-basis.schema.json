@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/worthwhile-basis.schema.json",
+  "title": "PalamedesWorthwhileBasis",
+  "description": "Experimental Cycle 101 contract for judging mission worth without owner-history imitation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "beneficiary_condition",
+    "why_now",
+    "disconfirming_condition",
+    "value_sources"
+  ],
+  "properties": {
+    "beneficiary_condition": {
+      "type": "string",
+      "minLength": 1
+    },
+    "why_now": {
+      "type": "string",
+      "minLength": 1
+    },
+    "disconfirming_condition": {
+      "type": "string",
+      "minLength": 1
+    },
+    "value_sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_id",
+          "kind",
+          "claim"
+        ],
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "constitution_clause",
+              "beneficiary_evidence",
+              "owner_preference",
+              "outcome_evidence",
+              "external_observation"
+            ]
+          },
+          "claim": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

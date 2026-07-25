@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/initial-empirical-claim-boundary.schema.json",
+  "title": "PalamedesInitialEmpiricalClaimBoundary",
+  "description": "Cycle 379 bounded initial claim for quality improvement or labor retirement without worse safeguards.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["claim_boundary_id", "proof_dataset_id", "baseline_condition_id", "palamedes_condition_id", "evaluation_protocol_id", "evidence_bundle_fingerprint", "equal_information_verified", "quality_measurement", "labor_measurement", "safeguard_comparison", "claim_basis", "claim_supported", "claim_text", "startup_success_claimed", "general_superiority_claimed", "unmeasured_dimensions_implied", "claim_rationale"],
+  "properties": {
+    "claim_boundary_id": {"type": "string", "minLength": 1},
+    "proof_dataset_id": {"type": "string", "minLength": 1},
+    "baseline_condition_id": {"type": "string", "minLength": 1},
+    "palamedes_condition_id": {"type": "string", "minLength": 1},
+    "evaluation_protocol_id": {"type": "string", "minLength": 1},
+    "evidence_bundle_fingerprint": {"type": "string", "minLength": 1},
+    "equal_information_verified": {"const": true},
+    "quality_measurement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["metric_id", "metric_definition", "baseline_value", "palamedes_value", "higher_is_better", "improvement_delta", "evidence_artifact_id"],
+      "properties": {
+        "metric_id": {"type": "string", "minLength": 1},
+        "metric_definition": {"type": "string", "minLength": 1},
+        "baseline_value": {"type": "number"},
+        "palamedes_value": {"type": "number"},
+        "higher_is_better": {"type": "boolean"},
+        "improvement_delta": {"type": "number"},
+        "evidence_artifact_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "labor_measurement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["labor_definition", "baseline_minutes", "palamedes_minutes", "retired_minutes", "evidence_artifact_id"],
+      "properties": {
+        "labor_definition": {"type": "string", "minLength": 1},
+        "baseline_minutes": {"type": "number", "minimum": 0},
+        "palamedes_minutes": {"type": "number", "minimum": 0},
+        "retired_minutes": {"type": "number"},
+        "evidence_artifact_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "safeguard_comparison": {
+      "type": "object", "additionalProperties": false,
+      "required": ["baseline_constitutional_violation_count", "palamedes_constitutional_violation_count", "baseline_proxy_harm_count", "palamedes_proxy_harm_count", "not_worse"],
+      "properties": {
+        "baseline_constitutional_violation_count": {"type": "integer", "minimum": 0},
+        "palamedes_constitutional_violation_count": {"type": "integer", "minimum": 0},
+        "baseline_proxy_harm_count": {"type": "integer", "minimum": 0},
+        "palamedes_proxy_harm_count": {"type": "integer", "minimum": 0},
+        "not_worse": {"type": "boolean"}
+      }
+    },
+    "claim_basis": {"enum": ["quality_improvement", "labor_retirement", "quality_and_labor", "none"]},
+    "claim_supported": {"type": "boolean"},
+    "claim_text": {"type": "string", "minLength": 1},
+    "startup_success_claimed": {"const": false},
+    "general_superiority_claimed": {"const": false},
+    "unmeasured_dimensions_implied": {"const": false},
+    "claim_rationale": {"type": "string", "minLength": 1}
+  }
+}

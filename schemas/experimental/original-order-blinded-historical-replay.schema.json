@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/original-order-blinded-historical-replay.schema.json",
+  "title": "PalamedesOriginalOrderBlindedHistoricalReplay",
+  "description": "Cycle 363 original-order historical replay with equal information and hindsight seals.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["replay_protocol_id", "historical_case_id", "historical_case_fingerprint", "source_archive_id", "source_archive_fingerprint", "replay_protocol_fingerprint", "original_event_archive", "replay_reveals", "comparison_conditions", "hindsight_seals", "original_order_preserved", "information_parity_across_conditions", "hindsight_leak_detected", "replay_rationale"],
+  "properties": {
+    "replay_protocol_id": {"type": "string", "minLength": 1},
+    "historical_case_id": {"type": "string", "minLength": 1},
+    "historical_case_fingerprint": {"type": "string", "minLength": 1},
+    "source_archive_id": {"type": "string", "minLength": 1},
+    "source_archive_fingerprint": {"type": "string", "minLength": 1},
+    "replay_protocol_fingerprint": {"type": "string", "minLength": 1},
+    "original_event_archive": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["event_id", "original_sequence", "occurred_at", "event_fingerprint", "source_artifact_id", "source_artifact_fingerprint"],
+        "properties": {
+          "event_id": {"type": "string", "minLength": 1},
+          "original_sequence": {"type": "integer", "minimum": 1},
+          "occurred_at": {"type": "string", "minLength": 1},
+          "event_fingerprint": {"type": "string", "minLength": 1},
+          "source_artifact_id": {"type": "string", "minLength": 1},
+          "source_artifact_fingerprint": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "replay_reveals": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["reveal_id", "replay_sequence", "source_event_id", "source_event_fingerprint", "information_packet_id", "information_packet_fingerprint", "scheduled_reveal_at", "future_event_content_included"],
+        "properties": {
+          "reveal_id": {"type": "string", "minLength": 1},
+          "replay_sequence": {"type": "integer", "minimum": 1},
+          "source_event_id": {"type": "string", "minLength": 1},
+          "source_event_fingerprint": {"type": "string", "minLength": 1},
+          "information_packet_id": {"type": "string", "minLength": 1},
+          "information_packet_fingerprint": {"type": "string", "minLength": 1},
+          "scheduled_reveal_at": {"type": "string", "minLength": 1},
+          "future_event_content_included": {"const": false}
+        }
+      }
+    },
+    "comparison_conditions": {
+      "type": "array", "minItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["condition_id", "received_reveals", "future_outcome_visible", "eventual_successful_framing_visible"],
+        "properties": {
+          "condition_id": {"type": "string", "minLength": 1},
+          "received_reveals": {
+            "type": "array", "minItems": 3,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["replay_sequence", "information_packet_fingerprint"],
+              "properties": {
+                "replay_sequence": {"type": "integer", "minimum": 1},
+                "information_packet_fingerprint": {"type": "string", "minLength": 1}
+              }
+            }
+          },
+          "future_outcome_visible": {"const": false},
+          "eventual_successful_framing_visible": {"const": false}
+        }
+      }
+    },
+    "hindsight_seals": {
+      "type": "object", "additionalProperties": false,
+      "required": ["outcome_seal_id", "outcome_fingerprint", "successful_framing_seal_id", "successful_framing_fingerprint", "seal_custodian_id", "release_condition", "sealed_before_replay", "released_after_all_final_checkpoints"],
+      "properties": {
+        "outcome_seal_id": {"type": "string", "minLength": 1},
+        "outcome_fingerprint": {"type": "string", "minLength": 1},
+        "successful_framing_seal_id": {"type": "string", "minLength": 1},
+        "successful_framing_fingerprint": {"type": "string", "minLength": 1},
+        "seal_custodian_id": {"type": "string", "minLength": 1},
+        "release_condition": {"type": "string", "minLength": 1},
+        "sealed_before_replay": {"const": true},
+        "released_after_all_final_checkpoints": {"const": true}
+      }
+    },
+    "original_order_preserved": {"const": true},
+    "information_parity_across_conditions": {"const": true},
+    "hindsight_leak_detected": {"const": false},
+    "replay_rationale": {"type": "string", "minLength": 1}
+  }
+}

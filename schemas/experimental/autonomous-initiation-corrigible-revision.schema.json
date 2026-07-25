@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/autonomous-initiation-corrigible-revision.schema.json",
+  "title": "PalamedesAutonomousInitiationCorrigibleRevision",
+  "description": "Experimental Cycle 294 pairing unprompted mission initiation with evidence-responsive revision.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["behavior_record_id", "mission_lineage_id", "initiation", "revision", "autonomy_implies_incorrectibility", "behavior_rationale"],
+  "properties": {
+    "behavior_record_id": {"type": "string", "minLength": 1},
+    "mission_lineage_id": {"type": "string", "minLength": 1},
+    "initiation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["initiation_id", "wake_event_id", "observed_signal_id", "authority_grant_id", "initiated_mission_artifact_id", "initiated_at", "human_goal_prompt_present", "self_initiated", "initiation_rationale"],
+      "properties": {
+        "initiation_id": {"type": "string", "minLength": 1},
+        "wake_event_id": {"type": "string", "minLength": 1},
+        "observed_signal_id": {"type": "string", "minLength": 1},
+        "authority_grant_id": {"type": "string", "minLength": 1},
+        "initiated_mission_artifact_id": {"type": "string", "minLength": 1},
+        "initiated_at": {"type": "string", "minLength": 1},
+        "human_goal_prompt_present": {"const": false},
+        "self_initiated": {"const": true},
+        "initiation_rationale": {"type": "string", "minLength": 1}
+      }
+    },
+    "revision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["revision_id", "revision_trigger_id", "revision_evidence_id", "previous_mission_artifact_id", "revised_mission_artifact_id", "revised_at", "changed_claim", "contrary_evidence_addressed", "prior_output_defended_as_objective", "revision_resisted_to_preserve_identity", "self_preservation_used_as_reason", "revision_rationale"],
+      "properties": {
+        "revision_id": {"type": "string", "minLength": 1},
+        "revision_trigger_id": {"type": "string", "minLength": 1},
+        "revision_evidence_id": {"type": "string", "minLength": 1},
+        "previous_mission_artifact_id": {"type": "string", "minLength": 1},
+        "revised_mission_artifact_id": {"type": "string", "minLength": 1},
+        "revised_at": {"type": "string", "minLength": 1},
+        "changed_claim": {"type": "string", "minLength": 1},
+        "contrary_evidence_addressed": {"const": true},
+        "prior_output_defended_as_objective": {"const": false},
+        "revision_resisted_to_preserve_identity": {"const": false},
+        "self_preservation_used_as_reason": {"const": false},
+        "revision_rationale": {"type": "string", "minLength": 1}
+      }
+    },
+    "autonomy_implies_incorrectibility": {"const": false},
+    "behavior_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/blinded-separate-axis-judging.schema.json",
+  "title": "PalamedesBlindedSeparateAxisJudging",
+  "description": "Cycle 369 separate blinded panels for five proof dimensions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["judging_protocol_id", "proof_case_id", "condition_identity_seal_id", "condition_identity_seal_fingerprint", "protocol_fingerprint", "blinded_condition_outputs", "axis_panels", "condition_identity_map_sealed_until_all_scores", "single_holistic_judge_used", "axis_results_reported_separately", "global_impression_score_used", "judging_rationale"],
+  "properties": {
+    "judging_protocol_id": {"type": "string", "minLength": 1},
+    "proof_case_id": {"type": "string", "minLength": 1},
+    "condition_identity_seal_id": {"type": "string", "minLength": 1},
+    "condition_identity_seal_fingerprint": {"type": "string", "minLength": 1},
+    "protocol_fingerprint": {"type": "string", "minLength": 1},
+    "blinded_condition_outputs": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["blinded_output_id", "blinded_output_fingerprint", "source_output_fingerprint", "normalization_record_id", "presentation_order", "condition_identity_visible", "condition_specific_branding_removed", "semantic_content_changed_by_normalization"],
+        "properties": {
+          "blinded_output_id": {"type": "string", "minLength": 1},
+          "blinded_output_fingerprint": {"type": "string", "minLength": 1},
+          "source_output_fingerprint": {"type": "string", "minLength": 1},
+          "normalization_record_id": {"type": "string", "minLength": 1},
+          "presentation_order": {"type": "integer", "minimum": 1},
+          "condition_identity_visible": {"const": false},
+          "condition_specific_branding_removed": {"const": true},
+          "semantic_content_changed_by_normalization": {"const": false}
+        }
+      }
+    },
+    "axis_panels": {
+      "type": "array", "minItems": 5, "maxItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["axis", "panel_id", "rubric_id", "rubric_fingerprint", "axis_evidence_packet_id", "axis_evidence_packet_fingerprint", "axis_result_artifact_id", "judges", "rubric_frozen_before_outputs", "axis_evidence_only", "panel_independent"],
+        "properties": {
+          "axis": {"enum": ["beneficiary_outcome", "constitutional_reasoning", "originality", "planner_burden", "proxy_risk"]},
+          "panel_id": {"type": "string", "minLength": 1},
+          "rubric_id": {"type": "string", "minLength": 1},
+          "rubric_fingerprint": {"type": "string", "minLength": 1},
+          "axis_evidence_packet_id": {"type": "string", "minLength": 1},
+          "axis_evidence_packet_fingerprint": {"type": "string", "minLength": 1},
+          "axis_result_artifact_id": {"type": "string", "minLength": 1},
+          "judges": {
+            "type": "array", "minItems": 2,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["judge_id", "expertise_basis", "independence_record_id", "score_record_id", "condition_identity_visible", "other_axis_scores_visible"],
+              "properties": {
+                "judge_id": {"type": "string", "minLength": 1},
+                "expertise_basis": {"type": "string", "minLength": 1},
+                "independence_record_id": {"type": "string", "minLength": 1},
+                "score_record_id": {"type": "string", "minLength": 1},
+                "condition_identity_visible": {"const": false},
+                "other_axis_scores_visible": {"const": false}
+              }
+            }
+          },
+          "rubric_frozen_before_outputs": {"const": true},
+          "axis_evidence_only": {"const": true},
+          "panel_independent": {"const": true}
+        }
+      }
+    },
+    "condition_identity_map_sealed_until_all_scores": {"const": true},
+    "single_holistic_judge_used": {"const": false},
+    "axis_results_reported_separately": {"const": true},
+    "global_impression_score_used": {"const": false},
+    "judging_rationale": {"type": "string", "minLength": 1}
+  }
+}

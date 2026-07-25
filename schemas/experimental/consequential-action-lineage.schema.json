@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/consequential-action-lineage.schema.json",
+  "title": "PalamedesConsequentialActionLineage",
+  "description": "Experimental Cycle 149 accountable lineage for consequential actions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "action_id",
+    "mission_id",
+    "accountable_agent_id",
+    "agent_delegation_id",
+    "authority_decision_id",
+    "action",
+    "timestamp",
+    "evidence_as_of",
+    "rollback_or_recovery",
+    "consequential",
+    "constitution_clause_ids",
+    "evidence_state_ids",
+    "consequence_classes",
+    "reversibility",
+    "evidence_confidence",
+    "irreversible_authorization_id"
+  ],
+  "properties": {
+    "action_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "accountable_agent_id": {"type": "string", "minLength": 1},
+    "agent_delegation_id": {"type": "string", "minLength": 1},
+    "authority_decision_id": {"type": "string", "minLength": 1},
+    "action": {"type": "string", "minLength": 1},
+    "timestamp": {"type": "string", "minLength": 1},
+    "evidence_as_of": {"type": "string", "minLength": 1},
+    "rollback_or_recovery": {"type": "string", "minLength": 1},
+    "consequential": {"const": true},
+    "constitution_clause_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "evidence_state_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "consequence_classes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "reversibility": {
+      "enum": ["reversible", "partially_reversible", "irreversible"]
+    },
+    "evidence_confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+    "irreversible_authorization_id": {"type": "string"}
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/competing-causal-sketch-set.schema.json",
+  "title": "PalamedesCompetingCausalSketchSet",
+  "description": "Experimental Cycle 222 contract for bounded competing causal sketches.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "causal_sketch_set_id",
+    "world_model_set_id",
+    "affected_condition",
+    "exhaustive_world_simulation",
+    "shared_scope_boundary",
+    "sketches",
+    "comparison_decision",
+    "next_discriminator"
+  ],
+  "properties": {
+    "causal_sketch_set_id": {"type": "string", "minLength": 1},
+    "world_model_set_id": {"type": "string", "minLength": 1},
+    "affected_condition": {"type": "string", "minLength": 1},
+    "exhaustive_world_simulation": {"const": false},
+    "shared_scope_boundary": {"type": "string", "minLength": 1},
+    "sketches": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sketch_id",
+          "model_id",
+          "local_boundary",
+          "included_factors",
+          "deliberately_excluded_factors",
+          "causal_path",
+          "prediction",
+          "discriminating_observation"
+        ],
+        "properties": {
+          "sketch_id": {"type": "string", "minLength": 1},
+          "model_id": {"type": "string", "minLength": 1},
+          "local_boundary": {"type": "string", "minLength": 1},
+          "included_factors": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "deliberately_excluded_factors": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "causal_path": {"type": "string", "minLength": 1},
+          "prediction": {"type": "string", "minLength": 1},
+          "discriminating_observation": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "comparison_decision": {"type": "string", "minLength": 1},
+    "next_discriminator": {"type": "string", "minLength": 1}
+  }
+}

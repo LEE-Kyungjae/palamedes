@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/pre-reveal-candidate-commitments.schema.json",
+  "title": "PalamedesPreRevealCandidateCommitments",
+  "description": "Experimental Cycle 241 contract sealing candidate forecasts and failure conditions before rival reveal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tournament_commitment_id",
+    "tournament_id",
+    "rival_reveal_event_id",
+    "candidate_commitments",
+    "post_reveal_mutation_allowed",
+    "amendment_protocol"
+  ],
+  "properties": {
+    "tournament_commitment_id": {"type": "string", "minLength": 1},
+    "tournament_id": {"type": "string", "minLength": 1},
+    "rival_reveal_event_id": {"type": "string", "minLength": 1},
+    "candidate_commitments": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "candidate_id",
+          "commitment_id",
+          "commitment_hash",
+          "committed_at",
+          "forecast",
+          "forecast_measure",
+          "forecast_target",
+          "forecast_window",
+          "failure_condition",
+          "withdrawal_condition",
+          "assumption_set_id",
+          "committed_before_rival_reveal",
+          "rival_candidate_ids_visible_at_commitment",
+          "sealed"
+        ],
+        "properties": {
+          "candidate_id": {"type": "string", "minLength": 1},
+          "commitment_id": {"type": "string", "minLength": 1},
+          "commitment_hash": {"type": "string", "minLength": 1},
+          "committed_at": {"type": "string", "minLength": 1},
+          "forecast": {"type": "string", "minLength": 1},
+          "forecast_measure": {"type": "string", "minLength": 1},
+          "forecast_target": {"type": "string", "minLength": 1},
+          "forecast_window": {"type": "string", "minLength": 1},
+          "failure_condition": {"type": "string", "minLength": 1},
+          "withdrawal_condition": {"type": "string", "minLength": 1},
+          "assumption_set_id": {"type": "string", "minLength": 1},
+          "committed_before_rival_reveal": {"const": true},
+          "rival_candidate_ids_visible_at_commitment": {"type": "array", "maxItems": 0},
+          "sealed": {"const": true}
+        }
+      }
+    },
+    "post_reveal_mutation_allowed": {"const": false},
+    "amendment_protocol": {"type": "string", "minLength": 1}
+  }
+}

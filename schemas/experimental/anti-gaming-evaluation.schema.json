@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/anti-gaming-evaluation.schema.json",
+  "title": "PalamedesAntiGamingEvaluation",
+  "description": "Experimental Cycle 156 evaluation resistant to stylistic benchmark gaming.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "evaluation_id",
+    "benchmark_version",
+    "hidden_case_custodian",
+    "hidden_case_manifest_hash",
+    "future_case_sampling_rule",
+    "outcome_tracking_window",
+    "beneficiary_outcome_definition",
+    "style_role",
+    "palamedes_has_hidden_case_access",
+    "style_can_override_outcomes",
+    "preference_score_is_primary",
+    "primary_criteria",
+    "sealed_holdout_ids"
+  ],
+  "properties": {
+    "evaluation_id": {"type": "string", "minLength": 1},
+    "benchmark_version": {"type": "string", "minLength": 1},
+    "hidden_case_custodian": {"type": "string", "minLength": 1},
+    "hidden_case_manifest_hash": {"type": "string", "minLength": 1},
+    "future_case_sampling_rule": {"type": "string", "minLength": 1},
+    "outcome_tracking_window": {"type": "string", "minLength": 1},
+    "beneficiary_outcome_definition": {"type": "string", "minLength": 1},
+    "style_role": {"type": "string", "minLength": 1},
+    "palamedes_has_hidden_case_access": {"const": false},
+    "style_can_override_outcomes": {"const": false},
+    "preference_score_is_primary": {"const": false},
+    "primary_criteria": {
+      "type": "array",
+      "minItems": 2,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "sealed_holdout_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

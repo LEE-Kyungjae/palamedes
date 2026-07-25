@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/autonomous-purpose-claim-boundary.schema.json",
+  "title": "PalamedesAutonomousPurposeClaimBoundary",
+  "description": "Experimental Cycle 191 bounded claim for autonomous, plural, evidence-bearing, corrigible, consequential purpose formation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "claim_id",
+    "claim_statement",
+    "constitution_id",
+    "correction_mechanism_id",
+    "outcome_evidence_id",
+    "scope_limit",
+    "universally_correct_purpose_claimed",
+    "value_uncertainty_preserved",
+    "claim_is_falsifiable",
+    "bounded_capabilities"
+  ],
+  "properties": {
+    "claim_id": {"type": "string", "minLength": 1},
+    "claim_statement": {"type": "string", "minLength": 1},
+    "constitution_id": {"type": "string", "minLength": 1},
+    "correction_mechanism_id": {"type": "string", "minLength": 1},
+    "outcome_evidence_id": {"type": "string", "minLength": 1},
+    "scope_limit": {"type": "string", "minLength": 1},
+    "universally_correct_purpose_claimed": {"const": false},
+    "value_uncertainty_preserved": {"const": true},
+    "claim_is_falsifiable": {"const": true},
+    "bounded_capabilities": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["capability", "operational_meaning", "evidence_id", "failure_condition"],
+        "properties": {
+          "capability": {
+            "enum": ["autonomous", "plural", "evidence_bearing", "corrigible", "consequential"]
+          },
+          "operational_meaning": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "failure_condition": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

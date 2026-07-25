@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/human-upstream-labor-ledger.schema.json",
+  "title": "PalamedesHumanUpstreamLaborLedger",
+  "description": "Experimental Cycle 288 ledger of human labor required before a viable mission.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["labor_ledger_id", "case_id", "condition_labor_records", "zero_labor_must_be_explicit", "post_viability_labor_included", "measurement_rationale"],
+  "properties": {
+    "labor_ledger_id": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "condition_labor_records": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["condition_id", "viable_mission_id", "viability_decided_at", "viability_evidence_id", "labor_categories", "reported_total_event_count", "reported_total_human_seconds"],
+        "properties": {
+          "condition_id": {"enum": ["human", "one_shot_agent", "palamedes"]},
+          "viable_mission_id": {"type": "string", "minLength": 1},
+          "viability_decided_at": {"type": "string", "minLength": 1},
+          "viability_evidence_id": {"type": "string", "minLength": 1},
+          "labor_categories": {
+            "type": "array",
+            "minItems": 5,
+            "maxItems": 5,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["category", "event_count", "human_seconds", "evidence_ids"],
+              "properties": {
+                "category": {"enum": ["framing", "clarification", "approval", "correction", "intervention"]},
+                "event_count": {"type": "integer", "minimum": 0},
+                "human_seconds": {"type": "number", "minimum": 0},
+                "evidence_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+              }
+            }
+          },
+          "reported_total_event_count": {"type": "integer", "minimum": 0},
+          "reported_total_human_seconds": {"type": "number", "minimum": 0}
+        }
+      }
+    },
+    "zero_labor_must_be_explicit": {"const": true},
+    "post_viability_labor_included": {"const": false},
+    "measurement_rationale": {"type": "string", "minLength": 1}
+  }
+}

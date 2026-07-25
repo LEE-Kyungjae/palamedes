@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/semantic-command-freeze-lineage.schema.json",
+  "title": "PalamedesSemanticCommandFreezeLineage",
+  "description": "Cycle 394 seven semantic commands with frozen artifacts and explicit lineage.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["command_report_id", "commands", "final_state", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "command_report_id": {"type": "string", "minLength": 1},
+    "commands": {
+      "type": "array", "minItems": 7, "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command_id", "command_type", "artifact_id", "artifact_fingerprint", "parent_artifact_ids", "issued_at", "frozen"],
+        "properties": {
+          "command_id": {"type": "string", "minLength": 1},
+          "command_type": {"enum": ["signal", "constitution", "sketches", "candidates", "tournament", "contract", "outcome"]},
+          "artifact_id": {"type": "string", "minLength": 1},
+          "artifact_fingerprint": {"type": "string", "minLength": 1},
+          "parent_artifact_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "issued_at": {"type": "string", "minLength": 1},
+          "frozen": {"const": true}
+        }
+      }
+    },
+    "final_state": {
+      "type": "object",
+      "required": ["semantic_command_state_version", "artifacts", "command_log", "execution_commands_emitted", "all_artifacts_frozen"],
+      "properties": {
+        "semantic_command_state_version": {"const": "semantic-command-state/1"},
+        "artifacts": {"type": "array", "minItems": 7},
+        "command_log": {"type": "array", "minItems": 7},
+        "execution_commands_emitted": {"const": 0},
+        "all_artifacts_frozen": {"const": true}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

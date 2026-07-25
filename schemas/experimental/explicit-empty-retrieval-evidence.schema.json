@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/explicit-empty-retrieval-evidence.schema.json",
+  "title": "PalamedesExplicitEmptyRetrievalEvidence",
+  "description": "Cycle 334 preservation of empty retrieval slots as explicit missing-evidence states.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["completion_record_id", "retrieval_plan_id", "context_manifest_id", "slot_completions", "empty_slots_dropped", "all_slots_forced_filled", "missing_evidence_visible_to_downstream_roles", "completion_rationale"],
+  "properties": {
+    "completion_record_id": {"type": "string", "minLength": 1},
+    "retrieval_plan_id": {"type": "string", "minLength": 1},
+    "context_manifest_id": {"type": "string", "minLength": 1},
+    "slot_completions": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["completion_id", "slot_type", "query_fingerprint", "searched_scope", "searched_source_ids", "search_completed_at", "retrieval_attempted", "status", "result_artifact_ids", "missing_evidence_statement", "uncertainty_impact", "next_acquisition_trigger", "empty_marker_included_in_context", "weak_reference_used_as_padding"],
+        "properties": {
+          "completion_id": {"type": "string", "minLength": 1},
+          "slot_type": {"enum": ["counter_view", "failure", "remote_mechanism", "uncovered_beneficiary"]},
+          "query_fingerprint": {"type": "string", "minLength": 1},
+          "searched_scope": {"type": "string", "minLength": 1},
+          "searched_source_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "search_completed_at": {"type": "string", "minLength": 1},
+          "retrieval_attempted": {"const": true},
+          "status": {"enum": ["filled", "empty"]},
+          "result_artifact_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "missing_evidence_statement": {"type": "string"},
+          "uncertainty_impact": {"type": "string"},
+          "next_acquisition_trigger": {"type": "string"},
+          "empty_marker_included_in_context": {"type": "boolean"},
+          "weak_reference_used_as_padding": {"const": false}
+        }
+      }
+    },
+    "empty_slots_dropped": {"const": false},
+    "all_slots_forced_filled": {"const": false},
+    "missing_evidence_visible_to_downstream_roles": {"const": true},
+    "completion_rationale": {"type": "string", "minLength": 1}
+  }
+}

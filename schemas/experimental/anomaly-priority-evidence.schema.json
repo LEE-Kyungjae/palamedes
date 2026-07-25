@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/anomaly-priority-evidence.schema.json",
+  "title": "PalamedesAnomalyPriorityEvidence",
+  "description": "Experimental Cycle 204 anomaly priority from persistence, cross-source recurrence, and consequence asymmetry.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "priority_record_id",
+    "anomaly_reservation_id",
+    "anomaly_observation",
+    "first_observed_at",
+    "last_observed_at",
+    "observation_count",
+    "recurrence_sources",
+    "consequence_asymmetry_present",
+    "consequence_asymmetry",
+    "meaning_declared",
+    "harm_declared",
+    "priority",
+    "next_investigation",
+    "priority_rationale"
+  ],
+  "properties": {
+    "priority_record_id": {"type": "string", "minLength": 1},
+    "anomaly_reservation_id": {"type": "string", "minLength": 1},
+    "anomaly_observation": {"type": "string", "minLength": 1},
+    "first_observed_at": {"type": "string", "minLength": 1},
+    "last_observed_at": {"type": "string", "minLength": 1},
+    "observation_count": {"type": "integer", "minimum": 1},
+    "recurrence_sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_id", "context", "observation", "evidence_id"],
+        "properties": {
+          "source_id": {"type": "string", "minLength": 1},
+          "context": {"type": "string", "minLength": 1},
+          "observation": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "consequence_asymmetry_present": {"type": "boolean"},
+    "consequence_asymmetry": {"type": "string", "minLength": 1},
+    "meaning_declared": {"const": false},
+    "harm_declared": {"const": false},
+    "priority": {"enum": ["low", "moderate", "high"]},
+    "next_investigation": {"type": "string", "minLength": 1},
+    "priority_rationale": {"type": "string", "minLength": 1}
+  }
+}

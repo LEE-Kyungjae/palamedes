@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/prestructured-failure-attribution.schema.json",
+  "title": "PalamedesPrestructuredFailureAttribution",
+  "description": "Experimental Cycle 163 frozen failure attribution with shared causal responsibility.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attribution_protocol_id",
+    "mission_id",
+    "pre_registered_forecast_id",
+    "structure_frozen_at",
+    "outcome_observed_at",
+    "structure_frozen_before_outcome",
+    "downstream_execution_presumed_cause",
+    "upstream_selection_exempt",
+    "responsibility_mode",
+    "conclusion_rationale",
+    "layer_attributions"
+  ],
+  "properties": {
+    "attribution_protocol_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "pre_registered_forecast_id": {"type": "string", "minLength": 1},
+    "structure_frozen_at": {"type": "string", "minLength": 1},
+    "outcome_observed_at": {"type": "string", "minLength": 1},
+    "structure_frozen_before_outcome": {"const": true},
+    "downstream_execution_presumed_cause": {"const": false},
+    "upstream_selection_exempt": {"const": false},
+    "responsibility_mode": {"enum": ["sole", "shared", "underdetermined"]},
+    "conclusion_rationale": {"type": "string", "minLength": 1},
+    "layer_attributions": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "layer",
+          "contribution",
+          "precommitted_question",
+          "evidence_for_contribution",
+          "evidence_against_contribution",
+          "evidence_id"
+        ],
+        "properties": {
+          "layer": {
+            "enum": [
+              "mission_selection",
+              "planning",
+              "execution",
+              "environment",
+              "measurement"
+            ]
+          },
+          "contribution": {"enum": ["none", "contributing", "primary", "unknown"]},
+          "precommitted_question": {"type": "string", "minLength": 1},
+          "evidence_for_contribution": {"type": "string", "minLength": 1},
+          "evidence_against_contribution": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "packet_gate_id": "case-001-treatment-gate",
+  "case_id": "case-001-insight-rag",
+  "task_fingerprint": "sha256:gahyeonbot-turn-trace-task",
+  "source_manifest_fingerprint": "sha256:case-001-reference-corpus",
+  "overall_confidence": "low",
+  "required_capabilities": [
+    "correlation_id",
+    "structured_logging",
+    "runtime_boundary_propagation"
+  ],
+  "allowed_supporting_capabilities": [
+    "observability",
+    "failure_diagnostics"
+  ],
+  "candidates": [
+    {
+      "candidate_id": "openclaw-diagnostics-otel:Src:src",
+      "confidence": "low",
+      "positive_capabilities": [
+        "observability",
+        "failure_diagnostics"
+      ],
+      "evidence_ids": [
+        "openclaw:src/service-attributes.ts",
+        "openclaw:src/service-events.ts",
+        "openclaw:src/service-trace-context.ts"
+      ]
+    }
+  ],
+  "selected_candidate_id": "openclaw-diagnostics-otel:Src:src",
+  "guidance_steps": [
+    {
+      "step_id": "runtime-boundary",
+      "text": "Locate the current runtime boundary before adding new abstractions.",
+      "capability": "runtime_boundary_propagation",
+      "task_relevance": "direct",
+      "source_evidence_ids": ["openclaw:src/service-trace-context.ts"]
+    },
+    {
+      "step_id": "cache-ttl",
+      "text": "Add duplicate request collapse, TTL, and invalidation semantics.",
+      "capability": "high_throughput_caching",
+      "task_relevance": "unrelated",
+      "source_evidence_ids": ["openclaw:src/service-events.ts"]
+    },
+    {
+      "step_id": "correlation-propagation",
+      "text": "Propagate request or correlation identifiers through the full runtime path.",
+      "capability": "correlation_id",
+      "task_relevance": "direct",
+      "source_evidence_ids": ["openclaw:src/service-trace-context.ts"]
+    }
+  ],
+  "handoff_authorized": false,
+  "treatment_status": "unavailable_insufficient_evidence",
+  "report_fingerprint": "sha256:case-001-treatment-gate",
+  "report_rationale": "The packet is low confidence, lacks required positive evidence, and includes unrelated cache guidance."
+}

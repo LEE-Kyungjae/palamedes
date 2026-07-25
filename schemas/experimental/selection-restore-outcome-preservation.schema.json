@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/selection-restore-outcome-preservation.schema.json",
+  "title": "PalamedesSelectionRestoreOutcomePreservation",
+  "description": "Cycle 387 selection rollback with append-only outcome preservation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["restore_report_id", "restore_input", "restore_record", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "restore_report_id": {"type": "string", "minLength": 1},
+    "restore_input": {"type": "object"},
+    "restore_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["restore_record_version", "restore_id", "mission_id", "restored_selection_revision_id", "restored_selection_fingerprint", "restored_selection_state", "replaced_current_selection_revision_id", "replaced_current_selection_fingerprint", "restore_evidence_artifact_id", "outcome_observations", "later_outcome_observation_ids", "outcome_observation_count_before", "outcome_observation_count_after", "outcomes_deleted_by_restore", "later_outcomes_reassigned_to_restored_selection"],
+      "properties": {
+        "restore_record_version": {"const": "selection-restore/1"},
+        "restore_id": {"type": "string", "minLength": 1},
+        "mission_id": {"type": "string", "minLength": 1},
+        "restored_selection_revision_id": {"type": "string", "minLength": 1},
+        "restored_selection_fingerprint": {"type": "string", "minLength": 1},
+        "restored_selection_state": {"type": "object"},
+        "replaced_current_selection_revision_id": {"type": "string", "minLength": 1},
+        "replaced_current_selection_fingerprint": {"type": "string", "minLength": 1},
+        "restore_evidence_artifact_id": {"type": "string", "minLength": 1},
+        "outcome_observations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["observation_id", "observation_fingerprint", "observed_at", "source_selection_revision_id", "evidence_artifact_id", "observed_after_target_selection", "source_selection_revision_preserved"],
+            "properties": {
+              "observation_id": {"type": "string", "minLength": 1},
+              "observation_fingerprint": {"type": "string", "minLength": 1},
+              "observed_at": {"type": "string", "minLength": 1},
+              "source_selection_revision_id": {"type": "string", "minLength": 1},
+              "evidence_artifact_id": {"type": "string", "minLength": 1},
+              "observed_after_target_selection": {"type": "boolean"},
+              "source_selection_revision_preserved": {"const": true}
+            }
+          }
+        },
+        "later_outcome_observation_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "outcome_observation_count_before": {"type": "integer", "minimum": 0},
+        "outcome_observation_count_after": {"type": "integer", "minimum": 0},
+        "outcomes_deleted_by_restore": {"const": false},
+        "later_outcomes_reassigned_to_restored_selection": {"const": false}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

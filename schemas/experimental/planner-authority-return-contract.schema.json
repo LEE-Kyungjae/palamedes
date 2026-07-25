@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/planner-authority-return-contract.schema.json",
+  "title": "PalamedesPlannerAuthorityReturnContract",
+  "description": "Experimental Cycle 258 contract granting planner freedom until evidence or scope changes return authority to Palamedes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority_clause_id",
+    "planner_contract_id",
+    "palamedes_authority_id",
+    "delegated_freedoms",
+    "forbidden_actions",
+    "return_control_is_automatic",
+    "return_triggers",
+    "current_control",
+    "planner_continues_unilaterally",
+    "return_protocol"
+  ],
+  "properties": {
+    "authority_clause_id": {"type": "string", "minLength": 1},
+    "planner_contract_id": {"type": "string", "minLength": 1},
+    "palamedes_authority_id": {"type": "string", "minLength": 1},
+    "delegated_freedoms": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "forbidden_actions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "return_control_is_automatic": {"const": true},
+    "return_triggers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "trigger_id",
+          "trigger_type",
+          "condition",
+          "threshold",
+          "return_action",
+          "triggered",
+          "observed_change",
+          "evidence_id",
+          "observed_at"
+        ],
+        "properties": {
+          "trigger_id": {"type": "string", "minLength": 1},
+          "trigger_type": {"enum": ["evidence_change", "scope_change"]},
+          "condition": {"type": "string", "minLength": 1},
+          "threshold": {"type": "string", "minLength": 1},
+          "return_action": {"type": "string", "minLength": 1},
+          "triggered": {"type": "boolean"},
+          "observed_change": {"type": "string"},
+          "evidence_id": {"type": "string"},
+          "observed_at": {"type": "string"}
+        }
+      }
+    },
+    "current_control": {"enum": ["planner", "palamedes_review"]},
+    "planner_continues_unilaterally": {"type": "boolean"},
+    "return_protocol": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/evidence-weighted-model-update.schema.json",
+  "title": "PalamedesEvidenceWeightedModelUpdate",
+  "description": "Experimental Cycle 169 model update bounded by relevance and causal identification.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "update_id",
+    "source_evidence_id",
+    "target_model",
+    "target_claim_id",
+    "prior_belief",
+    "proposed_belief",
+    "evidence_relevance",
+    "relevance_rationale",
+    "causal_identification",
+    "causal_identification_rationale",
+    "update_strength",
+    "outcome_emotional_salience",
+    "outcome_financial_magnitude",
+    "emotional_magnitude_drives_update",
+    "financial_magnitude_drives_update"
+  ],
+  "properties": {
+    "update_id": {"type": "string", "minLength": 1},
+    "source_evidence_id": {"type": "string", "minLength": 1},
+    "target_model": {"enum": ["world", "value", "mechanism"]},
+    "target_claim_id": {"type": "string", "minLength": 1},
+    "prior_belief": {"type": "string", "minLength": 1},
+    "proposed_belief": {"type": "string", "minLength": 1},
+    "evidence_relevance": {"enum": ["none", "indirect", "direct"]},
+    "relevance_rationale": {"type": "string", "minLength": 1},
+    "causal_identification": {"enum": ["none", "weak", "moderate", "strong"]},
+    "causal_identification_rationale": {"type": "string", "minLength": 1},
+    "update_strength": {"enum": ["none", "weak", "moderate", "strong"]},
+    "outcome_emotional_salience": {"type": "number"},
+    "outcome_financial_magnitude": {"type": "number"},
+    "emotional_magnitude_drives_update": {"const": false},
+    "financial_magnitude_drives_update": {"const": false}
+  }
+}

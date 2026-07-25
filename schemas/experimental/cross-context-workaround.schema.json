@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/cross-context-workaround.schema.json",
+  "title": "PalamedesCrossContextWorkaround",
+  "description": "Experimental Cycle 124 contract testing workaround mechanisms across contexts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "analysis_id",
+    "mechanism_hypothesis",
+    "shared_pattern",
+    "boundary_conditions",
+    "next_discriminating_context",
+    "generalizes_universally",
+    "mechanism_strength",
+    "contexts"
+  ],
+  "properties": {
+    "analysis_id": {"type": "string", "minLength": 1},
+    "mechanism_hypothesis": {"type": "string", "minLength": 1},
+    "shared_pattern": {"type": "string", "minLength": 1},
+    "boundary_conditions": {"type": "string", "minLength": 1},
+    "next_discriminating_context": {"type": "string", "minLength": 1},
+    "generalizes_universally": {"const": false},
+    "mechanism_strength": {"enum": ["tentative", "supported", "contested"]},
+    "contexts": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "context_id",
+          "population",
+          "environment",
+          "observed_workaround",
+          "mechanism_evidence",
+          "difference",
+          "source_id"
+        ],
+        "properties": {
+          "context_id": {"type": "string", "minLength": 1},
+          "population": {"type": "string", "minLength": 1},
+          "environment": {"type": "string", "minLength": 1},
+          "observed_workaround": {"type": "string", "minLength": 1},
+          "mechanism_evidence": {"type": "string", "minLength": 1},
+          "difference": {"type": "string", "minLength": 1},
+          "source_id": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

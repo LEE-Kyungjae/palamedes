@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/world-model-surprise-registry.schema.json",
+  "title": "PalamedesWorldModelSurpriseRegistry",
+  "description": "Experimental Cycle 226 registry making every world model vulnerable to a competitor-favoring surprise.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "surprise_registry_id",
+    "world_model_set_id",
+    "observation_window",
+    "model_surprises",
+    "review_trigger"
+  ],
+  "properties": {
+    "surprise_registry_id": {"type": "string", "minLength": 1},
+    "world_model_set_id": {"type": "string", "minLength": 1},
+    "observation_window": {"type": "string", "minLength": 1},
+    "model_surprises": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "model_id",
+          "expected_observation",
+          "surprising_observation",
+          "why_surprising",
+          "measurement_rule",
+          "model_can_lose",
+          "model_update_if_observed",
+          "favored_competing_model_id"
+        ],
+        "properties": {
+          "model_id": {"type": "string", "minLength": 1},
+          "expected_observation": {"type": "string", "minLength": 1},
+          "surprising_observation": {"type": "string", "minLength": 1},
+          "why_surprising": {"type": "string", "minLength": 1},
+          "measurement_rule": {"type": "string", "minLength": 1},
+          "model_can_lose": {"const": true},
+          "model_update_if_observed": {"type": "string", "minLength": 1},
+          "favored_competing_model_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "review_trigger": {"type": "string", "minLength": 1}
+  }
+}

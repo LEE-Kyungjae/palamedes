@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/scoped-constitution-conflict-blocking.schema.json",
+  "title": "PalamedesScopedConstitutionConflictBlocking",
+  "description": "Cycle 385 action-level constitutional conflict routing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["scope_report_id", "scope_input", "scope_record", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "scope_report_id": {"type": "string", "minLength": 1},
+    "scope_input": {"type": "object"},
+    "scope_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope_record_version", "scope_decision_id", "constitution_version_id", "constitution_fingerprint", "safe_exploration_authority_id", "action_decisions", "blocked_action_ids", "safe_exploration_action_ids", "unaffected_action_ids", "blocked_mission_ids", "unaffected_mission_ids", "global_freeze"],
+      "properties": {
+        "scope_record_version": {"const": "constitution-conflict-scope/1"},
+        "scope_decision_id": {"type": "string", "minLength": 1},
+        "constitution_version_id": {"type": "string", "minLength": 1},
+        "constitution_fingerprint": {"type": "string", "minLength": 1},
+        "safe_exploration_authority_id": {"type": "string", "minLength": 1},
+        "action_decisions": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["action_id", "mission_id", "status", "conflict_ids", "scope_rationale"],
+            "properties": {
+              "action_id": {"type": "string", "minLength": 1},
+              "mission_id": {"type": "string", "minLength": 1},
+              "status": {"enum": ["continue_unaffected", "continue_safe_exploration", "blocked_constitution_conflict"]},
+              "conflict_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+              "scope_rationale": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "blocked_action_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "safe_exploration_action_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "unaffected_action_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "blocked_mission_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "unaffected_mission_ids": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "global_freeze": {"const": false}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

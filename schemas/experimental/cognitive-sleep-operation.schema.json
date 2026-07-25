@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/cognitive-sleep-operation.schema.json",
+  "title": "PalamedesCognitiveSleepOperation",
+  "description": "Experimental Cycle 269 monitored cognitive sleep when reality is the only useful remaining information source.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sleep_operation_id",
+    "deferral_id",
+    "frontier_entry_id",
+    "missing_condition_id",
+    "reality_is_only_useful_information_source",
+    "additional_internal_reasoning_information_gain",
+    "reality_observation_source_id",
+    "observation_channel",
+    "sleep_started_at",
+    "latest_review_at",
+    "wake_trigger",
+    "early_interrupt_conditions",
+    "safe_interim_state",
+    "responsible_monitor_id",
+    "busy_polling",
+    "mission_abandoned",
+    "sleep_status",
+    "wake_evidence_id",
+    "woken_at"
+  ],
+  "properties": {
+    "sleep_operation_id": {"type": "string", "minLength": 1},
+    "deferral_id": {"type": "string", "minLength": 1},
+    "frontier_entry_id": {"type": "string", "minLength": 1},
+    "missing_condition_id": {"type": "string", "minLength": 1},
+    "reality_is_only_useful_information_source": {"const": true},
+    "additional_internal_reasoning_information_gain": {"const": 0},
+    "reality_observation_source_id": {"type": "string", "minLength": 1},
+    "observation_channel": {"type": "string", "minLength": 1},
+    "sleep_started_at": {"type": "string", "minLength": 1},
+    "latest_review_at": {"type": "string", "minLength": 1},
+    "wake_trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trigger_id", "condition", "threshold", "required_evidence"],
+      "properties": {
+        "trigger_id": {"type": "string", "minLength": 1},
+        "condition": {"type": "string", "minLength": 1},
+        "threshold": {"type": "string", "minLength": 1},
+        "required_evidence": {"type": "string", "minLength": 1}
+      }
+    },
+    "early_interrupt_conditions": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "condition", "response"],
+        "properties": {
+          "type": {"enum": ["harm", "authority_conflict"]},
+          "condition": {"type": "string", "minLength": 1},
+          "response": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "safe_interim_state": {"type": "string", "minLength": 1},
+    "responsible_monitor_id": {"type": "string", "minLength": 1},
+    "busy_polling": {"const": false},
+    "mission_abandoned": {"const": false},
+    "sleep_status": {"enum": ["sleeping", "woken"]},
+    "wake_evidence_id": {"type": "string"},
+    "woken_at": {"type": "string"}
+  }
+}

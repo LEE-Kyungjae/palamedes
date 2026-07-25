@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/stop-failure-diagnosis.schema.json",
+  "title": "PalamedesStopFailureDiagnosis",
+  "description": "Experimental Cycle 148 four-way diagnosis before automatic stopping.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "diagnosis_id",
+    "mission_id",
+    "signal_id",
+    "observed_deviation",
+    "selected_diagnosis_rationale",
+    "next_action",
+    "candidate_diagnoses",
+    "selected_diagnosis",
+    "decision",
+    "confidence"
+  ],
+  "properties": {
+    "diagnosis_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "signal_id": {"type": "string", "minLength": 1},
+    "observed_deviation": {"type": "string", "minLength": 1},
+    "selected_diagnosis_rationale": {"type": "string", "minLength": 1},
+    "next_action": {"type": "string", "minLength": 1},
+    "candidate_diagnoses": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "plausibility", "evidence", "discriminator"],
+        "properties": {
+          "type": {
+            "enum": [
+              "thesis_failure",
+              "execution_failure",
+              "delayed_signal",
+              "measurement_failure"
+            ]
+          },
+          "plausibility": {"type": "string", "minLength": 1},
+          "evidence": {"type": "string", "minLength": 1},
+          "discriminator": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "selected_diagnosis": {
+      "enum": ["thesis_failure", "execution_failure", "delayed_signal", "measurement_failure"]
+    },
+    "decision": {
+      "enum": ["stop", "remediate_execution", "wait_for_signal", "repair_measurement"]
+    },
+    "confidence": {"type": "integer", "minimum": 0, "maximum": 100}
+  }
+}

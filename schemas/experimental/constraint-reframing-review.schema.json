@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/constraint-reframing-review.schema.json",
+  "title": "PalamedesConstraintReframingReview",
+  "description": "Experimental Cycle 174 review of whether a constraint reveals a better beneficiary or mechanism.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "review_id",
+    "planner_return_id",
+    "constraint",
+    "constraint_evidence_id",
+    "constraint_treated_as_resistance_by_default",
+    "original_beneficiary",
+    "original_mechanism",
+    "alternative_beneficiary",
+    "alternative_mechanism",
+    "comparison_dimensions",
+    "comparison_evidence_id",
+    "comparison_rationale",
+    "alternative_mission_better",
+    "planning_paused",
+    "decision"
+  ],
+  "properties": {
+    "review_id": {"type": "string", "minLength": 1},
+    "planner_return_id": {"type": "string", "minLength": 1},
+    "constraint": {"type": "string", "minLength": 1},
+    "constraint_evidence_id": {"type": "string", "minLength": 1},
+    "constraint_treated_as_resistance_by_default": {"const": false},
+    "original_beneficiary": {"type": "string", "minLength": 1},
+    "original_mechanism": {"type": "string", "minLength": 1},
+    "alternative_beneficiary": {"type": "string", "minLength": 1},
+    "alternative_mechanism": {"type": "string", "minLength": 1},
+    "comparison_dimensions": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "enum": ["beneficiary_change", "causal_defensibility", "constitutional_fit"]
+      }
+    },
+    "comparison_evidence_id": {"type": "string", "minLength": 1},
+    "comparison_rationale": {"type": "string", "minLength": 1},
+    "alternative_mission_better": {"type": "boolean"},
+    "planning_paused": {"type": "boolean"},
+    "decision": {"enum": ["continue_planning", "reopen_mission_selection"]}
+  }
+}

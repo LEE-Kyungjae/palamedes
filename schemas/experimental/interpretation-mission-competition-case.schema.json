@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/interpretation-mission-competition-case.schema.json",
+  "title": "PalamedesInterpretationMissionCompetitionCase",
+  "description": "Experimental Cycle 282 case with plural beneficiary interpretations and genuinely competing missions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "competition_design_id",
+    "comparison_system_id",
+    "case_id",
+    "beneficiary_interpretations",
+    "mission_candidates",
+    "selection_required",
+    "single_summary_is_sufficient",
+    "design_rationale"
+  ],
+  "properties": {
+    "competition_design_id": {"type": "string", "minLength": 1},
+    "comparison_system_id": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "beneficiary_interpretations": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "interpretation_id",
+          "beneficiary_population",
+          "interpretation",
+          "supporting_evidence_id",
+          "disconfirming_observation",
+          "plausible"
+        ],
+        "properties": {
+          "interpretation_id": {"type": "string", "minLength": 1},
+          "beneficiary_population": {"type": "string", "minLength": 1},
+          "interpretation": {"type": "string", "minLength": 1},
+          "supporting_evidence_id": {"type": "string", "minLength": 1},
+          "disconfirming_observation": {"type": "string", "minLength": 1},
+          "plausible": {"const": true}
+        }
+      }
+    },
+    "mission_candidates": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mission_id",
+          "mission",
+          "beneficiary_interpretation_ids",
+          "changed_external_condition",
+          "distinguishing_thesis",
+          "supporting_evidence_id",
+          "independently_competing"
+        ],
+        "properties": {
+          "mission_id": {"type": "string", "minLength": 1},
+          "mission": {"type": "string", "minLength": 1},
+          "beneficiary_interpretation_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "changed_external_condition": {"type": "string", "minLength": 1},
+          "distinguishing_thesis": {"type": "string", "minLength": 1},
+          "supporting_evidence_id": {"type": "string", "minLength": 1},
+          "independently_competing": {"const": true}
+        }
+      }
+    },
+    "selection_required": {"const": true},
+    "single_summary_is_sufficient": {"const": false},
+    "design_rationale": {"type": "string", "minLength": 1}
+  }
+}

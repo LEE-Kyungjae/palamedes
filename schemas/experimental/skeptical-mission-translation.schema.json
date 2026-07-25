@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/skeptical-mission-translation.schema.json",
+  "title": "PalamedesSkepticalMissionTranslation",
+  "description": "Experimental Cycle 239 contract testing whether a creative mission survives plain skeptical translation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "translation_test_id",
+    "mission_candidate_id",
+    "original_mission_statement",
+    "removed_creative_terms",
+    "skeptical_translator_id",
+    "translator_saw_generation_context",
+    "plain_translation",
+    "creative_metaphor_retained",
+    "original_semantics",
+    "translated_semantics",
+    "beneficiary_change_preserved",
+    "translation_status",
+    "translation_rationale"
+  ],
+  "properties": {
+    "translation_test_id": {"type": "string", "minLength": 1},
+    "mission_candidate_id": {"type": "string", "minLength": 1},
+    "original_mission_statement": {"type": "string", "minLength": 1},
+    "removed_creative_terms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "skeptical_translator_id": {"type": "string", "minLength": 1},
+    "translator_saw_generation_context": {"const": false},
+    "plain_translation": {"type": "string", "minLength": 1},
+    "creative_metaphor_retained": {"const": false},
+    "original_semantics": {"$ref": "#/$defs/missionSemantics"},
+    "translated_semantics": {"$ref": "#/$defs/missionSemantics"},
+    "beneficiary_change_preserved": {"type": "boolean"},
+    "translation_status": {"enum": ["passed", "failed"]},
+    "translation_rationale": {"type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "missionSemantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "beneficiary",
+        "current_condition",
+        "target_condition",
+        "outcome_measure",
+        "evaluation_horizon"
+      ],
+      "properties": {
+        "beneficiary": {"type": "string", "minLength": 1},
+        "current_condition": {"type": "string", "minLength": 1},
+        "target_condition": {"type": "string", "minLength": 1},
+        "outcome_measure": {"type": "string", "minLength": 1},
+        "evaluation_horizon": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

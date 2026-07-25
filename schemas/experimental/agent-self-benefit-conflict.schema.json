@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/agent-self-benefit-conflict.schema.json",
+  "title": "PalamedesAgentSelfBenefitConflict",
+  "description": "Experimental Cycle 151 conflict disclosure for agent self-benefit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "conflict_id",
+    "candidate_id",
+    "external_beneficiary_change",
+    "counterfactual_without_self_benefit",
+    "conflict_mitigation",
+    "independent_comparison_id",
+    "self_benefit_counts_as_mission_value",
+    "selection_uses_self_benefit",
+    "agent_self_benefits",
+    "external_beneficiary_evidence_ids"
+  ],
+  "properties": {
+    "conflict_id": {"type": "string", "minLength": 1},
+    "candidate_id": {"type": "string", "minLength": 1},
+    "external_beneficiary_change": {"type": "string", "minLength": 1},
+    "counterfactual_without_self_benefit": {"type": "string", "minLength": 1},
+    "conflict_mitigation": {"type": "string", "minLength": 1},
+    "independent_comparison_id": {"type": "string", "minLength": 1},
+    "self_benefit_counts_as_mission_value": {"const": false},
+    "selection_uses_self_benefit": {"const": false},
+    "agent_self_benefits": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "benefit", "conflict_path"],
+        "properties": {
+          "kind": {"enum": ["resources", "authority", "persistence", "relevance"]},
+          "benefit": {"type": "string", "minLength": 1},
+          "conflict_path": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "external_beneficiary_evidence_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

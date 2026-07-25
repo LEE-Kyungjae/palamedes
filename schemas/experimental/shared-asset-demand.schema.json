@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/shared-asset-demand.schema.json",
+  "title": "PalamedesSharedAssetDemand",
+  "description": "Experimental Cycle 138 contract requiring independent credible demand for shared assets.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "asset_id",
+    "asset_capability",
+    "bounded_build_scope",
+    "capacity_cost",
+    "asset_stop_condition",
+    "shared_asset_label_is_sufficient",
+    "mission_demands"
+  ],
+  "properties": {
+    "asset_id": {"type": "string", "minLength": 1},
+    "asset_capability": {"type": "string", "minLength": 1},
+    "bounded_build_scope": {"type": "string", "minLength": 1},
+    "capacity_cost": {"type": "string", "minLength": 1},
+    "asset_stop_condition": {"type": "string", "minLength": 1},
+    "shared_asset_label_is_sufficient": {"const": false},
+    "mission_demands": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mission_id",
+          "independent_assumption_hash",
+          "mission_credible",
+          "credibility_evidence_id",
+          "asset_need",
+          "counterfactual_without_asset"
+        ],
+        "properties": {
+          "mission_id": {"type": "string", "minLength": 1},
+          "independent_assumption_hash": {"type": "string", "minLength": 1},
+          "mission_credible": {"const": true},
+          "credibility_evidence_id": {"type": "string", "minLength": 1},
+          "asset_need": {"type": "string", "minLength": 1},
+          "counterfactual_without_asset": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/ambiguity-flood-bounded-probe.schema.json",
+  "title": "PalamedesAmbiguityFloodBoundedProbe",
+  "description": "Experimental Cycle 278 safe bounded probe preserving autonomy under ambiguity flooding.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ambiguity_review_id",
+    "frontier_entry_id",
+    "ambiguities",
+    "probe_id",
+    "discriminating_observation",
+    "probe_distinguishes_ambiguity_ids",
+    "safety_boundary",
+    "maximum_harm",
+    "harm_ceiling",
+    "probe_budget",
+    "available_probe_budget",
+    "starts_at",
+    "expires_at",
+    "stop_trigger",
+    "probe_reversible",
+    "permanent_escalation",
+    "autonomy_preserved",
+    "review_authority_id",
+    "decision",
+    "decision_rationale"
+  ],
+  "properties": {
+    "ambiguity_review_id": {"type": "string", "minLength": 1},
+    "frontier_entry_id": {"type": "string", "minLength": 1},
+    "ambiguities": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ambiguity_id", "claim", "source_id", "evidence_id", "decision_consequence"],
+        "properties": {
+          "ambiguity_id": {"type": "string", "minLength": 1},
+          "claim": {"type": "string", "minLength": 1},
+          "source_id": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1},
+          "decision_consequence": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "probe_id": {"type": "string", "minLength": 1},
+    "discriminating_observation": {"type": "string", "minLength": 1},
+    "probe_distinguishes_ambiguity_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "safety_boundary": {"type": "string", "minLength": 1},
+    "maximum_harm": {"type": "number", "minimum": 0},
+    "harm_ceiling": {"type": "number", "minimum": 0},
+    "probe_budget": {"type": "number", "exclusiveMinimum": 0},
+    "available_probe_budget": {"type": "number", "minimum": 0},
+    "starts_at": {"type": "string", "minLength": 1},
+    "expires_at": {"type": "string", "minLength": 1},
+    "stop_trigger": {"type": "string", "minLength": 1},
+    "probe_reversible": {"const": true},
+    "permanent_escalation": {"const": false},
+    "autonomy_preserved": {"const": true},
+    "review_authority_id": {"type": "string", "minLength": 1},
+    "decision": {"const": "run_bounded_probe"},
+    "decision_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/consequence-class-authority.schema.json",
+  "title": "PalamedesConsequenceClassAuthority",
+  "description": "Experimental Cycle 142 authority bounded by non-numeric consequence classes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy_id",
+    "authority_id",
+    "default_unclassified_action",
+    "numeric_limit_is_sufficient",
+    "consequence_classes"
+  ],
+  "properties": {
+    "policy_id": {"type": "string", "minLength": 1},
+    "authority_id": {"type": "string", "minLength": 1},
+    "default_unclassified_action": {"const": "escalate"},
+    "numeric_limit_is_sufficient": {"const": false},
+    "consequence_classes": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["class", "authority", "boundary", "example", "detection"],
+        "properties": {
+          "class": {"enum": ["reputational", "privacy", "relational", "strategic"]},
+          "authority": {"enum": ["autonomous", "escalate", "prohibited"]},
+          "boundary": {"type": "string", "minLength": 1},
+          "example": {"type": "string", "minLength": 1},
+          "detection": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/strategy-meaning-invariants.schema.json",
+  "title": "PalamedesStrategyMeaningInvariants",
+  "description": "Experimental Cycle 175 protection of beneficiary condition and non-goals during planning.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "review_id",
+    "mission_contract_id",
+    "mission_contract_version",
+    "strategy_proposal_id",
+    "original_beneficiary_condition",
+    "strategy_beneficiary_condition",
+    "original_non_goals",
+    "strategy_preserved_non_goals",
+    "feasibility_may_override_meaning",
+    "explicit_mission_revision",
+    "mission_revision_id",
+    "revision_reason",
+    "decision",
+    "review_rationale"
+  ],
+  "properties": {
+    "review_id": {"type": "string", "minLength": 1},
+    "mission_contract_id": {"type": "string", "minLength": 1},
+    "mission_contract_version": {"type": "string", "minLength": 1},
+    "strategy_proposal_id": {"type": "string", "minLength": 1},
+    "original_beneficiary_condition": {"type": "string", "minLength": 1},
+    "strategy_beneficiary_condition": {"type": "string", "minLength": 1},
+    "original_non_goals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "strategy_preserved_non_goals": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "feasibility_may_override_meaning": {"const": false},
+    "explicit_mission_revision": {"type": "boolean"},
+    "mission_revision_id": {"type": "string"},
+    "revision_reason": {"type": "string"},
+    "decision": {"enum": ["accept_strategy", "return_for_mission_revision"]},
+    "review_rationale": {"type": "string", "minLength": 1}
+  }
+}

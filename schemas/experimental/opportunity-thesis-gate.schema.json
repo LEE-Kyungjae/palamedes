@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/opportunity-thesis-gate.schema.json",
+  "title": "PalamedesOpportunityThesisGate",
+  "description": "Experimental Cycle 130 gate for consequential mismatches and time-bounded option openings.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gate_id",
+    "opportunity_record_id",
+    "consequential_mismatch",
+    "affected_condition",
+    "option_opening",
+    "closure_mechanism",
+    "window_evidence_id",
+    "mismatch_evidence_id",
+    "gate_rationale",
+    "fashionable_capability_is_sufficient",
+    "consequence_established",
+    "time_bounded_option_established",
+    "gate_decision"
+  ],
+  "properties": {
+    "gate_id": {"type": "string", "minLength": 1},
+    "opportunity_record_id": {"type": "string", "minLength": 1},
+    "consequential_mismatch": {"type": "string", "minLength": 1},
+    "affected_condition": {"type": "string", "minLength": 1},
+    "option_opening": {"type": "string", "minLength": 1},
+    "closure_mechanism": {"type": "string", "minLength": 1},
+    "window_evidence_id": {"type": "string", "minLength": 1},
+    "mismatch_evidence_id": {"type": "string", "minLength": 1},
+    "gate_rationale": {"type": "string", "minLength": 1},
+    "fashionable_capability_is_sufficient": {"const": false},
+    "consequence_established": {"const": true},
+    "time_bounded_option_established": {"const": true},
+    "gate_decision": {"const": "eligible"}
+  }
+}

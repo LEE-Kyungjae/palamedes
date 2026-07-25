@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/evaluate-wake-command.schema.json",
+  "title": "PalamedesEvaluateWakeCommand",
+  "description": "Experimental Cycle 313 read-only wake decision with named insufficiency, operation, and budget.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["command_id", "signal_ids", "frontier_snapshot_id", "frontier_fingerprint", "constitution_state_id", "constitution_fingerprint", "available_token_budget", "available_operation_budget", "wake_result", "read_only_evaluation", "evaluation_rationale"],
+  "properties": {
+    "command_id": {"type": "string", "minLength": 1},
+    "signal_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "frontier_snapshot_id": {"type": "string", "minLength": 1},
+    "frontier_fingerprint": {"type": "string", "minLength": 1},
+    "constitution_state_id": {"type": "string", "minLength": 1},
+    "constitution_fingerprint": {"type": "string", "minLength": 1},
+    "available_token_budget": {"type": "integer", "minimum": 0},
+    "available_operation_budget": {"type": "integer", "minimum": 0},
+    "wake_result": {
+      "type": "object", "additionalProperties": false,
+      "required": ["decision", "named_insufficiency", "cognitive_operation", "cognitive_budget", "decision_rationale", "state_mutated", "wake_event_created"],
+      "properties": {
+        "decision": {"enum": ["wake", "no_wake"]},
+        "named_insufficiency": {"type": "string", "minLength": 1},
+        "cognitive_operation": {"type": "string", "minLength": 1},
+        "cognitive_budget": {
+          "type": "object", "additionalProperties": false,
+          "required": ["max_tokens", "max_operations", "expires_at", "stop_condition"],
+          "properties": {
+            "max_tokens": {"type": "integer", "minimum": 0},
+            "max_operations": {"type": "integer", "minimum": 0},
+            "expires_at": {"type": "string", "minLength": 1},
+            "stop_condition": {"type": "string", "minLength": 1}
+          }
+        },
+        "decision_rationale": {"type": "string", "minLength": 1},
+        "state_mutated": {"const": false},
+        "wake_event_created": {"const": false}
+      }
+    },
+    "read_only_evaluation": {"const": true},
+    "evaluation_rationale": {"type": "string", "minLength": 1}
+  }
+}

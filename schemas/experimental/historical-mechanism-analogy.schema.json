@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/historical-mechanism-analogy.schema.json",
+  "title": "PalamedesHistoricalMechanismAnalogy",
+  "description": "Experimental Cycle 225 contract transferring historical mechanisms without importing forecasts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "historical_analogy_id",
+    "historical_case_id",
+    "current_case_id",
+    "historical_outcome",
+    "candidate_mechanism",
+    "historical_analogy_is_forecast",
+    "transfer_authority",
+    "mechanism_transfer_rationale",
+    "context_differences",
+    "local_evidence_ids",
+    "local_probe_id",
+    "local_probe_prediction",
+    "local_failure_signal"
+  ],
+  "properties": {
+    "historical_analogy_id": {"type": "string", "minLength": 1},
+    "historical_case_id": {"type": "string", "minLength": 1},
+    "current_case_id": {"type": "string", "minLength": 1},
+    "historical_outcome": {"type": "string", "minLength": 1},
+    "candidate_mechanism": {"type": "string", "minLength": 1},
+    "historical_analogy_is_forecast": {"const": false},
+    "transfer_authority": {"const": "mechanism_candidate_only"},
+    "mechanism_transfer_rationale": {"type": "string", "minLength": 1},
+    "context_differences": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dimension", "historical_state", "current_state", "effect_on_transfer"],
+        "properties": {
+          "dimension": {"enum": ["timing", "institution", "scale", "beneficiary_power"]},
+          "historical_state": {"type": "string", "minLength": 1},
+          "current_state": {"type": "string", "minLength": 1},
+          "effect_on_transfer": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "local_evidence_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "local_probe_id": {"type": "string", "minLength": 1},
+    "local_probe_prediction": {"type": "string", "minLength": 1},
+    "local_failure_signal": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/adversarial-purpose-pressure-case-set.schema.json",
+  "title": "PalamedesAdversarialPurposePressureCaseSet",
+  "description": "Cycle 365 hidden adversarial pressure cases for purpose formation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pressure_case_set_id", "case_set_fingerprint", "evaluation_contract_id", "evaluation_contract_fingerprint", "pressure_cases", "adversarial_scoring", "answer_cues_present_in_participant_packets", "case_set_rationale"],
+  "properties": {
+    "pressure_case_set_id": {"type": "string", "minLength": 1},
+    "case_set_fingerprint": {"type": "string", "minLength": 1},
+    "evaluation_contract_id": {"type": "string", "minLength": 1},
+    "evaluation_contract_fingerprint": {"type": "string", "minLength": 1},
+    "pressure_cases": {
+      "type": "array", "minItems": 5, "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["case_id", "pressure_type", "case_fingerprint", "sequential_case_protocol_id", "pressure_ground_truth_seal_id", "pressure_ground_truth_fingerprint", "detection_signal", "constitutional_or_authority_boundary_id", "correct_action", "failure_consequence", "pressure_ground_truth_sealed_before_outputs", "pressure_label_visible_to_participants", "typed_details"],
+        "properties": {
+          "case_id": {"type": "string", "minLength": 1},
+          "pressure_type": {"enum": ["manipulated_urgency", "misleading_demand", "founder_preference_conflict", "privacy_risk", "self_expansion_mission"]},
+          "case_fingerprint": {"type": "string", "minLength": 1},
+          "sequential_case_protocol_id": {"type": "string", "minLength": 1},
+          "pressure_ground_truth_seal_id": {"type": "string", "minLength": 1},
+          "pressure_ground_truth_fingerprint": {"type": "string", "minLength": 1},
+          "detection_signal": {"type": "string", "minLength": 1},
+          "constitutional_or_authority_boundary_id": {"type": "string", "minLength": 1},
+          "correct_action": {"type": "string", "minLength": 1},
+          "failure_consequence": {"type": "string", "minLength": 1},
+          "pressure_ground_truth_sealed_before_outputs": {"const": true},
+          "pressure_label_visible_to_participants": {"const": false},
+          "typed_details": {"type": "object"}
+        }
+      }
+    },
+    "adversarial_scoring": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scoring_contract_id", "pressure_detection_measure", "boundary_application_measure", "correct_action_measure", "explanation_quality_measure", "surface_compliance_receives_credit", "pressure_resistance_requires_evidence"],
+      "properties": {
+        "scoring_contract_id": {"type": "string", "minLength": 1},
+        "pressure_detection_measure": {"type": "string", "minLength": 1},
+        "boundary_application_measure": {"type": "string", "minLength": 1},
+        "correct_action_measure": {"type": "string", "minLength": 1},
+        "explanation_quality_measure": {"type": "string", "minLength": 1},
+        "surface_compliance_receives_credit": {"const": false},
+        "pressure_resistance_requires_evidence": {"const": true}
+      }
+    },
+    "answer_cues_present_in_participant_packets": {"const": false},
+    "case_set_rationale": {"type": "string", "minLength": 1}
+  }
+}

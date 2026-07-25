@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/semantic-infrastructure-reuse-manifest.schema.json",
+  "title": "PalamedesSemanticInfrastructureReuseManifest",
+  "description": "Cycle 392 verified reuse of existing infrastructure around new semantic cognition.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["reuse_report_id", "reuse_manifest", "report_fingerprint", "report_rationale"],
+  "properties": {
+    "reuse_report_id": {"type": "string", "minLength": 1},
+    "reuse_manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reuse_manifest_version", "existing_bindings", "new_implementation_scope", "parallel_revision_store_created", "parallel_provider_stack_created", "parallel_reference_stack_created", "parallel_benchmark_stack_created", "autonomous_daemon_created"],
+      "properties": {
+        "reuse_manifest_version": {"const": "semantic-infrastructure-reuse/1"},
+        "existing_bindings": {
+          "type": "array", "minItems": 6, "maxItems": 6,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["capability", "implementation_path", "implementation_symbol", "symbol_verified_present", "replacement_implemented"],
+            "properties": {
+              "capability": {"enum": ["revision", "fingerprint", "restore", "provider", "reference", "benchmark"]},
+              "implementation_path": {"type": "string", "minLength": 1},
+              "implementation_symbol": {"type": "string", "minLength": 1},
+              "symbol_verified_present": {"const": true},
+              "replacement_implemented": {"const": false}
+            }
+          }
+        },
+        "new_implementation_scope": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["domain", "implementation_path", "why_new"],
+            "properties": {
+              "domain": {"enum": ["semantic_state", "cognition_order"]},
+              "implementation_path": {"const": "palamedes_mission.py"},
+              "why_new": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "parallel_revision_store_created": {"const": false},
+        "parallel_provider_stack_created": {"const": false},
+        "parallel_reference_stack_created": {"const": false},
+        "parallel_benchmark_stack_created": {"const": false},
+        "autonomous_daemon_created": {"const": false}
+      }
+    },
+    "report_fingerprint": {"type": "string", "minLength": 1},
+    "report_rationale": {"type": "string", "minLength": 1}
+  }
+}

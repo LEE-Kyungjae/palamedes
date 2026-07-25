@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/temporal-counterfactual-mission-generation.schema.json",
+  "title": "PalamedesTemporalCounterfactualMissionGeneration",
+  "description": "Experimental Cycle 234 contract generating missions through temporal options and a no-mission counterfactual.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "temporal_generation_id",
+    "mission_generation_id",
+    "affected_condition",
+    "temporal_options",
+    "no_mission_counterfactual",
+    "generated_mission_candidate",
+    "selection_question"
+  ],
+  "properties": {
+    "temporal_generation_id": {"type": "string", "minLength": 1},
+    "mission_generation_id": {"type": "string", "minLength": 1},
+    "affected_condition": {"type": "string", "minLength": 1},
+    "temporal_options": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["option_type", "action", "timing_condition", "predicted_consequence", "evidence_id"],
+        "properties": {
+          "option_type": {"enum": ["wait", "sequence", "act_before_expiry"]},
+          "action": {"type": "string", "minLength": 1},
+          "timing_condition": {"type": "string", "minLength": 1},
+          "predicted_consequence": {"type": "string", "minLength": 1},
+          "evidence_id": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "no_mission_counterfactual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseline_condition",
+        "worsening_condition",
+        "affected_beneficiary",
+        "evaluation_horizon",
+        "evidence_id",
+        "alternative_recovery_path",
+        "mission_necessity_assumed",
+        "mission_necessity_test"
+      ],
+      "properties": {
+        "baseline_condition": {"type": "string", "minLength": 1},
+        "worsening_condition": {"type": "string", "minLength": 1},
+        "affected_beneficiary": {"type": "string", "minLength": 1},
+        "evaluation_horizon": {"type": "string", "minLength": 1},
+        "evidence_id": {"type": "string", "minLength": 1},
+        "alternative_recovery_path": {"type": "string", "minLength": 1},
+        "mission_necessity_assumed": {"const": false},
+        "mission_necessity_test": {"type": "string", "minLength": 1}
+      }
+    },
+    "generated_mission_candidate": {"type": "string", "minLength": 1},
+    "selection_question": {"type": "string", "minLength": 1}
+  }
+}

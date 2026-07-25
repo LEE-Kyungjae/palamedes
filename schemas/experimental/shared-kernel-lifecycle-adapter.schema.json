@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/shared-kernel-lifecycle-adapter.schema.json",
+  "title": "PalamedesSharedKernelLifecycleAdapter",
+  "description": "Experimental Cycle 302 reuse of kernel revision, fingerprint, restore, and provenance semantics.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["adapter_manifest_id", "kernel_store_id", "shared_adapter_id", "shared_lifecycle_services", "domain_bindings", "independent_purpose_database_created", "untyped_plan_fields_used", "kernel_semantics_are_authoritative", "adapter_rationale"],
+  "properties": {
+    "adapter_manifest_id": {"type": "string", "minLength": 1},
+    "kernel_store_id": {"type": "string", "minLength": 1},
+    "shared_adapter_id": {"type": "string", "minLength": 1},
+    "shared_lifecycle_services": {
+      "type": "array", "minItems": 6, "maxItems": 6, "uniqueItems": true,
+      "items": {"enum": ["atomic_write", "fingerprint", "optimistic_conflict", "revision_append", "restore_by_revision", "provenance_metadata"]}
+    },
+    "domain_bindings": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["domain", "lifecycle_adapter_id", "semantic_validator_id", "implements_own_revision_store", "implements_own_fingerprint", "implements_own_restore", "implements_own_provenance"],
+        "properties": {
+          "domain": {"enum": ["observation", "interpretation", "mission", "execution_plan"]},
+          "lifecycle_adapter_id": {"type": "string", "minLength": 1},
+          "semantic_validator_id": {"type": "string", "minLength": 1},
+          "implements_own_revision_store": {"const": false},
+          "implements_own_fingerprint": {"const": false},
+          "implements_own_restore": {"const": false},
+          "implements_own_provenance": {"const": false}
+        }
+      }
+    },
+    "independent_purpose_database_created": {"const": false},
+    "untyped_plan_fields_used": {"const": false},
+    "kernel_semantics_are_authoritative": {"const": true},
+    "adapter_rationale": {"type": "string", "minLength": 1}
+  }
+}

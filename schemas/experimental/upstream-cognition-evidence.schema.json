@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/upstream-cognition-evidence.schema.json",
+  "title": "PalamedesUpstreamCognitionEvidence",
+  "description": "Experimental Cycle 155 proof of cognition beyond supplied-signal planning.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "evaluation_id",
+    "mission_id",
+    "supplied_signals_hash",
+    "simple_planner_output_hash",
+    "palamedes_output_hash",
+    "blind_comparison_id",
+    "upstream_cognition_claim",
+    "simplification_action_if_failed",
+    "same_mission_inferable_from_supplied_signals",
+    "palamedes_added_upstream_cognition",
+    "ceremony_counts_as_cognition",
+    "autonomously_discovered_signal_ids",
+    "new_hypothesis_ids",
+    "frame_transition_ids"
+  ],
+  "properties": {
+    "evaluation_id": {"type": "string", "minLength": 1},
+    "mission_id": {"type": "string", "minLength": 1},
+    "supplied_signals_hash": {"type": "string", "minLength": 1},
+    "simple_planner_output_hash": {"type": "string", "minLength": 1},
+    "palamedes_output_hash": {"type": "string", "minLength": 1},
+    "blind_comparison_id": {"type": "string", "minLength": 1},
+    "upstream_cognition_claim": {"type": "string", "minLength": 1},
+    "simplification_action_if_failed": {"type": "string", "minLength": 1},
+    "same_mission_inferable_from_supplied_signals": {"const": false},
+    "palamedes_added_upstream_cognition": {"const": true},
+    "ceremony_counts_as_cognition": {"const": false},
+    "autonomously_discovered_signal_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "new_hypothesis_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "frame_transition_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

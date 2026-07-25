@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/strategy-revision-acceptance-invalidation.schema.json",
+  "title": "PalamedesStrategyRevisionAcceptanceInvalidation",
+  "description": "Cycle 358 invalidation of predecessor-bound strategies and explicit successor acceptance.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["invalidation_transaction_id", "mission_revision_id", "predecessor_contract_id", "predecessor_contract_version", "predecessor_contract_fingerprint", "successor_contract_id", "successor_contract_version", "successor_contract_fingerprint", "planner_id", "transaction_fingerprint", "dependent_strategy_versions", "successor_acceptance", "replacement_activation", "silent_plan_drift", "invalidation_rationale"],
+  "properties": {
+    "invalidation_transaction_id": {"type": "string", "minLength": 1},
+    "mission_revision_id": {"type": "string", "minLength": 1},
+    "predecessor_contract_id": {"type": "string", "minLength": 1},
+    "predecessor_contract_version": {"type": "string", "minLength": 1},
+    "predecessor_contract_fingerprint": {"type": "string", "minLength": 1},
+    "successor_contract_id": {"type": "string", "minLength": 1},
+    "successor_contract_version": {"type": "string", "minLength": 1},
+    "successor_contract_fingerprint": {"type": "string", "minLength": 1},
+    "planner_id": {"type": "string", "minLength": 1},
+    "transaction_fingerprint": {"type": "string", "minLength": 1},
+    "dependent_strategy_versions": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["strategy_version_id", "strategy_fingerprint", "dependency_record_id", "source_mission_contract_fingerprint", "status_before_revision", "status_after_revision", "execution_allowed_after_revision", "invalidation_notice_id", "notice_delivered", "invalidated_at", "invalidation_reason"],
+        "properties": {
+          "strategy_version_id": {"type": "string", "minLength": 1},
+          "strategy_fingerprint": {"type": "string", "minLength": 1},
+          "dependency_record_id": {"type": "string", "minLength": 1},
+          "source_mission_contract_fingerprint": {"type": "string", "minLength": 1},
+          "status_before_revision": {"const": "active"},
+          "status_after_revision": {"const": "invalidated"},
+          "execution_allowed_after_revision": {"const": false},
+          "invalidation_notice_id": {"type": "string", "minLength": 1},
+          "notice_delivered": {"const": true},
+          "invalidated_at": {"type": "string", "minLength": 1},
+          "invalidation_reason": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "successor_acceptance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["acceptance_id", "accepted_by_planner_id", "accepted_at", "acceptance_fingerprint", "accepted_mission_contract_id", "accepted_mission_contract_version", "accepted_mission_contract_fingerprint", "superseded_strategy_version_ids", "replacement_strategy_version_id", "replacement_strategy_fingerprint", "acknowledgment_artifact_id", "acceptance_statement", "explicitly_accepted", "mission_invariants_reconfirmed", "unresolved_clauses"],
+      "properties": {
+        "acceptance_id": {"type": "string", "minLength": 1},
+        "accepted_by_planner_id": {"type": "string", "minLength": 1},
+        "accepted_at": {"type": "string", "minLength": 1},
+        "acceptance_fingerprint": {"type": "string", "minLength": 1},
+        "accepted_mission_contract_id": {"type": "string", "minLength": 1},
+        "accepted_mission_contract_version": {"type": "string", "minLength": 1},
+        "accepted_mission_contract_fingerprint": {"type": "string", "minLength": 1},
+        "superseded_strategy_version_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "replacement_strategy_version_id": {"type": "string", "minLength": 1},
+        "replacement_strategy_fingerprint": {"type": "string", "minLength": 1},
+        "acknowledgment_artifact_id": {"type": "string", "minLength": 1},
+        "acceptance_statement": {"type": "string", "minLength": 1},
+        "explicitly_accepted": {"const": true},
+        "mission_invariants_reconfirmed": {"const": true},
+        "unresolved_clauses": {"type": "array", "maxItems": 0}
+      }
+    },
+    "replacement_activation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["strategy_version_id", "strategy_fingerprint", "source_mission_contract_fingerprint", "acceptance_id", "status", "activated_before_acceptance"],
+      "properties": {
+        "strategy_version_id": {"type": "string", "minLength": 1},
+        "strategy_fingerprint": {"type": "string", "minLength": 1},
+        "source_mission_contract_fingerprint": {"type": "string", "minLength": 1},
+        "acceptance_id": {"type": "string", "minLength": 1},
+        "status": {"const": "active"},
+        "activated_before_acceptance": {"const": false}
+      }
+    },
+    "silent_plan_drift": {"const": false},
+    "invalidation_rationale": {"type": "string", "minLength": 1}
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/downstream-agent-scope.schema.json",
+  "title": "PalamedesDownstreamAgentScope",
+  "description": "Experimental Cycle 146 contract preventing delegated-agent scope expansion.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "delegation_id",
+    "parent_mission_id",
+    "parent_authority_id",
+    "agent_id",
+    "mission_scope_hash",
+    "assigned_outcome",
+    "resource_slice",
+    "valid_until",
+    "allowed_decisions",
+    "forbidden_actions",
+    "return_required_changes",
+    "may_redelegate",
+    "scope_expansion_allowed"
+  ],
+  "properties": {
+    "delegation_id": {"type": "string", "minLength": 1},
+    "parent_mission_id": {"type": "string", "minLength": 1},
+    "parent_authority_id": {"type": "string", "minLength": 1},
+    "agent_id": {"type": "string", "minLength": 1},
+    "mission_scope_hash": {"type": "string", "minLength": 1},
+    "assigned_outcome": {"type": "string", "minLength": 1},
+    "resource_slice": {"type": "string", "minLength": 1},
+    "valid_until": {"type": "string", "minLength": 1},
+    "allowed_decisions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "forbidden_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "return_required_changes": {
+      "type": "array",
+      "minItems": 5,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "may_redelegate": {"const": false},
+    "scope_expansion_allowed": {"const": false}
+  }
+}

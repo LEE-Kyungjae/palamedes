@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/normative-empirical-separation.schema.json",
+  "title": "PalamedesNormativeEmpiricalSeparation",
+  "description": "Experimental Cycle 227 contract separating empirical uncertainty from normative disagreement.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "disagreement_record_id",
+    "mission_question",
+    "value_disagreement_disguised_as_missing_data",
+    "frames",
+    "empirical_questions",
+    "normative_disagreements",
+    "normative_decision_authority_id",
+    "decision_protocol"
+  ],
+  "properties": {
+    "disagreement_record_id": {"type": "string", "minLength": 1},
+    "mission_question": {"type": "string", "minLength": 1},
+    "value_disagreement_disguised_as_missing_data": {"const": false},
+    "frames": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["frame_id", "value_priority", "unacceptable_tradeoff", "represented_by"],
+        "properties": {
+          "frame_id": {"type": "string", "minLength": 1},
+          "value_priority": {"type": "string", "minLength": 1},
+          "unacceptable_tradeoff": {"type": "string", "minLength": 1},
+          "represented_by": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "empirical_questions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["question_id", "question", "empirically_resolvable", "discriminating_evidence", "update_if_observed"],
+        "properties": {
+          "question_id": {"type": "string", "minLength": 1},
+          "question": {"type": "string", "minLength": 1},
+          "empirically_resolvable": {"const": true},
+          "discriminating_evidence": {"type": "string", "minLength": 1},
+          "update_if_observed": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "normative_disagreements": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["disagreement_id", "frame_ids", "value_choice", "more_data_can_resolve", "required_commitment"],
+        "properties": {
+          "disagreement_id": {"type": "string", "minLength": 1},
+          "frame_ids": {
+            "type": "array",
+            "minItems": 2,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "value_choice": {"type": "string", "minLength": 1},
+          "more_data_can_resolve": {"const": false},
+          "required_commitment": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "normative_decision_authority_id": {"type": "string", "minLength": 1},
+    "decision_protocol": {"type": "string", "minLength": 1}
+  }
+}

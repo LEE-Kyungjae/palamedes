@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/coherence-before-novelty-evaluation.schema.json",
+  "title": "PalamedesCoherenceBeforeNoveltyEvaluation",
+  "description": "Experimental Cycle 287 evaluation ordering consequence and causal coherence before novelty.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["evaluation_id", "case_id", "evaluation_order", "candidate_evaluations", "selected_mission_id", "novelty_can_override_ineligibility", "evaluation_rationale"],
+  "properties": {
+    "evaluation_id": {"type": "string", "minLength": 1},
+    "case_id": {"type": "string", "minLength": 1},
+    "evaluation_order": {"const": ["consequence_eligibility", "causal_coherence", "novelty"]},
+    "candidate_evaluations": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mission_id", "consequence_assessment_id", "consequence_rationale", "consequence_eligible", "causal_assessment_id", "causal_rationale", "causally_coherent", "novelty_eligible", "novelty_score", "novelty_rationale"],
+        "properties": {
+          "mission_id": {"type": "string", "minLength": 1},
+          "consequence_assessment_id": {"type": "string", "minLength": 1},
+          "consequence_rationale": {"type": "string", "minLength": 1},
+          "consequence_eligible": {"type": "boolean"},
+          "causal_assessment_id": {"type": "string", "minLength": 1},
+          "causal_rationale": {"type": "string", "minLength": 1},
+          "causally_coherent": {"type": "boolean"},
+          "novelty_eligible": {"type": "boolean"},
+          "novelty_score": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+          "novelty_rationale": {"type": "string"}
+        }
+      }
+    },
+    "selected_mission_id": {"type": "string", "minLength": 1},
+    "novelty_can_override_ineligibility": {"const": false},
+    "evaluation_rationale": {"type": "string", "minLength": 1}
+  }
+}

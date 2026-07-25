@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/revenue-role-in-mission-selection.schema.json",
+  "title": "PalamedesRevenueRoleInMissionSelection",
+  "description": "Experimental Cycle 182 revenue as sustainability constraint and market signal within plural value.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "selection_review_id",
+    "portfolio_id",
+    "selected_mission_id",
+    "revenue_evidence_id",
+    "revenue_interpretation",
+    "revenue_is_sole_selector",
+    "revenue_can_override_constitution",
+    "revenue_defines_beneficiary_value",
+    "revenue_roles",
+    "selection_dimensions",
+    "mission_candidates",
+    "selection_rationale"
+  ],
+  "properties": {
+    "selection_review_id": {"type": "string", "minLength": 1},
+    "portfolio_id": {"type": "string", "minLength": 1},
+    "selected_mission_id": {"type": "string", "minLength": 1},
+    "revenue_evidence_id": {"type": "string", "minLength": 1},
+    "revenue_interpretation": {"type": "string", "minLength": 1},
+    "revenue_is_sole_selector": {"const": false},
+    "revenue_can_override_constitution": {"const": false},
+    "revenue_defines_beneficiary_value": {"const": false},
+    "revenue_roles": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {"enum": ["sustainability_constraint", "market_signal"]}
+    },
+    "selection_dimensions": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "enum": ["beneficiary_change", "constitutional_fit", "sustainability", "option_value"]
+      }
+    },
+    "mission_candidates": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mission_id",
+          "beneficiary_change",
+          "constitutional_fit",
+          "sustainability",
+          "option_value",
+          "revenue_signal",
+          "constitutionally_eligible"
+        ],
+        "properties": {
+          "mission_id": {"type": "string", "minLength": 1},
+          "beneficiary_change": {"type": "string", "minLength": 1},
+          "constitutional_fit": {"type": "string", "minLength": 1},
+          "sustainability": {"type": "string", "minLength": 1},
+          "option_value": {"type": "string", "minLength": 1},
+          "revenue_signal": {"type": "string", "minLength": 1},
+          "constitutionally_eligible": {"type": "boolean"}
+        }
+      }
+    },
+    "selection_rationale": {"type": "string", "minLength": 1}
+  }
+}
