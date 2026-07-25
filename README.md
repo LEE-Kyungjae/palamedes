@@ -140,6 +140,7 @@ palamedes/
 ├── palamedes_observe.py            # Bounded, redacted workspace observation
 ├── palamedes_watch.py              # Event-driven autonomous observation loop
 ├── palamedes_thought.py            # Pre-mission thought and discovery incubation
+├── palamedes_knowledge.py          # Temporal self/world claims and unknown boundaries
 ├── palamedes_mission.py            # Experimental pre-planner contracts and gates
 ├── palamedes_server.py             # Local HTTP transport
 ├── palamedes_sdk/                  # Packaged Python client surface
@@ -660,6 +661,25 @@ even when no new workspace signal arrives. Revisited residues gain strength;
 thoughts omitted from successive incubation lose strength and are eventually
 archived. The same daily and lifetime model-call budgets still apply, so
 incubation cannot become an unbounded self-conversation.
+
+The noticer also maintains a bounded, revisable knowledge layer under
+`.palamedes/knowledge/`. Claims distinguish `internal_product` from
+`external_world`, and fact, interpretation, norm, capability, and constraint.
+Every claim carries observed sources, confidence, validity time, scope,
+perspective, affected stakeholders, normative assumptions, and known
+exclusions. Product or primary-document changes must produce an explicit
+unknown boundary; the mere presence of new code is not treated as knowledge of
+its purpose, users, or value.
+
+Central references are no longer revision signals only. Observation includes a
+redacted, 4 KB representative README excerpt from at most eight ref
+repositories, while retaining the existing repository-count bound. A knowledge
+claim may cite only source identifiers actually present in the bounded
+observation. A `cross_domain` discovery must cite at least one active internal
+claim and one active external claim. It must also separate descriptive
+observation from normative judgment and name excluded stakeholders, rights
+risk, and time sensitivity. Common, legal, profitable, or historically
+accepted behavior is therefore not automatically treated as legitimate.
 
 Mission authority follows an explicit vertical contract:
 

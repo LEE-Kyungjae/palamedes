@@ -126,6 +126,7 @@ palamedes/
 ├── palamedes_observe.py            # 제한·마스킹된 작업공간 관찰
 ├── palamedes_watch.py              # 이벤트 기반 자율 관찰 루프
 ├── palamedes_thought.py            # 미션 이전 생각·발견 숙성 계층
+├── palamedes_knowledge.py          # 시간성을 가진 자기·외부 지식과 미지 경계
 ├── palamedes_mission.py            # 프리플래너 계약과 게이트
 ├── palamedes_server.py             # 로컬 HTTP 전송 계층
 ├── palamedes_sdk/                  # Python 클라이언트
@@ -167,6 +168,22 @@ palamedes/
 예산 안에서 한 번 재검토한다. 다시 관찰된 잔여는 강해지고, 연속 숙성에서
 선택되지 않은 thought는 약해져 결국 보관된다. 동일한 일일·누적 모델 호출
 예산이 적용되므로 무제한 자기 대화로 확장되지는 않는다.
+
+noticer는 `.palamedes/knowledge/`에 제한적이고 수정 가능한 지식층도
+관리한다. claim은 `internal_product`와 `external_world`, 그리고
+사실·해석·규범·역량·제약을 구분한다. 모든 claim에는 실제 관찰 출처,
+신뢰도, 유효 시점, 적용 범위, 관점, 영향받는 당사자, 규범적 가정,
+알려진 제외 범위가 붙는다. 제품 코드나 주요 문서가 바뀌면 명시적인
+unknown boundary를 남겨야 한다. 새 코드가 존재한다는 사실을 그 목적,
+사용자, 가치까지 안다는 뜻으로 취급하지 않는다.
+
+중앙 ref도 더 이상 revision 신호로만 보지 않는다. 최대 8개 저장소의 대표
+README를 각각 4 KB까지만 마스킹해 관찰한다. knowledge claim은 해당 bounded
+observation에 실제로 존재하는 source ID만 인용할 수 있다. `cross_domain`
+discovery는 활성 내부 claim과 외부 claim을 최소 하나씩 인용해야 하며,
+관찰된 현실과 규범 판단, 배제된 당사자, 권리 위험, 시대 민감성을 각각
+기록해야 한다. 따라서 흔하거나 합법적이거나 수익성이 있거나 역사적으로
+용인됐다는 사실이 정당성으로 자동 변환되지 않는다.
 
 ## 빠른 시작
 

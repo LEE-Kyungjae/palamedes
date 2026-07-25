@@ -361,8 +361,12 @@ def execute_wake(
         )
 
         from palamedes_thought import ThoughtStore
+        from palamedes_knowledge import KnowledgeStore
 
         thought_store = ThoughtStore(palamedes_module.STATE_DIR / "thoughts")
+        knowledge_store = KnowledgeStore(
+            palamedes_module.STATE_DIR / "knowledge"
+        )
         discoveries = thought_store.active_discoveries()
         result = run_cognition_cycle(
             provider=provider,
@@ -372,6 +376,14 @@ def execute_wake(
                 + json.dumps(observation_context(snapshot), ensure_ascii=False)
                 + "\n\nIncubated discovery candidates (not yet missions):\n"
                 + json.dumps(discoveries, ensure_ascii=False)
+                + "\n\nTemporal scoped knowledge supporting or challenging them:\n"
+                + json.dumps(
+                    knowledge_store.active_claims(), ensure_ascii=False
+                )
+                + "\n\nExplicit knowledge boundaries:\n"
+                + json.dumps(
+                    knowledge_store.open_unknowns(), ensure_ascii=False
+                )
             ),
             cycle_store=CognitionCycleStore(
                 palamedes_module.STATE_DIR / "missions" / "cognition"

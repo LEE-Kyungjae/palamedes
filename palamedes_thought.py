@@ -259,7 +259,9 @@ def persist_discoveries(
     store: ThoughtStore,
     output: Dict[str, Any],
     available_thought_ids: set,
+    available_knowledge: Optional[Dict[str, Dict[str, Any]]] = None,
 ) -> List[Dict[str, Any]]:
+    available_knowledge = available_knowledge or {}
     candidates = output.get("discoveries")
     if not isinstance(candidates, list):
         raise ValueError("connector discoveries must be an array")
@@ -277,6 +279,52 @@ def persist_discoveries(
                 "discovery must connect at least two available thought IDs"
             )
         thesis = _required_text(candidate, "thesis")
+        discovery_mode = candidate.get("discovery_mode", "experience_only")
+        if discovery_mode not in {"experience_only", "cross_domain"}:
+            raise ValueError("discovery has invalid discovery_mode")
+        grounding_ids = candidate.get("grounding_knowledge_ids", [])
+        if not isinstance(grounding_ids, list) or not all(
+            isinstance(item, str) and item.strip() for item in grounding_ids
+        ):
+            raise ValueError("discovery grounding_knowledge_ids must be an array")
+        if not set(grounding_ids).issubset(available_knowledge):
+            raise ValueError("discovery cites unavailable knowledge")
+        if discovery_mode == "cross_domain":
+            grounding_domains = {
+                available_knowledge[item]["domain"] for item in grounding_ids
+            }
+            if grounding_domains != {"internal_product", "external_world"}:
+                raise ValueError(
+                    "cross_domain discovery requires internal and external knowledge"
+                )
+            descriptive_observation = _required_text(
+                candidate, "descriptive_observation"
+            )
+            normative_judgment = _required_text(candidate, "normative_judgment")
+            excluded_stakeholders = candidate.get("excluded_stakeholders")
+            if not isinstance(excluded_stakeholders, list) or not all(
+                isinstance(item, str) and item.strip()
+                for item in excluded_stakeholders
+            ):
+                raise ValueError(
+                    "cross_domain discovery requires excluded_stakeholders"
+                )
+            rights_risk = _required_text(candidate, "rights_risk")
+            time_sensitivity = _required_text(candidate, "time_sensitivity")
+        else:
+            descriptive_observation = str(
+                candidate.get("descriptive_observation", "")
+            ).strip()
+            normative_judgment = str(
+                candidate.get("normative_judgment", "")
+            ).strip()
+            excluded_stakeholders = list(
+                candidate.get("excluded_stakeholders", [])
+            )
+            rights_risk = str(candidate.get("rights_risk", "")).strip()
+            time_sensitivity = str(
+                candidate.get("time_sensitivity", "")
+            ).strip()
         discovery = {
             "discovery_version": "palamedes-discovery/1",
             "connected_thought_ids": sorted(set(thought_ids)),
@@ -288,6 +336,13 @@ def persist_discoveries(
             "smallest_probe": _required_text(candidate, "smallest_probe"),
             "disconfirmation": _required_text(candidate, "disconfirmation"),
             "why_non_obvious": _required_text(candidate, "why_non_obvious"),
+            "discovery_mode": discovery_mode,
+            "grounding_knowledge_ids": grounding_ids,
+            "descriptive_observation": descriptive_observation,
+            "normative_judgment": normative_judgment,
+            "excluded_stakeholders": excluded_stakeholders,
+            "rights_risk": rights_risk,
+            "time_sensitivity": time_sensitivity,
             "status": "candidate",
             "created_at": utc_now(),
             "mission_authority_granted": False,
@@ -317,9 +372,18 @@ def run_discovery_incubation(
     store: ThoughtStore,
 ) -> Dict[str, Any]:
     from palamedes_chat import _provider_json, _role_artifact
+    from palamedes_knowledge import (
+        KnowledgeStore,
+        observation_source_ids,
+        persist_knowledge_updates,
+    )
 
     existing = store.active_thoughts()
     experiences = store.recent_experiences()
+    observation = observation_context(snapshot)
+    knowledge_store = KnowledgeStore(store.root.parent / "knowledge")
+    existing_knowledge = knowledge_store.active_claims()
+    open_unknowns = knowledge_store.open_unknowns()
     noticer_prompt = f"""ROLE: noticer
 Do not propose features, tasks, or missions. Extract at least two unresolved
 residues from the observation: anomalies, tensions, questions, possibilities,
@@ -333,13 +397,40 @@ Return exactly:
     "unexplained_residue":"what remains unexplained",
     "why_unresolved":"...",
     "wake_conditions":["specific evidence that should reactivate this thought"]
+  }}],
+  "knowledge_claims": [{{
+    "domain":"internal_product|external_world",
+    "claim_type":"fact|interpretation|norm|capability|constraint",
+    "claim":"...",
+    "scope":"who, what, and where this applies",
+    "source_ids":["only identifiers present in the observation"],
+    "confidence":50,
+    "valid_from":"observation time unless the source proves another date",
+    "perspective":"whose view this represents",
+    "affected_stakeholders":["..."],
+    "normative_assumptions":["value judgments embedded in the claim"],
+    "known_exclusions":["people or conditions not covered"],
+    "supersedes":["prior knowledge IDs only when directly contradicted"]
+  }}],
+  "unknown_boundaries": [{{
+    "subject":"...",
+    "missing_knowledge":"...",
+    "decision_consequence":"what cannot be responsibly concluded",
+    "needed_source":"...",
+    "wake_condition":"..."
   }}]
 }}
 
 Workspace observation:
-{json.dumps(observation_context(snapshot), ensure_ascii=False)}
+{json.dumps(observation, ensure_ascii=False)}
+Allowed source identifiers:
+{json.dumps(sorted(observation_source_ids({**observation, "experiences": experiences})), ensure_ascii=False)}
 Existing thoughts:
 {json.dumps(existing, ensure_ascii=False)}
+Existing temporal knowledge:
+{json.dumps(existing_knowledge, ensure_ascii=False)}
+Open knowledge boundaries:
+{json.dumps(open_unknowns, ensure_ascii=False)}
 Recent decision-to-outcome experiences:
 {json.dumps(experiences, ensure_ascii=False)}"""
     noticer = _provider_json(
@@ -355,13 +446,25 @@ Recent decision-to-outcome experiences:
         output=noticer,
         observation_id=snapshot["observation_id"],
     )
+    knowledge_result = persist_knowledge_updates(
+        store=knowledge_store,
+        output=noticer,
+        context={**observation, "experiences": experiences},
+    )
     decayed = store.decay_unrevisited({item["thought_id"] for item in thoughts})
     available = {item["thought_id"]: item for item in store.active_thoughts()}
+    available_knowledge = {
+        item["knowledge_id"]: item for item in knowledge_store.active_claims()
+    }
     connector_prompt = f"""ROLE: connector
 Look for a non-obvious relationship between thoughts from different signals,
 times, or conceptual domains. Similarity alone is not discovery. A valid
 connection must replace an assumption, reframe what the product may be, and
 change a possible decision. Do not issue a mission or authorize implementation.
+Do not convert what is common, legal, profitable, or historically accepted into
+what is right. Separate descriptive observation from normative judgment. Name
+whose perspective is missing, who bears the harm, whether basic rights are at
+risk, and how time could invalidate the claim.
 It is valid to return no discoveries.
 Return exactly:
 {{
@@ -374,12 +477,23 @@ Return exactly:
     "changed_decision":"...",
     "smallest_probe":"...",
     "disconfirmation":"...",
-    "why_non_obvious":"..."
+    "why_non_obvious":"...",
+    "discovery_mode":"experience_only|cross_domain",
+    "grounding_knowledge_ids":["knowledge IDs actually supporting the connection"],
+    "descriptive_observation":"what the evidence says happens",
+    "normative_judgment":"the separate value judgment, not inferred from prevalence",
+    "excluded_stakeholders":["whose experience is absent or underrepresented"],
+    "rights_risk":"possible dignity, safety, equality, autonomy, or exploitation risk",
+    "time_sensitivity":"how product or social change could invalidate this framing"
   }}]
 }}
 
 Available thoughts:
-{json.dumps(list(available.values()), ensure_ascii=False)}"""
+{json.dumps(list(available.values()), ensure_ascii=False)}
+Temporal, scoped knowledge:
+{json.dumps(list(available_knowledge.values()), ensure_ascii=False)}
+Open knowledge boundaries:
+{json.dumps(knowledge_store.open_unknowns(), ensure_ascii=False)}"""
     connector = _provider_json(
         provider,
         system=(
@@ -392,6 +506,7 @@ Available thoughts:
         store=store,
         output=connector,
         available_thought_ids=set(available),
+        available_knowledge=available_knowledge,
     )
     artifacts = [
         _role_artifact(
@@ -416,5 +531,11 @@ Available thoughts:
         "thought_ids": [item["thought_id"] for item in thoughts],
         "decayed_thought_ids": [item["thought_id"] for item in decayed],
         "discovery_ids": [item["discovery_id"] for item in discoveries],
+        "knowledge_ids": [
+            item["knowledge_id"] for item in knowledge_result["claims"]
+        ],
+        "unknown_ids": [
+            item["unknown_id"] for item in knowledge_result["unknowns"]
+        ],
         "mission_draft_issued": False,
     }

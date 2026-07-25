@@ -34,6 +34,12 @@ class PalamedesObserveTests(unittest.TestCase):
             )
             ref_root = Path(tempdir) / "ref"
             (ref_root / "repo-a").mkdir(parents=True)
+            (ref_root / "repo-a" / "README.md").write_text(
+                "# External Pattern\n"
+                "A different domain preserves reusable judgment.\n"
+                "API_KEY=reference-secret-value-123456\n",
+                encoding="utf-8",
+            )
 
             snapshot = palamedes_observe.collect_observation(
                 workspace, ref_root=ref_root
@@ -53,6 +59,12 @@ class PalamedesObserveTests(unittest.TestCase):
         self.assertEqual(
             snapshot["signals"]["reference_root"]["repository_count"], 1
         )
+        ref_knowledge = snapshot["signals"]["reference_root"]["repositories"][0][
+            "knowledge_document"
+        ]
+        self.assertIn("reusable judgment", ref_knowledge["excerpt"])
+        self.assertIn("[REDACTED]", ref_knowledge["excerpt"])
+        self.assertNotIn("reference-secret-value-123456", ref_knowledge["excerpt"])
 
     def test_second_observation_reports_document_and_git_change(self):
         with tempfile.TemporaryDirectory() as tempdir:

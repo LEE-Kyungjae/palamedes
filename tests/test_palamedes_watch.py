@@ -66,7 +66,17 @@ class StaticWakeProvider:
                         "why_unresolved": "No reuse outcome is measured",
                         "wake_conditions": ["Reuse correlates with retention"],
                     },
-                ]
+                ],
+                "knowledge_claims": [],
+                "unknown_boundaries": [
+                    {
+                        "subject": "changed product behavior",
+                        "missing_knowledge": "The reason and affected users are not observed",
+                        "decision_consequence": "The change cannot define product identity yet",
+                        "needed_source": "Usage and stakeholder evidence",
+                        "wake_condition": "Observed use or stakeholder feedback arrives",
+                    }
+                ],
             },
             "connector": {"discoveries": []},
             "interpreter": {
@@ -316,11 +326,12 @@ class PalamedesWatchTests(unittest.TestCase):
                 "mission_authority_granted": False,
             }
             thought_store.save_discovery(discovery)
+            provider = DiscoveryAwareProvider()
 
             wake = palamedes_watch.execute_wake(
                 policy=palamedes_watch.select_wake_policy(current),
                 snapshot=current,
-                provider=DiscoveryAwareProvider(),
+                provider=provider,
                 palamedes_module=fake,
             )
             contract_path = next(
@@ -333,6 +344,10 @@ class PalamedesWatchTests(unittest.TestCase):
             contract["source_discovery_ids"], ["discovery-123456789abc"]
         )
         self.assertEqual(contract["status"], "draft")
+        self.assertIn(
+            "Temporal scoped knowledge supporting or challenging them",
+            provider.calls[0][-1]["content"],
+        )
 
     def test_repeated_residue_reinforces_thought_across_wakes(self):
         first = snapshot("document_set_or_content_changed")

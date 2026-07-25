@@ -19,6 +19,8 @@ MAX_TOTAL_DOCUMENT_BYTES = 120_000
 MAX_DOCUMENTS = 12
 MAX_TODOS = 50
 MAX_REF_REPOS = 60
+MAX_REF_KNOWLEDGE_REPOS = 8
+MAX_REF_KNOWLEDGE_BYTES = 4_000
 DEFAULT_DOCUMENT_NAMES = (
     "AGENTS.md",
     "README.md",
@@ -304,7 +306,7 @@ def observe_ref_root(ref_root: Optional[Path]) -> Dict[str, Any]:
     candidates = sorted(
         path for path in scan_root.iterdir() if path.is_dir() or path.is_symlink()
     )
-    for path in candidates[:MAX_REF_REPOS]:
+    for index, path in enumerate(candidates[:MAX_REF_REPOS]):
         resolved = path.resolve()
         git_dir = resolved / ".git"
         item = {
@@ -319,6 +321,30 @@ def observe_ref_root(ref_root: Optional[Path]) -> Dict[str, Any]:
             status = run_command(["git", "status", "--short"], cwd=resolved, timeout=3)
             item["head"] = head["stdout"].strip()
             item["dirty"] = bool(status["stdout"].strip())
+        if index < MAX_REF_KNOWLEDGE_REPOS:
+            readme = next(
+                (
+                    candidate
+                    for candidate in (
+                        resolved / "README.md",
+                        resolved / "README",
+                        resolved / "README.rst",
+                    )
+                    if candidate.is_file() and safe_document(candidate)
+                ),
+                None,
+            )
+            if readme is not None:
+                raw = readme.read_bytes()
+                excerpt = raw[:MAX_REF_KNOWLEDGE_BYTES]
+                item["knowledge_document"] = {
+                    "path": str(readme),
+                    "content_sha256": hashlib.sha256(raw).hexdigest(),
+                    "excerpt": redact(
+                        excerpt.decode("utf-8", errors="replace")
+                    ),
+                    "excerpt_truncated": len(raw) > len(excerpt),
+                }
         repositories.append(item)
     return {
         "available": True,
@@ -504,6 +530,8 @@ def collect_observation(
             "max_documents": MAX_DOCUMENTS,
             "max_todos": MAX_TODOS,
             "max_ref_repositories": MAX_REF_REPOS,
+            "max_ref_knowledge_repositories": MAX_REF_KNOWLEDGE_REPOS,
+            "max_ref_knowledge_bytes": MAX_REF_KNOWLEDGE_BYTES,
         },
         "secret_redaction_enabled": True,
     }
