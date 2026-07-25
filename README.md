@@ -78,6 +78,7 @@ autonomous pre-planner is an active, falsifiable product hypothesis.
 | Reference-treatment safety | Correctly blocked the first packet with 9 explicit reasons |
 | Equal-information baseline vs treatment | `proof-002`: Palamedes won 8/9 blinded model-review votes and all 3 case majorities |
 | Generation cost | Palamedes used 4.26x baseline input tokens; cost-adjusted superiority is not proven |
+| Equal-call strong comparator | `proof-003`: Palamedes won 7/9 votes and 2/3 cases with 12 calls each and 1.045x input tokens |
 | Better external decisions or outcomes | Not yet proven |
 
 The first cross-repository case targets `insight-rag`. Palamedes selected a
@@ -94,8 +95,13 @@ produces more useful upstream missions: three fresh-session, origin-blinded
 Codex reviewers cast 8 of 9 votes for Palamedes, giving it the majority in all
 three cases. This is model-review evidence, not independent human validation.
 It also cost 4.26 times the baseline input tokens, so cost-adjusted superiority
-and downstream outcome improvement remain unproven. See the
-[`proof-002` result](experiments/proof-runs/proof-002/RESULT.md).
+and downstream outcome improvement remain unproven. A second preregistered run
+then compared Palamedes with a strong four-call candidate tournament. Palamedes
+won 7 of 9 votes and two of three cases while using 1.045 times the input
+tokens. This demonstrates the narrow same-model, equal-call claim, not
+independent human or downstream outcome superiority. See the
+[`proof-002`](experiments/proof-runs/proof-002/RESULT.md) and
+[`proof-003`](experiments/proof-runs/proof-003/RESULT.md) results.
 
 The executable three-project proof program is documented in
 [`experiments/PROOF.md`](experiments/PROOF.md). It freezes equal information

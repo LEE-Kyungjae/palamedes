@@ -1,0 +1,201 @@
+{
+  "blind_packet_version": "palamedes-proof-blind/1",
+  "cases": [
+    {
+      "case_id": "palamedes-self-hosting",
+      "information_fingerprint": "94b200455c48916cd19b2e21f8f640e12adfc68d4d7265013f4d36ad43c30241",
+      "missions": {
+        "A": {
+          "beneficiary": "Teams deciding whether Palamedes's additional machinery and operating cost are justified or should be replaced by a simpler process.",
+          "consequential_choice": "sequence: run the bounded simpler-mechanism ablation first; stop or simplify if Palamedes does not survive, and proceed to a preregistered prospective downstream trial only if it does",
+          "falsifiers": [
+            "A simpler baseline matches Palamedes on blinded mission quality and downstream decision effects at materially lower cost.",
+            "No Palamedes component contributes a replicable incremental benefit.",
+            "Rankings fail to replicate on fresh cases or with human decision owners.",
+            "Blinded artifact preferences do not predict consequential action differences.",
+            "Observed gains vanish after accounting for tokens, latency, human review labor, and coordination burden."
+          ],
+          "interpretation": "The most immediate uncertainty is whether Palamedes contributes judgment value beyond extra inference, structure, or a simpler deliberation mechanism. External outcome trials are premature until that cheaper replacement hypothesis is tested.",
+          "mission": "Determine whether Palamedes's apparent advantage survives comparison with simpler mechanisms and equalized inference budgets.",
+          "next_probe": "Replay the existing proof cases with equal token and tool budgets using the full system, a structured checklist baseline, and one reduced variant; score outputs with the existing blinded rubric plus cost-adjusted utility.",
+          "non_goals": [
+            "Expanding the kernel, retrieval corpus, lineage infrastructure, schemas, or agent hierarchy.",
+            "Claiming improved upstream judgment from model-rated document preference alone.",
+            "Optimizing a large ablation matrix around the existing proof cases.",
+            "Running a burdensome multi-project external trial before testing credible simpler replacements.",
+            "Treating equal-budget superiority as sufficient evidence of real-world cost-adjusted value."
+          ],
+          "rationale": "This is the smallest reversible test of Palamedes's anti-entrenchment claim. It offers high information gain at lower beneficiary burden than recruiting live projects and can falsify further investment if a checklist, structured prompt, contemporary reasoning agent, or reduced variant performs equivalently at lower cost. Existing-case replay cannot establish downstream value, so survival here is only a prerequisite for a later prospective trial.",
+          "situation": "Palamedes has initial blinded model-review preference evidence but no demonstrated attributable downstream benefit or cost-adjusted advantage, while consuming 4.26 times the baseline input tokens.",
+          "success_signal": "On preregistered comparisons, the full system shows a replicable, cost-adjusted advantage over strong simpler baselines, and the preference signal remains when verbosity, formatting, token budget, tools, and evaluator exposure are controlled."
+        },
+        "B": {
+          "beneficiary": "A real project owner who must make a consequential upstream choice and needs better judgment without disproportionate review labor or compute expense.",
+          "consequential_choice": "sequence: pause feature expansion, run one cost-accounted attributable downstream-outcome trial, and continue toward the three-project proof only if it demonstrates decision value beyond presentation quality",
+          "falsifiers": [
+            "The equal-information baseline yields the same consequential choice or a comparably good outcome at materially lower cost.",
+            "Reviewers prefer Palamedes prose, but the project owner does not change a decision or action.",
+            "Any observed benefit cannot be distinguished from planning quality, implementation quality, environmental change, or measurement bias.",
+            "Owner review and maintenance labor increases enough to erase the decision value.",
+            "Testing the core claim requires feature expansion or broader autonomy first."
+          ],
+          "interpretation": "The binding uncertainty is no longer technical capability or artifact quality; it is whether Palamedes creates enough attributable decision value to justify its cost and ceremony. The safest and cheapest next move is a bounded outcome test, not feature expansion.",
+          "mission": "Run the smallest preregistered real-project trial that compares Palamedes with an equal-information simple baseline and traces one consequential mission choice through human acceptance, downstream action, outcome, labor saved, and cost.",
+          "next_probe": "Select one live, reversible decision with an identifiable owner and near-term observable consequence; freeze an equal information packet, set token and owner-labor budgets, preregister both conditions and attribution criteria, record any changed commitment, and follow the selected choice through action and the first observable outcome.",
+          "non_goals": [
+            "Expanding the analyzer, corpus, reference library, agent hierarchy, plugin surface, or autonomous runtime.",
+            "Fine-tuning a model.",
+            "Treating schema coverage, test counts, reasoning cycles, retrieval volume, or model preference as outcome proof.",
+            "Claiming general superiority from one case.",
+            "Optimizing for novelty, philosophical completeness, or more elaborate mission artifacts."
+          ],
+          "rationale": "This directly tests the weakest product claim using the existing proof program while limiting cost, autonomy, and opportunity loss. One bounded case is the smallest useful next probe; it can determine whether to proceed toward the required three-project evidence gate without expanding the product first.",
+          "situation": "Palamedes has a stable, heavily tested kernel and an initial blinded preference win, but it consumed 4.26x the baseline input tokens and has not yet shown that its missions improve independent human decisions, downstream outcomes, or owner labor.",
+          "success_signal": "In a preregistered case, Palamedes causes an attributable stop, pivot, positioning, or sequencing choice that the owner accepts, produces a prospectively defined beneficial downstream consequence, and records enough owner-labor reduction or outcome value to plausibly justify its incremental token and operating cost."
+        }
+      },
+      "question": "What mission should Palamedes pursue next to earn confidence that it improves upstream judgment rather than merely producing elaborate planning artifacts?",
+      "required_decision": "Choose the smallest evidence-producing direction and reject feature expansion that does not strengthen the product claim."
+    },
+    {
+      "case_id": "gahyeonbot-voice-loop",
+      "information_fingerprint": "55ef0aa44c4e80d1962a92d0161a65fcda4b0c357144a74780fb1b21d3de940a",
+      "missions": {
+        "A": {
+          "beneficiary": "Small, recurring Discord voice groups seeking hands-free assistance without leaving the channel or typing commands.",
+          "consequential_choice": "sequence: freeze broad feature expansion, validate the explicit one-turn voice loop behind existing flags, and continue only if preset repetition, latency, trust, reliability, and cost thresholds are met; otherwise pivot to the strongest observed existing loop",
+          "falsifiers": [
+            "Pilot groups do not voluntarily reuse the loop after initial trials.",
+            "End-to-end latency regularly causes abandoned turns or disrupts conversation.",
+            "False activations, missed endpoints, transcription failures, or duplicate responses undermine trust.",
+            "Users reject voice capture or synthesized output despite explicit opt-in and clear controls.",
+            "Measured API, compute, hardware, or support cost per successful repeated turn exceeds the preset budget.",
+            "The TEN VAD or Voicebox integration is unreliable in the intended production environment.",
+            "Observed repeat behavior remains concentrated in an existing feature such as scheduled departure rather than voice assistance."
+          ],
+          "interpretation": "A bounded, opt-in one-turn voice pilot is the most decision-useful next focus because it tests the documented emerging stack while limiting exposure. Technical feasibility is indicated, but user value and production viability remain unproven.",
+          "mission": "Validate one explicit in-channel voice loop: a user invokes GahyeonBot, speaks one request, receives one short spoken response, and can reliably stop or cancel.",
+          "next_probe": "Run an opt-in pilot with a few recurring voice groups and record stage-level latency, intentional and false activations, missed or duplicate turns, completion and retry rates, repeat use across sessions, trust feedback, and marginal cost per successful turn; compare repeat behavior with existing feature usage.",
+          "non_goals": [
+            "Building an always-listening or unsolicited voice participant.",
+            "Expanding music, newsletters, scheduling variants, or unrelated utilities during the pilot.",
+            "Supporting multi-step agent workflows.",
+            "Scaling broadly before repeat use, latency, trust, reliability, and cost are measured.",
+            "Cloning or using a person's voice without explicit consent."
+          ],
+          "rationale": "This mission converts the assembled voice components into a narrow, measurable loop without claiming demonstrated demand. Default-off flags, intentional invocation, one response per utterance, and a limited pilot constrain accidental activation and cost while directly testing the required unknowns: repetition, latency, trust, reliability, and cost. Broad expansion should wait for that evidence.",
+          "situation": "GahyeonBot spans scheduling, music, newsletters, AI chat, and an optional voice assistant. The packet documents a coherent voice pipeline—TEN VAD, silence-based turn finalization, STT, one streamed LLM request, and Voicebox TTS—but provides no observed repeat usage, latency, trust, reliability, or operating-cost measurements.",
+          "success_signal": "The same pilot groups voluntarily reuse the complete invoke-speak-hear loop across sessions; most intentional invocations produce exactly one usable response without manual repair; users accept the measured delay and processing boundaries; and cost per successful turn stays within a preset budget."
+        },
+        "B": {
+          "beneficiary": "Couples and close friends who routinely stay together in Discord voice channels until bedtime and want an automatic, privacy-preserving exit.",
+          "consequential_choice": "sequence: defer final loop selection, test the nightly exit scheduler first, select it only if repeat-use and reliability thresholds survive, otherwise reject it and pivot to the next bounded observed-behavior probe",
+          "falsifiers": [
+            "Fewer than 25% of activated users schedule exits in at least three separate weeks.",
+            "Successful execution remains below 99% across restarts, reconnects, timezone changes, channel switches, and permission changes.",
+            "Manual departures, cancellations, or last-minute modifications dominate scheduled executions.",
+            "Users characterize the problem as only mildly annoying or find scheduling more cumbersome than disconnecting manually.",
+            "Mistaken or unwanted disconnects create material participant complaints or interpersonal harm.",
+            "The active server population is not meaningfully composed of users with recurring bedtime voice-channel behavior."
+          ],
+          "interpretation": "The nightly voice-channel exit scheduler is the most reversible and evidence-aligned candidate because it matches the original concrete problem, avoids speech capture and generative-AI costs, and can be piloted narrowly. It does not yet survive selection: README prominence is not demand evidence, and real-world repeat use and execution reliability are unknown.",
+          "mission": "Defer product-loop selection and run a bounded four-week pilot of dependable scheduled voice-channel exits to determine whether couples and close friends exhibit a recurring, valuable habit.",
+          "next_probe": "Instrument schedule creation, confirmation, modification, cancellation, manual early departure, execution, failure reason, and weekly repeat use; recruit 10–20 relevant Discord pairs; test restarts, reconnects, timezones, channel changes, and permissions; then interview repeaters, abandoners, and anyone affected by an erroneous disconnect.",
+          "non_goals": [
+            "Selecting the conversational voice assistant before measuring demand, latency, trust acceptance, and sustainable per-turn cost.",
+            "Expanding music, newsletter, AI-chat, or bulk voice-channel orchestration features during the pilot.",
+            "Using cloned voices, retaining speech, recording conversations, or transmitting voice data to generative services.",
+            "Treating upstream TEN VAD or Voicebox claims as GahyeonBot production evidence.",
+            "Generalizing pilot results beyond the recruited beneficiary cohort without follow-up evidence."
+          ],
+          "rationale": "This probe offers the highest information gain at the lowest integration, privacy, trust, and operating-cost burden. It tests the strongest candidate without committing to broad positioning. Voice assistance is comparatively slow, costly, fragile, and trust-sensitive; group orchestration risks coercive bulk actions; music is commoditized; and newsletters are disconnected from the original voice-channel problem. Selection should follow observed repetition and reliability rather than feature descriptions.",
+          "situation": "GahyeonBot spans unrelated scheduling, music, newsletter, AI-chat, and voice-assistant features, but the frozen packet contains no observed usage, retention, latency, trust, reliability, or operating-cost evidence sufficient to select a durable repeat loop.",
+          "success_signal": "Among 10–20 recruited Discord pairs, at least 25% of activated users schedule exits in at least three separate pilot weeks, scheduled executions succeed at least 99% of the time across realistic lifecycle and permission conditions, and interviews show the automation materially improves on manual disconnection."
+        }
+      },
+      "question": "Which user loop should GahyeonBot prioritize instead of remaining a broad collection of Discord bot features?",
+      "required_decision": "Select or reject a narrow repeat loop using observed Discord behavior, latency, trust, and operating-cost evidence."
+    },
+    {
+      "case_id": "termi-agent-control",
+      "information_fingerprint": "faa10143a3618101c02de5c21ce73e839411f9ce2c7e89aa77c631c22b0ff71c",
+      "missions": {
+        "A": {
+          "beneficiary": "Developers who currently rely on Termi for remote tmux access and may benefit from safely supervising unattended coding work without prematurely losing general terminal compatibility.",
+          "consequential_choice": "sequence: preserve the current remote-terminal boundary during a narrow agent-supervision probe; pivot to controlled agent runs only if authoritative semantics, adversarial safety, and user value all survive, otherwise continue as remote terminal I/O",
+          "falsifiers": [
+            "The agent cannot expose authoritative lifecycle, approval, cancellation, and completion events without parsing terminal text.",
+            "Approvals or control can be bypassed through local tmux clients, alternate Termi clients, shell composition, stale devices, or relay replay.",
+            "Reconnect tests produce missing or duplicate events, uncertain command execution, conflicting controllers, or ambiguous run ownership.",
+            "Target users prefer arbitrary terminal access and show little need for unattended-run approvals, notifications, or structured returns.",
+            "Existing coding-agent products already satisfy remote supervision well enough that Termi adds no material beneficiary value.",
+            "Participants cannot reliably predict whether cancelling, closing, transferring, or reconnecting affects the agent run or underlying tmux pane."
+          ],
+          "interpretation": "No irreversible product-boundary choice survives yet. Preserving raw terminal I/O is the evidenced baseline, but immediately hardening it could entrench security and migration costs; adopting run ownership, hybrid supervision, or typed actions would require large speculative investments and relies on unproven agent protocols and policy enforcement.",
+          "mission": "Defer the product-boundary decision and run a bounded comparative probe that keeps existing terminal behavior intact while testing whether one coding-agent integration can deliver authoritative, reconnect-safe supervision with exact-action approvals and structured returns.",
+          "next_probe": "Select one coding agent with a structured event interface, instrument one user-owned tmux session with durable sequence numbers and a single-writer controller lease, and test disconnect, replay, exact-action approval, cancellation, completion return, connector restart, relay interruption, and alternate-client bypass against a raw-tmux control group.",
+          "non_goals": [
+            "Replacing raw terminal access during the probe.",
+            "Building a general multi-agent adapter framework.",
+            "Making Termi own all tmux sessions or migrating existing workflows.",
+            "Claiming production-grade approval security from terminal-text parsing.",
+            "Expanding into a team-wide least-privilege action gateway.",
+            "Investing broadly in durable infrastructure before the narrow prototype demonstrates demand and semantic correctness."
+          ],
+          "rationale": "This sequence is reversible and maximizes information gain. It tests the strongest claimed advantage of agent control without replacing the demonstrated tmux product, and it directly attacks the decisive uncertainties: demand, authoritative state, approval safety, reconnect behavior, bypass resistance, and beneficiary value.",
+          "situation": "Termi is demonstrably a remote I/O layer for user-owned tmux sessions, while the evidence needed to justify structured coding-agent control is absent: authoritative lifecycle events, ownership rules, reconnect correctness, approval integrity, secure multi-client authorization, structured returns, and validated user demand.",
+          "success_signal": "A single-agent prototype completes representative long-running runs across disconnect, mobile backgrounding, connector or relay interruption, and two-device contention; emits authoritative sequenced lifecycle events; prevents duplicate input and approval replay; binds approval to an exact immutable action; returns summaries, diffs, artifacts, failures, and pending questions; and user testing shows materially greater safety or usefulness than reconnecting to raw tmux."
+        },
+        "B": {
+          "beneficiary": "A developer who starts a long-running coding agent on a Mac and needs to leave, reconnect from a phone or browser, safely handle approval requests, and understand what happened without continuously watching terminal output.",
+          "consequential_choice": "sequence: validate a controlled long-running coding-agent session layer first while preserving remote terminal I/O as transport and fallback; position Termi as agent control only if the probe passes",
+          "falsifiers": [
+            "Reliable reconnect requires replacing tmux or substantially redesigning the connector rather than adding a bounded control layer.",
+            "Session ownership cannot prevent conflicting controllers without unacceptable workflow friction.",
+            "Approval handling depends on brittle parsing of arbitrary terminal text and cannot be trustworthy for one defined coding-agent workflow.",
+            "Target users consistently prefer unrestricted terminal access and gain no meaningful value from structured approvals or return summaries."
+          ],
+          "interpretation": "Generic terminal I/O is evidenced, but the durable ownership, reconnect, approval, and return guarantees needed for an agent-control product are not. The most decision-useful move is therefore a narrow, reversible validation slice built on the existing tmux transport.",
+          "mission": "Build and validate one end-to-end controlled coding-agent session flow: explicitly claim a session, disconnect and safely reconnect without duplicate ownership or lost state, surface confirmation-required actions for approval, and return a durable completion or attention-needed summary.",
+          "next_probe": "Instrument one supported coding-agent workflow with explicit session ownership, resumable output state, one-time approval records, and durable return states; then test disconnect/reconnect, competing controllers, approval, completion, and failure-return scenarios while measuring correctness and recovery effort.",
+          "non_goals": [
+            "Building a complete coding-agent orchestration platform.",
+            "Owning agent execution, planning, scheduling, credentials, or lifecycle correctness.",
+            "Supporting every coding agent, shell program, or approval protocol in the first probe.",
+            "Removing raw terminal I/O or committing to agent-only positioning before the probe produces evidence.",
+            "Expanding platform coverage, deployment automation, or visual polish unrelated to the controlled-session test."
+          ],
+          "rationale": "This mission tests all four boundary-defining uncertainties without prematurely committing Termi to agent orchestration or agent-only positioning. It reuses the evidenced connector, tmux, relay, and clients, preserves terminal I/O as a fallback, and produces direct evidence for a later continue, stop, or positioning decision.",
+          "situation": "Termi already provides remote tmux session discovery, terminal output, and raw input across mobile and web, while its example policy hints at deny and confirmation controls. The unresolved boundary is whether to remain a general remote terminal or own the safer lifecycle of long-running coding-agent sessions.",
+          "success_signal": "In repeated end-to-end trials, one user can claim a coding-agent session, reconnect after interruption to a single authoritative state, approve or reject a gated action exactly once, and receive an accurate durable return summary without duplicated control, replayed commands, or lost output."
+        }
+      },
+      "question": "Should Termi remain remote terminal I/O or become a controlled interface for long-running coding agents?",
+      "required_decision": "Choose a product boundary based on session ownership, reconnect safety, approvals, and return behavior."
+    }
+  ],
+  "origin_visible": false,
+  "rubric": {
+    "decision_usefulness": {
+      "question": "Would this change a continue, stop, pivot, positioning, or sequencing decision?",
+      "weight": 20
+    },
+    "evidence_use": {
+      "question": "Are important claims grounded in the frozen artifacts without inventing evidence?",
+      "weight": 20
+    },
+    "falsifiability": {
+      "question": "Can the mission be rejected through a bounded probe and explicit failure signals?",
+      "weight": 20
+    },
+    "non_genericity": {
+      "question": "Is the selected direction specific enough that a generic agent-company answer would not fit?",
+      "weight": 20
+    },
+    "problem_framing": {
+      "question": "Does the mission identify the consequential upstream problem rather than restating the project?",
+      "weight": 20
+    }
+  },
+  "run_id": "proof-003"
+}

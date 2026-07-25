@@ -212,6 +212,8 @@ class PalamedesProofTests(unittest.TestCase):
             self.assertEqual(set(case["missions"]), {"A", "B"})
             self.assertNotIn("condition", case)
             self.assertNotIn("labels", case)
+        self.assertNotIn("comparison_condition", packet)
+        self.assertNotIn("treatment_condition", packet)
         self.assertTrue(score["mission_quality_gate_passed"])
         self.assertFalse(score["outcome_gate_passed"])
         self.assertFalse(score["claim_demonstrated"])
@@ -261,6 +263,71 @@ class PalamedesProofTests(unittest.TestCase):
         self.assertTrue(outcome["labor_retired"])
         self.assertTrue(outcome["owner_attested"])
         self.assertEqual(outcome["retired_seconds"], 480)
+
+    def test_quality_only_claim_marks_outcome_gate_not_applicable(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            config = portfolio(root)
+            config["success_gate"]["minimum_attributable_outcomes"] = 0
+            config["success_gate"]["minimum_labor_retirement_cases"] = 0
+            prepared = palamedes_proof.prepare_run(
+                config, run_root=root / "runs", run_id="proof-test"
+            )
+            run = Path(prepared["run_path"])
+            for item in prepared["manifest"]["frozen_cases"]:
+                case_root = run / "cases" / item["case_id"]
+                for condition in ("baseline", "palamedes"):
+                    palamedes_proof.write_object(
+                        case_root / f"{condition}.json",
+                        {
+                            "condition": condition,
+                            "mission": mission(condition),
+                            "usage": {},
+                        },
+                    )
+            blind = palamedes_proof.prepare_blind_packet(run, seed="secret")
+            key = palamedes_proof.load_object(
+                run / "private" / "answer-key.json"
+            )
+            reviews = []
+            for case in blind["packet"]["cases"]:
+                labels = next(
+                    item["labels"]
+                    for item in key["cases"]
+                    if item["case_id"] == case["case_id"]
+                )
+                preferred = next(
+                    label for label, system in labels.items()
+                    if system == "palamedes"
+                )
+                reviews.append(
+                    {
+                        "case_id": case["case_id"],
+                        "reviewer_id": "reviewer",
+                        "review": {
+                            "scores": {
+                                label: {
+                                    dimension: 5
+                                    for dimension in blind["packet"]["rubric"]
+                                }
+                                for label in ("A", "B")
+                            },
+                            "preferred": preferred,
+                            "rationale": "Preferred.",
+                            "decision_difference": "Changes choice.",
+                        },
+                    }
+                )
+            palamedes_proof.write_object(
+                run / "reviews" / "reviewer.json",
+                {"reviews": reviews},
+            )
+
+            score = palamedes_proof.score_run(run)
+
+        self.assertFalse(score["outcome_gate_applicable"])
+        self.assertIsNone(score["outcome_gate_passed"])
+        self.assertTrue(score["claim_demonstrated"])
 
     def test_generation_failure_is_preserved_and_not_retried_in_place(self):
         with tempfile.TemporaryDirectory() as tempdir:

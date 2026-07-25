@@ -1,0 +1,167 @@
+{
+  "case_id": "termi-agent-control",
+  "condition": "tournament",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-07-25T10:59:40.294580+00:00",
+  "information_fingerprint": "faa10143a3618101c02de5c21ce73e839411f9ce2c7e89aa77c631c22b0ff71c",
+  "mission": {
+    "beneficiary": "A developer who starts a long-running coding agent on a Mac and needs to leave, reconnect from a phone or browser, safely handle approval requests, and understand what happened without continuously watching terminal output.",
+    "consequential_choice": "sequence: validate a controlled long-running coding-agent session layer first while preserving remote terminal I/O as transport and fallback; position Termi as agent control only if the probe passes",
+    "falsifiers": [
+      "Reliable reconnect requires replacing tmux or substantially redesigning the connector rather than adding a bounded control layer.",
+      "Session ownership cannot prevent conflicting controllers without unacceptable workflow friction.",
+      "Approval handling depends on brittle parsing of arbitrary terminal text and cannot be trustworthy for one defined coding-agent workflow.",
+      "Target users consistently prefer unrestricted terminal access and gain no meaningful value from structured approvals or return summaries."
+    ],
+    "interpretation": "Generic terminal I/O is evidenced, but the durable ownership, reconnect, approval, and return guarantees needed for an agent-control product are not. The most decision-useful move is therefore a narrow, reversible validation slice built on the existing tmux transport.",
+    "mission": "Build and validate one end-to-end controlled coding-agent session flow: explicitly claim a session, disconnect and safely reconnect without duplicate ownership or lost state, surface confirmation-required actions for approval, and return a durable completion or attention-needed summary.",
+    "next_probe": "Instrument one supported coding-agent workflow with explicit session ownership, resumable output state, one-time approval records, and durable return states; then test disconnect/reconnect, competing controllers, approval, completion, and failure-return scenarios while measuring correctness and recovery effort.",
+    "non_goals": [
+      "Building a complete coding-agent orchestration platform.",
+      "Owning agent execution, planning, scheduling, credentials, or lifecycle correctness.",
+      "Supporting every coding agent, shell program, or approval protocol in the first probe.",
+      "Removing raw terminal I/O or committing to agent-only positioning before the probe produces evidence.",
+      "Expanding platform coverage, deployment automation, or visual polish unrelated to the controlled-session test."
+    ],
+    "rationale": "This mission tests all four boundary-defining uncertainties without prematurely committing Termi to agent orchestration or agent-only positioning. It reuses the evidenced connector, tmux, relay, and clients, preserves terminal I/O as a fallback, and produces direct evidence for a later continue, stop, or positioning decision.",
+    "situation": "Termi already provides remote tmux session discovery, terminal output, and raw input across mobile and web, while its example policy hints at deny and confirmation controls. The unresolved boundary is whether to remain a general remote terminal or own the safer lifecycle of long-running coding-agent sessions.",
+    "success_signal": "In repeated end-to-end trials, one user can claim a coding-agent session, reconnect after interruption to a single authoritative state, approve or reject a gated action exactly once, and receive an accurate durable return summary without duplicated control, replayed commands, or lost output."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "c57bbe59bc8e657d81069a15722ed68c003e2046d9c3d03606afa5a86758dfe6",
+  "provider": "codex",
+  "role_artifacts": {
+    "candidates": [
+      {
+        "beneficiary": "Developers who start coding agents on a Mac, leave the workstation, and need to supervise several long-running sessions safely from a phone or browser.",
+        "consequential_choice": "pivot: position Termi around controlled supervision of long-running coding agents, sequence durable session ownership and reconnect safety first, approvals second, and return summaries third, while retaining raw terminal I/O only as an escape hatch",
+        "falsifiers": [
+          "Target developers rarely leave coding agents running unattended or report that existing agent notifications and native interfaces already satisfy the need.",
+          "Most observed usage remains ad hoc shell administration rather than recurring supervision of agent-owned sessions.",
+          "Reliable ownership, replay, approval state, and return summaries cannot be added without replacing tmux or tightly coupling Termi to individual agent vendors.",
+          "Users consistently prefer unrestricted raw terminal control over bounded approvals and consider the controlled interface slower or less trustworthy."
+        ],
+        "interpretation": "The higher-value recurring need is not terminal access itself, but safely supervising coding agents that continue working while the beneficiary is away: checking progress, handling approval requests, recovering context after reconnects, intervening when necessary, and receiving a useful return summary.",
+        "mission": "Make Termi the controlled supervision and return interface for long-running coding agents operating inside explicitly owned tmux sessions.",
+        "next_probe": "Prototype one agent-owned session flow that records ownership and durable event history, restores safely after disconnect, presents an explicit command approval, and produces a concise return summary; test it across repeated leave-and-return cycles with developers who already run coding agents unattended.",
+        "non_goals": [
+          "Becoming a general-purpose SSH or remote desktop replacement.",
+          "Owning execution, planning, or model orchestration for coding agents.",
+          "Supporting arbitrary terminal sessions as first-class managed agents.",
+          "Replacing full terminal input; raw I/O remains a deliberate fallback.",
+          "Expanding platform breadth before reconnect and approval behavior is trustworthy."
+        ],
+        "rationale": "Developers supervising long-running agents repeatedly need asynchronous visibility and bounded control, whereas raw remote terminal I/O is a commodity capability used more episodically. Termi's existing connector, session streaming, mobile client, web relay, and command-policy primitives form a credible foundation. The product boundary should preserve terminal I/O as an escape hatch while organizing the primary experience around agent-owned sessions, durable reconnection, explicit approvals, and structured handoff on return.",
+        "situation": "Termi already provides remote tmux session discovery, live output, and raw input across mobile and web, while its policy example and required decision point toward approvals, reconnect safety, and long-running work. Remaining a generic remote terminal would leave the product differentiated mainly by access plumbing and expose users to fragile reconnection and unsafe command control.",
+        "success_signal": "Target users repeatedly supervise agent-owned sessions away from their workstation and, in most sessions, successfully reconnect, resolve at least one meaningful status or approval event, and use the return summary without reopening a conventional remote-shell workflow."
+      },
+      {
+        "beneficiary": "Developers who start coding agents on their own Mac and need to monitor, reconnect, approve sensitive actions, and regain an interactive terminal while away.",
+        "consequential_choice": "position: remain remote terminal I/O, differentiated by safe supervision of user-owned long-running coding-agent sessions; do not become the agent orchestrator.",
+        "falsifiers": [
+          "Reconnect cannot reliably identify the same owned run or reconstruct pending approvals.",
+          "Approval decisions can be replayed, bypassed through raw input, or applied to the wrong session.",
+          "The connector or relay must retain broad credentials or execute unattended commands to support the supervision flow.",
+          "Users obtain no material benefit beyond the existing terminal stream and raw-input interface.",
+          "Operating a secure relay and durable control state costs more than the target users will support."
+        ],
+        "interpretation": "The existing architecture is technically credible and inexpensive for terminal transport, while becoming a general controlled interface for autonomous coding agents would add a safety-critical orchestration layer whose core guarantees are not yet evidenced.",
+        "mission": "Keep Termi a remote terminal I/O product while adding one narrowly scoped, auditable control mode for reconnecting to and supervising user-owned long-running coding-agent sessions.",
+        "next_probe": "Build and test a single-session supervision slice with a stable run identifier, explicit user ownership, resumable output cursor, expiring one-time approval records, and a deterministic return-to-terminal action; run forced disconnects before, during, and after an approval.",
+        "non_goals": [
+          "Owning or scheduling autonomous coding-agent runs.",
+          "Replacing tmux or the underlying coding-agent runtime.",
+          "Providing unattended execution across arbitrary hosts.",
+          "Claiming command safety from regex denylist and confirmation rules alone.",
+          "Making the hosted relay a general-purpose proxy into private networks.",
+          "Achieving feature parity between web and Flutter before validating supervision demand."
+        ],
+        "rationale": "This boundary reuses tmux, the Go connector, pairing, WebSockets, and existing clients, minimizing engineering and hosting cost. User-owned sessions preserve clear ownership and permit recovery through ordinary tmux access. A narrow supervision mode can introduce explicit approvals and observable run state without prematurely making Termi responsible for autonomous execution, credential custody, or agent lifecycle correctness.",
+        "situation": "Termi already provides remote tmux discovery, terminal streaming, raw input, reconnect-capable web/mobile access, and a preliminary command policy, but the packet does not demonstrate durable agent-run ownership, approval-state recovery, or reliable return semantics.",
+        "success_signal": "In an end-to-end interruption test, a user starts an agent inside tmux, disconnects every client, reconnects from another client, sees the same session and pending approval state, approves or rejects exactly once, and returns to interactive terminal control without duplicated input or lost output."
+      },
+      {
+        "beneficiary": "A developer who starts a long-running coding agent on a Mac and needs to leave, reconnect from a phone or browser, safely handle approval requests, and know what happened without continuously watching raw terminal output.",
+        "consequential_choice": "sequence: validate a controlled long-running coding-agent session layer first while preserving remote terminal I/O as the underlying transport and fallback; position Termi as agent control only if this probe passes.",
+        "falsifiers": [
+          "Reliable reconnect requires replacing tmux or substantially redesigning the connector rather than adding a bounded control layer.",
+          "Session ownership cannot prevent conflicting controllers without unacceptable workflow friction.",
+          "Approval detection remains dependent on brittle parsing of arbitrary terminal text and cannot be made trustworthy for a defined coding-agent workflow.",
+          "Target users consistently prefer unrestricted terminal access and gain no meaningful value from structured return summaries or approval handling."
+        ],
+        "interpretation": "Generic terminal I/O is implemented but exposes a broad, weakly differentiated surface. A controlled agent interface is promising, yet committing to full orchestration before validating session ownership, reconnect semantics, approvals, and return behavior would be costly. The highest-information move is a narrow, reversible agent-control slice built atop the existing tmux transport.",
+        "mission": "Build and validate one end-to-end controlled coding-agent session flow: explicitly claim an agent session, disconnect and safely reconnect without duplicate ownership or lost state, surface confirmation-required actions for approval, and return a durable completion or attention-needed summary.",
+        "next_probe": "Instrument a single supported coding-agent workflow with explicit session ownership and lifecycle states, then run disconnect/reconnect, competing-controller, approval, completion, and failure-return scenarios while recording correctness and user recovery effort.",
+        "non_goals": [
+          "Replacing the existing mobile app or web draft with a complete agent orchestration platform.",
+          "Supporting every coding agent, shell program, or approval protocol in the first probe.",
+          "Removing raw terminal I/O or committing to agent-only positioning before evidence exists.",
+          "Expanding deployment automation, platform coverage, or visual polish unrelated to the controlled-session test."
+        ],
+        "rationale": "This mission reuses the current connector, tmux, relay, and clients, so it is reversible and avoids prematurely replacing terminal mode. It tests all four boundary-defining uncertainties in one realistic workflow and yields stronger product evidence than expanding platform coverage or polishing generic terminal access. If successful, it establishes differentiated value; if unsuccessful, Termi can retain remote terminal I/O with little stranded investment.",
+        "situation": "Termi already provides remote tmux session discovery, terminal output, and raw input across mobile and web, while its example policy hints at deny and confirmation controls. The unresolved boundary is whether to remain a general remote terminal or own the safer lifecycle of long-running coding-agent sessions.",
+        "success_signal": "In repeated end-to-end trials, one user can claim a coding-agent session, reconnect after interruption with a single authoritative session state, approve or reject a gated action, and receive an accurate durable return summary without replaying commands, duplicating control, or inspecting the full terminal transcript."
+      }
+    ]
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-07-25T10:58:33.319696+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 22162,
+          "output_tokens": 680,
+          "reasoning_output_tokens": 49
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-07-25T10:58:58.081891+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 22166,
+          "output_tokens": 597,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-07-25T10:59:25.074893+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 22170,
+          "output_tokens": 647,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-07-25T10:59:40.294469+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 12032,
+          "input_tokens": 23946,
+          "output_tokens": 626,
+          "reasoning_output_tokens": 0
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 60416,
+      "input_tokens": 90444,
+      "output_tokens": 2550,
+      "reasoning_output_tokens": 49
+    }
+  }
+}

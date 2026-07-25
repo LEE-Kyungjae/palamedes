@@ -1,0 +1,162 @@
+{
+  "blind_review_version": "palamedes-proof-review/1",
+  "review_fingerprint": "fc8060e4f4647e1f50bac5c576cb67990f3dbb9896f508ec48a2a4b67b716980",
+  "reviewed_at": "2026-07-25T11:02:43.385006+00:00",
+  "reviewer_id": "codex-cost-blind-3",
+  "reviews": [
+    {
+      "case_id": "palamedes-self-hosting",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.92,
+        "decision_difference": "Choose A to test whether Palamedes itself adds incremental, cost-adjusted judgment value before involving a live project; choose B only if simpler-mechanism superiority is already sufficiently established and the remaining uncertainty is exclusively real-world downstream impact.",
+        "preferred": "A",
+        "rationale": "A identifies the cheaper-replacement hypothesis as the immediate gating uncertainty and proposes a tightly bounded, equal-budget ablation with explicit controls, cost adjustment, and stop criteria. Its sequencing is especially useful: failure supports immediate simplification, while success is explicitly treated only as a prerequisite for a prospective downstream trial. B targets the ultimate product claim more directly and is strongly grounded, but a single live-project outcome is harder to attribute cleanly and imposes greater beneficiary burden before establishing that the machinery outperforms credible simpler mechanisms.",
+        "scores": {
+          "A": {
+            "decision_usefulness": 5,
+            "evidence_use": 5,
+            "falsifiability": 5,
+            "non_genericity": 5,
+            "problem_framing": 5
+          },
+          "B": {
+            "decision_usefulness": 5,
+            "evidence_use": 5,
+            "falsifiability": 4,
+            "non_genericity": 5,
+            "problem_framing": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-cost-blind-3",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-07-25T11:02:12.390923+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 16128,
+              "input_tokens": 18916,
+              "output_tokens": 320,
+              "reasoning_output_tokens": 76
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 18916,
+          "output_tokens": 320,
+          "reasoning_output_tokens": 76
+        }
+      }
+    },
+    {
+      "case_id": "gahyeonbot-voice-loop",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.91,
+        "decision_difference": "B supports a sequence decision: test and potentially select the scheduled-exit habit before investing in the voice-assistant loop. A instead provisionally prioritizes the voice loop and asks whether its repetition, latency, trust, reliability, and cost justify continuation.",
+        "preferred": "B",
+        "rationale": "B better improves loop selection by testing the lower-burden candidate with explicit four-week, adoption, and reliability rejection thresholds before committing to positioning. It frames the upstream problem as insufficient behavioral evidence for choosing among unrelated features. A is highly specific and probes the required voice uncertainties, but its success thresholds remain unspecified and its choice to privilege the emerging voice stack is less supported by observed behavior. Both appropriately distinguish documented functionality from demonstrated demand, though B makes a few comparative claims about candidate strength and burden that are only partially grounded in the supplied artifacts.",
+        "scores": {
+          "A": {
+            "decision_usefulness": 4,
+            "evidence_use": 4,
+            "falsifiability": 4,
+            "non_genericity": 5,
+            "problem_framing": 4
+          },
+          "B": {
+            "decision_usefulness": 5,
+            "evidence_use": 4,
+            "falsifiability": 5,
+            "non_genericity": 5,
+            "problem_framing": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-cost-blind-3",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-07-25T11:02:30.444789+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 16128,
+              "input_tokens": 19113,
+              "output_tokens": 409,
+              "reasoning_output_tokens": 157
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 19113,
+          "output_tokens": 409,
+          "reasoning_output_tokens": 157
+        }
+      }
+    },
+    {
+      "case_id": "termi-agent-control",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.94,
+        "decision_difference": "A can support a broader stop, continue, or pivot decision because it tests semantic correctness, bypass resistance, beneficiary demand, and incremental value against the existing product. B mainly determines whether one controlled-session implementation can work under common reconnect, ownership, approval, and return scenarios.",
+        "preferred": "A",
+        "rationale": "Both missions preserve the evidenced terminal boundary while proposing a reversible probe of ownership, reconnect safety, approvals, and durable returns. A is slightly stronger because its bounded comparative probe includes explicit raw-tmux comparison, authoritative event requirements, adversarial bypass and replay tests, relay and connector failures, two-device contention, user-demand validation, and competitive-value falsification. B is highly useful and more implementation-focused, but its falsifiers and probe omit several decisive failure paths, and its non-goal of not owning lifecycle correctness sits somewhat uneasily with validating an authoritative controlled-session layer.",
+        "scores": {
+          "A": {
+            "decision_usefulness": 5,
+            "evidence_use": 5,
+            "falsifiability": 5,
+            "non_genericity": 5,
+            "problem_framing": 5
+          },
+          "B": {
+            "decision_usefulness": 5,
+            "evidence_use": 5,
+            "falsifiability": 4,
+            "non_genericity": 5,
+            "problem_framing": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-cost-blind-3",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-07-25T11:02:43.384951+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 16128,
+              "input_tokens": 19091,
+              "output_tokens": 378,
+              "reasoning_output_tokens": 117
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 19091,
+          "output_tokens": 378,
+          "reasoning_output_tokens": 117
+        }
+      }
+    }
+  ],
+  "run_id": "proof-003"
+}

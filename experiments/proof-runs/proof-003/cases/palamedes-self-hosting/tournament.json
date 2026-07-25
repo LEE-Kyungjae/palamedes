@@ -1,0 +1,170 @@
+{
+  "case_id": "palamedes-self-hosting",
+  "condition": "tournament",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-07-25T10:56:23.753543+00:00",
+  "information_fingerprint": "94b200455c48916cd19b2e21f8f640e12adfc68d4d7265013f4d36ad43c30241",
+  "mission": {
+    "beneficiary": "A real project owner who must make a consequential upstream choice and needs better judgment without disproportionate review labor or compute expense.",
+    "consequential_choice": "sequence: pause feature expansion, run one cost-accounted attributable downstream-outcome trial, and continue toward the three-project proof only if it demonstrates decision value beyond presentation quality",
+    "falsifiers": [
+      "The equal-information baseline yields the same consequential choice or a comparably good outcome at materially lower cost.",
+      "Reviewers prefer Palamedes prose, but the project owner does not change a decision or action.",
+      "Any observed benefit cannot be distinguished from planning quality, implementation quality, environmental change, or measurement bias.",
+      "Owner review and maintenance labor increases enough to erase the decision value.",
+      "Testing the core claim requires feature expansion or broader autonomy first."
+    ],
+    "interpretation": "The binding uncertainty is no longer technical capability or artifact quality; it is whether Palamedes creates enough attributable decision value to justify its cost and ceremony. The safest and cheapest next move is a bounded outcome test, not feature expansion.",
+    "mission": "Run the smallest preregistered real-project trial that compares Palamedes with an equal-information simple baseline and traces one consequential mission choice through human acceptance, downstream action, outcome, labor saved, and cost.",
+    "next_probe": "Select one live, reversible decision with an identifiable owner and near-term observable consequence; freeze an equal information packet, set token and owner-labor budgets, preregister both conditions and attribution criteria, record any changed commitment, and follow the selected choice through action and the first observable outcome.",
+    "non_goals": [
+      "Expanding the analyzer, corpus, reference library, agent hierarchy, plugin surface, or autonomous runtime.",
+      "Fine-tuning a model.",
+      "Treating schema coverage, test counts, reasoning cycles, retrieval volume, or model preference as outcome proof.",
+      "Claiming general superiority from one case.",
+      "Optimizing for novelty, philosophical completeness, or more elaborate mission artifacts."
+    ],
+    "rationale": "This directly tests the weakest product claim using the existing proof program while limiting cost, autonomy, and opportunity loss. One bounded case is the smallest useful next probe; it can determine whether to proceed toward the required three-project evidence gate without expanding the product first.",
+    "situation": "Palamedes has a stable, heavily tested kernel and an initial blinded preference win, but it consumed 4.26x the baseline input tokens and has not yet shown that its missions improve independent human decisions, downstream outcomes, or owner labor.",
+    "success_signal": "In a preregistered case, Palamedes causes an attributable stop, pivot, positioning, or sequencing choice that the owner accepts, produces a prospectively defined beneficial downstream consequence, and records enough owner-labor reduction or outcome value to plausibly justify its incremental token and operating cost."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "e1b53662b0a53371ff85892b134972c31880a6b22f8d2fbf066577785733601b",
+  "provider": "codex",
+  "role_artifacts": {
+    "candidates": [
+      {
+        "beneficiary": "Project owners who repeatedly must choose which mission to pursue, defer, change, or stop before committing implementation effort.",
+        "consequential_choice": "sequence: pause feature expansion and complete the three-project longitudinal outcome proof before further product development",
+        "falsifiers": [
+          "Owners do not repeatedly seek help with upstream mission selection or would not reuse Palamedes after the trial.",
+          "Equal-information baselines lead to the same consequential choices and comparable outcomes with materially lower cost.",
+          "Palamedes artifacts receive favorable reviews but do not change owner action.",
+          "Changed decisions cannot be linked to better beneficiary outcomes or reduced recurring owner labor.",
+          "The added latency, token cost, or process burden outweighs the observed decision value."
+        ],
+        "interpretation": "The central risk is no longer insufficient planning machinery but mistaking elaborate, preferred artifacts for beneficiary value. Confidence can only advance through repeated real decisions where Palamedes causes a traceable stop, pivot, positioning, or sequencing choice that produces better outcomes for project owners.",
+        "mission": "Run the smallest longitudinal proof across three real project decisions, measuring whether Palamedes repeatedly changes an owner's upstream choice and improves the resulting outcome enough to justify its added cost.",
+        "next_probe": "Select the next live, time-bounded owner decision with at least two credible missions; freeze an equal information packet, preregister the baseline and Palamedes comparison, record the owner's initial choice, run both conditions blindly, capture any changed commitment, then follow implementation far enough to measure outcome and owner labor.",
+        "non_goals": [
+          "Expanding the analyzer, retrieval corpus, agent hierarchy, plugins, schemas, or planning ontology.",
+          "Optimizing for more polished, novel, or reviewer-preferred mission prose.",
+          "Claiming general superiority from unit tests, schema coverage, internal reasoning cycles, or model-only review.",
+          "Fine-tuning a model or broadening Palamedes into implementation management.",
+          "Treating reference volume, debate volume, or view-transition genealogy as beneficiary value by itself."
+        ],
+        "rationale": "Project owners face recurring uncertainty about what to pursue before implementation, making upstream judgment the repeatable demand Palamedes claims to serve. A bounded three-project trial directly tests that demand and beneficiary value while resisting feature expansion, model-preference theater, and self-entrenchment. The existing kernel and proof protocol are sufficient; the missing evidence is attributable real-world consequence.",
+        "situation": "Palamedes has strong implementation and model-review evidence, including 8 of 9 blinded votes, but no independent proof that its preferred missions improve consequential downstream choices or retire recurring owner labor; it also costs 4.26 times the baseline input tokens.",
+        "success_signal": "Across three real project cases, Palamedes produces at least two independently validated decisions preferred to an equal-information baseline, causes at least one attributable stop, pivot, positioning, or sequencing choice, and records a downstream outcome or recurring owner-labor reduction whose value plausibly exceeds the 4.26x token overhead."
+      },
+      {
+        "beneficiary": "A real project owner who must make a consequential upstream choice and needs better judgment without disproportionate review labor or compute expense.",
+        "consequential_choice": "sequence: pause feature expansion, run one cost-accounted attributable downstream-outcome trial, and continue Palamedes development only if it beats the simple baseline on decision consequence rather than presentation quality",
+        "falsifiers": [
+          "The baseline yields the same consequential choice or an outcome at least as good with materially lower cost.",
+          "Reviewers prefer Palamedes prose, but the project owner does not change a decision or action.",
+          "Any observed benefit cannot be attributed separately from planning quality, implementation quality, environmental change, or measurement bias.",
+          "Owner review and maintenance labor increases enough to erase the decision value.",
+          "The trial requires new feature expansion or broader autonomy before the core claim can be tested."
+        ],
+        "interpretation": "The binding uncertainty is no longer technical capability or artifact quality; it is whether Palamedes creates enough attributable decision value to justify its cost and ceremony. The safest and cheapest next move is a bounded outcome test, not feature expansion.",
+        "mission": "Run the smallest preregistered real-project trial that compares Palamedes with an equal-information simple baseline and traces one consequential mission choice through human acceptance, downstream action, outcome, labor saved, and cost.",
+        "next_probe": "Select one live, reversible decision with an identifiable owner and near-term observable consequence; freeze the same information packet, set token and owner-labor budgets, preregister baseline and Palamedes outputs plus attribution criteria, then follow the selected choice through action and outcome.",
+        "non_goals": [
+          "Expanding the analyzer, corpus, reference library, agent hierarchy, plugin surface, or autonomous runtime.",
+          "Fine-tuning a model.",
+          "Treating schema coverage, test counts, reasoning-cycle counts, retrieval volume, or model preference as product-outcome proof.",
+          "Claiming general superiority from one case.",
+          "Optimizing for novelty, philosophical completeness, or more elaborate mission artifacts."
+        ],
+        "rationale": "This mission is technically feasible with the existing proof program and bounded runtime, limits safety exposure by avoiding expanded autonomy, and constrains operating cost through equal-information comparison and explicit budgets. It directly tests the weakest product claim while preserving the option to stop, simplify, or continue.",
+        "situation": "Palamedes has a stable, heavily tested kernel and an initial blinded preference win, but it consumed 4.26x the baseline input tokens and has not yet shown that its missions improve independent human decisions, downstream outcomes, or owner labor.",
+        "success_signal": "In a preregistered case, Palamedes causes an attributable stop, pivot, positioning, or sequencing choice that the owner accepts, produces a better downstream result than the equal-information baseline, and records enough owner labor reduction or outcome value to justify its incremental token and operating cost."
+      },
+      {
+        "beneficiary": "A project owner who needs to choose what work is worth pursuing before committing implementation resources.",
+        "consequential_choice": "sequence: freeze feature expansion, run one attributable human-in-the-loop downstream decision trial, and continue product investment only if it demonstrates value beyond artifact preference at a defensible total cost",
+        "falsifiers": [
+          "The owner does not prefer the Palamedes mission when origin is blinded and both conditions receive the same frozen information.",
+          "The preferred Palamedes mission does not produce a better downstream decision or observable consequence than the baseline.",
+          "Any apparent advantage cannot be separated from planning quality, implementation quality, environmental variation, or measurement bias.",
+          "Palamedes increases tokens and owner review labor without retiring compensating labor or avoiding a consequential mistake.",
+          "A simpler static process or single-agent baseline produces an equally strong mission from the same information."
+        ],
+        "interpretation": "The binding uncertainty is no longer whether Palamedes can produce a preferred planning artifact; it is whether its extra ceremony changes a consequential decision enough to justify its cost. Feature expansion would consume scarce attention while preserving that uncertainty.",
+        "mission": "Run one tightly bounded, preregistered real-project decision trial in which Palamedes and a simpler equal-information baseline independently recommend a mission, a human owner makes and records an origin-blinded choice, the chosen mission is executed far enough to observe an attributable consequence, and decision quality, token cost, and owner labor are compared.",
+        "next_probe": "Select the next real project decision with a bounded, reversible implementation horizon; preregister the decision, beneficiary outcome, attribution method, labor accounting, token accounting, and stop threshold; then run the equal-information blinded comparison through the first observable consequence.",
+        "non_goals": [
+          "Expanding the reference corpus or analyzer.",
+          "Adding agent hierarchies, orchestration features, plugins, or new kernel abstractions.",
+          "Fine-tuning a model.",
+          "Accumulating more internal reasoning cycles, schemas, or unit tests as substitutes for external evidence.",
+          "Claiming general product superiority from one trial."
+        ],
+        "rationale": "This is the smallest reversible probe that crosses the current evidence gap. It has high information gain because it tests the product claim against a real choice and consequence; low irreversibility because it is a single bounded trial with explicit stop conditions; and favorable opportunity cost because it freezes new architecture, corpus, and agent expansion until the core value proposition survives contact with reality.",
+        "situation": "Palamedes has strong internal machinery and an initial blinded preference win, but the evidence remains model-reviewed, costs 4.26 times the baseline input tokens, and does not show that its missions improve real downstream choices, outcomes, or owner labor.",
+        "success_signal": "The origin-blinded owner selects the Palamedes mission for decision-relevant reasons, execution produces a prospectively defined beneficial consequence attributable at least partly to the upstream mission, and the recorded improvement or retired owner labor plausibly justifies the 4.26x token-cost disadvantage."
+      }
+    ]
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-07-25T10:55:17.847794+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 22578,
+          "output_tokens": 640,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-07-25T10:55:42.935198+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 22582,
+          "output_tokens": 618,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-07-25T10:56:02.473137+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 22582,
+          "output_tokens": 674,
+          "reasoning_output_tokens": 28
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-07-25T10:56:23.753384+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 24387,
+          "output_tokens": 713,
+          "reasoning_output_tokens": 156
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 64512,
+      "input_tokens": 92129,
+      "output_tokens": 2645,
+      "reasoning_output_tokens": 184
+    }
+  }
+}

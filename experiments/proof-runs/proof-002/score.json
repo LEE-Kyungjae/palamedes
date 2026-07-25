@@ -152,7 +152,7 @@
       "output_tokens": 2141,
       "reasoning_output_tokens": 205
     },
-    "input_token_ratio_palamedes_to_baseline": 4.26,
+    "input_token_ratio_treatment_to_comparison": 4.26,
     "palamedes": {
       "call_count": 12,
       "input_tokens": 297173,
@@ -162,15 +162,18 @@
   },
   "labor_retirement_cases": 0,
   "mission_quality_gate_passed": true,
+  "outcome_gate_applicable": true,
   "outcome_gate_passed": false,
   "preference_summary": {
-    "baseline_votes": 1,
-    "palamedes_votes": 8,
+    "comparison_condition": "baseline",
+    "comparison_votes": 1,
     "tie_votes": 0,
     "total_votes": 9,
+    "treatment_condition": "palamedes",
+    "treatment_votes": 8,
     "unanimous_cases": 2
   },
   "proof_score_version": "palamedes-proof-score/1",
   "run_id": "proof-002",
-  "scored_at": "2026-07-25T10:51:22.384759+00:00"
+  "scored_at": "2026-07-25T11:04:04.096068+00:00"
 }

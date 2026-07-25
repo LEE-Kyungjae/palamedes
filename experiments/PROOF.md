@@ -133,3 +133,15 @@ Its `tournament` condition generates three independent missions through
 different product lenses and spends the fourth call selecting among them.
 Palamedes also receives four calls. Token and latency differences remain
 measured rather than assumed equal.
+
+That comparison is now complete as
+[`proof-003`](proof-runs/proof-003/RESULT.md):
+
+- both conditions used 12 generation calls across the three cases;
+- Palamedes used 297,332 input tokens and the tournament used 284,496, a
+  1.045x ratio;
+- Palamedes received 7 of 9 blinded model-review votes and won two of three
+  case majorities;
+- the preregistered equal-call mission-quality claim passed;
+- outcome evidence was outside this narrow run and is explicitly marked not
+  applicable, rather than passed.

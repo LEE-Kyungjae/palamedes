@@ -1,0 +1,37 @@
+{
+  "blind_key_version": "palamedes-proof-key/1",
+  "cases": [
+    {
+      "case_id": "palamedes-self-hosting",
+      "labels": {
+        "A": "palamedes",
+        "B": "tournament"
+      }
+    },
+    {
+      "case_id": "gahyeonbot-voice-loop",
+      "labels": {
+        "A": "tournament",
+        "B": "palamedes"
+      }
+    },
+    {
+      "case_id": "termi-agent-control",
+      "labels": {
+        "A": "palamedes",
+        "B": "tournament"
+      }
+    }
+  ],
+  "comparison_condition": "tournament",
+  "run_id": "proof-003",
+  "seed_sha256": "1c96860aec6f3a3e9062c3e13e00eddb04bb25b335102957af3a3225c79a2380",
+  "success_gate": {
+    "minimum_attributable_outcomes": 0,
+    "minimum_blinded_reviews_per_case": 3,
+    "minimum_cases": 3,
+    "minimum_labor_retirement_cases": 0,
+    "palamedes_preferred_cases": 2
+  },
+  "treatment_condition": "palamedes"
+}

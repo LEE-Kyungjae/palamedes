@@ -589,8 +589,6 @@ def prepare_blind_packet(
     blind = {
         "blind_packet_version": "palamedes-proof-blind/1",
         "run_id": manifest["run_id"],
-        "comparison_condition": comparison_condition,
-        "treatment_condition": treatment_condition,
         "rubric": manifest["portfolio"]["rubric"],
         "cases": packet_cases,
         "origin_visible": False,
@@ -807,9 +805,13 @@ def score_run(run_path: Path) -> Dict[str, Any]:
         )
         for item in case_results
     )
+    minimum_outcomes = int(gate["minimum_attributable_outcomes"])
+    minimum_labor = int(gate["minimum_labor_retirement_cases"])
+    outcome_gate_applicable = minimum_outcomes > 0 or minimum_labor > 0
     outcome_gate = (
-        attributable >= int(gate["minimum_attributable_outcomes"])
-        and labor >= int(gate["minimum_labor_retirement_cases"])
+        attributable >= minimum_outcomes and labor >= minimum_labor
+        if outcome_gate_applicable
+        else None
     )
     all_votes = [
         vote
@@ -834,8 +836,10 @@ def score_run(run_path: Path) -> Dict[str, Any]:
         "run_id": packet["run_id"],
         "scored_at": utc_now(),
         "mission_quality_gate_passed": quality_gate,
+        "outcome_gate_applicable": outcome_gate_applicable,
         "outcome_gate_passed": outcome_gate,
-        "claim_demonstrated": quality_gate and outcome_gate,
+        "claim_demonstrated": quality_gate
+        and (outcome_gate is True or not outcome_gate_applicable),
         "attributable_outcomes": attributable,
         "labor_retirement_cases": labor,
         "preference_summary": preference_summary,

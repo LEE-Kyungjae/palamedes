@@ -1,0 +1,162 @@
+{
+  "blind_review_version": "palamedes-proof-review/1",
+  "review_fingerprint": "9a41067451e019b29bb535c0c596073aed69a16fda3b42f41237532fb06dd8b1",
+  "reviewed_at": "2026-07-25T11:02:33.367063+00:00",
+  "reviewer_id": "codex-cost-blind-1",
+  "reviews": [
+    {
+      "case_id": "palamedes-self-hosting",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.91,
+        "decision_difference": "A sequences a controlled simpler-mechanism ablation before any prospective trial; B immediately runs the smallest cost-accounted prospective trial capable of distinguishing improved upstream judgment from elaborate artifact production.",
+        "preferred": "B",
+        "rationale": "Both missions are specific, grounded, bounded, and reject feature expansion. A efficiently tests whether simpler mechanisms reproduce Palamedes's artifact-level advantage, but it explicitly cannot establish downstream judgment value and therefore adds an intermediate gate. B directly tests the required product claim on one reversible live decision while controlling information, cost, owner labor, attribution, and presentation-only preference. Its reasoning more directly informs whether to continue toward the three-project proof, stop, or simplify.",
+        "scores": {
+          "A": {
+            "decision_usefulness": 4,
+            "evidence_use": 5,
+            "falsifiability": 5,
+            "non_genericity": 5,
+            "problem_framing": 5
+          },
+          "B": {
+            "decision_usefulness": 5,
+            "evidence_use": 5,
+            "falsifiability": 5,
+            "non_genericity": 5,
+            "problem_framing": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-cost-blind-1",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-07-25T11:02:09.226575+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 16128,
+              "input_tokens": 18916,
+              "output_tokens": 396,
+              "reasoning_output_tokens": 175
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 18916,
+          "output_tokens": 396,
+          "reasoning_output_tokens": 175
+        }
+      }
+    },
+    {
+      "case_id": "gahyeonbot-voice-loop",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.87,
+        "decision_difference": "B would decide whether scheduled bedtime exits deserve selection as the narrow repeat loop; A would provisionally sequence voice assistance first and decide whether to continue it based on a broader but less explicitly thresholded pilot.",
+        "preferred": "B",
+        "rationale": "B more directly tests the strongest evidence-aligned recurring behavior before committing to a technically ambitious loop. Its four-week cohort, explicit reuse and reliability thresholds, lifecycle failure cases, and reject-or-pivot rule make the decision unusually bounded and falsifiable. A is also highly useful and specific, and it covers latency, trust, and operating cost more directly, but several gates remain merely 'preset,' while technical component feasibility provides weaker support for prioritizing the loop than observed user behavior would.",
+        "scores": {
+          "A": {
+            "decision_usefulness": 5,
+            "evidence_use": 4,
+            "falsifiability": 4,
+            "non_genericity": 5,
+            "problem_framing": 4
+          },
+          "B": {
+            "decision_usefulness": 5,
+            "evidence_use": 4,
+            "falsifiability": 5,
+            "non_genericity": 5,
+            "problem_framing": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-cost-blind-1",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-07-25T11:02:20.778027+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 16128,
+              "input_tokens": 19113,
+              "output_tokens": 362,
+              "reasoning_output_tokens": 132
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 19113,
+          "output_tokens": 362,
+          "reasoning_output_tokens": 132
+        }
+      }
+    },
+    {
+      "case_id": "termi-agent-control",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.94,
+        "decision_difference": "A can determine whether controlled agent supervision is both trustworthy and materially better than the existing terminal boundary; B primarily determines whether one controlled-session flow can function.",
+        "preferred": "A",
+        "rationale": "Both missions frame the consequential product boundary well and propose reversible, evidence-seeking probes grounded in the supplied facts. A is stronger because it directly compares structured supervision with raw tmux, tests alternate-client bypass and replay, requires authoritative agent events rather than terminal parsing, and includes explicit demand and competitive-value falsifiers. B is concrete and useful but its failure criteria and comparison threshold are narrower, so a technically successful prototype could still leave the positioning decision unresolved.",
+        "scores": {
+          "A": {
+            "decision_usefulness": 5,
+            "evidence_use": 5,
+            "falsifiability": 5,
+            "non_genericity": 5,
+            "problem_framing": 5
+          },
+          "B": {
+            "decision_usefulness": 5,
+            "evidence_use": 5,
+            "falsifiability": 4,
+            "non_genericity": 5,
+            "problem_framing": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-cost-blind-1",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-07-25T11:02:33.366994+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 16128,
+              "input_tokens": 19095,
+              "output_tokens": 342,
+              "reasoning_output_tokens": 128
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 19095,
+          "output_tokens": 342,
+          "reasoning_output_tokens": 128
+        }
+      }
+    }
+  ],
+  "run_id": "proof-003"
+}

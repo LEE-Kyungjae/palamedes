@@ -1,0 +1,174 @@
+{
+  "case_id": "gahyeonbot-voice-loop",
+  "condition": "tournament",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-07-25T10:58:07.970582+00:00",
+  "information_fingerprint": "55ef0aa44c4e80d1962a92d0161a65fcda4b0c357144a74780fb1b21d3de940a",
+  "mission": {
+    "beneficiary": "Small, recurring Discord voice groups seeking hands-free assistance without leaving the channel or typing commands.",
+    "consequential_choice": "sequence: freeze broad feature expansion, validate the explicit one-turn voice loop behind existing flags, and continue only if preset repetition, latency, trust, reliability, and cost thresholds are met; otherwise pivot to the strongest observed existing loop",
+    "falsifiers": [
+      "Pilot groups do not voluntarily reuse the loop after initial trials.",
+      "End-to-end latency regularly causes abandoned turns or disrupts conversation.",
+      "False activations, missed endpoints, transcription failures, or duplicate responses undermine trust.",
+      "Users reject voice capture or synthesized output despite explicit opt-in and clear controls.",
+      "Measured API, compute, hardware, or support cost per successful repeated turn exceeds the preset budget.",
+      "The TEN VAD or Voicebox integration is unreliable in the intended production environment.",
+      "Observed repeat behavior remains concentrated in an existing feature such as scheduled departure rather than voice assistance."
+    ],
+    "interpretation": "A bounded, opt-in one-turn voice pilot is the most decision-useful next focus because it tests the documented emerging stack while limiting exposure. Technical feasibility is indicated, but user value and production viability remain unproven.",
+    "mission": "Validate one explicit in-channel voice loop: a user invokes GahyeonBot, speaks one request, receives one short spoken response, and can reliably stop or cancel.",
+    "next_probe": "Run an opt-in pilot with a few recurring voice groups and record stage-level latency, intentional and false activations, missed or duplicate turns, completion and retry rates, repeat use across sessions, trust feedback, and marginal cost per successful turn; compare repeat behavior with existing feature usage.",
+    "non_goals": [
+      "Building an always-listening or unsolicited voice participant.",
+      "Expanding music, newsletters, scheduling variants, or unrelated utilities during the pilot.",
+      "Supporting multi-step agent workflows.",
+      "Scaling broadly before repeat use, latency, trust, reliability, and cost are measured.",
+      "Cloning or using a person's voice without explicit consent."
+    ],
+    "rationale": "This mission converts the assembled voice components into a narrow, measurable loop without claiming demonstrated demand. Default-off flags, intentional invocation, one response per utterance, and a limited pilot constrain accidental activation and cost while directly testing the required unknowns: repetition, latency, trust, reliability, and cost. Broad expansion should wait for that evidence.",
+    "situation": "GahyeonBot spans scheduling, music, newsletters, AI chat, and an optional voice assistant. The packet documents a coherent voice pipeline—TEN VAD, silence-based turn finalization, STT, one streamed LLM request, and Voicebox TTS—but provides no observed repeat usage, latency, trust, reliability, or operating-cost measurements.",
+    "success_signal": "The same pilot groups voluntarily reuse the complete invoke-speak-hear loop across sessions; most intentional invocations produce exactly one usable response without manual repair; users accept the measured delay and processing boundaries; and cost per successful turn stays within a preset budget."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "c387e97d32754adc88c23946612fe0f7eab2978ddce45c4d898e988bfb5afbc8",
+  "provider": "codex",
+  "role_artifacts": {
+    "candidates": [
+      {
+        "beneficiary": "Discord users—especially couples or close friends—who routinely remain together in a voice channel while falling asleep and do not want to wake up merely to disconnect.",
+        "consequential_choice": "position: focus GahyeonBot on the recurring bedtime voice-channel departure loop and freeze further investment in broad assistant features until repeat-use evidence supports expansion",
+        "falsifiers": [
+          "Users mainly create one-off departure reservations and do not reuse the behavior across multiple nights.",
+          "Scheduled disconnections frequently fail, occur at the wrong time, or surprise participants enough to undermine trust.",
+          "Couples and sleep-call users report that Discord's existing controls or simple alarms already solve the problem sufficiently.",
+          "Observed repeat engagement concentrates in music, newsletters, or AI conversation rather than scheduled voice-channel departure.",
+          "Users require continuous listening or conversational assistance for the loop to feel valuable, making the narrow automation insufficient."
+        ],
+        "interpretation": "The strongest beneficiary value comes from reliably completing a small action users otherwise repeat nightly. This loop is more immediate and trust-verifiable than open-ended voice conversation, while avoiding the latency, privacy, failure-rate, and operating-cost burden of continuous VAD, STT, LLM, and TTS processing.",
+        "mission": "Make GahyeonBot the dependable bedtime voice-channel companion: users set or reuse a departure time, receive a brief confirmation, and the bot automatically disconnects the participating users together.",
+        "next_probe": "Instrument Out and WithOut usage, then offer a minimal recurring nightly departure option to current users; measure setup completion, successful executions, three-night reuse, cancellations, timing edits, and complaints over two weeks.",
+        "non_goals": [
+          "Becoming a general-purpose Discord assistant.",
+          "Expanding newsletter categories or music-player breadth.",
+          "Prioritizing open-ended voice conversation, voice cloning, or persona features.",
+          "Running continuous STT, LLM, and TTS processing before recurring demand is demonstrated.",
+          "Serving server-wide announcement and gathering workflows in the first focused iteration."
+        ],
+        "rationale": "Bedtime departure has a concrete outcome, natural daily recurrence, low interaction burden, and direct roots in the product's stated origin. Existing Out and WithOut primitives provide a starting point. Prioritizing reusable nightly routines and dependable execution should create more repeat value than adding breadth, while voice AI should remain subordinate until behavior proves that conversation itself is repeatedly wanted.",
+        "situation": "GahyeonBot combines scheduling, music, newsletters, AI conversation, and an emerging local voice-assistant stack, but the packet provides no adoption evidence for this broad bundle. Its clearest recurring Discord-native problem is removing people from voice channels at a chosen time, especially when partners fall asleep together.",
+        "success_signal": "A meaningful share of activated users creates a recurring bedtime departure, successfully completes it on at least three separate nights within two weeks, and continues using it without repeated manual correction or support."
+      },
+      {
+        "beneficiary": "Small, recurring Discord voice groups that want hands-free assistance without leaving the channel or repeatedly typing commands.",
+        "consequential_choice": "sequence: freeze broad feature expansion, validate the explicit one-turn voice assistant loop first, and continue only if repeat usage, latency, trust, and cost thresholds are met",
+        "falsifiers": [
+          "Pilot groups do not reuse the voice loop after initial novelty.",
+          "Observed end-to-end latency regularly interrupts natural conversation or causes users to abandon turns.",
+          "False activations, missed endpoints, transcription errors, or unwanted interruptions make users distrust the bot.",
+          "Users object to voice capture or cloned-voice output even with explicit opt-in and clear controls.",
+          "Required hardware, hosted inference, or API usage makes cost per successful turn unsustainable.",
+          "Local Voicebox or TEN VAD integration is materially unreliable on the intended production environment."
+        ],
+        "interpretation": "The most worthwhile differentiation is not another broad utility feature set but a deliberate, opt-in voice-channel assistant loop. It is technically feasible with the documented Java-compatible VAD and local voice stack, safer when disabled by default and visibly invoked, and potentially low-cost because VAD suppresses empty requests while STT and TTS can run locally. However, the packet contains no observed usage, latency, trust, or cost measurements, so expansion is not yet justified.",
+        "mission": "Validate a single opt-in voice loop in small Discord groups: a user explicitly invokes GahyeonBot, speaks one request, and receives one short spoken response, with a reliable stop or cancel path.",
+        "next_probe": "Instrument a limited opt-in pilot of the one-turn loop and record invocation-to-VAD, STT, first-token, and playback latencies; false and missed activation rates; completion and retry rates; repeat use by group; user trust feedback; and API, compute, and hardware cost per successful turn.",
+        "non_goals": [
+          "Expanding music, newsletter, or general-purpose AI features.",
+          "Building an always-listening autonomous participant.",
+          "Supporting multi-step agent workflows or unsolicited conversation.",
+          "Scaling to many servers before latency, trust, repeat usage, and cost are measured.",
+          "Training or cloning voices without explicit owner consent."
+        ],
+        "rationale": "This loop reuses the strongest assembled capabilities and creates a coherent reason to return: hands-free help inside an active voice channel. TEN VAD reduces accidental STT and LLM calls, one streamed LLM request bounds each turn, and local Voicebox can reduce marginal cost and keep voice data local. Explicit invocation, one-turn scope, short replies, default-off deployment, and fallback behavior constrain privacy, impersonation, interruption, and runaway-cost risks. Scheduling should remain available but should not drive new investment until this voice loop is measured.",
+        "situation": "GahyeonBot combines scheduling, music, newsletters, AI chat, and an optional voice assistant, but the packet provides the clearest technical foundation for a narrow Discord voice interaction loop: TEN VAD detects speech, silence finalizes a turn, STT transcribes it, one streamed LLM request produces a response, and local Voicebox TTS speaks it.",
+        "success_signal": "In an opt-in pilot, the same groups complete the invoke-speak-hear loop repeatedly across sessions, most invocations produce the intended response without manual repair or accidental activation, users tolerate the end-to-end delay, and measured per-completed-turn cost remains within a preset operating budget."
+      },
+      {
+        "beneficiary": "Small Discord voice groups—especially couples or close friends—who already spend recurring time together in voice channels and want hands-free assistance without leaving the conversation.",
+        "consequential_choice": "sequence: pause broad feature expansion, run the opt-in voice-turn pilot behind existing flags, and continue only if repeated group use survives explicit latency, trust, false-activation, and cost thresholds; otherwise pivot to the strongest observed existing loop",
+        "falsifiers": [
+          "Users try the voice loop once but do not voluntarily repeat it across sessions.",
+          "Noise, empty Discord audio packets, or overlapping speakers frequently trigger transcription or duplicate responses despite VAD.",
+          "End-to-end latency regularly interrupts conversation or causes users to abandon the turn.",
+          "Users distrust or dislike voice capture, cloned-voice output, or unclear recording and processing boundaries.",
+          "STT, model, TTS, hosting, or support cost per retained group is materially higher than the demonstrated value.",
+          "Observed repeat usage remains concentrated in scheduling, coordinated leaving, music, or newsletters instead of voice assistance."
+        ],
+        "interpretation": "The highest-information and most reversible move is to narrow the product around one distinctive repeat loop: people already gathered in a Discord voice channel speak to GahyeonBot and receive one timely spoken response. TEN VAD, local Voicebox STT/TTS, and one streamed OpenRouter request make this loop technically coherent, while feature breadth currently imposes substantial opportunity cost.",
+        "mission": "Validate a reliable in-channel voice turn loop—detect one intentional utterance, transcribe it, produce one useful answer, and speak it back—before expanding any other feature family.",
+        "next_probe": "Instrument an opt-in pilot with a few recurring voice groups and record, per utterance and session, intentional starts, false activations, duplicate or failed turns, stage-level latency, completed spoken responses, repeat use by group across days, explicit trust feedback, and marginal cost per completed turn; compare those groups' repeat behavior with existing feature usage.",
+        "non_goals": [
+          "Adding more newsletter themes, music controls, scheduling variants, or unrelated Discord utilities.",
+          "Building a general-purpose voice studio or matching Voicebox's full engine and editing surface.",
+          "Optimizing for broad server acquisition before repeat behavior is established.",
+          "Enabling the voice assistant by default for every server.",
+          "Scaling infrastructure or polishing cloned voices before latency, trust, repetition, and cost are measured."
+        ],
+        "rationale": "This loop is more differentiated and better aligned with Discord's native behavior than generic scheduling, music, or newsletters. A bounded pilot is reversible because the assistant, STT, and OpenRouter paths are feature-flagged and Edge TTS can remain a fallback. It maximizes information gain by exposing the decisive unknowns together: whether users voluntarily repeat voice interactions, whether VAD avoids accidental requests, whether end-to-end latency feels conversational, whether cloned/local voice output earns trust, and whether inference cost is sustainable. Continuing broad feature development before learning these facts would spend scarce effort without resolving product direction.",
+        "situation": "GahyeonBot combines scheduling, music, newsletters, text AI, and an emerging voice assistant, but the packet provides no observed usage, retention, latency, trust, or cost evidence proving which feature deserves continued investment.",
+        "success_signal": "In a bounded pilot, the same groups voluntarily complete the voice loop on multiple days, most intentional utterances yield exactly one appropriate spoken response, accidental activations are rare, response delay is acceptable to users, and measured per-turn operating cost supports continued use."
+      }
+    ]
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-07-25T10:56:48.521870+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 24977,
+          "output_tokens": 699,
+          "reasoning_output_tokens": 75
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-07-25T10:57:21.242541+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 24977,
+          "output_tokens": 736,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-07-25T10:57:42.159093+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 24977,
+          "output_tokens": 754,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-07-25T10:58:07.970527+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 26992,
+          "output_tokens": 736,
+          "reasoning_output_tokens": 139
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 64512,
+      "input_tokens": 101923,
+      "output_tokens": 2925,
+      "reasoning_output_tokens": 214
+    }
+  }
+}

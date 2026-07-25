@@ -1,0 +1,227 @@
+{
+  "case_id": "palamedes-self-hosting",
+  "condition": "palamedes",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-07-25T10:56:57.179823+00:00",
+  "information_fingerprint": "94b200455c48916cd19b2e21f8f640e12adfc68d4d7265013f4d36ad43c30241",
+  "mission": {
+    "beneficiary": "Teams deciding whether Palamedes's additional machinery and operating cost are justified or should be replaced by a simpler process.",
+    "consequential_choice": "sequence: run the bounded simpler-mechanism ablation first; stop or simplify if Palamedes does not survive, and proceed to a preregistered prospective downstream trial only if it does",
+    "falsifiers": [
+      "A simpler baseline matches Palamedes on blinded mission quality and downstream decision effects at materially lower cost.",
+      "No Palamedes component contributes a replicable incremental benefit.",
+      "Rankings fail to replicate on fresh cases or with human decision owners.",
+      "Blinded artifact preferences do not predict consequential action differences.",
+      "Observed gains vanish after accounting for tokens, latency, human review labor, and coordination burden."
+    ],
+    "interpretation": "The most immediate uncertainty is whether Palamedes contributes judgment value beyond extra inference, structure, or a simpler deliberation mechanism. External outcome trials are premature until that cheaper replacement hypothesis is tested.",
+    "mission": "Determine whether Palamedes's apparent advantage survives comparison with simpler mechanisms and equalized inference budgets.",
+    "next_probe": "Replay the existing proof cases with equal token and tool budgets using the full system, a structured checklist baseline, and one reduced variant; score outputs with the existing blinded rubric plus cost-adjusted utility.",
+    "non_goals": [
+      "Expanding the kernel, retrieval corpus, lineage infrastructure, schemas, or agent hierarchy.",
+      "Claiming improved upstream judgment from model-rated document preference alone.",
+      "Optimizing a large ablation matrix around the existing proof cases.",
+      "Running a burdensome multi-project external trial before testing credible simpler replacements.",
+      "Treating equal-budget superiority as sufficient evidence of real-world cost-adjusted value."
+    ],
+    "rationale": "This is the smallest reversible test of Palamedes's anti-entrenchment claim. It offers high information gain at lower beneficiary burden than recruiting live projects and can falsify further investment if a checklist, structured prompt, contemporary reasoning agent, or reduced variant performs equivalently at lower cost. Existing-case replay cannot establish downstream value, so survival here is only a prerequisite for a later prospective trial.",
+    "situation": "Palamedes has initial blinded model-review preference evidence but no demonstrated attributable downstream benefit or cost-adjusted advantage, while consuming 4.26 times the baseline input tokens.",
+    "success_signal": "On preregistered comparisons, the full system shows a replicable, cost-adjusted advantage over strong simpler baselines, and the preference signal remains when verbosity, formatting, token budget, tools, and evaluator exposure are controlled."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "12e6075a3b503bfad9d21fa5f4911944cb264050f67f94bef5a0368113597af2",
+  "provider": "codex",
+  "role_artifacts": {
+    "adversary": {
+      "candidate_critiques": [
+        {
+          "disconfirming_evidence": "Owners rarely change their intended actions; changed actions have no attributable benefit; results reverse across projects or outcome windows; independent adjudicators cannot separate mission effects from execution effects; or a structured baseline produces equivalent decisions with substantially less cost and coordination.",
+          "failure_mode": "Three heterogeneous projects cannot reliably isolate Palamedes's causal effect: owner uptake, implementation quality, environmental change, outcome-window choice, and selective recruitment may dominate. Matching compute also obscures the practical question of whether unequal real-world cost is justified, while the system may influence how packets, metrics, or attribution rules are constructed.",
+          "hidden_harm": "This candidate would waste the most effort if wrong. It consumes external owners' attention, delays live decisions, imposes extensive measurement overhead, and may expose projects to inferior recommendations before basic ablations establish that Palamedes contributes anything beyond a simpler prompt or checklist. Three noisy cases could still produce an expensive but inconclusive narrative.",
+          "mission": "Run a preregistered prospective trial testing whether Palamedes changes consequential decisions across three active external projects."
+        },
+        {
+          "disconfirming_evidence": "Rankings fail to replicate on fresh cases or with human decision owners; component effects are unstable or interaction-dependent; blinded preferences do not predict action changes; cost-adjusted gains vanish; or a checklist, structured prompt, or contemporary reasoning agent matches the full system.",
+          "failure_mode": "Replaying the existing proof cases risks overfitting to cases, rubrics, and model-reviewer preferences already used to shape Palamedes. Equal token budgets may unfairly penalize an architecture whose only possible value lies in spending more compute on rare decisions, while mission-quality scoring can reproduce the artifact-preference problem instead of testing judgment.",
+          "hidden_harm": "A large ablation matrix can become internally focused optimization theater: many comparisons, weak statistical power, and post hoc stories about interacting components. It may refine an elaborate system around model-judged document quality while postponing contact with consequential decisions.",
+          "mission": "Determine whether Palamedes's apparent advantage survives comparison with simpler mechanisms and equalized inference budgets."
+        },
+        {
+          "disconfirming_evidence": "Performance drops on naturally occurring or prospectively collected evidence; caution produces equal or greater expected loss than false acceptance; strong baselines match calibration; results depend heavily on trap wording or assigned cost ratios; or calibrated responses do not improve downstream choices.",
+          "failure_mode": "A synthetic ten-case benchmark may reward recognizing designer-authored traps rather than making useful decisions under authentic uncertainty. Ground-truth labels and asymmetric costs may be contestable, domain leakage may let models detect benchmark cues, and refusal calibration is only one narrow capability that does not establish better mission selection.",
+          "hidden_harm": "Optimizing for contamination detection could make Palamedes systematically cautious, increasing delay, missed opportunities, probe costs, and false rejection of unconventional but valuable evidence. A favorable result could also be overgeneralized from epistemic hygiene to the much broader claim of improved upstream judgment.",
+          "mission": "Test whether Palamedes provides unique value through calibrated refusal and deferral under subtle evidence contamination."
+        },
+        {
+          "disconfirming_evidence": "Ordinary concise logs perform equally well; lineage increases review time or confidence without accuracy; successors anchor more strongly on prior interpretations; benefits disappear when packet length and salience are controlled; or real project handoffs do not use the records.",
+          "failure_mode": "A single completed decision with hidden outcome evidence is vulnerable to hindsight contamination, reconstruction bias, and mismatch between experimental successors and real maintainers. Matching facts while varying lineage is intrinsically difficult because lineage adds framing, salience, and volume; any effect may measure presentation or extra information rather than preserved viewpoint evolution.",
+          "hidden_harm": "The project could invest deeply in logging infrastructure and impose continuing documentation burdens before proving that succession is a frequent, costly problem. Lineage records may entrench prior frames, leak persuasive rationales, amplify hindsight confidence, and create surveillance or accountability concerns that discourage candid reasoning.",
+          "mission": "Test whether view-transition lineage improves later judgment instead of merely producing persuasive retrospective narratives."
+        }
+      ],
+      "shared_assumptions": [
+        "A bounded experiment can operationalize 'upstream judgment' without prematurely collapsing distinct targets such as artifact preference, decision change, outcome quality, information gain, and cost-adjusted value.",
+        "Frozen equal-information packets adequately represent the information available to real decision-makers and do not remove the environmental interaction through which judgment matters.",
+        "Origin blinding can neutralize advocacy, formatting, verbosity, and system-identity effects despite recognizable output styles and unequal reasoning traces.",
+        "The selected projects or constructed cases will be representative enough to support conclusions beyond their domains, stakes, owners, and time horizons.",
+        "Outcome effects can be attributed to mission selection separately from planning, implementation, owner compliance, environmental change, and measurement choices.",
+        "Strong baselines can be specified and kept current without being weakened to preserve Palamedes's apparent differentiation.",
+        "Token, latency, human-review labor, coordination burden, and opportunity cost can be measured on a common utility basis.",
+        "Independent owners or evaluators will understand both conditions equally and will not favor longer, more structured, or more cautious artifacts.",
+        "Palamedes's components are separable enough for ablation, even though their value may arise from interactions and accumulated state.",
+        "Short pilot sizes can yield useful falsification rather than ambiguous results that justify further expansion.",
+        "Preregistration will constrain researcher degrees of freedom despite Palamedes evaluating its own continued investment and helping define cases, metrics, and interpretations.",
+        "The main risk is false confidence in Palamedes rather than harm caused by experimental delay, owner burden, induced caution, privacy exposure, or displacement of simpler work.",
+        "A recommendation that changes a decision is evidence of value, although non-change may be correct and change may be harmful.",
+        "External outcomes will become observable within fixed windows appropriate to each decision.",
+        "More instrumentation is the smallest evidence-producing move, rather than first defining a discontinuation threshold and testing the cheapest credible replacement.",
+        "The truncated packet does not omit controls, negative results, case-selection details, or qualifications that would materially change the critiques."
+      ]
+    },
+    "interpreter": {
+      "interpretations": [
+        "The blinded preference result may indicate that Palamedes produces upstream mission artifacts judged more useful than a one-shot baseline under matched information.",
+        "The same result may reflect greater token expenditure, richer formatting, evaluator preference for elaborate reasoning, or similarity between generator and model-reviewer tastes rather than better judgment.",
+        "Blocking the irrelevant retrieval packet may demonstrate useful epistemic restraint and resistance to retrieval laundering.",
+        "Alternatively, that block may show only that the system can detect conspicuous mismatch; it does not establish performance on subtle, plausible, decision-relevant misinformation.",
+        "The mature kernel and extensive schemas may provide a strong experimental substrate for evaluating upstream judgment.",
+        "Alternatively, the implementation volume may be evidence of artifact elaboration and path dependence around an unvalidated product hypothesis.",
+        "View-transition lineage may improve auditability, expose changed assumptions, and support learning across implementation outcomes.",
+        "Alternatively, preserved lineage may encourage persuasive retrospective narratives without establishing causal contribution to better choices.",
+        "The strongest unresolved claim appears to concern whether Palamedes changes consequential choices or outcomes, not whether it can generate preferred mission documents.",
+        "A small downstream comparison could be interpreted as the most direct bridge from artifact preference to decision value, but a broader set of cases may be necessary if effects are highly project-dependent.",
+        "Cost asymmetry may be acceptable if Palamedes materially improves rare, high-leverage decisions; it may be disqualifying for routine decisions or when a simpler deliberation prompt achieves similar results.",
+        "Self-hosting creates a useful adversarial test of anti-entrenchment, but it also creates conflicts of interest because Palamedes is evaluating whether Palamedes deserves continued investment.",
+        "The relevant baseline may not be a one-shot generic response; stronger alternatives could include structured prompting, modern reasoning agents, retrieval-assisted planners, human deliberation, or simpler static checklists.",
+        "Feature expansion before outcome evidence could increase measurement capability, but it could also postpone falsification by continually redefining what must be built first."
+      ],
+      "missing_evidence": [
+        "The exact proof-002 cases, generated outputs, reviewer rubric, vote rationales, reviewer independence controls, and statistical uncertainty around 8 of 9 votes.",
+        "Replication with independent human decision-makers who are blind to origin, project advocacy, and system identity.",
+        "Evidence that preferred mission artifacts cause different downstream choices rather than merely receiving higher document-quality ratings.",
+        "Measured downstream consequences such as avoided work, earlier stops or pivots, improved positioning, reduced rework, beneficiary impact, or owner labor retired.",
+        "Attribution separating mission quality from planning quality, implementation quality, environmental changes, and measurement error.",
+        "A cost-adjusted comparison that includes tokens, latency, model calls, human review time, infrastructure cost, and opportunity cost.",
+        "Comparisons against strong contemporary baselines using the same information, compute budgets, tools, and opportunity to revise.",
+        "Ablations identifying whether benefits come from competing interpretations, retrieval, criticism, blinded judging, lineage preservation, extra inference compute, or formatting.",
+        "Performance across multiple real repositories, decision types, domains, stakes, and time horizons, including negative and null cases.",
+        "Prospective preregistration of decision criteria, stopping rules, outcome windows, and failure thresholds before observing results.",
+        "Tests using ambiguous but plausible evidence, adversarial evidence, missing evidence, and conflicting evidence rather than only clearly irrelevant retrieval.",
+        "Calibration data showing whether confidence, deferral, rejection, and disconfirmation predictions correspond to later outcomes.",
+        "Evidence that beneficiary claims and value conflicts are represented accurately rather than inferred primarily from the project owner's preferences.",
+        "Longitudinal evidence that view-transition records predict or enable better later decisions instead of merely documenting them.",
+        "Evidence about false-positive mission changes, unnecessary pivots, analysis delay, and cases where a simple answer was rejected for being insufficiently novel.",
+        "An operational definition and threshold for 'improves upstream judgment' that distinguishes artifact preference, decision change, outcome improvement, information gain, and cost-adjusted value.",
+        "A predefined condition under which Palamedes should be simplified, replaced, or discontinued in favor of a planner, static process, or other agent.",
+        "The base rates and selection process for the reported cases, including whether favorable or legible examples were disproportionately included.",
+        "Full untruncated artifact contents needed to verify whether additional evidence, limitations, or experimental controls materially change these assessments."
+      ],
+      "observations": [
+        "Palamedes is positioned as a pre-planning layer that selects and revises missions before downstream planning and implementation.",
+        "The plan-state kernel is implemented and treated as stable, while the autonomous pre-planner remains a falsifiable research-alpha hypothesis.",
+        "The repository reports 1,209 mission tests, 298 experimental schemas, 401 reasoning cycles, 1,624 evidence records, and 837 indexed components; these primarily demonstrate implementation breadth and internal activity rather than external decision quality.",
+        "In the first real retrieval case, Palamedes rejected a low-confidence packet containing irrelevant cache, TTL, and deduplication guidance instead of treating retrieved material as authoritative.",
+        "In proof-002, Palamedes won 8 of 9 origin-blinded model-review votes and the majority in all three cases against a one-shot baseline using frozen equal-information packets.",
+        "The reported comparison used fresh-session Codex reviewers rather than independent human evaluators.",
+        "The Palamedes condition consumed 4.26 times the baseline input tokens.",
+        "No improvement in attributable downstream decisions, external outcomes, or cost-adjusted performance has been demonstrated.",
+        "The proof program requires attributable downstream choices and owner labor-retirement records before mission preference is promoted into a product claim.",
+        "The project explicitly recognizes risks including retrospective storytelling, citation theater, compute inflation, owner-bias amplification, performative insight, and institutional self-entrenchment.",
+        "The architecture documents favor bounded loops, source-grounded insights, explicit permissions, outcome monitoring, and replacement by simpler mechanisms when those mechanisms perform equally well.",
+        "The supplied artifacts are partly truncated, so some procedures, results, counterpoints, and qualification details may be absent from the packet."
+      ]
+    },
+    "inventor": {
+      "candidate_missions": [
+        {
+          "beneficiary": "Project owners who need better high-leverage choices before committing implementation resources.",
+          "falsifier": "Palamedes does not produce more beneficial attributable choices than the baseline, its recommendations rarely alter action, or any gains disappear after accounting for tokens, latency, and human review labor.",
+          "mechanism": "For each project, freeze an equal-information packet, generate recommendations from Palamedes and a strong structured-reasoning baseline under matched compute, present them origin-blinded to an independent decision owner, record the chosen action, and measure avoided work, pivots, rework, beneficiary impact, and total cost over a fixed outcome window.",
+          "mission": "Run a preregistered prospective trial testing whether Palamedes changes consequential decisions across three active external projects.",
+          "next_probe": "Recruit one independent project with an imminent reversible decision and preregister the decision, baseline, budget, outcome window, attribution method, and failure threshold before generating either condition."
+        },
+        {
+          "beneficiary": "Teams deciding whether Palamedes's additional machinery and operating cost are justified or should be replaced by a simpler process.",
+          "falsifier": "A simpler baseline matches Palamedes on blinded mission quality and downstream decision effects at materially lower cost, or no Palamedes component contributes a replicable incremental benefit.",
+          "mechanism": "Run a component-and-cost ablation tournament comparing the full system with a static mission checklist, structured deliberation prompt, modern reasoning agent, and reduced Palamedes variants that remove retrieval, competing interpretations, criticism, or view-transition lineage.",
+          "mission": "Determine whether Palamedes's apparent advantage survives comparison with simpler mechanisms and equalized inference budgets.",
+          "next_probe": "Replay the existing proof cases with equal token and tool budgets using the full system, a structured checklist baseline, and one reduced variant; score outputs with the existing blinded rubric plus cost-adjusted utility."
+        },
+        {
+          "beneficiary": "Decision-makers operating in noisy evidence environments where confidently adopting a plausible false premise can cause expensive misdirection.",
+          "falsifier": "Palamedes's acceptance, rejection, and deferral decisions are no better calibrated than strong baselines, or its caution causes as much expected harm through delay and missed opportunities as it prevents through error avoidance.",
+          "mechanism": "Create prospective decision cases containing plausible but misleading, conflicting, incomplete, and adversarial evidence; require systems to accept, reject, defer, or request a probe, then compare those responses with later verified ground truth and the downstream cost of false confidence versus unnecessary caution.",
+          "mission": "Test whether Palamedes provides unique value through calibrated refusal and deferral under subtle evidence contamination.",
+          "next_probe": "Construct a blinded ten-case pilot with predefined evidence traps, ground-truth labels, asymmetric error costs, and calibration scoring; include subtle domain-relevant misinformation rather than conspicuously unrelated retrieval."
+        },
+        {
+          "beneficiary": "Long-running projects and successor decision-makers who must learn from prior reasoning without inheriting its narrative bias.",
+          "falsifier": "Lineage records do not improve delayed decisions, prediction accuracy, or mistake avoidance relative to simpler logs, or they increase hindsight bias, narrative confidence, or review burden without compensating value.",
+          "mechanism": "Randomize continuing projects to receive either structured view-transition records or outcome-equivalent ordinary decision logs, then assess whether independent successors more accurately recover assumptions, anticipate failure, revise missions, and avoid repeated mistakes after a delayed handoff.",
+          "mission": "Test whether view-transition lineage improves later judgment instead of merely producing persuasive retrospective narratives.",
+          "next_probe": "Choose one completed decision with a later follow-up, prepare blinded lineage and ordinary-log packets containing matched facts, and test successor recommendations against preregistered hidden outcome evidence."
+        }
+      ]
+    }
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-07-25T10:55:30.521162+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 12032,
+          "input_tokens": 22491,
+          "output_tokens": 1210,
+          "reasoning_output_tokens": 24
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-07-25T10:55:55.954780+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 23731,
+          "output_tokens": 754,
+          "reasoning_output_tokens": 21
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-07-25T10:56:36.089827+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 12032,
+          "input_tokens": 24520,
+          "output_tokens": 1258,
+          "reasoning_output_tokens": 40
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-07-25T10:56:57.179746+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 12032,
+          "input_tokens": 25863,
+          "output_tokens": 692,
+          "reasoning_output_tokens": 133
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 52224,
+      "input_tokens": 96605,
+      "output_tokens": 3914,
+      "reasoning_output_tokens": 218
+    }
+  }
+}
