@@ -319,6 +319,7 @@ class MissionStore:
         self.root = root
         self.handoff_root = root / "handoffs"
         self.outcomes_path = root / "outcomes.jsonl"
+        self.outcome_gates_path = root / "outcome-gates.jsonl"
 
     def contract_path(self, mission_id: str) -> Path:
         if not re.fullmatch(r"mission-[a-f0-9]{12}", mission_id):
@@ -358,6 +359,24 @@ class MissionStore:
         self.root.mkdir(parents=True, exist_ok=True)
         with self.outcomes_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(outcome, ensure_ascii=False, sort_keys=True) + "\n")
+
+    def append_outcome_gate(self, gate: Dict[str, Any]) -> None:
+        self.root.mkdir(parents=True, exist_ok=True)
+        with self.outcome_gates_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(gate, ensure_ascii=False, sort_keys=True) + "\n")
+
+    def open_outcome_gates(self) -> List[Dict[str, Any]]:
+        if not self.outcome_gates_path.is_file():
+            return []
+        latest: Dict[str, Dict[str, Any]] = {}
+        for line in self.outcome_gates_path.read_text(encoding="utf-8").splitlines():
+            try:
+                gate = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(gate, dict) and isinstance(gate.get("gate_id"), str):
+                latest[gate["gate_id"]] = gate
+        return [gate for gate in latest.values() if gate.get("status") == "open"]
 
 
 class CognitionCycleStore:
@@ -610,13 +629,21 @@ Candidates:
 Select, defer, or reject from the frozen candidates and critiques. You may not
 invent a new candidate. Then compile the selected candidate into the exact
 mission draft shape below. If evidence is weak, select an information-producing
-probe and preserve uncertainty.
+probe and preserve uncertainty. Classify whether this cycle originated a
+mission before implementation, selected or constrained an existing direction,
+or audited work that had already started. A retrospective audit is not mission
+origination. State whether the selection is exclusive, sequencing, conditional,
+portfolio, or a probe, and preserve the fate of every candidate.
 Return:
 {{
   "decision":"select|defer|reject",
   "selected_candidate_id":"candidate-1 or empty when not selected",
   "selection_reason":"...",
-  "rejected_alternatives":[{{"candidate_id":"...","reason":"..."}}],
+  "causal_role":"originated|selected|constrained|audited",
+  "decision_scope":"strategic_open|tactical_bounded|audit_only|integration",
+  "implementation_state_at_start":"not_started|in_progress|completed|unknown",
+  "selection_type":"exclusive|sequencing|conditional|portfolio|probe",
+  "candidate_fates":[{{"candidate_id":"...","fate":"selected|rejected|deferred|conditional|queued","reason":"...","reopen_condition":"..."}}],
   "decisive_assumptions":["..."],
   "reversal_triggers":["..."],
   "mission_contract": {mission_prompt("Use the frozen artifacts").split("Required shape:", 1)[1].split("Do not invent", 1)[0].strip()}
@@ -638,6 +665,73 @@ Adversary:
             raise ValueError("selector must select a frozen candidate ID")
         if decision != "select" and selected_id:
             raise ValueError("defer or reject cannot name a selected candidate")
+        causal_role = selector.get("causal_role")
+        if causal_role not in {"originated", "selected", "constrained", "audited"}:
+            raise ValueError("selector requires a valid causal_role")
+        decision_scope = selector.get("decision_scope")
+        if decision_scope not in {
+            "strategic_open",
+            "tactical_bounded",
+            "audit_only",
+            "integration",
+        }:
+            raise ValueError("selector requires a valid decision_scope")
+        implementation_state = selector.get("implementation_state_at_start")
+        if implementation_state not in {
+            "not_started",
+            "in_progress",
+            "completed",
+            "unknown",
+        }:
+            raise ValueError("selector requires implementation_state_at_start")
+        if implementation_state == "completed" and (
+            causal_role != "audited" or decision_scope != "audit_only"
+        ):
+            raise ValueError(
+                "completed work must be classified as audited with audit_only scope"
+            )
+        if causal_role == "audited" and decision_scope != "audit_only":
+            raise ValueError("audited cycles require audit_only scope")
+        selection_type = selector.get("selection_type")
+        if selection_type not in {
+            "exclusive",
+            "sequencing",
+            "conditional",
+            "portfolio",
+            "probe",
+        }:
+            raise ValueError("selector requires a valid selection_type")
+        candidate_fates = selector.get("candidate_fates")
+        if not isinstance(candidate_fates, list):
+            raise ValueError("selector candidate_fates must be an array")
+        fate_ids = []
+        for fate in candidate_fates:
+            if not isinstance(fate, dict):
+                raise ValueError("each candidate fate must be an object")
+            candidate_id = str(fate.get("candidate_id", "")).strip()
+            if fate.get("fate") not in {
+                "selected",
+                "rejected",
+                "deferred",
+                "conditional",
+                "queued",
+            }:
+                raise ValueError(f"candidate {candidate_id or '?'} has invalid fate")
+            if not str(fate.get("reason", "")).strip():
+                raise ValueError(f"candidate {candidate_id or '?'} fate requires reason")
+            fate_ids.append(candidate_id)
+        if sorted(fate_ids) != sorted(candidate_ids) or len(fate_ids) != len(set(fate_ids)):
+            raise ValueError("selector must preserve exactly one fate for every candidate")
+        selected_fates = [
+            item for item in candidate_fates if item.get("fate") == "selected"
+        ]
+        if decision == "select" and (
+            len(selected_fates) != 1
+            or selected_fates[0].get("candidate_id") != selected_id
+        ):
+            raise ValueError("selected candidate must have the sole selected fate")
+        if decision != "select" and selected_fates:
+            raise ValueError("defer or reject cannot contain a selected fate")
         cycle["artifacts"].append(
             _role_artifact(
                 role="selector",
@@ -649,6 +743,11 @@ Adversary:
         )
         cycle["decision"] = decision
         cycle["selected_candidate_id"] = selected_id
+        cycle["causal_role"] = causal_role
+        cycle["decision_scope"] = decision_scope
+        cycle["implementation_state_at_start"] = implementation_state
+        cycle["selection_type"] = selection_type
+        cycle["candidate_fates"] = candidate_fates
         cycle["status"] = "selected" if decision == "select" else decision
         cycle["completed_at"] = utc_now()
         cycle["live_model_call_count"] = 4
@@ -663,6 +762,11 @@ Adversary:
             contract = validate_mission_draft(raw_contract)
             contract["cognition_cycle_id"] = cycle_id
             contract["selected_candidate_id"] = selected_id
+            contract["causal_role"] = causal_role
+            contract["decision_scope"] = decision_scope
+            contract["implementation_state_at_start"] = implementation_state
+            contract["selection_type"] = selection_type
+            contract["candidate_fates"] = candidate_fates
             contract["role_lineage"] = [
                 {
                     "role": item["role"],
@@ -670,6 +774,19 @@ Adversary:
                 }
                 for item in cycle["artifacts"]
             ]
+            governance_fingerprint = _fingerprint(
+                {
+                    "draft_fingerprint": contract["contract_fingerprint"],
+                    "cognition_cycle_id": cycle_id,
+                    "causal_role": causal_role,
+                    "decision_scope": decision_scope,
+                    "implementation_state_at_start": implementation_state,
+                    "selection_type": selection_type,
+                    "candidate_fates": candidate_fates,
+                }
+            )
+            contract["mission_id"] = f"mission-{governance_fingerprint[:12]}"
+            contract["contract_fingerprint"] = governance_fingerprint
         cycle_store.save(cycle)
         return {"cycle": cycle, "contract": contract}
     except Exception as exc:
@@ -685,6 +802,7 @@ def run_outcome_analyst(
     *,
     provider: ChatProvider,
     cycle_store: CognitionCycleStore,
+    mission_store: MissionStore,
     contract: Dict[str, Any],
     outcome: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -750,6 +868,19 @@ Observed outcome:
     cycle["latest_mission_disposition"] = output["mission_disposition"]
     cycle["live_model_call_count"] = 4 + len(cycle["outcome_analyses"])
     cycle_store.save(cycle)
+    if output["mission_disposition"] != "continue":
+        mission_store.append_outcome_gate(
+            {
+                "gate_version": "palamedes-outcome-gate/1",
+                "gate_id": f"gate-{outcome['outcome_id'][8:]}",
+                "outcome_id": outcome["outcome_id"],
+                "mission_contract_id": contract["mission_id"],
+                "mission_disposition": output["mission_disposition"],
+                "required_response": output["next_probe"],
+                "status": "open",
+                "opened_at": utc_now(),
+            }
+        )
     return {"status": "completed", "analysis": analysis}
 
 
@@ -835,6 +966,29 @@ def validate_mission_draft(payload: Dict[str, Any]) -> Dict[str, Any]:
         errors.append("uncertainty must be an integer from 0 to 100")
     if errors:
         raise ValueError("invalid mission draft: " + "; ".join(errors))
+    normalized_outcome_response = None
+    outcome_response = payload.get("outcome_response")
+    if outcome_response is not None:
+        if not isinstance(outcome_response, dict):
+            raise ValueError("invalid mission draft: outcome_response must be an object")
+        related_ids = outcome_response.get("related_outcome_ids")
+        if not isinstance(related_ids, list) or not all(
+            isinstance(item, str) and item.strip() for item in related_ids
+        ):
+            raise ValueError(
+                "invalid mission draft: outcome_response requires related_outcome_ids"
+            )
+        action = outcome_response.get("action")
+        rationale = str(outcome_response.get("rationale", "")).strip()
+        if action not in {"resolve", "independent", "accept_debt"} or not rationale:
+            raise ValueError(
+                "invalid mission draft: outcome_response requires action and rationale"
+            )
+        normalized_outcome_response = {
+            "related_outcome_ids": [item.strip() for item in related_ids],
+            "action": action,
+            "rationale": rationale,
+        }
     normalized = {
         "mission": payload["mission"].strip(),
         "rationale": payload["rationale"].strip(),
@@ -849,6 +1003,8 @@ def validate_mission_draft(payload: Dict[str, Any]) -> Dict[str, Any]:
         "planner_brief": payload["planner_brief"].strip(),
         "uncertainty": uncertainty,
     }
+    if normalized_outcome_response is not None:
+        normalized["outcome_response"] = normalized_outcome_response
     mission_id = f"mission-{_fingerprint(normalized)[:12]}"
     return {
         "mission_contract_version": "palamedes-chat-mission/1",
@@ -881,12 +1037,18 @@ Required shape:
     "expected_result": "precommitted observable result"
   }},
   "planner_brief": "semantic handoff for a downstream planner",
-  "uncertainty": 50
+  "uncertainty": 50,
+  "outcome_response": {{
+    "related_outcome_ids": ["outcome IDs from open evidence gates, when present"],
+    "action": "resolve|independent|accept_debt",
+    "rationale": "why the next mission resolves, is independent from, or consciously carries the evidence debt"
+  }}
 }}
 
 Do not invent external evidence. Use source "user" or "plan" for claims from the
 provided context. If evidence is weak, preserve that weakness with low
-confidence and a falsifying probe.
+confidence and a falsifying probe. Omit outcome_response only when there are no
+open outcome evidence gates.
 
 User context:
 {context}"""
@@ -899,6 +1061,9 @@ def render_mission(contract: Dict[str, Any]) -> str:
         f"  rationale: {contract['rationale']}",
         f"  success metric: {contract['success_metric']}",
         f"  uncertainty: {contract['uncertainty']}/100",
+        f"  causal role: {contract.get('causal_role', 'direct mission draft')}",
+        f"  decision scope: {contract.get('decision_scope', 'not classified')}",
+        f"  selection type: {contract.get('selection_type', 'not classified')}",
         "  evidence:",
     ]
     lines.extend(
@@ -942,6 +1107,25 @@ def approve_mission(
 ) -> Dict[str, Any]:
     if contract.get("status") != "draft":
         raise ValueError(f"mission is not approvable from status {contract.get('status')}")
+    open_gates = mission_store.open_outcome_gates()
+    if open_gates:
+        response = contract.get("outcome_response")
+        related_ids = (
+            response.get("related_outcome_ids", []) if isinstance(response, dict) else []
+        )
+        unresolved = [
+            gate for gate in open_gates if gate.get("outcome_id") not in related_ids
+        ]
+        if unresolved:
+            ids = ", ".join(gate["outcome_id"] for gate in unresolved)
+            raise ValueError(
+                "mission approval blocked by unresolved outcome evidence: "
+                f"{ids}; the draft must explicitly respond to each outcome"
+            )
+        if response.get("action") not in {"resolve", "independent", "accept_debt"}:
+            raise ValueError("outcome_response requires resolve, independent, or accept_debt")
+        if not str(response.get("rationale", "")).strip():
+            raise ValueError("outcome_response requires a rationale")
     mission_id = contract["mission_id"]
     ts = utc_now()
 
@@ -1015,6 +1199,18 @@ def approve_mission(
     approved = dict(contract)
     approved.update({"status": "approved", "approved_at": ts, "session_id": session_id})
     mission_store.save_contract(approved)
+    if open_gates:
+        for gate in open_gates:
+            resolved = dict(gate)
+            resolved.update(
+                {
+                    "status": "responded",
+                    "responded_at": ts,
+                    "response_mission_contract_id": mission_id,
+                    "response_action": contract["outcome_response"]["action"],
+                }
+            )
+            mission_store.append_outcome_gate(resolved)
     handoff = {
         "handoff_version": "palamedes-planner-handoff/1",
         "handoff_id": f"handoff-{mission_id[8:]}",
@@ -1029,6 +1225,11 @@ def approve_mission(
         "non_goals": contract["non_goals"],
         "falsifiers": contract["falsifiers"],
         "next_probe": contract["next_probe"],
+        "causal_role": contract.get("causal_role", "originated"),
+        "decision_scope": contract.get("decision_scope", "tactical_bounded"),
+        "selection_type": contract.get("selection_type", "probe"),
+        "candidate_fates": contract.get("candidate_fates", []),
+        "outcome_response": contract.get("outcome_response"),
         "planner_may_change_mission": False,
         "delivery_authority_granted": False,
     }
@@ -1059,6 +1260,7 @@ def record_mission_outcome(
         "status": status,
         "observation": observation,
         "attribution": "unresolved",
+        "evidence_source_type": "implementer_claim",
         "may_rewrite_prior_history": False,
     }
 
@@ -1317,6 +1519,11 @@ def run_chat(
                         observation_context(latest_observation),
                         ensure_ascii=False,
                     )
+                    + "\n\nOpen outcome evidence gates:\n"
+                    + json.dumps(
+                        mission_store.open_outcome_gates(),
+                        ensure_ascii=False,
+                    )
                 )
                 result = run_cognition_cycle(
                     provider=provider,
@@ -1392,9 +1599,13 @@ def run_chat(
                 output.write("No pending mission draft to approve.\n")
                 continue
             contract = mission_store.load_contract(mission_id)
-            result = approve_mission(
-                palamedes_module, mission_store, contract, active_session
-            )
+            try:
+                result = approve_mission(
+                    palamedes_module, mission_store, contract, active_session
+                )
+            except ValueError as exc:
+                output.write(f"Mission approval blocked: {exc}\n")
+                continue
             store.append(
                 active_session,
                 {
@@ -1480,6 +1691,7 @@ def run_chat(
                 analysis_result = run_outcome_analyst(
                     provider=provider,
                     cycle_store=cognition_store,
+                    mission_store=mission_store,
                     contract=contract,
                     outcome=outcome,
                 )
@@ -1525,8 +1737,17 @@ def run_chat(
             if not remainder:
                 output.write(f"{command} requires a topic or context.\n")
                 continue
+            mission_context = remainder
+            if command == "/mission":
+                mission_context += (
+                    "\n\nOpen outcome evidence gates:\n"
+                    + json.dumps(
+                        mission_store.open_outcome_gates(),
+                        ensure_ascii=False,
+                    )
+                )
             user_content = (
-                mission_prompt(remainder)
+                mission_prompt(mission_context)
                 if command == "/mission"
                 else f"{CHAT_COMMANDS[command]}\n\nUser context:\n{remainder}"
             )

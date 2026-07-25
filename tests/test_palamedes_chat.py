@@ -110,9 +110,29 @@ class StaticChatProvider:
                     "decision": "select",
                     "selected_candidate_id": "candidate-1",
                     "selection_reason": "It creates the most informative reversible comparison.",
-                    "rejected_alternatives": [
-                        {"candidate_id": "candidate-2", "reason": "Less causal"},
-                        {"candidate_id": "candidate-3", "reason": "Higher cost"},
+                    "causal_role": "originated",
+                    "decision_scope": "tactical_bounded",
+                    "implementation_state_at_start": "not_started",
+                    "selection_type": "probe",
+                    "candidate_fates": [
+                        {
+                            "candidate_id": "candidate-1",
+                            "fate": "selected",
+                            "reason": "Most informative",
+                            "reopen_condition": "",
+                        },
+                        {
+                            "candidate_id": "candidate-2",
+                            "fate": "deferred",
+                            "reason": "Less causal",
+                            "reopen_condition": "Probe one fails",
+                        },
+                        {
+                            "candidate_id": "candidate-3",
+                            "fate": "rejected",
+                            "reason": "Higher cost",
+                            "reopen_condition": "",
+                        },
                     ],
                     "decisive_assumptions": ["Blinded review can distinguish action quality"],
                     "reversal_triggers": ["Control consistently wins"],
@@ -351,6 +371,121 @@ class PalamedesChatTests(unittest.TestCase):
             ],
         )
         self.assertIn("Outcome analyst completed", output.getvalue())
+
+    def test_completed_work_is_classified_as_audit_not_origination(self):
+        class RetrospectiveOriginClaimProvider(StaticChatProvider):
+            def stream(self, messages):
+                if "ROLE: selector" in messages[-1]["content"]:
+                    payload = json.loads("".join(super().stream(messages)))
+                    payload["implementation_state_at_start"] = "completed"
+                    payload["causal_role"] = "originated"
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = RetrospectiveOriginClaimProvider()
+            store = palamedes_chat.CognitionCycleStore(
+                fake.STATE_DIR / "missions" / "cognition"
+            )
+
+            with self.assertRaisesRegex(
+                ValueError, "completed work must be classified as audited"
+            ):
+                palamedes_chat.run_cognition_cycle(
+                    provider=provider,
+                    palamedes_module=fake,
+                    context="Audit an implementation that is already complete",
+                    cycle_store=store,
+                )
+
+            cycle = json.loads(next(store.root.glob("*.json")).read_text())
+
+        self.assertEqual(cycle["status"], "failed")
+        self.assertEqual(cycle["live_model_call_count"], 3)
+
+    def test_revise_outcome_blocks_unanswered_next_mission(self):
+        class ReviseProvider(StaticChatProvider):
+            def stream(self, messages):
+                if "ROLE: outcome_analyst" in messages[-1]["content"]:
+                    self.calls.append(messages)
+                    yield json.dumps(
+                        {
+                            "observed_vs_expected": "The result exposed a missing check.",
+                            "attribution_hypotheses": [
+                                {
+                                    "layer": "mission",
+                                    "claim": "The acceptance contract was incomplete",
+                                    "confidence": 70,
+                                }
+                            ],
+                            "belief_updates": ["Repair the contract before expansion"],
+                            "mission_disposition": "revise",
+                            "next_probe": "Add the missing comparison",
+                            "confidence": 70,
+                        }
+                    )
+                    return
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                provider = ReviseProvider()
+                mission_store = palamedes_chat.MissionStore(
+                    isolated.STATE_DIR / "missions"
+                )
+                cycle_store = palamedes_chat.CognitionCycleStore(
+                    isolated.STATE_DIR / "missions" / "cognition"
+                )
+                result = palamedes_chat.run_cognition_cycle(
+                    provider=provider,
+                    palamedes_module=isolated,
+                    context="Choose a bounded proof",
+                    cycle_store=cycle_store,
+                )
+                approved = palamedes_chat.approve_mission(
+                    isolated, mission_store, result["contract"], "gate-test"
+                )["contract"]
+                outcome = palamedes_chat.record_mission_outcome(
+                    isolated,
+                    mission_store,
+                    approved,
+                    "mixed",
+                    "The implementation passed but the comparison is missing",
+                )
+                palamedes_chat.run_outcome_analyst(
+                    provider=provider,
+                    cycle_store=cycle_store,
+                    mission_store=mission_store,
+                    contract=approved,
+                    outcome=outcome,
+                )
+
+                unanswered = palamedes_chat.validate_mission_draft(
+                    StaticChatProvider._mission_payload()
+                )
+                with self.assertRaisesRegex(
+                    ValueError, "blocked by unresolved outcome evidence"
+                ):
+                    palamedes_chat.approve_mission(
+                        isolated, mission_store, unanswered, "gate-test"
+                    )
+
+                response_payload = StaticChatProvider._mission_payload()
+                response_payload["mission"] = "Resolve the missing comparison evidence"
+                response_payload["outcome_response"] = {
+                    "related_outcome_ids": [outcome["outcome_id"]],
+                    "action": "resolve",
+                    "rationale": "The next probe directly adds the missing comparison.",
+                }
+                response = palamedes_chat.validate_mission_draft(response_payload)
+                palamedes_chat.approve_mission(
+                    isolated, mission_store, response, "gate-test"
+                )
+
+        self.assertEqual(mission_store.open_outcome_gates(), [])
 
     def test_cycle_failure_preserves_partial_artifacts_without_mission(self):
         class FailingAdversaryProvider(StaticChatProvider):

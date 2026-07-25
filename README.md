@@ -661,6 +661,7 @@ adversary
       ↓ frozen artifact
 selector
   select / defer / reject from frozen candidates only
+  + causal role, authority scope, selection type, and every candidate's fate
       ↓
 schema-validated mission draft
 
@@ -668,6 +669,7 @@ actual /outcome
       ↓
 outcome analyst
   observed-vs-expected + separated attribution + belief update
+  + an operational evidence gate when disposition is not continue
 ```
 
 The four pre-outcome roles are separate provider calls even when one model
@@ -684,6 +686,22 @@ appended to `.palamedes/missions/outcomes.jsonl`; role artifacts live under
 `.palamedes/missions/cognition/`. Repeating `/approve` cannot approve a contract
 that has already left `draft` status. Outcome attribution is recorded as
 unresolved first and only then examined by the outcome analyst.
+
+A cycle cannot claim that it originated work already marked complete: completed
+work must be classified as an `audited` cycle with `audit_only` scope. Selection
+also distinguishes an exclusive decision from sequencing, conditional,
+portfolio, and probe decisions, so an unselected candidate is not silently
+treated as permanently rejected. Every frozen candidate receives a persisted
+fate and reason.
+
+`revise`, `stop`, and `insufficient_evidence` outcome dispositions create an
+open record in `.palamedes/missions/outcome-gates.jsonl`. A later mission cannot
+be approved until its `outcome_response` names each open outcome and declares
+whether it resolves the evidence gap, is genuinely independent, or consciously
+carries the debt. This makes outcome analysis constrain the next action rather
+than serving as commentary only. User-entered `/outcome` observations are
+labelled `implementer_claim`; they do not become independent evidence merely
+because Palamedes recorded them.
 
 The first 5 to 10 minutes should produce:
 

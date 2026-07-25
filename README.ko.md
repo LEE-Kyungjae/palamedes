@@ -329,6 +329,7 @@ adversary
       ↓ 동결된 산출물
 selector
   동결된 후보만 선택 / 보류 / 거부
+  + 인과 역할, 권한 범위, 선택 유형, 모든 후보의 후속 상태
       ↓
 스키마 검증된 미션 초안
 
@@ -336,7 +337,23 @@ selector
       ↓
 outcome analyst
   예상 대 관찰 + 원인 분리 + 믿음 갱신
+  + continue가 아니면 다음 승인을 제약하는 evidence gate
 ```
+
+완료된 구현을 뒤늦게 평가한 사이클은 미션을 `originated`했다고 기록할
+수 없다. `implementation_state_at_start=completed`이면 반드시
+`causal_role=audited`, `decision_scope=audit_only`여야 한다. 또한 선택은
+`exclusive`, `sequencing`, `conditional`, `portfolio`, `probe`를 구분하고,
+모든 후보에 선택·거부·보류·조건부·대기 상태와 이유를 남긴다. 따라서
+“이번에 고르지 않음”이 자동으로 “영구 폐기”로 둔갑하지 않는다.
+
+outcome analyst가 `revise`, `stop`, `insufficient_evidence`를 내리면
+`.palamedes/missions/outcome-gates.jsonl`에 열린 제약이 생성된다. 다음
+미션은 `outcome_response`로 각 결과를 지목하고 증거 공백을 해결하는지,
+독립적인 미션인지, 또는 부채를 의식적으로 감수하는지 설명해야 승인된다.
+따라서 outcome은 단순 의견이 아니라 다음 행동에 영향을 준다. 사용자가
+`/outcome`으로 입력한 관측은 `implementer_claim`으로 표시되며, 기록됐다는
+이유만으로 독립 증거가 되지는 않는다.
 
 ## 핵심 계획 CLI
 
