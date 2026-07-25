@@ -42,42 +42,140 @@ class StaticChatProvider:
 
     def stream(self, messages):
         self.calls.append(messages)
+        prompt = messages[-1]["content"]
+        if "ROLE: interpreter" in prompt:
+            yield json.dumps(
+                {
+                    "observations": ["The current product claim needs external proof"],
+                    "interpretations": [
+                        {
+                            "interpretation_id": "frame-1",
+                            "frame": "The missing proof is causal",
+                            "mechanism": "Compare action choices",
+                            "would_lose_if": "Prose ratings predict outcomes",
+                        },
+                        {
+                            "interpretation_id": "frame-2",
+                            "frame": "The missing proof is operational",
+                            "mechanism": "Measure retired human labor",
+                            "would_lose_if": "No labor is retired",
+                        },
+                    ],
+                    "tensions": ["Quality and autonomy may diverge"],
+                    "missing_evidence": ["Equal-budget outcome comparison"],
+                }
+            )
+            return
+        if "ROLE: inventor" in prompt:
+            yield json.dumps(
+                {
+                    "candidates": [
+                        {
+                            "candidate_id": f"candidate-{index}",
+                            "mission": f"Test mission mechanism {index}",
+                            "source_interpretation_id": "frame-1" if index < 3 else "frame-2",
+                            "beneficiary": "Project owner",
+                            "causal_thesis": f"Mechanism {index} improves the next action",
+                            "success_metric": f"Action quality threshold {index}",
+                            "early_falsifier": f"No decision change in arm {index}",
+                            "next_probe": f"Run paired probe {index}",
+                        }
+                        for index in range(1, 4)
+                    ]
+                }
+            )
+            return
+        if "ROLE: adversary" in prompt:
+            yield json.dumps(
+                {
+                    "critiques": [
+                        {
+                            "candidate_id": f"candidate-{index}",
+                            "fatal_risks": [f"Hidden confound {index}"],
+                            "repairable_risks": ["Blind the evaluator"],
+                            "disqualifying": False,
+                        }
+                        for index in range(1, 4)
+                    ],
+                    "shared_assumptions": ["The chosen metric reflects decision quality"],
+                    "missing_opposition": ["A strong one-shot agent baseline"],
+                    "minimum_disconfirming_probe": "Run one blinded equal-budget pair",
+                }
+            )
+            return
+        if "ROLE: selector" in prompt:
+            yield json.dumps(
+                {
+                    "decision": "select",
+                    "selected_candidate_id": "candidate-1",
+                    "selection_reason": "It creates the most informative reversible comparison.",
+                    "rejected_alternatives": [
+                        {"candidate_id": "candidate-2", "reason": "Less causal"},
+                        {"candidate_id": "candidate-3", "reason": "Higher cost"},
+                    ],
+                    "decisive_assumptions": ["Blinded review can distinguish action quality"],
+                    "reversal_triggers": ["Control consistently wins"],
+                    "mission_contract": self._mission_payload(),
+                }
+            )
+            return
+        if "ROLE: outcome_analyst" in prompt:
+            yield json.dumps(
+                {
+                    "observed_vs_expected": "The traceable result matched the forecast.",
+                    "attribution_hypotheses": [
+                        {
+                            "layer": "mission",
+                            "claim": "Mission framing contributed to traceability",
+                            "confidence": 60,
+                        }
+                    ],
+                    "belief_updates": ["Approval lineage is operationally observable"],
+                    "mission_disposition": "continue",
+                    "next_probe": "Run an equal-budget control",
+                    "confidence": 60,
+                }
+            )
+            return
         if "Required shape:" in messages[-1]["content"]:
-            payload = {
-                "mission": "Prove that one mission improves the next action",
-                "rationale": "The product claim currently lacks an approved vertical slice.",
-                "success_metric": "One outcome is recorded against an approved mission",
-                "deadline": "7 days",
-                "evidence": [
-                    {
-                        "claim": "The user requested a mission approval flow",
-                        "source": "user",
-                        "confidence": 90,
-                    }
-                ],
-                "hypotheses": [
-                    {
-                        "hypothesis": "Explicit approval prevents silent authority expansion",
-                        "metric": "unapproved plan mutations",
-                        "target": "0",
-                        "window": "one mission cycle",
-                    }
-                ],
-                "falsifiers": ["The plan changes before /approve"],
-                "non_goals": ["Execute delivery tasks"],
-                "constraints": ["Plan-only authority"],
-                "next_probe": {
-                    "step": "Run one approved mission cycle",
-                    "expected_learning": "Whether the state transition is traceable",
-                    "expected_result": "One linked handoff and outcome record",
-                },
-                "planner_brief": "Plan the smallest traceable mission experiment.",
-                "uncertainty": 35,
-            }
-            yield json.dumps(payload)
+            yield json.dumps(self._mission_payload())
             return
         yield "A falsifiable "
         yield "mission."
+
+    @staticmethod
+    def _mission_payload():
+        return {
+            "mission": "Prove that one mission improves the next action",
+            "rationale": "The product claim currently lacks an approved vertical slice.",
+            "success_metric": "One outcome is recorded against an approved mission",
+            "deadline": "7 days",
+            "evidence": [
+                {
+                    "claim": "The user requested a mission approval flow",
+                    "source": "user",
+                    "confidence": 90,
+                }
+            ],
+            "hypotheses": [
+                {
+                    "hypothesis": "Explicit approval prevents silent authority expansion",
+                    "metric": "unapproved plan mutations",
+                    "target": "0",
+                    "window": "one mission cycle",
+                }
+            ],
+            "falsifiers": ["The plan changes before /approve"],
+            "non_goals": ["Execute delivery tasks"],
+            "constraints": ["Plan-only authority"],
+            "next_probe": {
+                "step": "Run one approved mission cycle",
+                "expected_learning": "Whether the state transition is traceable",
+                "expected_result": "One linked handoff and outcome record",
+            },
+            "planner_brief": "Plan the smallest traceable mission experiment.",
+            "uncertainty": 35,
+        }
 
 
 class PalamedesIsolation:
@@ -206,6 +304,87 @@ class PalamedesChatTests(unittest.TestCase):
 
         self.assertIn("[mission validation error]", output.getvalue())
         self.assertIn("No pending mission draft to approve.", output.getvalue())
+
+    def test_independent_cognition_cycle_and_post_outcome_analysis(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                provider = StaticChatProvider()
+                output = io.StringIO()
+                palamedes_chat.run_chat(
+                    palamedes_module=isolated,
+                    provider=provider,
+                    session_id="cognition",
+                    input_stream=io.StringIO(
+                        "/cycle find a mission worth planning\n"
+                        "/approve\n"
+                        "/outcome success The selected probe matched its forecast\n"
+                        "/quit\n"
+                    ),
+                    output=output,
+                )
+                cycle_path = next(
+                    (isolated.STATE_DIR / "missions" / "cognition").glob("cycle-*.json")
+                )
+                cycle = json.loads(cycle_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            [item["role"] for item in cycle["artifacts"]],
+            ["interpreter", "inventor", "adversary", "selector"],
+        )
+        self.assertEqual(len(cycle["outcome_analyses"]), 1)
+        self.assertEqual(
+            cycle["outcome_analyses"][0]["role"], "outcome_analyst"
+        )
+        self.assertEqual(cycle["live_model_call_count"], 5)
+        self.assertFalse(cycle["outcome_analyst_runs_before_outcome"])
+        self.assertEqual(
+            [call[-1]["content"].splitlines()[0] for call in provider.calls],
+            [
+                "ROLE: interpreter",
+                "ROLE: inventor",
+                "ROLE: adversary",
+                "ROLE: selector",
+                "ROLE: outcome_analyst",
+            ],
+        )
+        self.assertIn("Outcome analyst completed", output.getvalue())
+
+    def test_cycle_failure_preserves_partial_artifacts_without_mission(self):
+        class FailingAdversaryProvider(StaticChatProvider):
+            def stream(self, messages):
+                if "ROLE: adversary" in messages[-1]["content"]:
+                    self.calls.append(messages)
+                    yield '{"critiques":[]}'
+                    return
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = FailingAdversaryProvider()
+            output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=provider,
+                session_id="failed-cycle",
+                input_stream=io.StringIO("/cycle pressure the current direction\n/quit\n"),
+                output=output,
+            )
+            cycle_path = next(
+                (fake.STATE_DIR / "missions" / "cognition").glob("cycle-*.json")
+            )
+            cycle = json.loads(cycle_path.read_text(encoding="utf-8"))
+            mission_files = list(
+                (fake.STATE_DIR / "missions").glob("mission-*.json")
+            )
+
+        self.assertEqual(cycle["status"], "failed")
+        self.assertEqual(
+            [item["role"] for item in cycle["artifacts"]],
+            ["interpreter", "inventor"],
+        )
+        self.assertEqual(mission_files, [])
+        self.assertIn("no mission draft was issued", output.getvalue())
 
     def test_new_session_does_not_overwrite_previous_history(self):
         with tempfile.TemporaryDirectory() as tempdir:

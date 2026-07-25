@@ -453,6 +453,7 @@ palamedes> /think What important question are we failing to ask?
 palamedes> /challenge Our current product direction
 palamedes> /research What evidence is missing before commitment?
 palamedes> /mission Produce the strongest mission worth planning
+palamedes> /cycle Find a mission through independent cognitive pressure
 palamedes> /preview
 palamedes> /approve
 palamedes> /handoff
@@ -465,6 +466,7 @@ Available commands:
 - `/challenge`: attack assumptions and state falsifiers
 - `/research`: identify the minimum missing external evidence
 - `/mission`: generate and validate a structured draft without changing the plan
+- `/cycle`: run independent interpreter, inventor, adversary, and selector calls
 - `/preview`: inspect the latest pending mission contract
 - `/approve`: project the draft into plan, evidence, hypotheses, and a probe
 - `/reject`: preserve and reject a draft with an explicit reason
@@ -496,11 +498,43 @@ Mission authority follows an explicit vertical contract:
   -> append-only outcome + linked state update
 ```
 
+`/cycle` adds the full pre-planning cognition path:
+
+```text
+interpreter
+  observations + rival frames
+      ↓ frozen artifact
+inventor
+  three or more competing missions; no selection authority
+      ↓ frozen artifact
+adversary
+  candidate attacks + shared-assumption pressure; no selection authority
+      ↓ frozen artifact
+selector
+  select / defer / reject from frozen candidates only
+      ↓
+schema-validated mission draft
+
+actual /outcome
+      ↓
+outcome analyst
+  observed-vs-expected + separated attribution + belief update
+```
+
+The four pre-outcome roles are separate provider calls even when one model
+performs every role. Each artifact records its role, call index, provider,
+model, prompt fingerprint, output fingerprint, and completion time. Partial
+artifacts survive a later-role failure, but no mission is issued. The fifth
+role, outcome analyst, cannot run until an observed outcome has been appended.
+Therefore one successful `/cycle` uses four model calls, with one additional
+call for each analyzed `/outcome`.
+
 Drafts and approved contracts live under `.palamedes/missions/`; planner
 handoffs live under `.palamedes/missions/handoffs/`; returned outcomes are
-appended to `.palamedes/missions/outcomes.jsonl`. Repeating `/approve` cannot
-approve a contract that has already left `draft` status. Outcome attribution is
-recorded as unresolved rather than inferred from success or failure text.
+appended to `.palamedes/missions/outcomes.jsonl`; role artifacts live under
+`.palamedes/missions/cognition/`. Repeating `/approve` cannot approve a contract
+that has already left `draft` status. Outcome attribution is recorded as
+unresolved first and only then examined by the outcome analyst.
 
 The first 5 to 10 minutes should produce:
 

@@ -261,9 +261,397 @@ class MissionStore:
             handle.write(json.dumps(outcome, ensure_ascii=False, sort_keys=True) + "\n")
 
 
+class CognitionCycleStore:
+    def __init__(self, root: Path) -> None:
+        self.root = root
+
+    def path(self, cycle_id: str) -> Path:
+        if not re.fullmatch(r"cycle-[a-f0-9]{12}", cycle_id):
+            raise ValueError("invalid cognition cycle ID")
+        return self.root / f"{cycle_id}.json"
+
+    def save(self, cycle: Dict[str, Any]) -> Path:
+        path = self.path(cycle["cognition_cycle_id"])
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(".json.tmp")
+        temporary.write_text(
+            json.dumps(cycle, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(path)
+        return path
+
+    def load(self, cycle_id: str) -> Dict[str, Any]:
+        path = self.path(cycle_id)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("cognition cycle must be an object")
+        return payload
+
+
 def _fingerprint(payload: Dict[str, Any]) -> str:
     encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _provider_json(
+    provider: ChatProvider,
+    *,
+    system: str,
+    prompt: str,
+) -> Dict[str, Any]:
+    raw = "".join(
+        provider.stream(
+            [
+                {"role": "system", "content": system},
+                {"role": "user", "content": prompt},
+            ]
+        )
+    )
+    return _extract_json_object(raw)
+
+
+def _non_empty_string_array(payload: Dict[str, Any], field: str) -> List[str]:
+    value = payload.get(field)
+    if not isinstance(value, list) or not value or not all(
+        isinstance(item, str) and item.strip() for item in value
+    ):
+        raise ValueError(f"{field} must be a non-empty string array")
+    return [item.strip() for item in value]
+
+
+def _role_artifact(
+    *,
+    role: str,
+    call_index: int,
+    prompt: str,
+    output: Dict[str, Any],
+    provider: ChatProvider,
+) -> Dict[str, Any]:
+    return {
+        "role": role,
+        "call_index": call_index,
+        "provider": provider.provider_name,
+        "model": provider.model,
+        "completed_at": utc_now(),
+        "prompt_fingerprint": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+        "output_fingerprint": _fingerprint(output),
+        "output": output,
+    }
+
+
+def run_cognition_cycle(
+    *,
+    provider: ChatProvider,
+    palamedes_module: Any,
+    context: str,
+    cycle_store: CognitionCycleStore,
+) -> Dict[str, Any]:
+    seed = {
+        "context": context,
+        "plan_context": json.loads(_plan_context(palamedes_module)),
+        "started_at": utc_now(),
+    }
+    cycle_id = f"cycle-{_fingerprint(seed)[:12]}"
+    cycle: Dict[str, Any] = {
+        "cognition_cycle_version": "palamedes-cognition-cycle/1",
+        "cognition_cycle_id": cycle_id,
+        "status": "running",
+        "context": context,
+        "started_at": seed["started_at"],
+        "provider": provider.provider_name,
+        "model": provider.model,
+        "role_order": ["interpreter", "inventor", "adversary", "selector", "outcome_analyst"],
+        "artifacts": [],
+        "outcome_analyses": [],
+        "selection_authority_role": "selector",
+        "outcome_analyst_runs_before_outcome": False,
+    }
+    cycle_store.save(cycle)
+    system = (
+        "You are one bounded cognitive role inside Palamedes. Return exactly one "
+        "JSON object. Do not perform another role's job and do not claim external evidence."
+    )
+    try:
+        interpreter_prompt = f"""ROLE: interpreter
+Separate observation from inference and preserve rival frames.
+Return:
+{{
+  "observations": ["claims actually present in user or plan context"],
+  "interpretations": [
+    {{"interpretation_id":"frame-1","frame":"...","mechanism":"...","would_lose_if":"..."}}
+  ],
+  "tensions": ["..."],
+  "missing_evidence": ["..."]
+}}
+Require at least two interpretations.
+
+User context: {context}
+Plan context: {_plan_context(palamedes_module)}"""
+        interpreter = _provider_json(
+            provider, system=system, prompt=interpreter_prompt
+        )
+        _non_empty_string_array(interpreter, "observations")
+        _non_empty_string_array(interpreter, "tensions")
+        _non_empty_string_array(interpreter, "missing_evidence")
+        interpretations = interpreter.get("interpretations")
+        if not isinstance(interpretations, list) or len(interpretations) < 2:
+            raise ValueError("interpreter requires at least two interpretations")
+        cycle["artifacts"].append(
+            _role_artifact(
+                role="interpreter",
+                call_index=1,
+                prompt=interpreter_prompt,
+                output=interpreter,
+                provider=provider,
+            )
+        )
+        cycle_store.save(cycle)
+
+        inventor_prompt = f"""ROLE: inventor
+Generate at least three competing outcome-level missions from distinct frames.
+Do not select a winner and do not criticize candidates.
+Return:
+{{
+  "candidates": [
+    {{
+      "candidate_id":"candidate-1",
+      "mission":"...",
+      "source_interpretation_id":"frame-1",
+      "beneficiary":"...",
+      "causal_thesis":"...",
+      "success_metric":"...",
+      "early_falsifier":"...",
+      "next_probe":"..."
+    }}
+  ]
+}}
+
+Interpreter artifact:
+{json.dumps(interpreter, ensure_ascii=False)}"""
+        inventor = _provider_json(provider, system=system, prompt=inventor_prompt)
+        candidates = inventor.get("candidates")
+        if not isinstance(candidates, list) or len(candidates) < 3:
+            raise ValueError("inventor requires at least three candidates")
+        candidate_ids = []
+        for item in candidates:
+            if not isinstance(item, dict):
+                raise ValueError("each candidate must be an object")
+            candidate_id = str(item.get("candidate_id", "")).strip()
+            for field in (
+                "mission",
+                "source_interpretation_id",
+                "beneficiary",
+                "causal_thesis",
+                "success_metric",
+                "early_falsifier",
+                "next_probe",
+            ):
+                if not str(item.get(field, "")).strip():
+                    raise ValueError(f"candidate {candidate_id or '?'} missing {field}")
+            candidate_ids.append(candidate_id)
+        if len(set(candidate_ids)) != len(candidate_ids) or not all(candidate_ids):
+            raise ValueError("candidate IDs must be non-empty and unique")
+        cycle["artifacts"].append(
+            _role_artifact(
+                role="inventor",
+                call_index=2,
+                prompt=inventor_prompt,
+                output=inventor,
+                provider=provider,
+            )
+        )
+        cycle_store.save(cycle)
+
+        adversary_prompt = f"""ROLE: adversary
+Attack every candidate, shared assumptions, proxy risks, hidden harms, owner bias,
+and Palamedes self-expansion. Do not select a winner or rewrite candidates.
+Return:
+{{
+  "critiques": [
+    {{"candidate_id":"candidate-1","fatal_risks":["..."],"repairable_risks":["..."],"disqualifying":false}}
+  ],
+  "shared_assumptions": ["..."],
+  "missing_opposition": ["..."],
+  "minimum_disconfirming_probe": "..."
+}}
+Every candidate ID must have exactly one critique.
+
+Interpreter:
+{json.dumps(interpreter, ensure_ascii=False)}
+Candidates:
+{json.dumps(inventor, ensure_ascii=False)}"""
+        adversary = _provider_json(provider, system=system, prompt=adversary_prompt)
+        critiques = adversary.get("critiques")
+        if not isinstance(critiques, list):
+            raise ValueError("adversary critiques must be an array")
+        critiqued_ids = [
+            str(item.get("candidate_id", "")).strip()
+            for item in critiques
+            if isinstance(item, dict)
+        ]
+        if sorted(critiqued_ids) != sorted(candidate_ids):
+            raise ValueError("adversary must critique every candidate exactly once")
+        _non_empty_string_array(adversary, "shared_assumptions")
+        _non_empty_string_array(adversary, "missing_opposition")
+        if not str(adversary.get("minimum_disconfirming_probe", "")).strip():
+            raise ValueError("adversary requires minimum_disconfirming_probe")
+        cycle["artifacts"].append(
+            _role_artifact(
+                role="adversary",
+                call_index=3,
+                prompt=adversary_prompt,
+                output=adversary,
+                provider=provider,
+            )
+        )
+        cycle_store.save(cycle)
+
+        selector_prompt = f"""ROLE: selector
+Select, defer, or reject from the frozen candidates and critiques. You may not
+invent a new candidate. Then compile the selected candidate into the exact
+mission draft shape below. If evidence is weak, select an information-producing
+probe and preserve uncertainty.
+Return:
+{{
+  "decision":"select|defer|reject",
+  "selected_candidate_id":"candidate-1 or empty when not selected",
+  "selection_reason":"...",
+  "rejected_alternatives":[{{"candidate_id":"...","reason":"..."}}],
+  "decisive_assumptions":["..."],
+  "reversal_triggers":["..."],
+  "mission_contract": {mission_prompt("Use the frozen artifacts").split("Required shape:", 1)[1].split("Do not invent", 1)[0].strip()}
+}}
+Only decision=select may contain a mission_contract.
+
+Candidates:
+{json.dumps(inventor, ensure_ascii=False)}
+Adversary:
+{json.dumps(adversary, ensure_ascii=False)}"""
+        selector = _provider_json(provider, system=system, prompt=selector_prompt)
+        decision = selector.get("decision")
+        if decision not in {"select", "defer", "reject"}:
+            raise ValueError("selector decision must be select, defer, or reject")
+        _non_empty_string_array(selector, "decisive_assumptions")
+        _non_empty_string_array(selector, "reversal_triggers")
+        selected_id = str(selector.get("selected_candidate_id", "")).strip()
+        if decision == "select" and selected_id not in candidate_ids:
+            raise ValueError("selector must select a frozen candidate ID")
+        if decision != "select" and selected_id:
+            raise ValueError("defer or reject cannot name a selected candidate")
+        cycle["artifacts"].append(
+            _role_artifact(
+                role="selector",
+                call_index=4,
+                prompt=selector_prompt,
+                output=selector,
+                provider=provider,
+            )
+        )
+        cycle["decision"] = decision
+        cycle["selected_candidate_id"] = selected_id
+        cycle["status"] = "selected" if decision == "select" else decision
+        cycle["completed_at"] = utc_now()
+        cycle["live_model_call_count"] = 4
+        cycle["role_output_fingerprints_unique"] = (
+            len({item["output_fingerprint"] for item in cycle["artifacts"]}) == 4
+        )
+        contract = None
+        if decision == "select":
+            raw_contract = selector.get("mission_contract")
+            if not isinstance(raw_contract, dict):
+                raise ValueError("selected cycle requires mission_contract")
+            contract = validate_mission_draft(raw_contract)
+            contract["cognition_cycle_id"] = cycle_id
+            contract["selected_candidate_id"] = selected_id
+            contract["role_lineage"] = [
+                {
+                    "role": item["role"],
+                    "output_fingerprint": item["output_fingerprint"],
+                }
+                for item in cycle["artifacts"]
+            ]
+        cycle_store.save(cycle)
+        return {"cycle": cycle, "contract": contract}
+    except Exception as exc:
+        cycle["status"] = "failed"
+        cycle["failed_at"] = utc_now()
+        cycle["failure"] = str(exc)
+        cycle["live_model_call_count"] = len(cycle["artifacts"])
+        cycle_store.save(cycle)
+        raise
+
+
+def run_outcome_analyst(
+    *,
+    provider: ChatProvider,
+    cycle_store: CognitionCycleStore,
+    contract: Dict[str, Any],
+    outcome: Dict[str, Any],
+) -> Dict[str, Any]:
+    cycle_id = str(contract.get("cognition_cycle_id", "")).strip()
+    if not cycle_id:
+        return {"status": "not_applicable", "reason": "mission has no cognition cycle"}
+    cycle = cycle_store.load(cycle_id)
+    prompt = f"""ROLE: outcome_analyst
+An outcome now exists. Compare it with the frozen mission forecast without
+rewriting prior artifacts. Separate mission, planning, implementation,
+environment, and measurement attribution.
+Return exactly:
+{{
+  "observed_vs_expected":"...",
+  "attribution_hypotheses":[{{"layer":"mission|planning|implementation|environment|measurement","claim":"...","confidence":0}}],
+  "belief_updates":["..."],
+  "mission_disposition":"continue|revise|stop|insufficient_evidence",
+  "next_probe":"...",
+  "confidence":0
+}}
+
+Frozen cycle:
+{json.dumps(cycle, ensure_ascii=False)}
+Mission contract:
+{json.dumps(contract, ensure_ascii=False)}
+Observed outcome:
+{json.dumps(outcome, ensure_ascii=False)}"""
+    output = _provider_json(
+        provider,
+        system=(
+            "You are the outcome_analyst role. You may update beliefs but may "
+            "not rewrite frozen pre-outcome artifacts. Return one JSON object."
+        ),
+        prompt=prompt,
+    )
+    if not str(output.get("observed_vs_expected", "")).strip():
+        raise ValueError("outcome analyst requires observed_vs_expected")
+    _non_empty_string_array(output, "belief_updates")
+    if output.get("mission_disposition") not in {
+        "continue",
+        "revise",
+        "stop",
+        "insufficient_evidence",
+    }:
+        raise ValueError("invalid mission_disposition")
+    if not str(output.get("next_probe", "")).strip():
+        raise ValueError("outcome analyst requires next_probe")
+    confidence = output.get("confidence")
+    if not isinstance(confidence, int) or isinstance(confidence, bool) or not 0 <= confidence <= 100:
+        raise ValueError("outcome analyst confidence must be 0-100")
+    attributions = output.get("attribution_hypotheses")
+    if not isinstance(attributions, list) or not attributions:
+        raise ValueError("outcome analyst requires attribution_hypotheses")
+    analysis = _role_artifact(
+        role="outcome_analyst",
+        call_index=5 + len(cycle.get("outcome_analyses", [])),
+        prompt=prompt,
+        output=output,
+        provider=provider,
+    )
+    analysis["outcome_id"] = outcome["outcome_id"]
+    cycle.setdefault("outcome_analyses", []).append(analysis)
+    cycle["latest_mission_disposition"] = output["mission_disposition"]
+    cycle["live_model_call_count"] = 4 + len(cycle["outcome_analyses"])
+    cycle_store.save(cycle)
+    return {"status": "completed", "analysis": analysis}
 
 
 def _extract_json_object(text: str) -> Dict[str, Any]:
@@ -686,6 +1074,7 @@ def _print_help(output: TextIO) -> None:
                 "  /challenge <claim>   attack assumptions and define falsifiers",
                 "  /research <question> identify the minimum missing evidence",
                 "  /mission <context>   draft a mission contract",
+                "  /cycle <context>     run interpreter→inventor→adversary→selector",
                 "  /preview             inspect the latest mission draft",
                 "  /approve             persist the draft and create planner handoff",
                 "  /reject <reason>     reject the latest draft without rewriting it",
@@ -715,6 +1104,9 @@ def run_chat(
 ) -> int:
     store = ChatSessionStore(palamedes_module.STATE_DIR / "chat")
     mission_store = MissionStore(palamedes_module.STATE_DIR / "missions")
+    cognition_store = CognitionCycleStore(
+        palamedes_module.STATE_DIR / "missions" / "cognition"
+    )
     active_session = session_id
     workspace = Path(palamedes_module.ROOT)
     output.write("Palamedes Research Alpha\n")
@@ -761,6 +1153,83 @@ def run_chat(
                 if record.get("role") in {"user", "assistant"}
             ]
             output.write("\n".join(turns) + ("\n" if turns else "No turns.\n"))
+            continue
+        if text.startswith("/cycle"):
+            context = text[len("/cycle") :].strip()
+            if not context:
+                output.write("/cycle requires context.\n")
+                continue
+            store.append(
+                active_session,
+                {
+                    "ts": utc_now(),
+                    "role": "user",
+                    "content": text,
+                    "provider": provider.provider_name,
+                    "model": provider.model,
+                },
+            )
+            output.write(
+                "Running independent roles: interpreter → inventor → adversary → selector\n"
+            )
+            try:
+                result = run_cognition_cycle(
+                    provider=provider,
+                    palamedes_module=palamedes_module,
+                    context=context,
+                    cycle_store=cognition_store,
+                )
+            except (RuntimeError, ValueError) as exc:
+                output.write(f"[cognition cycle error] {exc}\n")
+                output.write("Partial role artifacts were preserved; no mission draft was issued.\n")
+                continue
+            cycle = result["cycle"]
+            store.append(
+                active_session,
+                {
+                    "ts": utc_now(),
+                    "type": "cognition_cycle",
+                    "cognition_cycle_id": cycle["cognition_cycle_id"],
+                    "status": cycle["status"],
+                    "decision": cycle["decision"],
+                    "role_count": len(cycle["artifacts"]),
+                },
+            )
+            contract = result["contract"]
+            if contract is None:
+                output.write(
+                    f"Cycle {cycle['cognition_cycle_id']} ended with "
+                    f"{cycle['decision']}; no mission draft was issued.\n"
+                )
+                continue
+            mission_store.save_contract(contract)
+            store.append(
+                active_session,
+                {
+                    "ts": utc_now(),
+                    "type": "mission_state",
+                    "mission_id": contract["mission_id"],
+                    "status": "draft",
+                    "contract_fingerprint": contract["contract_fingerprint"],
+                    "cognition_cycle_id": cycle["cognition_cycle_id"],
+                },
+            )
+            reply = (
+                f"Cognition cycle: {cycle['cognition_cycle_id']}\n"
+                f"Independent role calls: {len(cycle['artifacts'])}\n"
+                + render_mission(contract)
+            )
+            store.append(
+                active_session,
+                {
+                    "ts": utc_now(),
+                    "role": "assistant",
+                    "content": reply,
+                    "provider": provider.provider_name,
+                    "model": provider.model,
+                },
+            )
+            output.write(reply + "\n")
             continue
         if text == "/preview":
             records = store.load(active_session)
@@ -861,6 +1330,15 @@ def run_chat(
             except ValueError as exc:
                 output.write(f"{exc}\n")
                 continue
+            try:
+                analysis_result = run_outcome_analyst(
+                    provider=provider,
+                    cycle_store=cognition_store,
+                    contract=contract,
+                    outcome=outcome,
+                )
+            except (RuntimeError, ValueError) as exc:
+                analysis_result = {"status": "failed", "reason": str(exc)}
             store.append(
                 active_session,
                 {
@@ -870,12 +1348,28 @@ def run_chat(
                     "status": "outcome_recorded",
                     "outcome_id": outcome["outcome_id"],
                     "outcome_status": status,
+                    "outcome_analysis_status": analysis_result["status"],
                 },
             )
             output.write(
                 f"Outcome recorded: {outcome['outcome_id']} ({status})\n"
-                "Attribution remains unresolved until separately evaluated.\n"
             )
+            if analysis_result["status"] == "completed":
+                disposition = analysis_result["analysis"]["output"][
+                    "mission_disposition"
+                ]
+                output.write(
+                    f"Outcome analyst completed: disposition={disposition}\n"
+                )
+            elif analysis_result["status"] == "not_applicable":
+                output.write(
+                    "Attribution remains unresolved: this mission predates a cognition cycle.\n"
+                )
+            else:
+                output.write(
+                    f"Outcome was preserved, but outcome analyst failed: "
+                    f"{analysis_result.get('reason', 'unknown error')}\n"
+                )
             continue
 
         user_content = text
