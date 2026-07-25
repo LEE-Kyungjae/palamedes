@@ -276,6 +276,17 @@ class PalamedesWatchTests(unittest.TestCase):
         from palamedes_thought import ThoughtStore
         from tests.test_palamedes_chat import StaticChatProvider
 
+        class DiscoveryAwareProvider(StaticChatProvider):
+            def stream(self, messages):
+                if "ROLE: selector" in messages[-1]["content"]:
+                    payload = json.loads("".join(super().stream(messages)))
+                    payload["source_discovery_ids"] = [
+                        "discovery-123456789abc"
+                    ]
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
         current = snapshot(
             "git_head_changed",
             "document_set_or_content_changed",
@@ -309,7 +320,7 @@ class PalamedesWatchTests(unittest.TestCase):
             wake = palamedes_watch.execute_wake(
                 policy=palamedes_watch.select_wake_policy(current),
                 snapshot=current,
-                provider=StaticChatProvider(),
+                provider=DiscoveryAwareProvider(),
                 palamedes_module=fake,
             )
             contract_path = next(

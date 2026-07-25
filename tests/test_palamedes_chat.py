@@ -422,6 +422,31 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertEqual(cycle["status"], "failed")
         self.assertEqual(cycle["live_model_call_count"], 3)
 
+    def test_selector_cannot_claim_an_unavailable_discovery(self):
+        class FalseLineageProvider(StaticChatProvider):
+            def stream(self, messages):
+                if "ROLE: selector" in messages[-1]["content"]:
+                    payload = json.loads("".join(super().stream(messages)))
+                    payload["source_discovery_ids"] = ["discovery-falseclaim"]
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            with self.assertRaisesRegex(
+                ValueError, "unavailable discovery ID"
+            ):
+                palamedes_chat.run_cognition_cycle(
+                    provider=FalseLineageProvider(),
+                    palamedes_module=fake,
+                    context="Select from available evidence",
+                    cycle_store=palamedes_chat.CognitionCycleStore(
+                        fake.STATE_DIR / "missions" / "cognition"
+                    ),
+                    available_discovery_ids={"discovery-real123456"},
+                )
+
     def test_revise_outcome_blocks_unanswered_next_mission(self):
         class ReviseProvider(StaticChatProvider):
             def stream(self, messages):

@@ -376,22 +376,12 @@ def execute_wake(
             cycle_store=CognitionCycleStore(
                 palamedes_module.STATE_DIR / "missions" / "cognition"
             ),
+            available_discovery_ids={
+                item["discovery_id"] for item in discoveries
+            },
         )
         contract = result["contract"]
         if contract:
-            source_discovery_ids = [
-                item["discovery_id"] for item in discoveries
-            ]
-            if source_discovery_ids:
-                contract["source_discovery_ids"] = source_discovery_ids
-                governed = {
-                    "prior_contract_fingerprint": contract["contract_fingerprint"],
-                    "source_discovery_ids": source_discovery_ids,
-                }
-                contract["contract_fingerprint"] = fingerprint(governed)
-                contract["mission_id"] = (
-                    f"mission-{contract['contract_fingerprint'][:12]}"
-                )
             MissionStore(palamedes_module.STATE_DIR / "missions").save_contract(
                 contract
             )

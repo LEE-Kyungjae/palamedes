@@ -464,7 +464,9 @@ def run_cognition_cycle(
     palamedes_module: Any,
     context: str,
     cycle_store: CognitionCycleStore,
+    available_discovery_ids: Optional[set] = None,
 ) -> Dict[str, Any]:
+    available_discovery_ids = available_discovery_ids or set()
     seed = {
         "context": context,
         "plan_context": json.loads(_plan_context(palamedes_module)),
@@ -643,6 +645,7 @@ Return:
   "decision_scope":"strategic_open|tactical_bounded|audit_only|integration",
   "implementation_state_at_start":"not_started|in_progress|completed|unknown",
   "selection_type":"exclusive|sequencing|conditional|portfolio|probe",
+  "source_discovery_ids":["only discovery IDs actually used, or empty"],
   "candidate_fates":[{{"candidate_id":"...","fate":"selected|rejected|deferred|conditional|queued","reason":"...","reopen_condition":"..."}}],
   "decisive_assumptions":["..."],
   "reversal_triggers":["..."],
@@ -701,6 +704,13 @@ Adversary:
             "probe",
         }:
             raise ValueError("selector requires a valid selection_type")
+        source_discovery_ids = selector.get("source_discovery_ids", [])
+        if not isinstance(source_discovery_ids, list) or not all(
+            isinstance(item, str) and item.strip() for item in source_discovery_ids
+        ):
+            raise ValueError("selector source_discovery_ids must be a string array")
+        if not set(source_discovery_ids).issubset(available_discovery_ids):
+            raise ValueError("selector cited an unavailable discovery ID")
         candidate_fates = selector.get("candidate_fates")
         if not isinstance(candidate_fates, list):
             raise ValueError("selector candidate_fates must be an array")
@@ -747,6 +757,7 @@ Adversary:
         cycle["decision_scope"] = decision_scope
         cycle["implementation_state_at_start"] = implementation_state
         cycle["selection_type"] = selection_type
+        cycle["source_discovery_ids"] = source_discovery_ids
         cycle["candidate_fates"] = candidate_fates
         cycle["status"] = "selected" if decision == "select" else decision
         cycle["completed_at"] = utc_now()
@@ -766,6 +777,8 @@ Adversary:
             contract["decision_scope"] = decision_scope
             contract["implementation_state_at_start"] = implementation_state
             contract["selection_type"] = selection_type
+            if source_discovery_ids:
+                contract["source_discovery_ids"] = source_discovery_ids
             contract["candidate_fates"] = candidate_fates
             contract["role_lineage"] = [
                 {
@@ -782,6 +795,7 @@ Adversary:
                     "decision_scope": decision_scope,
                     "implementation_state_at_start": implementation_state,
                     "selection_type": selection_type,
+                    "source_discovery_ids": source_discovery_ids,
                     "candidate_fates": candidate_fates,
                 }
             )
