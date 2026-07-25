@@ -1075,6 +1075,7 @@ def _print_help(output: TextIO) -> None:
                 "  /research <question> identify the minimum missing evidence",
                 "  /mission <context>   draft a mission contract",
                 "  /cycle <context>     run interpreter→inventor→adversary→selector",
+                "  /observe             collect project, Git, state, TODO, and ref signals",
                 "  /preview             inspect the latest mission draft",
                 "  /approve             persist the draft and create planner handoff",
                 "  /reject <reason>     reject the latest draft without rewriting it",
@@ -1107,6 +1108,7 @@ def run_chat(
     cognition_store = CognitionCycleStore(
         palamedes_module.STATE_DIR / "missions" / "cognition"
     )
+    latest_observation: Optional[Dict[str, Any]] = None
     active_session = session_id
     workspace = Path(palamedes_module.ROOT)
     output.write("Palamedes Research Alpha\n")
@@ -1154,6 +1156,30 @@ def run_chat(
             ]
             output.write("\n".join(turns) + ("\n" if turns else "No turns.\n"))
             continue
+        if text == "/observe":
+            from palamedes_observe import collect_observation, render_observation
+
+            ref_value = os.environ.get(
+                "PALAMEDES_REF_ROOT", "/Users/ze/work/ref"
+            ).strip()
+            latest_observation = collect_observation(
+                workspace,
+                ref_root=Path(ref_value).expanduser() if ref_value else None,
+            )
+            store.append(
+                active_session,
+                {
+                    "ts": utc_now(),
+                    "type": "workspace_observation",
+                    "observation_id": latest_observation["observation_id"],
+                    "snapshot_fingerprint": latest_observation[
+                        "snapshot_fingerprint"
+                    ],
+                    "change": latest_observation["change"],
+                },
+            )
+            output.write(render_observation(latest_observation) + "\n")
+            continue
         if text.startswith("/cycle"):
             context = text[len("/cycle") :].strip()
             if not context:
@@ -1173,13 +1199,33 @@ def run_chat(
                 "Running independent roles: interpreter → inventor → adversary → selector\n"
             )
             try:
+                from palamedes_observe import (
+                    collect_observation,
+                    observation_context,
+                )
+
+                ref_value = os.environ.get(
+                    "PALAMEDES_REF_ROOT", "/Users/ze/work/ref"
+                ).strip()
+                latest_observation = collect_observation(
+                    workspace,
+                    ref_root=Path(ref_value).expanduser() if ref_value else None,
+                )
+                grounded_context = (
+                    f"User request:\n{context}\n\n"
+                    "Bounded workspace observation:\n"
+                    + json.dumps(
+                        observation_context(latest_observation),
+                        ensure_ascii=False,
+                    )
+                )
                 result = run_cognition_cycle(
                     provider=provider,
                     palamedes_module=palamedes_module,
-                    context=context,
+                    context=grounded_context,
                     cycle_store=cognition_store,
                 )
-            except (RuntimeError, ValueError) as exc:
+            except (OSError, RuntimeError, ValueError) as exc:
                 output.write(f"[cognition cycle error] {exc}\n")
                 output.write("Partial role artifacts were preserved; no mission draft was issued.\n")
                 continue
@@ -1193,6 +1239,7 @@ def run_chat(
                     "status": cycle["status"],
                     "decision": cycle["decision"],
                     "role_count": len(cycle["artifacts"]),
+                    "observation_id": latest_observation["observation_id"],
                 },
             )
             contract = result["contract"]
@@ -1465,13 +1512,9 @@ def cmd_chat(args: Any, palamedes_module: Any) -> None:
     workspace = Path(args.workspace).expanduser().resolve() if args.workspace else Path.cwd()
     if not workspace.is_dir():
         raise ValueError(f"workspace does not exist or is not a directory: {workspace}")
-    palamedes_module.ROOT = workspace
-    palamedes_module.STATE_DIR = workspace / ".palamedes"
-    palamedes_module.PLAN_PATH = palamedes_module.STATE_DIR / "plan.json"
-    palamedes_module.DECISIONS_PATH = palamedes_module.STATE_DIR / "decisions.jsonl"
-    palamedes_module.RISKS_PATH = palamedes_module.STATE_DIR / "risks.jsonl"
-    palamedes_module.EVENTS_PATH = palamedes_module.STATE_DIR / "events.jsonl"
-    palamedes_module.REVISIONS_PATH = palamedes_module.STATE_DIR / "revisions.jsonl"
+    from palamedes_observe import bind_workspace
+
+    bind_workspace(palamedes_module, workspace)
     ChatSessionStore(palamedes_module.STATE_DIR / "chat").path(session_id)
     if args.history_limit < 2 or args.history_limit > 200:
         raise ValueError("history-limit must be between 2 and 200")

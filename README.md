@@ -449,6 +449,7 @@ provider: openrouter
 model: <provider/model>
 session: local-trial
 
+palamedes> /observe
 palamedes> /think What important question are we failing to ask?
 palamedes> /challenge Our current product direction
 palamedes> /research What evidence is missing before commitment?
@@ -462,6 +463,7 @@ palamedes> /outcome success The probe produced the precommitted result
 
 Available commands:
 
+- `/observe`: snapshot bounded project, Git, TODO, plan-state, and central-ref signals
 - `/think`: choose and perform the missing mode of thought
 - `/challenge`: attack assumptions and state falsifiers
 - `/research`: identify the minimum missing external evidence
@@ -484,6 +486,47 @@ and provider-side API billing.
 The chat surface is deliberately plan-only. Model output can recommend a
 mission or plan change, but it cannot silently mutate a plan or claim that
 delivery work occurred.
+
+### Workspace observation
+
+Observe a project without calling an AI provider:
+
+```bash
+palamedes observe --workspace /path/to/project
+```
+
+Run an explicitly selected test command as part of the observation:
+
+```bash
+palamedes observe \
+  --workspace /path/to/project \
+  --test-command "python3 -m unittest" \
+  --test-timeout 300
+```
+
+Machine-readable output is available with `--json`. The central reference root
+defaults to `/Users/ze/work/ref` and can be changed with `--ref-root` or
+`PALAMEDES_REF_ROOT`.
+
+Each observation records:
+
+- bounded excerpts and hashes for README, AGENTS, build manifests, and selected top-level docs
+- Git HEAD, branch, working-tree status, diff stat, and five recent commits
+- bounded TODO/FIXME/HACK markers with file and line provenance
+- plan fingerprint and counts for evidence, open hypotheses, and planned probes
+- central reference repository paths, revisions, symlink state, and dirty flags
+- explicit test command, exit status, timeout, and bounded output tails
+- changes from the previous observation, such as a new commit, document change,
+  plan change, ref revision, or test failure
+
+Snapshots are stored under `.palamedes/observations/`. Collection excludes
+common credential filenames, redacts API-key/token/password/private-key
+patterns, limits file counts and bytes, never executes a test command unless it
+was explicitly supplied, and invokes commands without a shell.
+
+`/cycle` automatically captures a fresh bounded observation and supplies its
+provenance-bearing context to the interpreter. This grounds the cognition cycle
+in project state rather than only the user's phrasing.
 
 Mission authority follows an explicit vertical contract:
 

@@ -18,6 +18,7 @@ setup(
         "palamedes_chat",
         "palamedes_client",
         "palamedes_mission",
+        "palamedes_observe",
         "palamedes_server",
         "palamedes_store",
     ],

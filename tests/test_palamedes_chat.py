@@ -311,18 +311,19 @@ class PalamedesChatTests(unittest.TestCase):
             with PalamedesIsolation(root) as isolated:
                 provider = StaticChatProvider()
                 output = io.StringIO()
-                palamedes_chat.run_chat(
-                    palamedes_module=isolated,
-                    provider=provider,
-                    session_id="cognition",
-                    input_stream=io.StringIO(
-                        "/cycle find a mission worth planning\n"
-                        "/approve\n"
-                        "/outcome success The selected probe matched its forecast\n"
-                        "/quit\n"
-                    ),
-                    output=output,
-                )
+                with patch.dict(os.environ, {"PALAMEDES_REF_ROOT": ""}):
+                    palamedes_chat.run_chat(
+                        palamedes_module=isolated,
+                        provider=provider,
+                        session_id="cognition",
+                        input_stream=io.StringIO(
+                            "/cycle find a mission worth planning\n"
+                            "/approve\n"
+                            "/outcome success The selected probe matched its forecast\n"
+                            "/quit\n"
+                        ),
+                        output=output,
+                    )
                 cycle_path = next(
                     (isolated.STATE_DIR / "missions" / "cognition").glob("cycle-*.json")
                 )
@@ -363,13 +364,16 @@ class PalamedesChatTests(unittest.TestCase):
             fake = FakePalamedes(Path(tempdir))
             provider = FailingAdversaryProvider()
             output = io.StringIO()
-            palamedes_chat.run_chat(
-                palamedes_module=fake,
-                provider=provider,
-                session_id="failed-cycle",
-                input_stream=io.StringIO("/cycle pressure the current direction\n/quit\n"),
-                output=output,
-            )
+            with patch.dict(os.environ, {"PALAMEDES_REF_ROOT": ""}):
+                palamedes_chat.run_chat(
+                    palamedes_module=fake,
+                    provider=provider,
+                    session_id="failed-cycle",
+                    input_stream=io.StringIO(
+                        "/cycle pressure the current direction\n/quit\n"
+                    ),
+                    output=output,
+                )
             cycle_path = next(
                 (fake.STATE_DIR / "missions" / "cognition").glob("cycle-*.json")
             )

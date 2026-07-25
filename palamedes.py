@@ -3614,6 +3614,14 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--history-limit", type=int, default=24)
     s.set_defaults(func=cmd_chat)
 
+    s = sub.add_parser("observe", help="Collect a bounded workspace observation.")
+    s.add_argument("--workspace", type=str, default="")
+    s.add_argument("--ref-root", type=str, default="")
+    s.add_argument("--test-command", type=str, default="")
+    s.add_argument("--test-timeout", type=int, default=120)
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(func=cmd_observe)
+
     s = sub.add_parser("init")
     s.set_defaults(func=cmd_init)
 
@@ -3850,6 +3858,12 @@ def cmd_chat(args: argparse.Namespace) -> None:
     from palamedes_chat import cmd_chat as run_chat_command
 
     run_chat_command(args, sys.modules[__name__])
+
+
+def cmd_observe(args: argparse.Namespace) -> None:
+    from palamedes_observe import cmd_observe as run_observe_command
+
+    run_observe_command(args, sys.modules[__name__])
 
 
 def main() -> None:
