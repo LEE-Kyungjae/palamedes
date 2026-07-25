@@ -1,0 +1,17 @@
+{
+  "proof_run_failure_version": "palamedes-proof-run-failure/1",
+  "run_id": "proof-001",
+  "failed_condition": "palamedes",
+  "failed_case_id": "gahyeonbot-voice-loop",
+  "failure_observed_at": "2026-07-25T10:33:00+00:00",
+  "failure": "mission.situation must be a non-empty string",
+  "classification": "harness_selector_prompt_contract_failure",
+  "known_call_count": 4,
+  "exact_token_usage_available": false,
+  "completed_outputs_before_failure": [
+    "cases/palamedes-self-hosting/palamedes.json"
+  ],
+  "retry_appended_to_same_run": false,
+  "claim_demonstrated": false,
+  "disposition": "Preserve proof-001 as failed. Correct the selector contract and start a newly frozen proof-002 run."
+}

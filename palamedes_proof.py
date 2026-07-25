@@ -382,8 +382,9 @@ Frozen inventor artifact:
             "candidates and return only JSON."
         ),
         prompt=f"""Select, defer, or reject based on evidence, reversibility,
-information gain, beneficiary value, and adversarial survival. If selecting,
-express the strongest surviving candidate as exactly:
+information gain, beneficiary value, and adversarial survival. Always return
+the exact mission shape below. If no candidate survives, encode a bounded
+defer-or-reject mission that makes collecting the missing evidence the mission:
 {_mission_shape()}
 
 Frozen information packet:
@@ -434,13 +435,34 @@ def generate_condition(
         if packet["information_fingerprint"] != item["information_fingerprint"]:
             raise ValueError(f"information fingerprint mismatch: {item['case_id']}")
         engine = MeteredCodex(model=model)
-        if condition == "baseline":
-            mission = generate_baseline(packet, engine)
-            role_artifacts: Dict[str, Any] = {}
-        else:
-            generated = generate_palamedes(packet, engine)
-            mission = generated["mission"]
-            role_artifacts = generated["role_artifacts"]
+        try:
+            if condition == "baseline":
+                mission = generate_baseline(packet, engine)
+                role_artifacts: Dict[str, Any] = {}
+            else:
+                generated = generate_palamedes(packet, engine)
+                mission = generated["mission"]
+                role_artifacts = generated["role_artifacts"]
+        except (OSError, RuntimeError, ValueError) as exc:
+            failed = {
+                "condition_failure_version": "palamedes-proof-failure/1",
+                "case_id": item["case_id"],
+                "condition": condition,
+                "failed_at": utc_now(),
+                "provider": "codex",
+                "model": engine.model,
+                "information_fingerprint": packet["information_fingerprint"],
+                "failure": str(exc),
+                "usage": engine.usage(),
+                "retry_appended_to_same_run": False,
+            }
+            failed["failure_fingerprint"] = fingerprint(failed)
+            write_object(
+                target
+                / f"{condition}.failure-{failed['failure_fingerprint'][:8]}.json",
+                failed,
+            )
+            raise
         usage = engine.usage()
         if usage["call_count"] != expected_calls[condition]:
             raise ValueError(f"{condition} call count violated preregistration")

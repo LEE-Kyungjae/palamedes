@@ -1,0 +1,59 @@
+{
+  "case_id": "termi-agent-control",
+  "condition": "baseline",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-07-25T10:30:51.728143+00:00",
+  "information_fingerprint": "2c125e0199db7e8a33066bb81873f3bb844f191568315a581594a1427f213752",
+  "mission": {
+    "beneficiary": "A developer who starts a long-running coding agent on a Mac and needs to monitor, approve, redirect, and resume it safely from another device.",
+    "consequential_choice": "pivot: preserve remote terminal I/O as infrastructure, but make controlled long-running coding-agent supervision the product boundary and sequence all near-term work behind proving safe ownership, reconnect, approval, and return behavior",
+    "falsifiers": [
+      "Target developers consistently prefer unrestricted terminal access and find agent-specific state or controls burdensome.",
+      "Reconnects cannot reliably preserve a single authoritative session state and input ownership.",
+      "Approval requests cannot be represented and resolved more safely than typing directly into the terminal.",
+      "The relay and connector architecture cannot provide acceptable security and reliability for remote agent supervision.",
+      "Testing shows that users do not return to supervise long-running sessions often enough to justify specialization."
+    ],
+    "interpretation": "Generic terminal I/O is an enabling layer, not the strongest product identity. The more valuable boundary is controlled agent supervision, but only if Termi can make session ownership, reconnect behavior, approval handling, and return-to-session state explicit and dependable.",
+    "mission": "Pivot Termi into a controlled interface for supervising long-running coding agents, beginning with one end-to-end agent session lifecycle: claim ownership, disconnect safely, reconnect without ambiguity, review and approve blocked actions, and return to the exact actionable state.",
+    "next_probe": "Prototype and test a single-owner agent-session state machine over the existing tmux flow, covering running, awaiting approval, disconnected, reconnected, handed-off, and completed states; validate it with real leave-and-return sessions before broadening either clients or features.",
+    "non_goals": [
+      "Building a full general-purpose terminal emulator across web, iOS, and Android.",
+      "Supporting arbitrary autonomous-agent frameworks before one lifecycle works end to end.",
+      "Adding collaboration or multiple simultaneous controllers before single-owner handoff is safe.",
+      "Expanding deployment automation or distribution breadth as the primary objective.",
+      "Replacing tmux or the developer's existing local coding workflow."
+    ],
+    "rationale": "This direction turns the existing connector, tmux persistence, relay, multi-client access, and command policy concepts into a differentiated workflow. It also forces the project to solve the trust and continuity problems that determine whether remote agent control is genuinely useful, instead of expanding undifferentiated terminal features across three surfaces.",
+    "situation": "Termi already spans a macOS tmux connector, mobile client, hosted web draft, relay, pairing, session discovery, streaming output, and raw input. Its unresolved product boundary is whether to remain a generic remote terminal or specialize around safely supervising long-running coding agents across disconnects and devices.",
+    "success_signal": "A developer can leave an active coding-agent session, reconnect through the supported remote client, immediately understand its owner and current state, approve or reject a gated action, send guidance, and resume from the same context without duplicated commands, lost output, or uncertainty about control."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "2d927dd9324f3c7c7c2e9f123a5c9734a1b8a19df34ce5775c766b656704d382",
+  "provider": "codex",
+  "role_artifacts": {},
+  "usage": {
+    "call_count": 1,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-07-25T10:30:51.728082+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 22176,
+          "output_tokens": 683,
+          "reasoning_output_tokens": 50
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 0,
+      "input_tokens": 22176,
+      "output_tokens": 683,
+      "reasoning_output_tokens": 50
+    }
+  }
+}

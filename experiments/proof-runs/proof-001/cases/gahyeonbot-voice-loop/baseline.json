@@ -1,0 +1,59 @@
+{
+  "case_id": "gahyeonbot-voice-loop",
+  "condition": "baseline",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-07-25T10:30:28.744283+00:00",
+  "information_fingerprint": "ab4765e72b79296fa34fdd1e116d7ed41d1cee3b241b7ffdae5d249088e04580",
+  "mission": {
+    "beneficiary": "Couples and small Discord groups who routinely remain in a voice channel at bedtime and want a safe, predictable way to disconnect later without waking up.",
+    "consequential_choice": "sequence: freeze broad feature expansion and prove the reliable scheduled-departure habit first; add VAD/STT and spoken interaction only if measured command friction is the main barrier to repeated use",
+    "falsifiers": [
+      "Target users do not repeat the loop after an initial trial.",
+      "Users prefer Discord's existing controls or manual disconnection and do not consider scheduling meaningfully easier.",
+      "Reliable execution cannot reach the required level under real Discord connection and deployment conditions.",
+      "Users are uncomfortable granting the bot permission to disconnect themselves or others, even with explicit confirmation and cancellation.",
+      "Support and operating costs per repeated user outweigh the value of the narrow loop."
+    ],
+    "interpretation": "The project should not treat a general-purpose voice assistant as the product. The narrowest credible repeat loop is: schedule a voice-channel departure, receive an unambiguous confirmation, and have the bot execute it reliably. Voice input may later reduce friction, but only after the underlying action earns trust.",
+    "mission": "Make scheduled voice-channel departure a dependable nightly habit for Discord users who fall asleep together: create or join a departure schedule in seconds, confirm exactly who and when it affects, execute it reliably, and report the outcome.",
+    "next_probe": "Run a small instrumented pilot of the schedule-confirm-cancel-execute-result loop with bedtime voice-channel users, recording repeat nights per user, completion and cancellation rates, execution accuracy, mistaken-disconnection reports, confirmation-to-action latency, and operating cost; test typed commands first so voice-stack variability does not obscure demand.",
+    "non_goals": [
+      "Building a broad conversational voice assistant.",
+      "Expanding music, newsletter, sports, travel, stock, or general AI features.",
+      "Using cloned-voice TTS as a prerequisite for the core loop.",
+      "Optimizing OpenRouter streaming or multilingual voice capabilities before repeat usage is demonstrated.",
+      "Supporting large-server orchestration before the bedtime use case is trusted."
+    ],
+    "rationale": "This mission directly matches the strongest user problem in the packet, is inherently repeatable, and uses the bot's existing scheduling identity. It also avoids making latency-sensitive STT, LLM, cloned-voice TTS, and local model operations prerequisites for delivering value. Reliability and consent matter more than conversational breadth when the bot can disconnect users.",
+    "situation": "GahyeonBot combines scheduling, music, newsletters, AI conversation, and an optional VAD-STT-LLM-TTS voice stack, but the frozen packet provides no observed usage, latency, trust, retention, or operating-cost evidence for any loop. Its clearest stated Discord-native pain is helping people leave a voice channel at a chosen time, especially before sleep.",
+    "success_signal": "Across a bounded pilot, the same users schedule departures on multiple nights, at least 95% of accepted schedules execute at the intended time and scope, cancellations remain easy, mistaken or surprising disconnections are rare, and users report that the feature replaces a recurring manual bedtime action."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "93eee90bfd474acfe1df4f2b35304874691b54de5c842f32cf3863e480051b6a",
+  "provider": "codex",
+  "role_artifacts": {},
+  "usage": {
+    "call_count": 1,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-07-25T10:30:28.744245+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 24979,
+          "output_tokens": 876,
+          "reasoning_output_tokens": 203
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 0,
+      "input_tokens": 24979,
+      "output_tokens": 876,
+      "reasoning_output_tokens": 203
+    }
+  }
+}

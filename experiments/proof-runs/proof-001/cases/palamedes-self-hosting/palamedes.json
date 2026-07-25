@@ -1,0 +1,243 @@
+{
+  "case_id": "palamedes-self-hosting",
+  "condition": "palamedes",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-07-25T10:33:09.227881+00:00",
+  "information_fingerprint": "04ff5e4e50dd73a85955bca939292cbdb34f9d63245f94f6db5b3c30d9c4d0f9",
+  "mission": {
+    "beneficiary": "Project owners deciding what to build, stop, or validate before committing implementation labor.",
+    "consequential_choice": "sequence: run the bounded insight-rag comparison first; continue to the three-project proof only if it yields a credible judgment signal, pivot to a simpler matched-budget comparator if it ties, and stop feature expansion if no practical advantage survives",
+    "falsifiers": [
+      "Matched presentation and resource accounting eliminate the apparent advantage.",
+      "Independent reviewers tie or prefer the baseline, show low agreement, or base preference primarily on polish, verbosity, novelty, or schema compliance.",
+      "A strong simpler single-agent or static process matches Palamedes closely enough that its orchestration and maintenance costs are unjustified.",
+      "Preferred Palamedes missions do not change downstream choices or yield better consequences.",
+      "Results depend on self-selected owner-adjacent cases, inferred condition identity, or self-authored evaluation criteria and do not survive independent review."
+    ],
+    "interpretation": "The highest-value reversible move is to run the already-preregistered comparison, beginning with the paired insight-rag pilot. This directly tests comparative judgment while exposing compute, presentation, reviewer, and self-evaluation confounds. It should precede mechanism ablations or real-project intervention because those are costlier or riskier before any full-system signal exists.",
+    "mission": "Run the preregistered three-project, equal-information comparison and produce the first blinded evidence about whether Palamedes improves mission judgment over a one-shot baseline.",
+    "next_probe": "Complete the paired insight-rag pilot using the frozen packet: predeclare a rubric that separates judgment from presentation, generate the one-shot baseline and four-role Palamedes outputs, normalize obvious presentation cues where possible, conceal origin, obtain independent ratings with ties and rationales, and report full inference and human costs. If Palamedes does not show a robust advantage, compare the same packet against a matched-budget strong single-agent workflow before proceeding to the remaining projects.",
+    "non_goals": [
+      "Expanding analyzers, corpora, schemas, agent hierarchy, or autonomous runtime features before comparative evidence exists.",
+      "Launching a combinatorial mechanism-ablation program before establishing any full-system advantage.",
+      "Claiming superiority from rejecting one bad retrieval packet, passing tests, accumulating reasoning artifacts, or winning on document quality.",
+      "Treating three cases or two preferences as proof of broad generality.",
+      "Using an unvalidated recommendation to force a costly or irreversible real-project stop or pivot."
+    ],
+    "rationale": "This candidate targets the central missing evidence, reuses an existing proof protocol, is reversible, and has greater immediate information gain than adding architecture, benchmarking isolated mechanisms, or intervening in consequential projects. Its result can justify continuation, force a pivot toward a simpler comparator, or stop product expansion. Blinding alone is insufficient, so the evaluation must predeclare judgment-versus-presentation criteria, permit ties and baseline wins, disclose all resource asymmetries, and treat the initial pilot as provisional rather than proof of generality.",
+    "situation": "Palamedes has substantial structural validation and one demonstrated rejection of irrelevant retrieval, but no equal-information comparison showing better upstream judgment than a baseline; further feature expansion would deepen an unproven product claim.",
+    "success_signal": "Across three frozen real-project packets, independent blinded reviewers prefer Palamedes on preregistered judgment-quality criteria in at least two cases, with recorded rationales and credible agreement; the advantage remains practically meaningful after output presentation and token, latency, tool-use, compute, and human-review costs are disclosed; and at least one recommendation prospectively produces an attributable stop, pivot, positioning, or sequencing choice."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "f536d39ef2fb2d7636a7471fd8fcb9f8d15b651d1106c36fc823b71aa8435638",
+  "provider": "codex",
+  "role_artifacts": {
+    "adversary": {
+      "candidate_critiques": [
+        {
+          "disconfirming_evidence": "Matched compute and presentation eliminate the advantage; independent reviewers tie or prefer the baseline; agreement is low; simpler methods achieve equivalent calibration; or preferred missions fail to produce better downstream choices.",
+          "failure_mode": "The comparison may confound Palamedes with four-role deliberation, greater inference, longer outputs, or reviewer-facing polish. Three self-selected projects and subjective ratings could yield a favorable but non-generalizable result even with concealed origin.",
+          "hidden_harm": "A nominal win could legitimize further architecture investment while masking cost asymmetry, self-authored criteria, correlated reviewers, and weak links to real consequences. A nominal loss could also wrongly reject useful components because the bundled treatment prevents diagnosis.",
+          "mission": "Run the preregistered three-project, equal-information comparison and produce the first blinded evidence about whether Palamedes improves mission judgment over a one-shot baseline."
+        },
+        {
+          "disconfirming_evidence": "A static checklist or well-prompted single agent matches the full system; rankings vary with prompt wording or evaluator; mechanism effects do not replicate across tasks; or observed gains vanish on real decisions and useful-evidence cases.",
+          "failure_mode": "Ablations may be too small, artificial, or interaction-blind to represent mission origination. Removing one mechanism at a time can miss complementarities, while matching token budgets does not match reasoning quality, implementation maturity, or prompt optimization.",
+          "hidden_harm": "This candidate would waste the most effort if wrong: a combinatorial ablation program across immature mechanisms can consume extensive engineering, evaluation, and reviewer labor before there is evidence that the full system improves any consequential decision. It may optimize decomposition of an unproven product claim.",
+          "mission": "Test whether Palamedes-specific mechanisms add value beyond a much simpler relevance-and-disconfirmation rubric."
+        },
+        {
+          "disconfirming_evidence": "The recommendation does not change action; changed action worsens external outcomes; saved labor merely postpones necessary work; independent causal review cannot attribute the result to mission judgment; or the baseline recommendation performs better over a longer horizon.",
+          "failure_mode": "A single prospective decision cannot isolate mission quality from implementation, market changes, owner skill, or chance. The baseline recorded before treatment may alter behavior, and counterfactual outcomes remain unobserved. A 30–60 day window may favor quick savings over durable value.",
+          "hidden_harm": "The demand for a visible stop or pivot may reward conservatism, induce abandonment of high-variance opportunities, or invite post-hoc claims that avoided labor equals benefit. Real projects and beneficiaries bear the cost of using an unvalidated system as an intervention.",
+          "mission": "Demonstrate that a Palamedes recommendation causes an attributable, beneficial downstream stop, pivot, or positioning decision rather than merely winning a document preference contest."
+        },
+        {
+          "disconfirming_evidence": "Ordinary relevance filtering matches performance; results collapse on independently authored or adversarial packets; influence traces fail causal perturbation tests; useful evidence changes rhetoric but not choices; or calibration fails under mixed and uncertain evidence.",
+          "failure_mode": "Constructed packet labels may encode the designers' preferred interpretation and test document classification rather than upstream judgment. Explicit influence traces can be rationalizations, and the benchmark may not capture ambiguity, source incentives, conflicts, or evolving evidence.",
+          "hidden_harm": "Optimizing false-accept and false-block rates on synthetic packets could create unwarranted confidence in live retrieval. The system might become better at narrating evidence influence while remaining vulnerable to persuasive, correlated, or strategically misleading sources.",
+          "mission": "Establish whether Palamedes can safely accept and use good external evidence, not merely reject weak retrieval."
+        },
+        {
+          "disconfirming_evidence": "Raw notes or a short decision log perform equally well; lineage increases owner questions or revision time; revisers inherit false assumptions more often; maintenance exceeds recovered labor; or results fail when records are produced during ordinary work rather than for evaluation.",
+          "failure_mode": "Equivalent-length raw notes are not an adequate control because structure, editing effort, and information selection differ. Independent revisers may perform well because lineage records are polished summaries, while maintenance costs and omitted context are undercounted.",
+          "hidden_harm": "Lineage can institutionalize retrospective narratives, anchor later agents to prior frames, expose sensitive reasoning, and transfer labor from repeated explanation into continuous curation. Proving auditability could be misrepresented as proving better mission selection.",
+          "mission": "Test whether view-transition lineage improves later revision and reduces recurring owner judgment labor, even if it does not improve initial mission selection."
+        }
+      ],
+      "shared_assumptions": [
+        "The supplied, partially truncated packet contains enough information to define the right experiments and relevant alternatives.",
+        "Mission judgment can be operationalized reliably and separated from verbosity, polish, novelty, schema compliance, persuasion, and evaluator taste.",
+        "A one-shot baseline is the correct practical comparator rather than a strong single-agent workflow, human process, existing planner, or ensemble with matched resources.",
+        "Information equality and inference-budget matching are both achievable and sufficient to isolate Palamedes-specific value.",
+        "Blinding output origin prevents reviewers from inferring condition from structure, terminology, length, or style.",
+        "Independent ratings and agreement provide valid evidence of decision quality despite unobserved counterfactual outcomes.",
+        "The selected projects, especially insight-rag and other owner-adjacent repositories, represent external users, domains, and decision types.",
+        "Self-authored preregistration, rubrics, artifacts, and case selection can avoid favoring Palamedes' own conception of good reasoning.",
+        "A stop, pivot, or positioning change is a valid upstream success signal rather than a bias toward visible intervention or conservatism.",
+        "Owner labor can be measured completely, including experiment design, record curation, reviewer coordination, system maintenance, and displaced cognitive work.",
+        "Short-horizon outcomes can reveal the value of missions whose costs, benefits, or option losses may emerge much later.",
+        "Counterfactual indicators can support credible causal attribution when only one real action is taken.",
+        "Explicit evidence and view-transition traces reflect actual causal influence rather than plausible retrospective explanation.",
+        "Mechanisms can be meaningfully ablated without changing the identity, maturity, or operating assumptions of the overall system.",
+        "Benchmarks with labeled useful or misleading evidence approximate open-world retrieval where relevance and truth are contested.",
+        "The current implementation is stable enough that negative results test the hypothesis rather than avoidable execution defects.",
+        "Three cases, two blinded preferences, and one attributable decision constitute a meaningful confidence threshold rather than an arbitrary release gate.",
+        "Better upstream judgment is the primary value worth testing; auditability, safety, learning, and governance cannot independently justify the system unless they improve that outcome.",
+        "Beneficiary interests can be represented adequately by project owners and reviewers without direct, independent beneficiary participation.",
+        "The experiments will be allowed to report ties, baseline wins, harmful interventions, and null results without reinterpretation or expansion of the product hypothesis."
+      ]
+    },
+    "interpreter": {
+      "interpretations": [
+        "Palamedes may already have a credible safety contribution: it can prevent weak retrieved material from being converted into unwarranted authority.",
+        "The observed rejection may instead reflect ordinary relevance checking that a simpler prompt, rubric, planner, or human reviewer could perform equally well.",
+        "The extensive schemas, tests, reasoning cycles, and lineage records may be enabling infrastructure for rigorous evaluation.",
+        "The same infrastructure may be artifact elaboration whose volume creates an appearance of maturity without demonstrating better judgment.",
+        "The existing proof program appears designed around the central uncertainty and may be more informative than additional architectural or feature work.",
+        "Blinded preference could reveal perceived decision quality, but preference alone may reward polish, complexity, or persuasive framing rather than consequentially better judgment.",
+        "An attributable stop or pivot could be strong evidence of upstream value if it prevents costly work, but it could also represent excessive conservatism or post-hoc attribution.",
+        "The four-role condition may improve outputs through additional compute, deliberation, or token budget rather than through Palamedes-specific mechanisms.",
+        "The insight-rag case may be a useful initial stress test because it has already exposed retrieval failure, but a self-selected related repository may not establish generality.",
+        "View-transition lineage may improve auditability and learning even if it does not improve initial mission selection; these benefits should not be conflated.",
+        "The anti-entrenchment requirement makes equivalence with a simpler method a meaningful negative result rather than merely a failed demonstration.",
+        "Self-hosting evaluation creates a risk that Palamedes-authored criteria, artifacts, and reviewers favor the system's own style of reasoning."
+      ],
+      "missing_evidence": [
+        "Completed equal-information and meaningfully equal-budget control-versus-Palamedes runs.",
+        "Predeclared scoring rubrics that distinguish judgment quality from verbosity, polish, novelty, and schema compliance.",
+        "Blinded independent reviews with reviewer identities or qualifications, agreement measures, rationales, and handling of ties.",
+        "Actual baseline and treatment outputs for the same frozen packets.",
+        "Token, latency, compute, tool-use, and human-review costs for every condition.",
+        "Evidence isolating Palamedes-specific value from gains caused by extra inference, multiple roles, retrieval, or longer context.",
+        "Downstream records connecting a recommendation to a chosen action and then to observed consequences.",
+        "Counterfactual evidence estimating what would have happened under the rejected action or baseline recommendation.",
+        "Owner labor measurements showing whether recurring judgment work was genuinely reduced rather than displaced into maintaining Palamedes.",
+        "False-positive and false-negative rates for blocking references, stopping missions, or recommending pivots.",
+        "Cases containing useful retrieval packets, so evaluation covers successful influence as well as rejection of bad evidence.",
+        "Cases where the simpler baseline wins, ties, or identifies errors missed by Palamedes.",
+        "Evidence from multiple independent projects, domains, owners, and decision types rather than one related cross-repository case.",
+        "Longitudinal evidence that decisions remain beneficial after implementation and that lineage records improve later revision.",
+        "Beneficiary feedback and harm measurements independent of project-owner preference.",
+        "Ablation studies for view transitions, mission competition, reference lineage, criticism roles, and constitutional state.",
+        "Evidence that partial ordering and reversible probes outperform simpler scoring or decision rules when values conflict.",
+        "Operational data on calibration: whether stated confidence and disconfirmation conditions predict later correctness.",
+        "The omitted portions of the three truncated artifacts, which may contain qualifications, experimental details, or contrary evidence relevant to interpretation."
+      ],
+      "observations": [
+        "Palamedes claims to improve judgment before planning by forming, challenging, and selecting mission contracts rather than implementation plans.",
+        "The plan-state kernel and bounded pre-planner contracts are implemented and extensively tested, but these tests primarily establish structural and behavioral correctness rather than decision quality.",
+        "The repository reports 401 reasoning cycles, 1,624 indexed evidence records, and 837 indexed components.",
+        "The first real retrieval treatment packet was judged low-confidence and irrelevant to the target task, and Palamedes blocked it with nine explicit reasons.",
+        "Blocking the bad packet demonstrates a reference-treatment safety behavior, not superiority over a baseline or improved downstream outcomes.",
+        "No equal-information, equal-budget baseline-versus-treatment comparison has yet been run.",
+        "No evidence currently shows that Palamedes produces better external decisions, outcomes, or attributable owner-labor retirement.",
+        "A proof protocol is already specified: freeze information before generation, compare a one-shot baseline with a four-role Palamedes condition, blind proposal origin during review, and disclose compute and token asymmetry.",
+        "The stated release-quality gate requires three real project cases, at least two blinded preferences over a generic baseline, and at least one attributable stop, pivot, or positioning decision.",
+        "The first cross-repository case targets insight-rag and uses a counterfactual action-choice benchmark rather than immediate analyzer or corpus expansion.",
+        "Palamedes explicitly treats its autonomous pre-planner, view-transition lineage, and longitudinal evaluation as product hypotheses rather than settled capabilities.",
+        "The contract requires anti-entrenchment evidence showing why Palamedes is necessary and when a simpler planner, agent, or static process should replace it.",
+        "The frozen packet is incomplete at the byte level: 20,586 of 24,000 budgeted bytes are included, and three of four artifact excerpts are truncated."
+      ]
+    },
+    "inventor": {
+      "candidate_missions": [
+        {
+          "beneficiary": "Project owners deciding what to build, stop, or validate before committing implementation labor.",
+          "falsifier": "Palamedes loses or ties without a practically meaningful judgment-quality advantage, reviewer preference is explained by presentation quality, or any advantage disappears after accounting for compute and human-review asymmetry.",
+          "mechanism": "Freeze identical packets; predeclare a rubric that discounts verbosity, polish, novelty, and schema compliance; generate baseline and four-role Palamedes outputs; blind their origins; collect independent ratings, ties, rationales, agreement, and full token, latency, tool-use, and human-review costs.",
+          "mission": "Run the preregistered three-project, equal-information comparison and produce the first blinded evidence about whether Palamedes improves mission judgment over a one-shot baseline.",
+          "next_probe": "Complete the paired insight-rag pilot with frozen inputs, concealed origins, cost disclosure, and a preregistered judgment-versus-presentation rubric."
+        },
+        {
+          "beneficiary": "Teams that need reliable upstream judgment but should not inherit unnecessary orchestration, maintenance, or conceptual ceremony.",
+          "falsifier": "A static rubric, single-agent planner, or reduced ablation matches the full system on error detection, mission quality, calibration, and cost, showing that Palamedes-specific machinery is unnecessary.",
+          "mechanism": "Compare the full system against matched-budget ablations and a static checklist that can reject irrelevant evidence, varying mission competition, view-transition lineage, reference lineage, criticism roles, and constitutional state while holding the information packet and inference budget as constant as practical.",
+          "mission": "Test whether Palamedes-specific mechanisms add value beyond a much simpler relevance-and-disconfirmation rubric.",
+          "next_probe": "Replay the bad insight-rag retrieval packet and one deliberately useful packet through the full condition, a matched-budget single-agent condition, and a static relevance rubric; score both correct rejection and correct influence."
+        },
+        {
+          "beneficiary": "Project owners and affected users who bear the cost of pursuing the wrong mission or abandoning the right one.",
+          "falsifier": "Recommendations do not change action, changed actions fail to improve preregistered outcomes, stops and pivots prove excessively conservative, or claimed value depends on post-hoc attribution that cannot distinguish mission quality from implementation or environmental effects.",
+          "mechanism": "Prospectively record the chosen action, rejected counterfactual, causal thesis, disconfirmation trigger, expected costs, and owner labor; follow implementation outcomes and compare them with predeclared counterfactual indicators and later beneficiary consequences.",
+          "mission": "Demonstrate that a Palamedes recommendation causes an attributable, beneficial downstream stop, pivot, or positioning decision rather than merely winning a document preference contest.",
+          "next_probe": "Select one reversible real decision with a measurable 30–60 day consequence, log the baseline choice before exposing the Palamedes output, and track whether any changed choice saves labor or improves an external outcome."
+        },
+        {
+          "beneficiary": "Decision makers using large reference libraries who need both protection from irrelevant material and access to genuinely decision-changing mechanisms.",
+          "falsifier": "Palamedes rejects useful evidence at an unacceptable rate, accepts misleading evidence, cannot explain which evidence changed the mission, or performs no better than ordinary relevance filtering.",
+          "mechanism": "Construct paired cases containing relevant, misleading, mixed, and absent reference packets; require explicit influence traces from evidence to mission changes; measure false blocks, false acceptance, calibration, and whether useful evidence produces better action choices without being laundered into authority.",
+          "mission": "Establish whether Palamedes can safely accept and use good external evidence, not merely reject weak retrieval.",
+          "next_probe": "Create a blinded four-packet benchmark around the same action-choice task—useful, irrelevant, subtly misleading, and no retrieval—and compare mission changes and error rates across conditions."
+        },
+        {
+          "beneficiary": "Long-running projects whose owners repeatedly reconsider direction after new evidence or implementation feedback.",
+          "falsifier": "Lineage does not improve revision quality or speed, encourages retrospective storytelling, increases maintenance work, or merely displaces owner labor into curating elaborate records.",
+          "mechanism": "Run a longitudinal comparison in which later agents or owners revisit decisions with either structured view-transition records or equivalent raw notes; measure recovery of prior assumptions, speed and quality of revision, repeated investigation, maintenance burden, and owner intervention time.",
+          "mission": "Test whether view-transition lineage improves later revision and reduces recurring owner judgment labor, even if it does not improve initial mission selection.",
+          "next_probe": "Choose one active mission likely to receive new evidence, prepare blinded lineage and raw-note handoffs of comparable length, and test whether independent revisers identify the correct reversal trigger with less time and fewer owner questions."
+        }
+      ]
+    }
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-07-25T10:31:29.051621+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 22485,
+          "output_tokens": 1059,
+          "reasoning_output_tokens": 24
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-07-25T10:31:57.819211+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 23571,
+          "output_tokens": 955,
+          "reasoning_output_tokens": 25
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-07-25T10:32:44.844478+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 0,
+          "input_tokens": 24565,
+          "output_tokens": 1412,
+          "reasoning_output_tokens": 39
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-07-25T10:33:09.227715+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 26059,
+          "output_tokens": 771,
+          "reasoning_output_tokens": 0
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 32256,
+      "input_tokens": 96680,
+      "output_tokens": 4197,
+      "reasoning_output_tokens": 88
+    }
+  }
+}

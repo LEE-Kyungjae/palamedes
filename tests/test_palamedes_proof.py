@@ -221,6 +221,32 @@ class PalamedesProofTests(unittest.TestCase):
         self.assertTrue(outcome["labor_retired"])
         self.assertEqual(outcome["retired_seconds"], 480)
 
+    def test_generation_failure_is_preserved_and_not_retried_in_place(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            prepared = palamedes_proof.prepare_run(
+                portfolio(root), run_root=root / "runs", run_id="proof-test"
+            )
+            run = Path(prepared["run_path"])
+            with patch(
+                "palamedes_proof.generate_baseline",
+                side_effect=ValueError("invalid mission"),
+            ):
+                with self.assertRaises(ValueError):
+                    palamedes_proof.generate_condition(
+                        run, condition="baseline", case_id="case-0"
+                    )
+
+            failures = list(
+                (run / "cases" / "case-0").glob("baseline.failure-*.json")
+            )
+            record = palamedes_proof.load_object(failures[0])
+
+        self.assertEqual(len(failures), 1)
+        self.assertEqual(record["failure"], "invalid mission")
+        self.assertFalse(record["retry_appended_to_same_run"])
+        self.assertFalse((run / "cases" / "case-0" / "baseline.json").exists())
+
 
 if __name__ == "__main__":
     unittest.main()
