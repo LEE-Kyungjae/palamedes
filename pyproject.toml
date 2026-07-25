@@ -24,10 +24,14 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
+[project.scripts]
+palamedes = "palamedes:main"
+
 [tool.setuptools]
 py-modules = [
   "palamedes",
   "palamedes_agent",
+  "palamedes_chat",
   "palamedes_client",
   "palamedes_mission",
   "palamedes_server",

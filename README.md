@@ -407,6 +407,73 @@ This quick start exercises the stable plan-state kernel. It does not by itself
 run or prove the full autonomous pre-planner; empirical mission origination is
 currently represented by the experimental contracts and preregistered cases.
 
+### Interactive AI terminal
+
+Install the local console entry point:
+
+```bash
+python3 -m pip install -e .
+```
+
+Start Palamedes with OpenRouter:
+
+```bash
+export OPENROUTER_API_KEY="<new-key>"
+palamedes chat \
+  --provider openrouter \
+  --model <provider/model> \
+  --workspace /path/to/project
+```
+
+Or use the OpenAI Responses API:
+
+```bash
+export OPENAI_API_KEY="<new-key>"
+palamedes chat \
+  --provider openai \
+  --model gpt-5.6
+```
+
+Without installation, the equivalent command is:
+
+```bash
+python3 palamedes.py chat --provider openrouter --model <provider/model>
+```
+
+The terminal is a persistent, streaming REPL:
+
+```text
+Palamedes Research Alpha
+workspace: /path/to/project
+provider: openrouter
+model: <provider/model>
+session: local-trial
+
+palamedes> /think What important question are we failing to ask?
+palamedes> /challenge Our current product direction
+palamedes> /research What evidence is missing before commitment?
+palamedes> /mission Produce the strongest mission worth planning
+```
+
+Available commands:
+
+- `/think`: choose and perform the missing mode of thought
+- `/challenge`: attack assumptions and state falsifiers
+- `/research`: identify the minimum missing external evidence
+- `/mission`: draft a mission contract with rationale, non-goals, uncertainty, and next probe
+- `/status`, `/history`, `/sessions`, `/new`, `/help`, `/quit`
+
+The current directory is the default workspace; `--workspace` selects another
+project explicitly. Sessions are stored locally as JSONL under that project's
+`.palamedes/chat/`. API keys are read only from environment variables and are
+not written to session state. ChatGPT Plus/Pro and Claude subscription
+credentials are not API credentials; this CLI currently uses provider API keys
+and provider-side API billing.
+
+The chat surface is deliberately plan-only. Model output can recommend a
+mission or plan change, but it cannot silently mutate a plan or claim that
+delivery work occurred.
+
 The first 5 to 10 minutes should produce:
 
 1. one chosen direction

@@ -15,10 +15,12 @@ setup(
     py_modules=[
         "palamedes",
         "palamedes_agent",
+        "palamedes_chat",
         "palamedes_client",
         "palamedes_mission",
         "palamedes_server",
         "palamedes_store",
     ],
     packages=["palamedes_sdk"],
+    entry_points={"console_scripts": ["palamedes=palamedes:main"]},
 )

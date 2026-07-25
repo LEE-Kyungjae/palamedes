@@ -5,6 +5,7 @@ import importlib
 import json
 import re
 import shutil
+import sys
 import tempfile
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
@@ -3602,8 +3603,16 @@ def cmd_ideate(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Palamedes local planning engine (MVP)")
+    p = argparse.ArgumentParser(description="Palamedes local planning and mission intelligence")
     sub = p.add_subparsers(dest="command", required=True)
+
+    s = sub.add_parser("chat", help="Start an interactive AI-backed Palamedes session.")
+    s.add_argument("--provider", choices=["openrouter", "openai"], default="openrouter")
+    s.add_argument("--model", type=str, default="")
+    s.add_argument("--session", type=str, default="")
+    s.add_argument("--workspace", type=str, default="")
+    s.add_argument("--history-limit", type=int, default=24)
+    s.set_defaults(func=cmd_chat)
 
     s = sub.add_parser("init")
     s.set_defaults(func=cmd_init)
@@ -3835,6 +3844,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--apply", action="store_true")
     s.set_defaults(func=cmd_review)
     return p
+
+
+def cmd_chat(args: argparse.Namespace) -> None:
+    from palamedes_chat import cmd_chat as run_chat_command
+
+    run_chat_command(args, sys.modules[__name__])
 
 
 def main() -> None:
