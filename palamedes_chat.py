@@ -7,7 +7,10 @@ import json
 import hashlib
 import os
 import re
+import shutil
+import subprocess
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 import uuid
@@ -155,6 +158,91 @@ class OpenAIResponsesChatProvider:
                         yield delta
 
 
+@dataclass
+class CodexCliChatProvider:
+    model: str = "configured-default"
+    provider_name: str = "codex"
+    timeout_seconds: int = 300
+    last_usage: Optional[Dict[str, int]] = None
+
+    def stream(self, messages: List[Dict[str, str]]) -> Iterable[str]:
+        self.last_usage = None
+        executable = shutil.which("codex")
+        if not executable:
+            raise RuntimeError("Codex CLI is not installed or not available on PATH")
+        prompt = "\n\n".join(
+            f"{item.get('role', 'user').upper()}:\n{item.get('content', '')}"
+            for item in messages
+        )
+        prompt += (
+            "\n\nReturn only the requested final answer. Do not inspect the filesystem, "
+            "run commands, edit files, or expand beyond the supplied bounded context."
+        )
+        command = [
+            executable,
+            "exec",
+            "-",
+            "--ephemeral",
+            "--sandbox",
+            "read-only",
+            "--skip-git-repo-check",
+            "--color",
+            "never",
+            "--json",
+        ]
+        if self.model != "configured-default":
+            command.extend(["--model", self.model])
+        try:
+            with tempfile.TemporaryDirectory(prefix="palamedes-codex-") as tempdir:
+                result = subprocess.run(
+                    command,
+                    cwd=tempdir,
+                    input=prompt,
+                    capture_output=True,
+                    text=True,
+                    timeout=self.timeout_seconds,
+                    check=False,
+                )
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(
+                f"Codex CLI timed out after {self.timeout_seconds} seconds"
+            ) from exc
+        if result.returncode != 0:
+            detail = result.stderr.strip()[-4000:] or "no diagnostic output"
+            raise RuntimeError(
+                f"Codex CLI failed with exit code {result.returncode}: {detail}"
+            )
+        final_text = ""
+        usage: Optional[Dict[str, int]] = None
+        for line in result.stdout.splitlines():
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(event, dict):
+                continue
+            if event.get("type") == "item.completed":
+                item = event.get("item", {})
+                if (
+                    isinstance(item, dict)
+                    and item.get("type") == "agent_message"
+                    and isinstance(item.get("text"), str)
+                ):
+                    final_text = item["text"]
+            if event.get("type") == "turn.completed" and isinstance(
+                event.get("usage"), dict
+            ):
+                usage = {
+                    key: int(value)
+                    for key, value in event["usage"].items()
+                    if isinstance(value, int) and value >= 0
+                }
+        if not final_text.strip():
+            raise RuntimeError("Codex CLI returned no final agent message")
+        self.last_usage = usage
+        yield final_text
+
+
 def provider_from_config(name: str, model: str = "") -> ChatProvider:
     if name == "openrouter":
         return OpenRouterChatProvider(
@@ -165,10 +253,20 @@ def provider_from_config(name: str, model: str = "") -> ChatProvider:
         return OpenAIResponsesChatProvider(
             model=model or os.environ.get("PALAMEDES_OPENAI_MODEL", DEFAULT_OPENAI_MODEL)
         )
-    raise ValueError("provider must be openrouter or openai")
+    if name == "codex":
+        return CodexCliChatProvider(model=model or "configured-default")
+    raise ValueError("provider must be openrouter, openai, or codex")
 
 
 def provider_health(name: str) -> Dict[str, Any]:
+    if name == "codex":
+        available = bool(shutil.which("codex"))
+        return {
+            "provider": name,
+            "status": "ok" if available else "unavailable",
+            "credential_hint": "run codex login if the CLI is not authenticated",
+            "cli_available": available,
+        }
     env_name = "OPENROUTER_API_KEY" if name == "openrouter" else "OPENAI_API_KEY"
     key_set = bool(os.environ.get(env_name, "").strip())
     return {
@@ -176,6 +274,7 @@ def provider_health(name: str) -> Dict[str, Any]:
         "status": "ok" if key_set else "unavailable",
         "api_key_env": env_name,
         "api_key_set": key_set,
+        "credential_hint": f"set {env_name}",
     }
 
 
@@ -1504,7 +1603,7 @@ def cmd_chat(args: Any, palamedes_module: Any) -> None:
     health = provider_health(args.provider)
     if health["status"] != "ok":
         raise ValueError(
-            f"{args.provider} is unavailable: set {health['api_key_env']} before starting chat"
+            f"{args.provider} is unavailable: {health['credential_hint']}"
         )
     session_id = args.session or os.environ.get("PALAMEDES_CHAT_SESSION", "").strip()
     if not session_id:

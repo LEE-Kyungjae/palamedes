@@ -34,6 +34,13 @@ def select_wake_policy(
             0,
             "initial observation establishes a baseline without spending cognition",
         )
+    if reasons == {"initial_observation"}:
+        return _policy(
+            "interpret_initial_baseline",
+            ["interpreter"],
+            1,
+            "the caller explicitly requested cognition on the initial baseline",
+        )
     if "mission_outcome_appended" in reasons:
         return _policy(
             "outcome_review",
@@ -226,10 +233,18 @@ class CountingProvider:
         self.provider_name = getattr(provider, "provider_name", "unknown")
         self.model = getattr(provider, "model", "unknown")
         self.call_count = 0
+        self.token_usage: Dict[str, int] = {}
 
     def stream(self, messages: List[Dict[str, str]]):
         self.call_count += 1
-        yield from self.provider.stream(messages)
+        try:
+            yield from self.provider.stream(messages)
+        finally:
+            usage = getattr(self.provider, "last_usage", None)
+            if isinstance(usage, dict):
+                for key, value in usage.items():
+                    if isinstance(value, int) and value >= 0:
+                        self.token_usage[key] = self.token_usage.get(key, 0) + value
 
 
 def _validate_partial_output(role: str, output: Dict[str, Any]) -> None:
@@ -368,6 +383,7 @@ def watch_once(
     auto_cognition: bool,
     wake_initial: bool,
     max_calls_per_wake: int,
+    max_calls_per_day: int,
     max_calls_total: int,
 ) -> Dict[str, Any]:
     snapshot = collect_observation(
@@ -379,6 +395,12 @@ def watch_once(
     policy = select_wake_policy(snapshot, wake_initial=wake_initial)
     key = wake_key(snapshot, policy)
     state = store.load_state()
+    budget_date = utc_now()[:10]
+    daily_calls = (
+        int(state.get("daily_model_calls", 0))
+        if state.get("budget_date") == budget_date
+        else 0
+    )
     duplicate = bool(key and key == state.get("last_wake_key"))
     if duplicate and policy["operation"] != "wait":
         policy = _policy(
@@ -387,7 +409,10 @@ def watch_once(
             0,
             "the same signal state already received a wake decision",
         )
-    calls_remaining = max(0, max_calls_total - int(state.get("total_model_calls", 0)))
+    total_calls = int(state.get("total_model_calls", 0))
+    total_remaining = max(0, max_calls_total - total_calls)
+    daily_remaining = max(0, max_calls_per_day - daily_calls)
+    calls_remaining = min(total_remaining, daily_remaining)
     budget_blocked = (
         policy["maximum_model_calls"] > max_calls_per_wake
         or policy["maximum_model_calls"] > calls_remaining
@@ -404,8 +429,12 @@ def watch_once(
         "auto_cognition_enabled": auto_cognition,
         "budget": {
             "max_calls_per_wake": max_calls_per_wake,
+            "max_calls_per_day": max_calls_per_day,
             "max_calls_total": max_calls_total,
-            "calls_used_before": int(state.get("total_model_calls", 0)),
+            "budget_date": budget_date,
+            "daily_calls_used_before": daily_calls,
+            "daily_calls_remaining_before": daily_remaining,
+            "calls_used_before": total_calls,
             "calls_remaining_before": calls_remaining,
             "blocked": budget_blocked,
         },
@@ -433,6 +462,8 @@ def watch_once(
                 palamedes_module=palamedes_module,
             )
             wake["execution"]["model_call_count"] = counted_provider.call_count
+            if counted_provider.token_usage:
+                wake["execution"]["token_usage"] = counted_provider.token_usage
         except (OSError, RuntimeError, ValueError) as exc:
             wake["execution"] = {
                 "status": "failed",
@@ -440,10 +471,17 @@ def watch_once(
                 "model_call_count": counted_provider.call_count,
                 "mission_draft_issued": False,
             }
+            if counted_provider.token_usage:
+                wake["execution"]["token_usage"] = counted_provider.token_usage
     used = int(wake["execution"].get("model_call_count", 0))
-    wake["budget"]["calls_used_after"] = int(
-        state.get("total_model_calls", 0)
-    ) + used
+    token_usage = wake["execution"].get("token_usage", {})
+    token_total = sum(
+        value
+        for key, value in token_usage.items()
+        if key != "cached_input_tokens" and isinstance(value, int)
+    )
+    wake["budget"]["daily_calls_used_after"] = daily_calls + used
+    wake["budget"]["calls_used_after"] = total_calls + used
     path = store.save_wake(wake)
     store.append_event(
         {
@@ -454,6 +492,7 @@ def watch_once(
             "operation": policy["operation"],
             "execution_status": wake["execution"]["status"],
             "model_call_count": used,
+            "token_count": token_total,
             "wake_path": str(path),
         }
     )
@@ -464,7 +503,16 @@ def watch_once(
             "last_observation_id": snapshot["observation_id"],
             "last_wake_id": wake["wake_id"],
             "last_wake_key": key if policy["operation"] != "wait" else state.get("last_wake_key", ""),
-            "total_model_calls": int(state.get("total_model_calls", 0)) + used,
+            "budget_date": budget_date,
+            "daily_model_calls": daily_calls + used,
+            "total_model_calls": total_calls + used,
+            "daily_tokens": (
+                int(state.get("daily_tokens", 0))
+                if state.get("budget_date") == budget_date
+                else 0
+            )
+            + token_total,
+            "total_tokens": int(state.get("total_tokens", 0)) + token_total,
             "iteration_count": int(state.get("iteration_count", 0)) + 1,
         }
     )
@@ -506,7 +554,7 @@ def cmd_watch(args: Any, palamedes_module: Any) -> None:
         health = provider_health(args.provider)
         if health["status"] != "ok":
             raise ValueError(
-                f"{args.provider} is unavailable: set {health['api_key_env']}"
+                f"{args.provider} is unavailable: {health['credential_hint']}"
             )
         provider = provider_from_config(args.provider, args.model)
     store = WatchStore(palamedes_module.STATE_DIR / "watch")
@@ -524,6 +572,7 @@ def cmd_watch(args: Any, palamedes_module: Any) -> None:
                 auto_cognition=args.auto_cognition,
                 wake_initial=args.wake_initial,
                 max_calls_per_wake=args.max_calls_per_wake,
+                max_calls_per_day=args.max_calls_per_day,
                 max_calls_total=args.max_calls_total,
             )
             if args.json:

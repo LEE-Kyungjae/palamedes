@@ -434,6 +434,16 @@ palamedes chat \
   --model gpt-5.6
 ```
 
+Or reuse an authenticated Codex CLI session without configuring a provider API
+key:
+
+```bash
+codex login
+palamedes chat \
+  --provider codex \
+  --workspace /path/to/project
+```
+
 Without installation, the equivalent command is:
 
 ```bash
@@ -479,9 +489,10 @@ Available commands:
 The current directory is the default workspace; `--workspace` selects another
 project explicitly. Sessions are stored locally as JSONL under that project's
 `.palamedes/chat/`. API keys are read only from environment variables and are
-not written to session state. ChatGPT Plus/Pro and Claude subscription
-credentials are not API credentials; this CLI currently uses provider API keys
-and provider-side API billing.
+not written to session state. OpenRouter and the OpenAI Responses API use
+provider API keys and provider-side API billing. The `codex` provider instead
+invokes an installed, authenticated Codex CLI and can reuse its saved
+ChatGPT-managed Codex authentication.
 
 The chat surface is deliberately plan-only. Model output can recommend a
 mission or plan change, but it cannot silently mutate a plan or claim that
@@ -549,6 +560,27 @@ palamedes watch \
   --max-calls-total 20
 ```
 
+For a lower-consumption Codex-backed loop, use the defaults explicitly:
+
+```bash
+palamedes watch \
+  --workspace /path/to/project \
+  --interval 300 \
+  --auto-cognition \
+  --provider codex \
+  --max-calls-per-wake 2 \
+  --max-calls-per-day 10 \
+  --max-calls-total 20
+```
+
+Each Codex wake runs as an ephemeral, read-only, non-interactive process in an
+isolated temporary directory. It receives the bounded observation rather than
+the repository as working context and is instructed not to inspect files or
+run commands. Codex JSONL usage is captured into wake and watch state records,
+including input, cached-input, output, and reasoning token fields reported by
+the CLI. This keeps Codex in the reasoning role, makes consumption auditable,
+and prevents repeated whole-repository exploration from becoming the default.
+
 `watch` turns observed changes into the least sufficient cognitive operation:
 
 | Observed signal | Wake operation |
@@ -566,8 +598,12 @@ Autonomous cognition is off unless `--auto-cognition` is supplied. The watcher
 never runs tests unless `--test-command` is explicitly supplied, never gains
 delivery authority, and never approves a mission into the plan. A full wake may
 save a mission as a reviewable draft only. Per-wake and lifetime call budgets
-are enforced before provider access; attempted calls are charged even if the
-provider fails. Repeated identical signal states are suppressed.
+are enforced before provider access, with an additional daily budget; attempted
+calls are charged even if the provider fails. Repeated identical signal states
+are suppressed. The defaults are a five-minute interval, two calls per wake,
+ten calls per UTC day, and twenty calls over the stored watch lifetime. Because
+a full cognition cycle needs four independent calls, it remains blocked at the
+default per-wake budget; opt into it with `--max-calls-per-wake 4`.
 
 Watch state is local and inspectable under `.palamedes/watch/`: `state.json`
 holds the current cursor and budget total, `events.jsonl` is append-only, and

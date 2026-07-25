@@ -5,6 +5,7 @@ import os
 import tempfile
 import unittest
 from argparse import Namespace
+from types import SimpleNamespace
 from unittest.mock import patch
 from pathlib import Path
 
@@ -434,6 +435,66 @@ class PalamedesChatTests(unittest.TestCase):
 
         self.assertNotIn("api_key", health)
         self.assertIn("api_key_set", health)
+
+    def test_codex_provider_runs_ephemeral_read_only_and_isolated(self):
+        provider = palamedes_chat.CodexCliChatProvider()
+        completed = SimpleNamespace(
+            returncode=0,
+            stdout="\n".join(
+                [
+                    json.dumps(
+                        {
+                            "type": "item.completed",
+                            "item": {
+                                "type": "agent_message",
+                                "text": '{"observations":["bounded"]}',
+                            },
+                        }
+                    ),
+                    json.dumps(
+                        {
+                            "type": "turn.completed",
+                            "usage": {
+                                "input_tokens": 120,
+                                "cached_input_tokens": 80,
+                                "output_tokens": 10,
+                            },
+                        }
+                    ),
+                ]
+            ),
+            stderr="",
+        )
+        with patch("palamedes_chat.shutil.which", return_value="/bin/codex"), patch(
+            "palamedes_chat.subprocess.run", return_value=completed
+        ) as run:
+            output = "".join(
+                provider.stream(
+                    [
+                        {"role": "system", "content": "Return JSON."},
+                        {"role": "user", "content": "Interpret this snapshot."},
+                    ]
+                )
+            )
+
+        command = run.call_args.args[0]
+        self.assertEqual(output, '{"observations":["bounded"]}')
+        self.assertEqual(provider.last_usage["input_tokens"], 120)
+        self.assertIn("--ephemeral", command)
+        self.assertIn("read-only", command)
+        self.assertIn("--skip-git-repo-check", command)
+        self.assertIn("--json", command)
+        self.assertTrue(run.call_args.kwargs["cwd"].startswith("/"))
+        self.assertIn(
+            "Do not inspect the filesystem", run.call_args.kwargs["input"]
+        )
+
+    def test_codex_provider_health_requires_only_the_cli_at_preflight(self):
+        with patch("palamedes_chat.shutil.which", return_value="/bin/codex"):
+            health = palamedes_chat.provider_health("codex")
+
+        self.assertEqual(health["status"], "ok")
+        self.assertNotIn("api_key_env", health)
 
     def test_system_prompt_contains_plan_only_authority_boundary(self):
         with tempfile.TemporaryDirectory() as tempdir:

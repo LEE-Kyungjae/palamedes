@@ -94,6 +94,12 @@ class PalamedesWatchTests(unittest.TestCase):
         )
         self.assertEqual(
             palamedes_watch.select_wake_policy(
+                snapshot("initial_observation"), wake_initial=True
+            )["roles"],
+            ["interpreter"],
+        )
+        self.assertEqual(
+            palamedes_watch.select_wake_policy(
                 snapshot("document_set_or_content_changed")
             )["roles"],
             ["interpreter"],
@@ -161,6 +167,7 @@ class PalamedesWatchTests(unittest.TestCase):
                     auto_cognition=False,
                     wake_initial=False,
                     max_calls_per_wake=4,
+                    max_calls_per_day=10,
                     max_calls_total=20,
                 )
                 second = palamedes_watch.watch_once(
@@ -174,6 +181,7 @@ class PalamedesWatchTests(unittest.TestCase):
                     auto_cognition=False,
                     wake_initial=False,
                     max_calls_per_wake=4,
+                    max_calls_per_day=10,
                     max_calls_total=20,
                 )
 
@@ -201,6 +209,7 @@ class PalamedesWatchTests(unittest.TestCase):
                     auto_cognition=True,
                     wake_initial=False,
                     max_calls_per_wake=1,
+                    max_calls_per_day=10,
                     max_calls_total=20,
                 )
 
@@ -233,6 +242,7 @@ class PalamedesWatchTests(unittest.TestCase):
                     auto_cognition=True,
                     wake_initial=False,
                     max_calls_per_wake=4,
+                    max_calls_per_day=10,
                     max_calls_total=20,
                 )
 
@@ -241,6 +251,83 @@ class PalamedesWatchTests(unittest.TestCase):
         self.assertEqual(wake["execution"]["status"], "failed")
         self.assertEqual(wake["execution"]["model_call_count"], 1)
         self.assertEqual(state["total_model_calls"], 1)
+
+    def test_provider_token_usage_is_persisted(self):
+        class MeteredProvider(StaticWakeProvider):
+            last_usage = None
+
+            def stream(self, messages):
+                yield from super().stream(messages)
+                self.last_usage = {
+                    "input_tokens": 120,
+                    "cached_input_tokens": 80,
+                    "output_tokens": 10,
+                }
+
+        current = snapshot("document_set_or_content_changed")
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            store = palamedes_watch.WatchStore(root / "watch")
+            with patch(
+                "palamedes_watch.collect_observation", return_value=current
+            ):
+                wake = palamedes_watch.watch_once(
+                    workspace=root,
+                    store=store,
+                    palamedes_module=FakePalamedes(root),
+                    ref_root=None,
+                    test_command="",
+                    test_timeout=10,
+                    provider=MeteredProvider(),
+                    auto_cognition=True,
+                    wake_initial=False,
+                    max_calls_per_wake=2,
+                    max_calls_per_day=10,
+                    max_calls_total=20,
+                )
+            state = store.load_state()
+
+        self.assertEqual(wake["execution"]["token_usage"]["input_tokens"], 120)
+        self.assertEqual(state["total_tokens"], 130)
+        self.assertEqual(state["daily_tokens"], 130)
+
+    def test_daily_budget_blocks_cognition(self):
+        current = snapshot("document_set_or_content_changed")
+        provider = StaticWakeProvider()
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            store = palamedes_watch.WatchStore(root / "watch")
+            store.save_state(
+                {
+                    "watch_state_version": "palamedes-watch-state/1",
+                    "budget_date": palamedes_watch.utc_now()[:10],
+                    "daily_model_calls": 10,
+                    "total_model_calls": 10,
+                    "iteration_count": 1,
+                    "last_wake_key": "",
+                }
+            )
+            with patch(
+                "palamedes_watch.collect_observation", return_value=current
+            ):
+                wake = palamedes_watch.watch_once(
+                    workspace=root,
+                    store=store,
+                    palamedes_module=FakePalamedes(root),
+                    ref_root=None,
+                    test_command="",
+                    test_timeout=10,
+                    provider=provider,
+                    auto_cognition=True,
+                    wake_initial=False,
+                    max_calls_per_wake=2,
+                    max_calls_per_day=10,
+                    max_calls_total=20,
+                )
+
+        self.assertEqual(wake["execution"]["status"], "budget_blocked")
+        self.assertEqual(wake["budget"]["daily_calls_remaining_before"], 0)
+        self.assertEqual(provider.calls, [])
 
     def test_watch_lock_rejects_second_live_process(self):
         with tempfile.TemporaryDirectory() as tempdir:
