@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/outcome-causal-backfill.schema.json",
+  "title": "Immutable Legacy Outcome Meta-learning Backfill",
+  "type": "object",
+  "required": ["backfill_interpretation_version", "backfill_interpretation_id", "outcome_id", "mission_contract_id", "causal_signature", "mechanism_summary", "work_scale", "surface_key", "finding_lane", "exploration_value", "hypothesis_scope", "source_outcome_immutable", "recorded_at"],
+  "properties": {
+    "backfill_interpretation_version": {"const": "palamedes-outcome-backfill/1"},
+    "backfill_interpretation_id": {"type": "string", "pattern": "^backfill-[a-f0-9]{12}$"},
+    "outcome_id": {"type": "string", "pattern": "^outcome-[a-f0-9]{12}$"},
+    "mission_contract_id": {"type": "string", "pattern": "^mission-[a-f0-9]{12}$"},
+    "causal_signature": {"type": "string", "minLength": 1},
+    "mechanism_summary": {"type": "string", "minLength": 1},
+    "work_scale": {"enum": ["micro", "component", "product", "service", "portfolio"]},
+    "surface_key": {"type": "string", "minLength": 1},
+    "finding_lane": {"enum": ["correctness_defect", "design_hypothesis", "null_candidate", "expected_outcome", "inconclusive"]},
+    "exploration_value": {"type": "integer", "minimum": 0, "maximum": 100},
+    "hypothesis_scope": {"type": "string"},
+    "source_outcome_immutable": {"const": true},
+    "recorded_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

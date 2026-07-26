@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 from palamedes_observe import fingerprint, utc_now
 
@@ -15,6 +15,8 @@ class PromptAgendaStore:
         self.root = root
         self.clusters_root = root / "causal-clusters"
         self.agendas_root = root / "prompt-agendas"
+        self.hypotheses_root = root / "design-hypotheses"
+        self.backfill_root = root / "backfill-interpretations"
         self.events_path = root / "events.jsonl"
 
     @staticmethod
@@ -36,6 +38,16 @@ class PromptAgendaStore:
 
     def save_agenda(self, agenda: Dict[str, Any]) -> Path:
         return self._save(self.agendas_root, agenda["prompt_agenda_id"], agenda)
+
+    def save_design_hypothesis(self, hypothesis: Dict[str, Any]) -> Path:
+        return self._save(
+            self.hypotheses_root, hypothesis["design_hypothesis_id"], hypothesis
+        )
+
+    def save_backfill_interpretation(self, item: Dict[str, Any]) -> Path:
+        return self._save(
+            self.backfill_root, item["backfill_interpretation_id"], item
+        )
 
     def append_event(self, event: Dict[str, Any]) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
@@ -121,6 +133,210 @@ def record_causal_pattern(
     return cluster
 
 
+def record_zoom_pattern(
+    *, store: PromptAgendaStore, interpretations: List[Dict[str, Any]], threshold: int = 5
+) -> Dict[str, Any]:
+    if threshold < 2:
+        raise ValueError("zoom threshold must be at least two")
+    streak: List[Dict[str, Any]] = []
+    surface = ""
+    for item in reversed(interpretations):
+        if item.get("work_scale") != "micro":
+            break
+        item_surface = str(item.get("surface_key", "")).strip()
+        if not item_surface:
+            break
+        if not surface:
+            surface = item_surface
+        if item_surface != surface:
+            break
+        streak.append(item)
+    if len(streak) < threshold:
+        return {
+            "status": "not_applicable",
+            "micro_streak": len(streak),
+            "threshold": threshold,
+        }
+    selected = list(reversed(streak))
+    signature = f"micro-cycle-streak:{surface}"
+    cluster = record_causal_pattern(
+        store=store,
+        interpretation={
+            "outcome_id": selected[-1]["outcome_id"],
+            "mission_contract_id": selected[-1]["mission_contract_id"],
+            "causal_signature": signature,
+            "mechanism_summary": (
+                f"{len(selected)} consecutive micro outcomes remained on {surface}; "
+                "a component or product fresh-eyes audit is required before more local work."
+            ),
+        },
+    )
+    cluster["outcome_ids"] = [item["outcome_id"] for item in selected]
+    cluster["mission_contract_ids"] = [
+        item["mission_contract_id"] for item in selected
+    ]
+    cluster["recurrence_count"] = len(selected)
+    cluster["meta_shift_required"] = True
+    cluster["zoom_shift_from"] = "micro"
+    cluster["zoom_shift_to"] = "component_or_product"
+    cluster["fresh_eyes_required"] = True
+    store.save_cluster(cluster)
+    store.append_event(
+        {
+            "ts": utc_now(),
+            "type": "zoom_shift_required",
+            "causal_cluster_id": cluster["causal_cluster_id"],
+            "surface_key": surface,
+            "micro_streak": len(selected),
+        }
+    )
+    return {"status": "required", "cluster": cluster}
+
+
+def record_design_hypothesis(
+    *, store: PromptAgendaStore, interpretation: Dict[str, Any]
+) -> Dict[str, Any]:
+    if interpretation.get("finding_lane") != "design_hypothesis":
+        return {"status": "not_applicable"}
+    scope = str(interpretation.get("hypothesis_scope", "")).strip()
+    if not scope:
+        raise ValueError("design hypothesis requires hypothesis_scope")
+    identity = {
+        "outcome_id": interpretation["outcome_id"],
+        "scope": scope.casefold(),
+    }
+    hypothesis_id = f"design-hypothesis-{fingerprint(identity)[:12]}"
+    hypothesis = {
+        "design_hypothesis_version": "palamedes-design-hypothesis/1",
+        "design_hypothesis_id": hypothesis_id,
+        "outcome_id": interpretation["outcome_id"],
+        "mission_contract_id": interpretation["mission_contract_id"],
+        "surface_key": interpretation["surface_key"],
+        "hypothesis_scope": scope,
+        "exploration_value": interpretation["exploration_value"],
+        "claim_limit": "No correctness or human-outcome claim without new evidence.",
+        "mission_authority_granted": False,
+        "status": "incubating",
+        "created_at": utc_now(),
+    }
+    store.save_design_hypothesis(hypothesis)
+    store.append_event(
+        {
+            "ts": hypothesis["created_at"],
+            "type": "design_hypothesis_incubated",
+            "design_hypothesis_id": hypothesis_id,
+            "outcome_id": interpretation["outcome_id"],
+        }
+    )
+    return {"status": "recorded", "hypothesis": hypothesis}
+
+
+def run_outcome_backfill(
+    *,
+    provider: Any,
+    store: PromptAgendaStore,
+    outcomes: List[Dict[str, Any]],
+    already_interpreted_outcome_ids: set,
+    limit: int = 12,
+) -> Dict[str, Any]:
+    from palamedes_chat import _provider_json
+
+    if limit < 1 or limit > 24:
+        raise ValueError("backfill limit must be from 1 to 24")
+    pending = [
+        item
+        for item in outcomes
+        if item.get("outcome_id") not in already_interpreted_outcome_ids
+    ][:limit]
+    if not pending:
+        return {"status": "nothing_to_backfill", "records": []}
+    prompt = f"""ROLE: retrospective_outcome_mapper
+Map historical outcomes into the new meta-learning fields without rewriting
+their status, opening gates, or claiming new product facts. Reuse known causal
+signatures for materially identical mechanisms. Classify work scale and keep a
+contractless possibility as design_hypothesis only when a bounded comparison
+could be informative; otherwise use null_candidate. Return one row for every
+provided outcome and only those outcome IDs.
+Return exactly:
+{{"interpretations":[{{"outcome_id":"outcome-...",
+"causal_signature":"...","mechanism_summary":"...",
+"work_scale":"micro|component|product|service|portfolio",
+"surface_key":"...",
+"finding_lane":"correctness_defect|design_hypothesis|null_candidate|expected_outcome|inconclusive",
+"exploration_value":0,"hypothesis_scope":"bounded question or empty"}}]}}
+
+Known clusters:
+{json.dumps(store.active_clusters(), ensure_ascii=False)}
+Historical outcomes:
+{json.dumps(pending, ensure_ascii=False)}"""
+    output = _provider_json(
+        provider,
+        system=(
+            "You perform read-only retrospective metadata mapping. You cannot "
+            "rewrite outcomes, gates, contracts, or authority."
+        ),
+        prompt=prompt,
+    )
+    rows = output.get("interpretations")
+    expected_ids = {item["outcome_id"] for item in pending}
+    if not isinstance(rows, list) or {
+        str(item.get("outcome_id", "")).strip()
+        for item in rows
+        if isinstance(item, dict)
+    } != expected_ids:
+        raise ValueError("backfill must return exactly one row per pending outcome")
+    persisted = []
+    for row in rows:
+        for field in ("causal_signature", "mechanism_summary", "surface_key"):
+            _required_text(row, field)
+        if row.get("work_scale") not in {
+            "micro", "component", "product", "service", "portfolio"
+        }:
+            raise ValueError("backfill row has invalid work_scale")
+        if row.get("finding_lane") not in {
+            "correctness_defect", "design_hypothesis", "null_candidate",
+            "expected_outcome", "inconclusive",
+        }:
+            raise ValueError("backfill row has invalid finding_lane")
+        value = row.get("exploration_value")
+        if not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 100:
+            raise ValueError("backfill exploration_value must be 0-100")
+        scope = str(row.get("hypothesis_scope", "")).strip()
+        if row["finding_lane"] == "design_hypothesis" and not scope:
+            raise ValueError("backfilled design hypothesis requires scope")
+        if row["finding_lane"] != "design_hypothesis" and scope:
+            raise ValueError("only backfilled design hypotheses may have scope")
+        source = next(
+            item for item in pending if item["outcome_id"] == row["outcome_id"]
+        )
+        record = {
+            "backfill_interpretation_version": "palamedes-outcome-backfill/1",
+            "backfill_interpretation_id": f"backfill-{row['outcome_id'][8:]}",
+            "outcome_id": row["outcome_id"],
+            "mission_contract_id": source["mission_contract_id"],
+            "causal_signature": row["causal_signature"].strip(),
+            "mechanism_summary": row["mechanism_summary"].strip(),
+            "work_scale": row["work_scale"],
+            "surface_key": row["surface_key"].strip(),
+            "finding_lane": row["finding_lane"],
+            "exploration_value": value,
+            "hypothesis_scope": scope,
+            "source_outcome_immutable": True,
+            "recorded_at": utc_now(),
+        }
+        store.save_backfill_interpretation(record)
+        record_causal_pattern(store=store, interpretation=record)
+        record_design_hypothesis(store=store, interpretation=record)
+        persisted.append(record)
+    zoom = record_zoom_pattern(store=store, interpretations=persisted)
+    return {
+        "status": "completed",
+        "records": persisted,
+        "zoom_pattern": zoom,
+        "model_call_count": 1,
+    }
+
+
 def _required_text(payload: Dict[str, Any], field: str) -> str:
     value = str(payload.get(field, "")).strip()
     if not value:
@@ -129,7 +345,11 @@ def _required_text(payload: Dict[str, Any], field: str) -> str:
 
 
 def run_prompt_architecture(
-    *, provider: Any, store: PromptAgendaStore, cluster: Dict[str, Any]
+    *,
+    provider: Any,
+    store: PromptAgendaStore,
+    cluster: Dict[str, Any],
+    progress: Optional[Callable[[str], None]] = None,
 ) -> Dict[str, Any]:
     from palamedes_chat import _provider_json, _role_artifact
 
@@ -159,6 +379,8 @@ Return exactly:
 
 Causal cluster:
 {json.dumps(cluster, ensure_ascii=False)}"""
+    if progress:
+        progress("Prompt architect 1/3")
     architect = _provider_json(
         provider,
         system="You design bounded research prompts, never implementation authority.",
@@ -200,6 +422,8 @@ Cluster:
 {json.dumps(cluster, ensure_ascii=False)}
 Frozen candidates:
 {json.dumps(candidates, ensure_ascii=False)}"""
+    if progress:
+        progress("Prompt adversary 2/3")
     adversary = _provider_json(
         provider,
         system="You adversarially test self-authored prompts without expanding them.",
@@ -228,6 +452,8 @@ Candidates:
 {json.dumps(candidates, ensure_ascii=False)}
 Critiques:
 {json.dumps(critiques, ensure_ascii=False)}"""
+    if progress:
+        progress("Prompt selector 3/3")
     selector = _provider_json(
         provider,
         system="You select a bounded research agenda, not an implementation task.",

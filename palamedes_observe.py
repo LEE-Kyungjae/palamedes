@@ -19,7 +19,7 @@ MAX_TOTAL_DOCUMENT_BYTES = 120_000
 MAX_DOCUMENTS = 12
 MAX_TODOS = 50
 MAX_REF_REPOS = 60
-MAX_REF_KNOWLEDGE_REPOS = 8
+MAX_REF_KNOWLEDGE_REPOS = 16
 MAX_REF_KNOWLEDGE_BYTES = 4_000
 DEFAULT_DOCUMENT_NAMES = (
     "AGENTS.md",
@@ -303,9 +303,28 @@ def observe_ref_root(ref_root: Optional[Path]) -> Dict[str, Any]:
         }
     scan_root = ref_root / "roots" if (ref_root / "roots").is_dir() else ref_root
     repositories = []
-    candidates = sorted(
-        path for path in scan_root.iterdir() if path.is_dir() or path.is_symlink()
-    )
+    candidates: List[Path] = []
+    manifest = ref_root / "manifests" / "status-current.json"
+    if manifest.is_file():
+        try:
+            payload = json.loads(manifest.read_text(encoding="utf-8"))
+            rows = payload.get("repositories", []) if isinstance(payload, dict) else []
+            candidates = sorted(
+                {
+                    Path(item["path"]).expanduser()
+                    for item in rows
+                    if isinstance(item, dict)
+                    and isinstance(item.get("path"), str)
+                    and Path(item["path"]).expanduser().exists()
+                },
+                key=lambda path: str(path),
+            )
+        except (OSError, json.JSONDecodeError):
+            candidates = []
+    if not candidates:
+        candidates = sorted(
+            path for path in scan_root.iterdir() if path.is_dir() or path.is_symlink()
+        )
     for index, path in enumerate(candidates[:MAX_REF_REPOS]):
         resolved = path.resolve()
         git_dir = resolved / ".git"
@@ -590,9 +609,7 @@ def cmd_observe(args: Any, palamedes_module: Any) -> None:
         else Path.cwd().resolve()
     )
     bind_workspace(palamedes_module, workspace)
-    ref_value = args.ref_root or os.environ.get(
-        "PALAMEDES_REF_ROOT", "/Users/ze/work/ref"
-    )
+    ref_value = args.ref_root or os.environ.get("PALAMEDES_REF_ROOT", "")
     snapshot = collect_observation(
         workspace,
         ref_root=Path(ref_value).expanduser() if ref_value else None,

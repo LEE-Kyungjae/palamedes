@@ -167,6 +167,11 @@ def persist_mission_experience(
         ).strip(),
         "causal_signature": str(output.get("causal_signature", "")).strip(),
         "mechanism_summary": str(output.get("mechanism_summary", "")).strip(),
+        "work_scale": output.get("work_scale", "micro"),
+        "surface_key": str(output.get("surface_key", "")).strip(),
+        "finding_lane": output.get("finding_lane", "inconclusive"),
+        "exploration_value": int(output.get("exploration_value", 0)),
+        "hypothesis_scope": str(output.get("hypothesis_scope", "")).strip(),
         "mission_disposition": output.get(
             "mission_disposition", "insufficient_evidence"
         ),

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/reference-intelligence.schema.json",
+  "title": "Source-bounded Reference Intelligence",
+  "type": "object",
+  "required": ["reference_intelligence_version", "reference_intelligence_id", "observation_id", "reference_mode", "sources", "self_model", "hypotheses", "selected_agenda", "created_at"],
+  "properties": {
+    "reference_intelligence_version": {"const": "palamedes-reference-intelligence/1"},
+    "reference_intelligence_id": {"type": "string", "pattern": "^reference-intelligence-[a-f0-9]{12}$"},
+    "observation_id": {"type": "string", "minLength": 1},
+    "reference_mode": {"enum": ["workspace_only", "workspace_plus_optional_references"]},
+    "sources": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "self_model": {"type": "object"},
+    "hypotheses": {"type": "array", "minItems": 1, "maxItems": 3, "items": {"type": "object"}},
+    "selected_agenda": {
+      "type": "object",
+      "required": ["status", "prompt", "rationale", "grounding_source_ids", "external_research_required", "stop_conditions", "delivery_authority_granted", "created_at"],
+      "properties": {"delivery_authority_granted": {"const": false}},
+      "additionalProperties": true
+    },
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

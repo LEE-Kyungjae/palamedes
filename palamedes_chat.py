@@ -17,7 +17,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Protocol, TextIO
+from typing import Any, Callable, Dict, Iterable, List, Optional, Protocol, TextIO
 
 
 DEFAULT_OPENAI_MODEL = "gpt-5.6"
@@ -361,12 +361,40 @@ class MissionStore:
         with self.outcomes_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(outcome, ensure_ascii=False, sort_keys=True) + "\n")
 
+    def outcomes(self) -> List[Dict[str, Any]]:
+        if not self.outcomes_path.is_file():
+            return []
+        records = []
+        for line in self.outcomes_path.read_text(encoding="utf-8").splitlines():
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(payload, dict):
+                records.append(payload)
+        return records
+
     def append_outcome_interpretation(self, interpretation: Dict[str, Any]) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
         with self.outcome_interpretations_path.open("a", encoding="utf-8") as handle:
             handle.write(
                 json.dumps(interpretation, ensure_ascii=False, sort_keys=True) + "\n"
             )
+
+    def outcome_interpretations(self) -> List[Dict[str, Any]]:
+        if not self.outcome_interpretations_path.is_file():
+            return []
+        records = []
+        for line in self.outcome_interpretations_path.read_text(
+            encoding="utf-8"
+        ).splitlines():
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(payload, dict):
+                records.append(payload)
+        return records
 
     def append_outcome_gate(self, gate: Dict[str, Any]) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
@@ -827,6 +855,7 @@ def run_outcome_analyst(
     mission_store: MissionStore,
     contract: Dict[str, Any],
     outcome: Dict[str, Any],
+    progress: Optional[Callable[[str], None]] = None,
 ) -> Dict[str, Any]:
     cycle_id = str(contract.get("cognition_cycle_id", "")).strip()
     if not cycle_id:
@@ -835,6 +864,8 @@ def run_outcome_analyst(
     from palamedes_prompt import (
         PromptAgendaStore,
         record_causal_pattern,
+        record_design_hypothesis,
+        record_zoom_pattern,
         run_prompt_architecture,
     )
 
@@ -853,6 +884,11 @@ Return exactly:
   "belief_updates":["..."],
   "causal_signature":"short stable mechanism label reusable across outcomes",
   "mechanism_summary":"how the observed result was produced, independent of surface wording",
+  "work_scale":"micro|component|product|service|portfolio",
+  "surface_key":"stable product or code surface label",
+  "finding_lane":"correctness_defect|design_hypothesis|null_candidate|expected_outcome|inconclusive",
+  "exploration_value":0,
+  "hypothesis_scope":"bounded design question, or empty when not a design hypothesis",
   "probe_status":"completed|incomplete|not_applicable",
   "finding":"qualifying_defect|null_finding|expected_result|adverse_result|inconclusive",
   "mission_disposition":"continue|revise|stop|insufficient_evidence",
@@ -888,6 +924,35 @@ Known causal clusters:
         raise ValueError("outcome analyst requires causal signature and mechanism summary")
     output["causal_signature"] = causal_signature
     output["mechanism_summary"] = mechanism_summary
+    if output.get("work_scale") not in {
+        "micro", "component", "product", "service", "portfolio"
+    }:
+        raise ValueError("invalid outcome work_scale")
+    surface_key = str(output.get("surface_key", "")).strip()
+    if not surface_key:
+        raise ValueError("outcome analyst requires surface_key")
+    output["surface_key"] = surface_key
+    if output.get("finding_lane") not in {
+        "correctness_defect",
+        "design_hypothesis",
+        "null_candidate",
+        "expected_outcome",
+        "inconclusive",
+    }:
+        raise ValueError("invalid outcome finding_lane")
+    exploration_value = output.get("exploration_value")
+    if (
+        not isinstance(exploration_value, int)
+        or isinstance(exploration_value, bool)
+        or not 0 <= exploration_value <= 100
+    ):
+        raise ValueError("exploration_value must be an integer from 0 to 100")
+    hypothesis_scope = str(output.get("hypothesis_scope", "")).strip()
+    if output["finding_lane"] == "design_hypothesis" and not hypothesis_scope:
+        raise ValueError("design_hypothesis requires a bounded hypothesis_scope")
+    if output["finding_lane"] != "design_hypothesis" and hypothesis_scope:
+        raise ValueError("hypothesis_scope is only valid for design_hypothesis")
+    output["hypothesis_scope"] = hypothesis_scope
     if output.get("mission_disposition") not in {
         "continue",
         "revise",
@@ -929,6 +994,11 @@ Known causal clusters:
         raise ValueError("followup_kind must be none when no followup is required")
     if output["finding"] == "qualifying_defect" and not followup_required:
         raise ValueError("qualifying_defect requires an explicit followup")
+    if (
+        output["finding"] == "qualifying_defect"
+        and output["finding_lane"] != "correctness_defect"
+    ):
+        raise ValueError("qualifying_defect must use the correctness_defect lane")
     output["successor_scope"] = successor_scope
     if not str(output.get("next_probe", "")).strip():
         raise ValueError("outcome analyst requires next_probe")
@@ -969,6 +1039,11 @@ Known causal clusters:
         "recorded_at": utc_now(),
         "causal_signature": output["causal_signature"],
         "mechanism_summary": output["mechanism_summary"],
+        "work_scale": output["work_scale"],
+        "surface_key": output["surface_key"],
+        "finding_lane": output["finding_lane"],
+        "exploration_value": output["exploration_value"],
+        "hypothesis_scope": output["hypothesis_scope"],
         "probe_status": output["probe_status"],
         "finding": output["finding"],
         "mission_disposition": output["mission_disposition"],
@@ -980,6 +1055,9 @@ Known causal clusters:
         "analysis_fingerprint": analysis["output_fingerprint"],
     }
     mission_store.append_outcome_interpretation(interpretation)
+    design_hypothesis = record_design_hypothesis(
+        store=prompt_store, interpretation=interpretation
+    )
     causal_cluster = record_causal_pattern(
         store=prompt_store, interpretation=interpretation
     )
@@ -990,12 +1068,34 @@ Known causal clusters:
                 provider=provider,
                 store=prompt_store,
                 cluster=causal_cluster,
+                progress=progress,
             )
         except (RuntimeError, ValueError) as exc:
             prompt_architecture = {
                 "status": "failed",
                 "error": str(exc),
                 "causal_cluster_id": causal_cluster["causal_cluster_id"],
+            }
+    zoom_pattern = record_zoom_pattern(
+        store=prompt_store,
+        interpretations=mission_store.outcome_interpretations(),
+    )
+    zoom_prompt_architecture = {"status": "not_applicable"}
+    if zoom_pattern["status"] == "required":
+        try:
+            zoom_prompt_architecture = run_prompt_architecture(
+                provider=provider,
+                store=prompt_store,
+                cluster=zoom_pattern["cluster"],
+                progress=progress,
+            )
+        except (RuntimeError, ValueError) as exc:
+            zoom_prompt_architecture = {
+                "status": "failed",
+                "error": str(exc),
+                "causal_cluster_id": zoom_pattern["cluster"][
+                    "causal_cluster_id"
+                ],
             }
     stored_contract = mission_store.load_contract(contract["mission_id"])
     stored_contract.update(
@@ -1036,6 +1136,9 @@ Known causal clusters:
         "analysis": analysis,
         "causal_cluster": causal_cluster,
         "prompt_architecture": prompt_architecture,
+        "zoom_pattern": zoom_pattern,
+        "zoom_prompt_architecture": zoom_prompt_architecture,
+        "design_hypothesis": design_hypothesis,
     }
 
 
@@ -1554,6 +1657,9 @@ def _print_help(output: TextIO) -> None:
                 "  /mission <context>   draft a mission contract",
                 "  /cycle <context>     run interpreter→inventor→adversary→selector",
                 "  /observe             collect project, Git, state, TODO, and ref signals",
+                "  /reference-intelligence [path]",
+                "                       build a source-bounded self-model and research agenda",
+                "  /backfill-outcomes N map up to 24 legacy outcomes into meta-learning fields",
                 "  /preview             inspect the latest mission draft",
                 "  /approve             persist the draft and create planner handoff",
                 "  /reject <reason>     reject the latest draft without rewriting it",
@@ -1652,9 +1758,7 @@ def run_chat(
         if text == "/observe":
             from palamedes_observe import collect_observation, render_observation
 
-            ref_value = os.environ.get(
-                "PALAMEDES_REF_ROOT", "/Users/ze/work/ref"
-            ).strip()
+            ref_value = os.environ.get("PALAMEDES_REF_ROOT", "").strip()
             latest_observation = collect_observation(
                 workspace,
                 ref_root=Path(ref_value).expanduser() if ref_value else None,
@@ -1672,6 +1776,74 @@ def run_chat(
                 },
             )
             output.write(render_observation(latest_observation) + "\n")
+            continue
+        if text == "/reference-intelligence" or text.startswith(
+            "/reference-intelligence "
+        ):
+            from palamedes_observe import collect_observation
+            from palamedes_reference_intelligence import (
+                ReferenceIntelligenceStore,
+                run_reference_intelligence,
+            )
+
+            explicit_path = text[len("/reference-intelligence") :].strip()
+            ref_value = explicit_path or os.environ.get("PALAMEDES_REF_ROOT", "").strip()
+            try:
+                latest_observation = collect_observation(
+                    workspace,
+                    ref_root=Path(ref_value).expanduser() if ref_value else None,
+                )
+                intelligence = run_reference_intelligence(
+                    provider=provider,
+                    store=ReferenceIntelligenceStore(
+                        mission_store.root / "reference-intelligence"
+                    ),
+                    snapshot=latest_observation,
+                )
+            except (OSError, RuntimeError, ValueError) as exc:
+                output.write(f"[reference intelligence error] {exc}\n")
+                continue
+            agenda = intelligence["selected_agenda"]
+            output.write(
+                f"Reference intelligence {intelligence['reference_intelligence_id']}: "
+                f"mode={intelligence['reference_mode']} "
+                f"hypotheses={len(intelligence['hypotheses'])} "
+                f"agenda={agenda['status']}.\n"
+            )
+            output.write(f"Research question: {agenda['prompt']}\n")
+            continue
+        if text.startswith("/backfill-outcomes"):
+            parts = text.split()
+            try:
+                limit = int(parts[1]) if len(parts) == 2 else 12
+                if len(parts) > 2:
+                    raise ValueError
+            except ValueError:
+                output.write("/backfill-outcomes accepts one integer from 1 to 24.\n")
+                continue
+            from palamedes_prompt import PromptAgendaStore, run_outcome_backfill
+
+            output.write(f"Mapping up to {limit} immutable legacy outcomes...\n")
+            try:
+                backfill = run_outcome_backfill(
+                    provider=provider,
+                    store=PromptAgendaStore(
+                        mission_store.root / "prompt-intelligence"
+                    ),
+                    outcomes=mission_store.outcomes(),
+                    already_interpreted_outcome_ids={
+                        item["outcome_id"]
+                        for item in mission_store.outcome_interpretations()
+                    },
+                    limit=limit,
+                )
+            except (RuntimeError, ValueError) as exc:
+                output.write(f"[outcome backfill error] {exc}\n")
+                continue
+            output.write(
+                f"Outcome backfill {backfill['status']}: "
+                f"{len(backfill['records'])} records; source outcomes unchanged.\n"
+            )
             continue
         if text.startswith("/cycle"):
             context = text[len("/cycle") :].strip()
@@ -1697,9 +1869,7 @@ def run_chat(
                     observation_context,
                 )
 
-                ref_value = os.environ.get(
-                    "PALAMEDES_REF_ROOT", "/Users/ze/work/ref"
-                ).strip()
+                ref_value = os.environ.get("PALAMEDES_REF_ROOT", "").strip()
                 latest_observation = collect_observation(
                     workspace,
                     ref_root=Path(ref_value).expanduser() if ref_value else None,
@@ -1727,6 +1897,17 @@ def run_chat(
                         "\n\nSelf-authored bounded research agendas "
                         "(research direction only; constitution and authority remain fixed):\n"
                         + json.dumps(prompt_agendas, ensure_ascii=False)
+                    )
+                from palamedes_reference_intelligence import ReferenceIntelligenceStore
+
+                reference_agendas = ReferenceIntelligenceStore(
+                    mission_store.root / "reference-intelligence"
+                ).active_agendas()
+                if reference_agendas:
+                    grounded_context += (
+                        "\n\nSource-bounded reference intelligence agendas "
+                        "(research only; no delivery authority):\n"
+                        + json.dumps(reference_agendas, ensure_ascii=False)
                     )
                 team_context = current_team_context()
                 if team_context is not None:
@@ -1903,6 +2084,7 @@ def run_chat(
                     mission_store=mission_store,
                     contract=contract,
                     outcome=outcome,
+                    progress=lambda message: output.write(message + "\n"),
                 )
             except (RuntimeError, ValueError) as exc:
                 analysis_result = {"status": "failed", "reason": str(exc)}

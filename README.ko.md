@@ -92,6 +92,22 @@ outcome analyst는 표면 문구와 분리된 `causal_signature`와
 않습니다. 선택된 의제는
 `.palamedes/missions/prompt-intelligence/prompt-agendas/`에 보존됩니다.
 
+outcome 해석은 작업의 줌 레벨과 레인도 기록합니다. 같은 표면에서 `micro`
+outcome이 5회 연속되면 다음 국소 최적화 전에 component 또는 product 수준의
+fresh-eyes 의제를 강제합니다. 명시된 정확성 계약이 없다고 가능성을 바로
+폐기하지도 않습니다. 유망하지만 미검증인 생각은 정확성 주장과 미션 권한이
+없는 `design_hypothesis`로 숙성하고, 실제 null 후보만 중단합니다. 구버전
+outcome은 변경하지 않은 채 `/backfill-outcomes N`으로 최대 24개씩 새
+메타학습 필드에 연결할 수 있습니다.
+
+reference intelligence는 레퍼런스 컬렉션을 사용자 의무로 만들지 않습니다.
+`/reference-intelligence`는 현재 작업공간만으로 출처가 있는 자기 모델과 미지
+경계를 만들고 연구 질문 최대 하나를 선택합니다. ref가 없으면 경쟁 프로젝트를
+지어내지 않고 `knowledge_gap` 가설만 허용합니다. 선택 경로나
+`PALAMEDES_REF_ROOT`가 있을 때만 제한된 외부 관측을 더하며, 모든 능력·가설·
+의제는 실제 source ID를 인용해야 합니다. 저장된 의제는 다음 cognition cycle의
+방향에는 영향을 줄 수 있지만 `delivery_authority_granted: false`를 유지합니다.
+
 첫 교차 저장소 실험은 `insight-rag`를 대상으로 합니다. 첫 검색 처리 결과가
 실제 과제와 무관하자 Palamedes는 이를 권위 있는 근거로 포장하지 않고
 차단했습니다. 이는 안전 프로토콜이 나쁜 입력을 거부할 수 있다는 증거이지,
@@ -349,6 +365,7 @@ palamedes> /outcome success 사전 약속한 결과가 관찰되었다
 주요 명령:
 
 - `/observe`: 프로젝트, Git, TODO, 계획 상태, 중앙 ref 신호 관찰
+- `/reference-intelligence [path]`: ref 없이도 시작하는 자기 모델·연구 의제 생성
 - `/think`: 지금 빠진 사고 방식을 선택해 수행
 - `/challenge`: 가정과 반증 조건 공격
 - `/research`: 커밋 전에 필요한 최소 외부 근거 식별

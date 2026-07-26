@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/design-hypothesis-incubation.schema.json",
+  "title": "Contractless Design Hypothesis Incubation",
+  "type": "object",
+  "required": ["design_hypothesis_version", "design_hypothesis_id", "outcome_id", "mission_contract_id", "surface_key", "hypothesis_scope", "exploration_value", "claim_limit", "mission_authority_granted", "status", "created_at"],
+  "properties": {
+    "design_hypothesis_version": {"const": "palamedes-design-hypothesis/1"},
+    "design_hypothesis_id": {"type": "string", "pattern": "^design-hypothesis-[a-f0-9]{12}$"},
+    "outcome_id": {"type": "string", "pattern": "^outcome-[a-f0-9]{12}$"},
+    "mission_contract_id": {"type": "string", "pattern": "^mission-[a-f0-9]{12}$"},
+    "surface_key": {"type": "string", "minLength": 1},
+    "hypothesis_scope": {"type": "string", "minLength": 1},
+    "exploration_value": {"type": "integer", "minimum": 0, "maximum": 100},
+    "claim_limit": {"type": "string", "minLength": 1},
+    "mission_authority_granted": {"const": false},
+    "status": {"const": "incubating"},
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

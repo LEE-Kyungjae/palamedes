@@ -630,9 +630,7 @@ def cmd_watch(args: Any, palamedes_module: Any) -> None:
         else Path.cwd().resolve()
     )
     bind_workspace(palamedes_module, workspace)
-    ref_value = args.ref_root or os.environ.get(
-        "PALAMEDES_REF_ROOT", "/Users/ze/work/ref"
-    )
+    ref_value = args.ref_root or os.environ.get("PALAMEDES_REF_ROOT", "")
     ref_root = Path(ref_value).expanduser() if ref_value else None
     provider = None
     if args.auto_cognition:

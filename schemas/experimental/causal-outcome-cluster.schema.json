@@ -35,7 +35,10 @@
     "recurrence_count": {"type": "integer", "minimum": 1},
     "meta_shift_required": {"type": "boolean"},
     "created_at": {"type": "string", "minLength": 1},
-    "updated_at": {"type": "string", "minLength": 1}
+    "updated_at": {"type": "string", "minLength": 1},
+    "zoom_shift_from": {"const": "micro"},
+    "zoom_shift_to": {"const": "component_or_product"},
+    "fresh_eyes_required": {"type": "boolean"}
   },
   "allOf": [
     {

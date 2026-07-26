@@ -74,7 +74,7 @@ Palamedes improves startup or downstream business outcomes.
 | Evidence level | Current result |
 | --- | --- |
 | Stable plan-state kernel | Implemented with revision, restore, conflict, QA, and conformance surfaces |
-| Bounded pre-planner contracts | Implemented and covered by 1,209 mission tests and 302 experimental schemas |
+| Bounded pre-planner contracts | Implemented and covered by 1,209 mission tests and 304 experimental schemas |
 | Mission-quality proof | `proof-002` and `proof-003` provide initial blinded evidence against one-shot and equal-call strong comparators |
 | 1:1 Codex collaboration | Repeated live implementation cycles produced validated product improvements; Palamedes's causal increment over Codex alone is not yet isolated |
 | Local 1:N team cognition | Alpha: implemented with provenance, stale-world protection, competing hypotheses, mission ownership, bounded context, and blind commit–reveal exploration |
@@ -123,6 +123,25 @@ role sequence, and stopping logic. It cannot modify authority, evidence,
 privacy, approval, budget, or falsification rules and grants no delivery
 authority. Selected agendas are stored under
 `.palamedes/missions/prompt-intelligence/prompt-agendas/`.
+
+Outcome interpretation also records its zoom level and lane. Five consecutive
+`micro` outcomes on one surface force a component-or-product fresh-eyes agenda
+before more local optimization. A missing correctness contract no longer means
+that a plausible idea must disappear: it can be stored as a bounded
+`design_hypothesis` with no correctness claim and no mission authority, while a
+true null candidate still stops. Legacy outcomes remain immutable and can be
+mapped into these meta-learning fields in bounded batches with
+`/backfill-outcomes N` (maximum 24).
+
+Reference intelligence is local-first rather than collection-dependent. Running
+`/reference-intelligence` builds a provenance-bearing project self-model from
+the current workspace, records unknown boundaries, and selects at most one
+research question. With no configured reference root it may emit only
+`knowledge_gap` hypotheses, never invented competitor comparisons. An optional
+path argument or `PALAMEDES_REF_ROOT` adds bounded external observations; every
+capability, hypothesis, and agenda must cite an observed source ID. The stored
+agenda can steer a later cognition cycle but always has
+`delivery_authority_granted: false`.
 
 The first cross-repository case targets `insight-rag`. Palamedes selected a
 counterfactual action-choice benchmark instead of immediately expanding its
@@ -578,6 +597,7 @@ palamedes> /outcome success The probe produced the precommitted result
 Available commands:
 
 - `/observe`: snapshot bounded project, Git, TODO, plan-state, and central-ref signals
+- `/reference-intelligence [path]`: build a local-first self-model and bounded research agenda; references are optional
 - `/think`: choose and perform the missing mode of thought
 - `/challenge`: attack assumptions and state falsifiers
 - `/research`: identify the minimum missing external evidence

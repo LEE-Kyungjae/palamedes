@@ -11,6 +11,11 @@
     "recorded_at",
     "causal_signature",
     "mechanism_summary",
+    "work_scale",
+    "surface_key",
+    "finding_lane",
+    "exploration_value",
+    "hypothesis_scope",
     "probe_status",
     "finding",
     "mission_disposition",
@@ -49,6 +54,15 @@
       "type": "string",
       "minLength": 1
     },
+    "work_scale": {
+      "enum": ["micro", "component", "product", "service", "portfolio"]
+    },
+    "surface_key": {"type": "string", "minLength": 1},
+    "finding_lane": {
+      "enum": ["correctness_defect", "design_hypothesis", "null_candidate", "expected_outcome", "inconclusive"]
+    },
+    "exploration_value": {"type": "integer", "minimum": 0, "maximum": 100},
+    "hypothesis_scope": {"type": "string"},
     "probe_status": {
       "enum": ["completed", "incomplete", "not_applicable"]
     },
