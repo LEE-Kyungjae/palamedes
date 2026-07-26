@@ -371,6 +371,7 @@ def execute_wake(
         from palamedes_thought import ThoughtStore
         from palamedes_knowledge import KnowledgeStore
         from palamedes_epistemics import EpistemicStore
+        from palamedes_prompt import PromptAgendaStore
 
         thought_store = ThoughtStore(palamedes_module.STATE_DIR / "thoughts")
         knowledge_store = KnowledgeStore(
@@ -378,6 +379,9 @@ def execute_wake(
         )
         epistemic_store = EpistemicStore(
             palamedes_module.STATE_DIR / "epistemics"
+        )
+        prompt_store = PromptAgendaStore(
+            palamedes_module.STATE_DIR / "missions" / "prompt-intelligence"
         )
         discoveries = thought_store.active_discoveries()
         result = run_cognition_cycle(
@@ -400,6 +404,8 @@ def execute_wake(
                 + json.dumps(
                     epistemic_store.load_coverage(), ensure_ascii=False
                 )
+                + "\n\nSelf-authored bounded research agendas:\n"
+                + json.dumps(prompt_store.active_agendas(), ensure_ascii=False)
             ),
             cycle_store=CognitionCycleStore(
                 palamedes_module.STATE_DIR / "missions" / "cognition"

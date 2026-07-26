@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/causal-outcome-cluster.schema.json",
+  "title": "Repeated Outcome Causal Cluster",
+  "type": "object",
+  "required": [
+    "causal_cluster_version",
+    "causal_cluster_id",
+    "causal_signature",
+    "mechanism_summary",
+    "outcome_ids",
+    "mission_contract_ids",
+    "recurrence_count",
+    "meta_shift_required",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "causal_cluster_version": {"const": "palamedes-causal-cluster/1"},
+    "causal_cluster_id": {"type": "string", "pattern": "^causal-cluster-[a-f0-9]{12}$"},
+    "causal_signature": {"type": "string", "minLength": 1},
+    "mechanism_summary": {"type": "string", "minLength": 1},
+    "outcome_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^outcome-[a-f0-9]{12}$"}
+    },
+    "mission_contract_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^mission-[a-f0-9]{12}$"}
+    },
+    "recurrence_count": {"type": "integer", "minimum": 1},
+    "meta_shift_required": {"type": "boolean"},
+    "created_at": {"type": "string", "minLength": 1},
+    "updated_at": {"type": "string", "minLength": 1}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"recurrence_count": {"minimum": 2}}},
+      "then": {"properties": {"meta_shift_required": {"const": true}}}
+    }
+  ],
+  "additionalProperties": false
+}

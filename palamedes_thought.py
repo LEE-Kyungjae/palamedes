@@ -165,6 +165,8 @@ def persist_mission_experience(
         "prediction_gap": str(
             output.get("observed_vs_expected", "not yet analyzed")
         ).strip(),
+        "causal_signature": str(output.get("causal_signature", "")).strip(),
+        "mechanism_summary": str(output.get("mechanism_summary", "")).strip(),
         "mission_disposition": output.get(
             "mission_disposition", "insufficient_evidence"
         ),

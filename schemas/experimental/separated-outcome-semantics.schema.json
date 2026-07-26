@@ -9,6 +9,8 @@
     "outcome_id",
     "mission_contract_id",
     "recorded_at",
+    "causal_signature",
+    "mechanism_summary",
     "probe_status",
     "finding",
     "mission_disposition",
@@ -36,6 +38,14 @@
       "pattern": "^mission-[a-f0-9]{12}$"
     },
     "recorded_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "causal_signature": {
+      "type": "string",
+      "minLength": 1
+    },
+    "mechanism_summary": {
       "type": "string",
       "minLength": 1
     },

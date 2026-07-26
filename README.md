@@ -74,7 +74,7 @@ Palamedes improves startup or downstream business outcomes.
 | Evidence level | Current result |
 | --- | --- |
 | Stable plan-state kernel | Implemented with revision, restore, conflict, QA, and conformance surfaces |
-| Bounded pre-planner contracts | Implemented and covered by 1,209 mission tests and 300 experimental schemas |
+| Bounded pre-planner contracts | Implemented and covered by 1,209 mission tests and 302 experimental schemas |
 | Mission-quality proof | `proof-002` and `proof-003` provide initial blinded evidence against one-shot and equal-call strong comparators |
 | 1:1 Codex collaboration | Repeated live implementation cycles produced validated product improvements; Palamedes's causal increment over Codex alone is not yet isolated |
 | Local 1:N team cognition | Alpha: implemented with provenance, stale-world protection, competing hypotheses, mission ownership, bounded context, and blind commit–reveal exploration |
@@ -104,6 +104,25 @@ A probe may therefore complete successfully and stop while still producing a
 qualifying defect that requires a bounded production successor. An unrelated
 mission may proceed after acknowledging that result, but it does not silently
 close the required follow-up gate.
+
+Outcome analysis also records a surface-independent `causal_signature` and
+`mechanism_summary`. When the same signature recurs twice, Palamedes stops
+treating the outcomes as isolated rows and opens a bounded prompt-architecture
+cycle:
+
+```text
+repeated causal signature
+  -> prompt architect: competing higher-abstraction research prompts
+  -> prompt adversary: TODO repetition, confirmation, and scope attacks
+  -> prompt selector: at most one decision-changing agenda
+  -> next cognition cycle receives the selected agenda
+```
+
+The generated prompt may change the research question, perspective, comparison,
+role sequence, and stopping logic. It cannot modify authority, evidence,
+privacy, approval, budget, or falsification rules and grants no delivery
+authority. Selected agendas are stored under
+`.palamedes/missions/prompt-intelligence/prompt-agendas/`.
 
 The first cross-repository case targets `insight-rag`. Palamedes selected a
 counterfactual action-choice benchmark instead of immediately expanding its

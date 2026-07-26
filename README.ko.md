@@ -75,6 +75,23 @@ outcome은 하나의 성공·중단 값으로 합치지 않고 다음 의미를 
 그 결과를 명시적으로 인정한 뒤 진행할 수 있지만, 필요한 후속 gate를 조용히
 닫지는 못합니다.
 
+outcome analyst는 표면 문구와 분리된 `causal_signature`와
+`mechanism_summary`도 기록합니다. 같은 서명이 두 번 반복되면 개별 상태를
+계속 열거하지 않고 제한된 프롬프트 설계 사이클을 엽니다.
+
+```text
+반복 causal signature
+  → prompt architect: 더 높은 추상화의 경쟁 탐사 프롬프트 생성
+  → prompt adversary: TODO 재포장·자기확증·범위확장 공격
+  → prompt selector: 의사결정을 바꿀 의제 최대 하나 선택
+  → 다음 cognition cycle에 선택 의제 제공
+```
+
+생성 프롬프트는 연구 질문·관점·비교·역할 순서·중단 조건만 바꿀 수 있습니다.
+권한·증거·개인정보·승인·예산·반증 헌법은 변경할 수 없고 실행 권한도 얻지
+않습니다. 선택된 의제는
+`.palamedes/missions/prompt-intelligence/prompt-agendas/`에 보존됩니다.
+
 첫 교차 저장소 실험은 `insight-rag`를 대상으로 합니다. 첫 검색 처리 결과가
 실제 과제와 무관하자 Palamedes는 이를 권위 있는 근거로 포장하지 않고
 차단했습니다. 이는 안전 프로토콜이 나쁜 입력을 거부할 수 있다는 증거이지,

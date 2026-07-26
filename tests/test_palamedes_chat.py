@@ -152,6 +152,8 @@ class StaticChatProvider:
                         }
                     ],
                     "belief_updates": ["Approval lineage is operationally observable"],
+                    "causal_signature": "approval-lineage-observed",
+                    "mechanism_summary": "An approved mission produced a traceable outcome record.",
                     "probe_status": "completed",
                     "finding": "expected_result",
                     "mission_disposition": "continue",
@@ -427,6 +429,7 @@ class PalamedesChatTests(unittest.TestCase):
         )
         self.assertEqual(experience["outcome_status"], "success")
         self.assertEqual(experience["evidence_source_type"], "implementer_claim")
+        self.assertEqual(experience["causal_signature"], "approval-lineage-observed")
         self.assertEqual(experience["probe_status"], "completed")
         self.assertEqual(experience["finding"], "expected_result")
         self.assertFalse(experience["followup_required"])
@@ -506,6 +509,8 @@ class PalamedesChatTests(unittest.TestCase):
                                 }
                             ],
                             "belief_updates": ["Repair the contract before expansion"],
+                            "causal_signature": "missing-comparison-evidence",
+                            "mechanism_summary": "The probe lacked the comparison needed for attribution.",
                             "probe_status": "incomplete",
                             "finding": "inconclusive",
                             "mission_disposition": "revise",
@@ -593,6 +598,8 @@ class PalamedesChatTests(unittest.TestCase):
                                 }
                             ],
                             "belief_updates": ["Presentation precedence needs correction"],
+                            "causal_signature": "presentation-state-precedence",
+                            "mechanism_summary": "Committed state outranked an active presentation boundary.",
                             "probe_status": "completed",
                             "finding": "qualifying_defect",
                             "mission_disposition": "stop",
@@ -697,6 +704,9 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertEqual(interpretations[0]["finding"], "qualifying_defect")
         self.assertEqual(experience["probe_status"], "completed")
         self.assertEqual(experience["finding"], "qualifying_defect")
+        self.assertEqual(
+            experience["causal_signature"], "presentation-state-precedence"
+        )
         self.assertTrue(experience["followup_required"])
         self.assertEqual(experience["followup_kind"], "production_correction")
         self.assertEqual(

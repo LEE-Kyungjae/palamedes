@@ -832,15 +832,27 @@ def run_outcome_analyst(
     if not cycle_id:
         return {"status": "not_applicable", "reason": "mission has no cognition cycle"}
     cycle = cycle_store.load(cycle_id)
+    from palamedes_prompt import (
+        PromptAgendaStore,
+        record_causal_pattern,
+        run_prompt_architecture,
+    )
+
+    prompt_store = PromptAgendaStore(mission_store.root / "prompt-intelligence")
+    known_clusters = prompt_store.active_clusters()
     prompt = f"""ROLE: outcome_analyst
 An outcome now exists. Compare it with the frozen mission forecast without
 rewriting prior artifacts. Separate mission, planning, implementation,
-environment, and measurement attribution.
+environment, and measurement attribution. Reuse an existing causal_signature
+when the mechanism is materially the same; create a new short stable signature
+only when the mechanism differs, regardless of surface feature or wording.
 Return exactly:
 {{
   "observed_vs_expected":"...",
   "attribution_hypotheses":[{{"layer":"mission|planning|implementation|environment|measurement","claim":"...","confidence":0}}],
   "belief_updates":["..."],
+  "causal_signature":"short stable mechanism label reusable across outcomes",
+  "mechanism_summary":"how the observed result was produced, independent of surface wording",
   "probe_status":"completed|incomplete|not_applicable",
   "finding":"qualifying_defect|null_finding|expected_result|adverse_result|inconclusive",
   "mission_disposition":"continue|revise|stop|insufficient_evidence",
@@ -856,7 +868,9 @@ Frozen cycle:
 Mission contract:
 {json.dumps(contract, ensure_ascii=False)}
 Observed outcome:
-{json.dumps(outcome, ensure_ascii=False)}"""
+{json.dumps(outcome, ensure_ascii=False)}
+Known causal clusters:
+{json.dumps(known_clusters, ensure_ascii=False)}"""
     output = _provider_json(
         provider,
         system=(
@@ -868,6 +882,12 @@ Observed outcome:
     if not str(output.get("observed_vs_expected", "")).strip():
         raise ValueError("outcome analyst requires observed_vs_expected")
     _non_empty_string_array(output, "belief_updates")
+    causal_signature = str(output.get("causal_signature", "")).strip()
+    mechanism_summary = str(output.get("mechanism_summary", "")).strip()
+    if not causal_signature or not mechanism_summary:
+        raise ValueError("outcome analyst requires causal signature and mechanism summary")
+    output["causal_signature"] = causal_signature
+    output["mechanism_summary"] = mechanism_summary
     if output.get("mission_disposition") not in {
         "continue",
         "revise",
@@ -947,6 +967,8 @@ Observed outcome:
         "outcome_id": outcome["outcome_id"],
         "mission_contract_id": contract["mission_id"],
         "recorded_at": utc_now(),
+        "causal_signature": output["causal_signature"],
+        "mechanism_summary": output["mechanism_summary"],
         "probe_status": output["probe_status"],
         "finding": output["finding"],
         "mission_disposition": output["mission_disposition"],
@@ -958,6 +980,23 @@ Observed outcome:
         "analysis_fingerprint": analysis["output_fingerprint"],
     }
     mission_store.append_outcome_interpretation(interpretation)
+    causal_cluster = record_causal_pattern(
+        store=prompt_store, interpretation=interpretation
+    )
+    prompt_architecture = {"status": "not_applicable"}
+    if causal_cluster["meta_shift_required"]:
+        try:
+            prompt_architecture = run_prompt_architecture(
+                provider=provider,
+                store=prompt_store,
+                cluster=causal_cluster,
+            )
+        except (RuntimeError, ValueError) as exc:
+            prompt_architecture = {
+                "status": "failed",
+                "error": str(exc),
+                "causal_cluster_id": causal_cluster["causal_cluster_id"],
+            }
     stored_contract = mission_store.load_contract(contract["mission_id"])
     stored_contract.update(
         {
@@ -992,7 +1031,12 @@ Observed outcome:
                 "opened_at": utc_now(),
             }
         )
-    return {"status": "completed", "analysis": analysis}
+    return {
+        "status": "completed",
+        "analysis": analysis,
+        "causal_cluster": causal_cluster,
+        "prompt_architecture": prompt_architecture,
+    }
 
 
 def _extract_json_object(text: str) -> Dict[str, Any]:
@@ -1673,6 +1717,17 @@ def run_chat(
                         ensure_ascii=False,
                     )
                 )
+                from palamedes_prompt import PromptAgendaStore
+
+                prompt_agendas = PromptAgendaStore(
+                    mission_store.root / "prompt-intelligence"
+                ).active_agendas()
+                if prompt_agendas:
+                    grounded_context += (
+                        "\n\nSelf-authored bounded research agendas "
+                        "(research direction only; constitution and authority remain fixed):\n"
+                        + json.dumps(prompt_agendas, ensure_ascii=False)
+                    )
                 team_context = current_team_context()
                 if team_context is not None:
                     grounded_context += (
@@ -1876,6 +1931,19 @@ def run_chat(
                     f"disposition={disposition} "
                     f"followup_required={str(analysis_output['followup_required']).lower()}\n"
                 )
+                prompt_result = analysis_result.get("prompt_architecture", {})
+                if prompt_result.get("status") == "completed":
+                    agenda = prompt_result["agenda"]
+                    output.write(
+                        "Self-authored research agenda selected: "
+                        f"{agenda['prompt_agenda_id']} "
+                        f"mode={agenda['missing_cognitive_mode']}\n"
+                    )
+                elif prompt_result.get("status") == "failed":
+                    output.write(
+                        "Prompt architecture failed without invalidating the outcome: "
+                        f"{prompt_result['error']}\n"
+                    )
             elif analysis_result["status"] == "not_applicable":
                 output.write(
                     "Attribution remains unresolved: this mission predates a cognition cycle.\n"
