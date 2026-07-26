@@ -57,6 +57,10 @@ class StaticWakeProvider:
                         "content": "Users revisit an output without editing it",
                         "unexplained_residue": "Revisits do not match the editing model",
                         "why_unresolved": "The observation has no user intent data",
+                        "perspective": "An operator reusing a prior decision without its author",
+                        "future_scenario": "The original author is unavailable during a repeated operation",
+                        "actor_goal": "Recover the prior judgment without recreating it",
+                        "scenario_constraint": "No intent or provenance is visible",
                         "wake_conditions": ["A second revisit signal appears"],
                     },
                     {
@@ -64,6 +68,10 @@ class StaticWakeProvider:
                         "content": "Stored outputs may act as reusable judgment",
                         "unexplained_residue": "Reuse may be more valuable than creation",
                         "why_unresolved": "No reuse outcome is measured",
+                        "perspective": "A team inheriting stored outputs",
+                        "future_scenario": "The product is used as organizational memory after handoff",
+                        "actor_goal": "Apply an earlier judgment to a new case",
+                        "scenario_constraint": "The product explains creation but not reuse",
                         "wake_conditions": ["Reuse correlates with retention"],
                     },
                 ],
@@ -117,6 +125,15 @@ class StaticWakeProvider:
                         {
                             "connected_thought_ids": thought_ids[:2],
                             "thesis": "The product may preserve judgment, not merely produce output",
+                            "trigger": "Repeated return to unchanged outputs",
+                            "perspective": "A team inheriting decisions from an unavailable author",
+                            "future_scenario": "A repeated operation must reuse prior judgment without its creator",
+                            "latent_question": "Is retained judgment more valuable than repeated creation?",
+                            "adjacent_opportunity": "A reusable judgment memory with provenance",
+                            "novelty_score": 78,
+                            "potential_value_score": 82,
+                            "uncertainty_score": 67,
+                            "scope_risk_score": 58,
                             "old_framing": "A one-shot creation tool",
                             "new_framing": "A reusable judgment memory",
                             "assumption_replaced": "Creation is the primary retained value",
@@ -176,6 +193,17 @@ class PalamedesWatchTests(unittest.TestCase):
                 snapshot("reference_repository_set_or_head_changed")
             )["roles"],
             ["noticer", "connector"],
+        )
+        completed_change = palamedes_watch.select_wake_policy(
+            snapshot("git_head_changed")
+        )
+        self.assertEqual(completed_change["operation"], "incubate_discovery")
+        self.assertEqual(completed_change["roles"], ["noticer", "connector"])
+        self.assertEqual(
+            palamedes_watch.select_wake_policy(snapshot("git_status_changed"))[
+                "operation"
+            ],
+            "inspect_code_change",
         )
         self.assertEqual(
             palamedes_watch.select_wake_policy(
@@ -276,11 +304,19 @@ class PalamedesWatchTests(unittest.TestCase):
             discovery = json.loads(discovery_files[0].read_text())
 
         self.assertEqual(wake["model_call_count"], 2)
+        self.assertEqual(
+            wake["exploration_mode"], "stakeholder_future_adjacent"
+        )
         self.assertEqual(len(thought_files), 2)
         self.assertEqual(len(discovery_files), 1)
         self.assertFalse(wake["mission_draft_issued"])
         self.assertFalse(discovery["mission_authority_granted"])
         self.assertEqual(len(discovery["connected_thought_ids"]), 2)
+        self.assertEqual(
+            discovery["latent_question"],
+            "Is retained judgment more valuable than repeated creation?",
+        )
+        self.assertEqual(discovery["novelty_score"], 78)
 
     def test_full_cycle_carries_incubated_discovery_into_mission(self):
         from palamedes_thought import ThoughtStore

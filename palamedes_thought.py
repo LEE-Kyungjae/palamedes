@@ -168,6 +168,11 @@ def persist_mission_experience(
         "mission_disposition": output.get(
             "mission_disposition", "insufficient_evidence"
         ),
+        "probe_status": output.get("probe_status", "not_applicable"),
+        "finding": output.get("finding", "inconclusive"),
+        "followup_required": bool(output.get("followup_required", False)),
+        "followup_kind": output.get("followup_kind", "none"),
+        "successor_scope": str(output.get("successor_scope", "")).strip(),
         "belief_updates": list(output.get("belief_updates", [])),
         "next_probe": str(
             output.get("next_probe", contract["next_probe"]["step"])
@@ -200,6 +205,7 @@ def persist_thoughts(
     store: ThoughtStore,
     output: Dict[str, Any],
     observation_id: str,
+    require_scenario_fields: bool = False,
 ) -> List[Dict[str, Any]]:
     candidates = output.get("thoughts")
     if not isinstance(candidates, list) or len(candidates) < 2:
@@ -220,6 +226,17 @@ def persist_thoughts(
             isinstance(item, str) and item.strip() for item in wake_conditions
         ):
             raise ValueError("thought wake_conditions must be a string array")
+        perspective = str(candidate.get("perspective", "")).strip()
+        future_scenario = str(candidate.get("future_scenario", "")).strip()
+        actor_goal = str(candidate.get("actor_goal", "")).strip()
+        scenario_constraint = str(candidate.get("scenario_constraint", "")).strip()
+        if require_scenario_fields and not all(
+            (perspective, future_scenario, actor_goal, scenario_constraint)
+        ):
+            raise ValueError(
+                "autonomous discovery thoughts require perspective, future_scenario, "
+                "actor_goal, and scenario_constraint"
+            )
         identity = {
             "kind": kind,
             "content": content.casefold(),
@@ -241,6 +258,10 @@ def persist_thoughts(
             "why_unresolved": why_unresolved,
             "source_observation_ids": evidence_ids,
             "wake_conditions": [item.strip() for item in wake_conditions],
+            "perspective": perspective,
+            "future_scenario": future_scenario,
+            "actor_goal": actor_goal,
+            "scenario_constraint": scenario_constraint,
             "strength": min(1.0, 0.2 + 0.12 * reinforcement_count),
             "reinforcement_count": reinforcement_count,
             "status": "reinforced" if previous else "incubating",
@@ -267,6 +288,7 @@ def persist_discoveries(
     output: Dict[str, Any],
     available_thought_ids: set,
     available_knowledge: Optional[Dict[str, Dict[str, Any]]] = None,
+    require_exploration_fields: bool = False,
 ) -> List[Dict[str, Any]]:
     available_knowledge = available_knowledge or {}
     candidates = output.get("discoveries")
@@ -286,6 +308,41 @@ def persist_discoveries(
                 "discovery must connect at least two available thought IDs"
             )
         thesis = _required_text(candidate, "thesis")
+        trigger = str(candidate.get("trigger", "")).strip()
+        perspective = str(candidate.get("perspective", "")).strip()
+        future_scenario = str(candidate.get("future_scenario", "")).strip()
+        latent_question = str(candidate.get("latent_question", "")).strip()
+        adjacent_opportunity = str(
+            candidate.get("adjacent_opportunity", "")
+        ).strip()
+        score_fields = {
+            field: candidate.get(field)
+            for field in (
+                "novelty_score",
+                "potential_value_score",
+                "uncertainty_score",
+                "scope_risk_score",
+            )
+        }
+        if require_exploration_fields:
+            if not all(
+                (
+                    trigger,
+                    perspective,
+                    future_scenario,
+                    latent_question,
+                    adjacent_opportunity,
+                )
+            ):
+                raise ValueError(
+                    "autonomous discovery requires trigger, perspective, future_scenario, "
+                    "latent_question, and adjacent_opportunity"
+                )
+            if any(
+                not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 100
+                for value in score_fields.values()
+            ):
+                raise ValueError("autonomous discovery scores must be integers from 0 to 100")
         discovery_mode = candidate.get("discovery_mode", "experience_only")
         if discovery_mode not in {"experience_only", "cross_domain"}:
             raise ValueError("discovery has invalid discovery_mode")
@@ -381,6 +438,12 @@ def persist_discoveries(
             "discovery_version": "palamedes-discovery/1",
             "connected_thought_ids": sorted(set(thought_ids)),
             "thesis": thesis,
+            "trigger": trigger,
+            "perspective": perspective,
+            "future_scenario": future_scenario,
+            "latent_question": latent_question,
+            "adjacent_opportunity": adjacent_opportunity,
+            **score_fields,
             "old_framing": _required_text(candidate, "old_framing"),
             "new_framing": _required_text(candidate, "new_framing"),
             "assumption_replaced": _required_text(candidate, "assumption_replaced"),
@@ -441,9 +504,13 @@ def run_discovery_incubation(
     open_unknowns = knowledge_store.open_unknowns()
     noticer_prompt = f"""ROLE: noticer
 Do not propose features, tasks, or missions. Extract at least two unresolved
-residues from the observation: anomalies, tensions, questions, possibilities,
-risks, analogies, or future events that the current product explanation does
-not fully absorb. Preserve uncertainty rather than converting it into advice.
+residues by mentally operating the observed product from different stakeholder
+and future-time perspectives. For every thought, place one actor in a concrete
+situation with a goal and a constraint. Ask what becomes difficult when the
+developer is absent, scale or regulation changes, an error occurs, ownership
+changes, or a repeated operation must be performed. Do not merely restate TODOs
+or generic best practices. Preserve uncertainty rather than converting it into
+advice.
 Return exactly:
 {{
   "thoughts": [{{
@@ -451,6 +518,10 @@ Return exactly:
     "content":"...",
     "unexplained_residue":"what remains unexplained",
     "why_unresolved":"...",
+    "perspective":"specific stakeholder whose work or life is simulated",
+    "future_scenario":"concrete event in which the current product is operated",
+    "actor_goal":"what the stakeholder must accomplish",
+    "scenario_constraint":"what prevents the ordinary happy path",
     "wake_conditions":["specific evidence that should reactivate this thought"]
   }}],
   "knowledge_claims": [{{
@@ -519,6 +590,7 @@ Recent decision-to-outcome experiences:
         store=store,
         output=noticer,
         observation_id=snapshot["observation_id"],
+        require_scenario_fields=True,
     )
     knowledge_result = persist_knowledge_updates(
         store=knowledge_store,
@@ -532,9 +604,14 @@ Recent decision-to-outcome experiences:
     }
     connector_prompt = f"""ROLE: connector
 Look for a non-obvious relationship between thoughts from different signals,
-times, or conceptual domains. Similarity alone is not discovery. A valid
-connection must replace an assumption, reframe what the product may be, and
-change a possible decision. Do not issue a mission or authorize implementation.
+times, stakeholders, or conceptual domains. Traverse one adjacent possibility:
+from what exists now to a future operating scene, its friction, the question a
+human owner has not yet asked, and a nearby product or business opportunity.
+Similarity, a generic checklist item, or a renamed TODO is not discovery. A
+valid connection must replace an assumption, reframe what the product may be,
+and change a possible decision. Score novelty separately from value,
+uncertainty, and scope-expansion risk. Do not issue a mission or authorize
+implementation.
 Do not convert what is common, legal, profitable, or historically accepted into
 what is right. Separate descriptive observation from normative judgment. Name
 whose perspective is missing, who bears the harm, whether basic rights are at
@@ -545,6 +622,15 @@ Return exactly:
   "discoveries": [{{
     "connected_thought_ids":["thought-...","thought-..."],
     "thesis":"...",
+    "trigger":"observed signal that started this line of inquiry",
+    "perspective":"stakeholder perspective used",
+    "future_scenario":"specific operating scene simulated",
+    "latent_question":"important question not already asked in the observation",
+    "adjacent_opportunity":"nearby capability, behavior, or business possibility",
+    "novelty_score":0,
+    "potential_value_score":0,
+    "uncertainty_score":0,
+    "scope_risk_score":0,
     "old_framing":"...",
     "new_framing":"...",
     "assumption_replaced":"...",
@@ -586,6 +672,7 @@ Open knowledge boundaries:
         output=connector,
         available_thought_ids=set(available),
         available_knowledge=available_knowledge,
+        require_exploration_fields=True,
     )
     artifacts = [
         _role_artifact(
@@ -605,6 +692,7 @@ Open knowledge boundaries:
     ]
     return {
         "status": "completed",
+        "exploration_mode": "stakeholder_future_adjacent",
         "artifacts": artifacts,
         "model_call_count": 2,
         "thought_ids": [item["thought_id"] for item in thoughts],

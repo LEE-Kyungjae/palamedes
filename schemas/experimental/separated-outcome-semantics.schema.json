@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/separated-outcome-semantics.schema.json",
+  "title": "Separated Probe, Finding, Disposition, and Follow-up Semantics",
+  "type": "object",
+  "required": [
+    "interpretation_version",
+    "interpretation_id",
+    "outcome_id",
+    "mission_contract_id",
+    "recorded_at",
+    "probe_status",
+    "finding",
+    "mission_disposition",
+    "followup_required",
+    "followup_kind",
+    "successor_scope",
+    "next_probe",
+    "confidence",
+    "analysis_fingerprint"
+  ],
+  "properties": {
+    "interpretation_version": {
+      "const": "palamedes-outcome-interpretation/1"
+    },
+    "interpretation_id": {
+      "type": "string",
+      "pattern": "^interpretation-[a-f0-9]{12}$"
+    },
+    "outcome_id": {
+      "type": "string",
+      "pattern": "^outcome-[a-f0-9]{12}$"
+    },
+    "mission_contract_id": {
+      "type": "string",
+      "pattern": "^mission-[a-f0-9]{12}$"
+    },
+    "recorded_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "probe_status": {
+      "enum": ["completed", "incomplete", "not_applicable"]
+    },
+    "finding": {
+      "enum": [
+        "qualifying_defect",
+        "null_finding",
+        "expected_result",
+        "adverse_result",
+        "inconclusive"
+      ]
+    },
+    "mission_disposition": {
+      "enum": ["continue", "revise", "stop", "insufficient_evidence"]
+    },
+    "followup_required": {
+      "type": "boolean"
+    },
+    "followup_kind": {
+      "enum": ["production_correction", "new_probe", "mission_revision", "none"]
+    },
+    "successor_scope": {
+      "type": "string"
+    },
+    "next_probe": {
+      "type": "string",
+      "minLength": 1
+    },
+    "confidence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "analysis_fingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "followup_required": {"const": true}
+        },
+        "required": ["followup_required"]
+      },
+      "then": {
+        "properties": {
+          "followup_kind": {
+            "enum": ["production_correction", "new_probe", "mission_revision"]
+          },
+          "successor_scope": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "followup_kind": {"const": "none"}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "finding": {"const": "qualifying_defect"}
+        },
+        "required": ["finding"]
+      },
+      "then": {
+        "properties": {
+          "followup_required": {"const": true}
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

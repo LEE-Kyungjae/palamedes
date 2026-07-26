@@ -93,7 +93,15 @@ def select_wake_policy(
             2,
             "a commitment changed and should be challenged before further execution",
         )
-    if reasons.intersection({"git_head_changed", "git_status_changed"}):
+    if "git_head_changed" in reasons:
+        return _policy(
+            "incubate_discovery",
+            ["noticer", "connector"],
+            2,
+            "a completed implementation change should be simulated from future "
+            "stakeholder perspectives before the next requested task narrows attention",
+        )
+    if "git_status_changed" in reasons:
         return _policy(
             "inspect_code_change",
             ["interpreter", "adversary"],

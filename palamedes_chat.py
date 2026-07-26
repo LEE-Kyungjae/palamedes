@@ -319,6 +319,7 @@ class MissionStore:
         self.root = root
         self.handoff_root = root / "handoffs"
         self.outcomes_path = root / "outcomes.jsonl"
+        self.outcome_interpretations_path = root / "outcome-interpretations.jsonl"
         self.outcome_gates_path = root / "outcome-gates.jsonl"
 
     def contract_path(self, mission_id: str) -> Path:
@@ -359,6 +360,13 @@ class MissionStore:
         self.root.mkdir(parents=True, exist_ok=True)
         with self.outcomes_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(outcome, ensure_ascii=False, sort_keys=True) + "\n")
+
+    def append_outcome_interpretation(self, interpretation: Dict[str, Any]) -> None:
+        self.root.mkdir(parents=True, exist_ok=True)
+        with self.outcome_interpretations_path.open("a", encoding="utf-8") as handle:
+            handle.write(
+                json.dumps(interpretation, ensure_ascii=False, sort_keys=True) + "\n"
+            )
 
     def append_outcome_gate(self, gate: Dict[str, Any]) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
@@ -833,7 +841,12 @@ Return exactly:
   "observed_vs_expected":"...",
   "attribution_hypotheses":[{{"layer":"mission|planning|implementation|environment|measurement","claim":"...","confidence":0}}],
   "belief_updates":["..."],
+  "probe_status":"completed|incomplete|not_applicable",
+  "finding":"qualifying_defect|null_finding|expected_result|adverse_result|inconclusive",
   "mission_disposition":"continue|revise|stop|insufficient_evidence",
+  "followup_required":true,
+  "followup_kind":"production_correction|new_probe|mission_revision|none",
+  "successor_scope":"exact bounded work still required, or empty when none",
   "next_probe":"...",
   "confidence":0
 }}
@@ -862,6 +875,41 @@ Observed outcome:
         "insufficient_evidence",
     }:
         raise ValueError("invalid mission_disposition")
+    if output.get("probe_status") not in {
+        "completed",
+        "incomplete",
+        "not_applicable",
+    }:
+        raise ValueError("invalid probe_status")
+    if output.get("finding") not in {
+        "qualifying_defect",
+        "null_finding",
+        "expected_result",
+        "adverse_result",
+        "inconclusive",
+    }:
+        raise ValueError("invalid outcome finding")
+    followup_required = output.get("followup_required")
+    if not isinstance(followup_required, bool):
+        raise ValueError("followup_required must be boolean")
+    if output.get("followup_kind") not in {
+        "production_correction",
+        "new_probe",
+        "mission_revision",
+        "none",
+    }:
+        raise ValueError("invalid followup_kind")
+    successor_scope = str(output.get("successor_scope", "")).strip()
+    if followup_required:
+        if output["followup_kind"] == "none" or not successor_scope:
+            raise ValueError(
+                "required followup needs a non-none followup_kind and successor_scope"
+            )
+    elif output["followup_kind"] != "none":
+        raise ValueError("followup_kind must be none when no followup is required")
+    if output["finding"] == "qualifying_defect" and not followup_required:
+        raise ValueError("qualifying_defect requires an explicit followup")
+    output["successor_scope"] = successor_scope
     if not str(output.get("next_probe", "")).strip():
         raise ValueError("outcome analyst requires next_probe")
     confidence = output.get("confidence")
@@ -880,6 +928,9 @@ Observed outcome:
     analysis["outcome_id"] = outcome["outcome_id"]
     cycle.setdefault("outcome_analyses", []).append(analysis)
     cycle["latest_mission_disposition"] = output["mission_disposition"]
+    cycle["latest_probe_status"] = output["probe_status"]
+    cycle["latest_finding"] = output["finding"]
+    cycle["latest_followup_required"] = output["followup_required"]
     cycle["live_model_call_count"] = 4 + len(cycle["outcome_analyses"])
     cycle_store.save(cycle)
     from palamedes_thought import ThoughtStore, persist_mission_experience
@@ -890,15 +941,53 @@ Observed outcome:
         outcome=outcome,
         analysis=analysis,
     )
-    if output["mission_disposition"] != "continue":
+    interpretation = {
+        "interpretation_version": "palamedes-outcome-interpretation/1",
+        "interpretation_id": f"interpretation-{outcome['outcome_id'][8:]}",
+        "outcome_id": outcome["outcome_id"],
+        "mission_contract_id": contract["mission_id"],
+        "recorded_at": utc_now(),
+        "probe_status": output["probe_status"],
+        "finding": output["finding"],
+        "mission_disposition": output["mission_disposition"],
+        "followup_required": output["followup_required"],
+        "followup_kind": output["followup_kind"],
+        "successor_scope": output["successor_scope"],
+        "next_probe": output["next_probe"],
+        "confidence": output["confidence"],
+        "analysis_fingerprint": analysis["output_fingerprint"],
+    }
+    mission_store.append_outcome_interpretation(interpretation)
+    stored_contract = mission_store.load_contract(contract["mission_id"])
+    stored_contract.update(
+        {
+            "latest_probe_status": output["probe_status"],
+            "latest_finding": output["finding"],
+            "latest_mission_disposition": output["mission_disposition"],
+            "latest_followup_required": output["followup_required"],
+            "latest_followup_kind": output["followup_kind"],
+            "latest_successor_scope": output["successor_scope"],
+        }
+    )
+    mission_store.save_contract(stored_contract)
+    if output["mission_disposition"] != "continue" or output["followup_required"]:
         mission_store.append_outcome_gate(
             {
-                "gate_version": "palamedes-outcome-gate/1",
+                "gate_version": "palamedes-outcome-gate/2",
                 "gate_id": f"gate-{outcome['outcome_id'][8:]}",
                 "outcome_id": outcome["outcome_id"],
                 "mission_contract_id": contract["mission_id"],
+                "probe_status": output["probe_status"],
+                "finding": output["finding"],
                 "mission_disposition": output["mission_disposition"],
-                "required_response": output["next_probe"],
+                "followup_required": output["followup_required"],
+                "followup_kind": output["followup_kind"],
+                "successor_scope": output["successor_scope"],
+                "required_response": (
+                    output["successor_scope"]
+                    if output["followup_required"]
+                    else output["next_probe"]
+                ),
                 "status": "open",
                 "opened_at": utc_now(),
             }
@@ -1063,7 +1152,7 @@ Required shape:
   "outcome_response": {{
     "related_outcome_ids": ["outcome IDs from open evidence gates, when present"],
     "action": "resolve|independent|accept_debt",
-    "rationale": "why the next mission resolves, is independent from, or consciously carries the evidence debt"
+    "rationale": "why the next mission resolves, is independent from, or consciously carries the evidence debt; independent and accept_debt do not close required follow-up"
   }}
 }}
 
@@ -1224,12 +1313,15 @@ def approve_mission(
     if open_gates:
         for gate in open_gates:
             resolved = dict(gate)
+            response_action = contract["outcome_response"]["action"]
+            closes_gate = not gate.get("followup_required", False) or response_action == "resolve"
             resolved.update(
                 {
-                    "status": "responded",
+                    "status": "responded" if closes_gate else "open",
                     "responded_at": ts,
                     "response_mission_contract_id": mission_id,
-                    "response_action": contract["outcome_response"]["action"],
+                    "response_action": response_action,
+                    "followup_still_required": not closes_gate,
                 }
             )
             mission_store.append_outcome_gate(resolved)
@@ -1775,11 +1867,14 @@ def run_chat(
                 f"Outcome recorded: {outcome['outcome_id']} ({status})\n"
             )
             if analysis_result["status"] == "completed":
-                disposition = analysis_result["analysis"]["output"][
-                    "mission_disposition"
-                ]
+                analysis_output = analysis_result["analysis"]["output"]
+                disposition = analysis_output["mission_disposition"]
                 output.write(
-                    f"Outcome analyst completed: disposition={disposition}\n"
+                    "Outcome analyst completed: "
+                    f"probe={analysis_output['probe_status']} "
+                    f"finding={analysis_output['finding']} "
+                    f"disposition={disposition} "
+                    f"followup_required={str(analysis_output['followup_required']).lower()}\n"
                 )
             elif analysis_result["status"] == "not_applicable":
                 output.write(

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/autonomous-adjacent-discovery.schema.json",
+  "title": "Autonomous Stakeholder and Future-Scenario Discovery",
+  "type": "object",
+  "required": [
+    "discovery_version",
+    "discovery_id",
+    "connected_thought_ids",
+    "thesis",
+    "trigger",
+    "perspective",
+    "future_scenario",
+    "latent_question",
+    "adjacent_opportunity",
+    "novelty_score",
+    "potential_value_score",
+    "uncertainty_score",
+    "scope_risk_score",
+    "old_framing",
+    "new_framing",
+    "assumption_replaced",
+    "changed_decision",
+    "smallest_probe",
+    "disconfirmation",
+    "why_non_obvious",
+    "promotion_state",
+    "status",
+    "created_at",
+    "mission_authority_granted"
+  ],
+  "properties": {
+    "discovery_version": {"const": "palamedes-discovery/1"},
+    "discovery_id": {"type": "string", "pattern": "^discovery-[a-f0-9]{12}$"},
+    "connected_thought_ids": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^thought-[a-f0-9]{12}$"}
+    },
+    "thesis": {"type": "string", "minLength": 1},
+    "trigger": {"type": "string", "minLength": 1},
+    "perspective": {"type": "string", "minLength": 1},
+    "future_scenario": {"type": "string", "minLength": 1},
+    "latent_question": {"type": "string", "minLength": 1},
+    "adjacent_opportunity": {"type": "string", "minLength": 1},
+    "novelty_score": {"type": "integer", "minimum": 0, "maximum": 100},
+    "potential_value_score": {"type": "integer", "minimum": 0, "maximum": 100},
+    "uncertainty_score": {"type": "integer", "minimum": 0, "maximum": 100},
+    "scope_risk_score": {"type": "integer", "minimum": 0, "maximum": 100},
+    "old_framing": {"type": "string", "minLength": 1},
+    "new_framing": {"type": "string", "minLength": 1},
+    "assumption_replaced": {"type": "string", "minLength": 1},
+    "changed_decision": {"type": "string", "minLength": 1},
+    "smallest_probe": {"type": "string", "minLength": 1},
+    "disconfirmation": {"type": "string", "minLength": 1},
+    "why_non_obvious": {"type": "string", "minLength": 1},
+    "promotion_state": {
+      "enum": [
+        "surface_anomaly",
+        "representativeness_unknown",
+        "cross_check_required",
+        "bounded_opportunity",
+        "mission_eligible"
+      ]
+    },
+    "status": {"const": "candidate"},
+    "created_at": {"type": "string", "minLength": 1},
+    "mission_authority_granted": {"const": false}
+  },
+  "additionalProperties": true
+}

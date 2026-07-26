@@ -152,7 +152,12 @@ class StaticChatProvider:
                         }
                     ],
                     "belief_updates": ["Approval lineage is operationally observable"],
+                    "probe_status": "completed",
+                    "finding": "expected_result",
                     "mission_disposition": "continue",
+                    "followup_required": False,
+                    "followup_kind": "none",
+                    "successor_scope": "",
                     "next_probe": "Run an equal-budget control",
                     "confidence": 60,
                 }
@@ -422,6 +427,10 @@ class PalamedesChatTests(unittest.TestCase):
         )
         self.assertEqual(experience["outcome_status"], "success")
         self.assertEqual(experience["evidence_source_type"], "implementer_claim")
+        self.assertEqual(experience["probe_status"], "completed")
+        self.assertEqual(experience["finding"], "expected_result")
+        self.assertFalse(experience["followup_required"])
+        self.assertEqual(experience["followup_kind"], "none")
 
     def test_completed_work_is_classified_as_audit_not_origination(self):
         class RetrospectiveOriginClaimProvider(StaticChatProvider):
@@ -497,7 +506,12 @@ class PalamedesChatTests(unittest.TestCase):
                                 }
                             ],
                             "belief_updates": ["Repair the contract before expansion"],
+                            "probe_status": "incomplete",
+                            "finding": "inconclusive",
                             "mission_disposition": "revise",
+                            "followup_required": True,
+                            "followup_kind": "new_probe",
+                            "successor_scope": "Add the missing comparison",
                             "next_probe": "Add the missing comparison",
                             "confidence": 70,
                         }
@@ -561,6 +575,136 @@ class PalamedesChatTests(unittest.TestCase):
                     isolated, mission_store, response, "gate-test"
                 )
 
+        self.assertEqual(mission_store.open_outcome_gates(), [])
+
+    def test_successful_probe_can_stop_with_defect_and_keep_followup_gate_open(self):
+        class DefectProvider(StaticChatProvider):
+            def stream(self, messages):
+                if "ROLE: outcome_analyst" in messages[-1]["content"]:
+                    self.calls.append(messages)
+                    yield json.dumps(
+                        {
+                            "observed_vs_expected": "The probe completed and reproduced a guidance defect.",
+                            "attribution_hypotheses": [
+                                {
+                                    "layer": "implementation",
+                                    "claim": "Committed state outranked presentation state",
+                                    "confidence": 90,
+                                }
+                            ],
+                            "belief_updates": ["Presentation precedence needs correction"],
+                            "probe_status": "completed",
+                            "finding": "qualifying_defect",
+                            "mission_disposition": "stop",
+                            "followup_required": True,
+                            "followup_kind": "production_correction",
+                            "successor_scope": "Correct guidance precedence for the reproduced trace",
+                            "next_probe": "Implement the bounded correction",
+                            "confidence": 90,
+                        }
+                    )
+                    return
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                provider = DefectProvider()
+                mission_store = palamedes_chat.MissionStore(
+                    isolated.STATE_DIR / "missions"
+                )
+                cycle_store = palamedes_chat.CognitionCycleStore(
+                    isolated.STATE_DIR / "missions" / "cognition"
+                )
+                result = palamedes_chat.run_cognition_cycle(
+                    provider=provider,
+                    palamedes_module=isolated,
+                    context="Probe one presentation boundary",
+                    cycle_store=cycle_store,
+                )
+                approved = palamedes_chat.approve_mission(
+                    isolated, mission_store, result["contract"], "semantic-test"
+                )["contract"]
+                outcome = palamedes_chat.record_mission_outcome(
+                    isolated,
+                    mission_store,
+                    approved,
+                    "success",
+                    "The probe completed and found one exact mismatch",
+                )
+                palamedes_chat.run_outcome_analyst(
+                    provider=provider,
+                    cycle_store=cycle_store,
+                    mission_store=mission_store,
+                    contract=approved,
+                    outcome=outcome,
+                )
+
+                gate = mission_store.open_outcome_gates()[0]
+                stored_contract = mission_store.load_contract(approved["mission_id"])
+                interpretations = [
+                    json.loads(line)
+                    for line in mission_store.outcome_interpretations_path.read_text(
+                        encoding="utf-8"
+                    ).splitlines()
+                ]
+                experience = json.loads(
+                    next(
+                        (isolated.STATE_DIR / "thoughts" / "experiences").glob(
+                            "*.json"
+                        )
+                    ).read_text(encoding="utf-8")
+                )
+
+                independent_payload = StaticChatProvider._mission_payload()
+                independent_payload["mission"] = "Audit an unrelated rule surface"
+                independent_payload["outcome_response"] = {
+                    "related_outcome_ids": [outcome["outcome_id"]],
+                    "action": "independent",
+                    "rationale": "This does not claim to resolve the guidance defect.",
+                }
+                independent = palamedes_chat.validate_mission_draft(
+                    independent_payload
+                )
+                palamedes_chat.approve_mission(
+                    isolated, mission_store, independent, "semantic-test"
+                )
+                still_open = mission_store.open_outcome_gates()
+
+                resolving_payload = StaticChatProvider._mission_payload()
+                resolving_payload["mission"] = (
+                    "Correct guidance precedence for the reproduced trace"
+                )
+                resolving_payload["outcome_response"] = {
+                    "related_outcome_ids": [outcome["outcome_id"]],
+                    "action": "resolve",
+                    "rationale": "This mission implements the exact required successor scope.",
+                }
+                resolving = palamedes_chat.validate_mission_draft(
+                    resolving_payload
+                )
+                palamedes_chat.approve_mission(
+                    isolated, mission_store, resolving, "semantic-test"
+                )
+
+        self.assertEqual(gate["probe_status"], "completed")
+        self.assertEqual(gate["finding"], "qualifying_defect")
+        self.assertEqual(gate["mission_disposition"], "stop")
+        self.assertTrue(gate["followup_required"])
+        self.assertEqual(gate["followup_kind"], "production_correction")
+        self.assertEqual(stored_contract["latest_finding"], "qualifying_defect")
+        self.assertTrue(stored_contract["latest_followup_required"])
+        self.assertEqual(interpretations[0]["finding"], "qualifying_defect")
+        self.assertEqual(experience["probe_status"], "completed")
+        self.assertEqual(experience["finding"], "qualifying_defect")
+        self.assertTrue(experience["followup_required"])
+        self.assertEqual(experience["followup_kind"], "production_correction")
+        self.assertEqual(
+            experience["successor_scope"],
+            "Correct guidance precedence for the reproduced trace",
+        )
+        self.assertEqual(len(still_open), 1)
+        self.assertTrue(still_open[0]["followup_still_required"])
         self.assertEqual(mission_store.open_outcome_gates(), [])
 
     def test_cycle_failure_preserves_partial_artifacts_without_mission(self):

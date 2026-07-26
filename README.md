@@ -74,7 +74,7 @@ Palamedes improves startup or downstream business outcomes.
 | Evidence level | Current result |
 | --- | --- |
 | Stable plan-state kernel | Implemented with revision, restore, conflict, QA, and conformance surfaces |
-| Bounded pre-planner contracts | Implemented and covered by 1,209 mission tests and 298 experimental schemas |
+| Bounded pre-planner contracts | Implemented and covered by 1,209 mission tests and 300 experimental schemas |
 | Mission-quality proof | `proof-002` and `proof-003` provide initial blinded evidence against one-shot and equal-call strong comparators |
 | 1:1 Codex collaboration | Repeated live implementation cycles produced validated product improvements; Palamedes's causal increment over Codex alone is not yet isolated |
 | Local 1:N team cognition | Alpha: implemented with provenance, stale-world protection, competing hypotheses, mission ownership, bounded context, and blind commit–reveal exploration |
@@ -88,6 +88,22 @@ Palamedes improves startup or downstream business outcomes.
 | Equal-call strong comparator | `proof-003`: Palamedes won 7/9 votes and 2/3 cases with 12 calls each and 1.045x input tokens |
 | Attributable downstream choice | 1 recorded: `proof-002` mission caused the `proof-003` equal-call experiment before feature expansion |
 | Owner labor retirement | Not yet owner-attested |
+
+Outcome semantics are separated rather than collapsed into one success or stop
+label:
+
+```text
+observed outcome
+  -> probe completion
+  -> finding (defect, null, expected, adverse, inconclusive)
+  -> current mission disposition
+  -> required successor scope, if any
+```
+
+A probe may therefore complete successfully and stop while still producing a
+qualifying defect that requires a bounded production successor. An unrelated
+mission may proceed after acknowledging that result, but it does not silently
+close the required follow-up gate.
 
 The first cross-repository case targets `insight-rag`. Palamedes selected a
 counterfactual action-choice benchmark instead of immediately expanding its
@@ -659,7 +675,8 @@ and prevents repeated whole-repository exploration from becoming the default.
 | Primary document changed | Noticer + connector incubation |
 | Central reference revision changed | Noticer + connector incubation |
 | Plan changed | Adversary + selector |
-| Git implementation changed | Interpreter + adversary |
+| Uncommitted implementation changed | Interpreter + adversary |
+| Completed Git revision changed | Stakeholder/future-scenario noticer + adjacent connector |
 | Explicit test failed | Interpreter + adversary |
 | Mission outcome appended | Outcome analyst |
 | Three or more independent signal classes changed | Full four-role cycle |
@@ -682,10 +699,16 @@ watchers from acting on the same workspace. Use `--wake-initial` only when the
 first baseline itself should trigger cognition, and `--max-iterations` for a
 bounded foreground run.
 
-Document and reference changes now stop before mission formation. A `noticer`
-extracts at least two unresolved residues rather than advice, and a `connector`
-may relate distant thoughts only when the relationship replaces an assumption,
-reframes the product, and changes a possible decision. Thoughts persist across
+Document, reference, and completed implementation changes stop before mission
+formation. A `noticer` extracts at least two unresolved residues rather than
+advice. Each residue must place a named stakeholder in a concrete future
+operating scene with a goal and a constraint—for example developer absence,
+failure recovery, scale, regulation, repeated operation, or ownership transfer.
+A `connector` then traverses one adjacent possibility and records the important
+question not already asked, a nearby product or business opportunity, and
+separate novelty, value, uncertainty, and scope-risk scores. It may relate
+distant thoughts only when the relationship replaces an assumption, reframes
+the product, and changes a possible decision. Thoughts persist across
 wakes under `.palamedes/thoughts/thoughts/`; candidate discoveries live under
 `.palamedes/thoughts/discoveries/`. Neither grants mission or delivery
 authority. A later full cognition wake receives these candidates and, if its
