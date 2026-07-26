@@ -37,11 +37,13 @@
     "call_budget": {"type": "integer", "minimum": 0, "maximum": 8},
     "stop_conditions": {"type": "array", "items": {"type": "string"}},
     "rationale": {"type": "string", "minLength": 1},
-    "status": {"enum": ["selected", "deferred"]},
+    "status": {"enum": ["selected", "deferred", "addressed"]},
     "constitutional_constraints_mutable": {"const": false},
     "delivery_authority_granted": {"const": false},
     "artifacts": {"type": "array", "minItems": 3, "maxItems": 3},
-    "created_at": {"type": "string", "minLength": 1}
+    "created_at": {"type": "string", "minLength": 1},
+    "addressed_by_mission_contract_id": {"type": "string", "pattern": "^mission-[a-f0-9]{12}$"},
+    "addressed_at": {"type": "string", "minLength": 1}
   },
   "additionalProperties": false
 }

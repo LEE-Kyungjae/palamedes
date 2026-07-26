@@ -38,7 +38,8 @@
     "updated_at": {"type": "string", "minLength": 1},
     "zoom_shift_from": {"const": "micro"},
     "zoom_shift_to": {"const": "component_or_product"},
-    "fresh_eyes_required": {"type": "boolean"}
+    "fresh_eyes_required": {"type": "boolean"},
+    "surface_key": {"type": "string", "minLength": 1}
   },
   "allOf": [
     {

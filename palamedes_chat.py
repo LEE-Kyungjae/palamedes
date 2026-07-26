@@ -462,7 +462,34 @@ def _provider_json(
             ]
         )
     )
-    return _extract_json_object(raw)
+    return _normalize_provider_scalars(_extract_json_object(raw))
+
+
+def _normalize_provider_scalars(value: Any, key: str = "") -> Any:
+    """Repair only unambiguous JSON scalar type drift from model providers."""
+    if isinstance(value, dict):
+        return {
+            item_key: _normalize_provider_scalars(item_value, item_key)
+            for item_key, item_value in value.items()
+        }
+    if isinstance(value, list):
+        return [_normalize_provider_scalars(item, key) for item in value]
+    integer_fields = {
+        "confidence",
+        "uncertainty",
+        "exploration_value",
+        "expected_information_gain",
+        "scope_risk",
+        "call_budget",
+    }
+    boolean_fields = {"followup_required", "disqualifying"}
+    if key in integer_fields and isinstance(value, str) and re.fullmatch(r"\d{1,3}", value.strip()):
+        return int(value.strip())
+    if key in boolean_fields and isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in {"true", "false"}:
+            return lowered == "true"
+    return value
 
 
 def _non_empty_string_array(payload: Dict[str, Any], field: str) -> List[str]:
@@ -1222,6 +1249,45 @@ def validate_mission_draft(payload: Dict[str, Any]) -> Dict[str, Any]:
     uncertainty = payload.get("uncertainty", 50)
     if not isinstance(uncertainty, int) or isinstance(uncertainty, bool) or not 0 <= uncertainty <= 100:
         errors.append("uncertainty must be an integer from 0 to 100")
+    work_scale = payload.get("work_scale", "unspecified")
+    if work_scale not in {
+        "unspecified",
+        "micro",
+        "component",
+        "product",
+        "service",
+        "portfolio",
+    }:
+        errors.append("work_scale must be a supported planning scale")
+    surface_key = str(payload.get("surface_key", "")).strip()
+    prompt_agenda_response = payload.get("prompt_agenda_response")
+    normalized_prompt_agenda_response = None
+    if prompt_agenda_response is not None:
+        if not isinstance(prompt_agenda_response, dict):
+            errors.append("prompt_agenda_response must be an object")
+        else:
+            agenda_ids = prompt_agenda_response.get("prompt_agenda_ids")
+            action = prompt_agenda_response.get("action")
+            rationale = str(prompt_agenda_response.get("rationale", "")).strip()
+            if not isinstance(agenda_ids, list) or not agenda_ids or not all(
+                isinstance(item, str) and item.strip() for item in agenda_ids
+            ):
+                errors.append("prompt_agenda_response requires prompt_agenda_ids")
+            if action != "address" or not rationale:
+                errors.append("prompt_agenda_response requires address and rationale")
+            if not errors:
+                normalized_prompt_agenda_response = {
+                    "prompt_agenda_ids": [item.strip() for item in agenda_ids],
+                    "action": action,
+                    "rationale": rationale,
+                }
+    product_alignment_response = payload.get("product_alignment_response")
+    normalized_product_alignment_response = None
+    if product_alignment_response is not None:
+        if not isinstance(product_alignment_response, dict):
+            errors.append("product_alignment_response must be an object")
+        else:
+            normalized_product_alignment_response = product_alignment_response
     if errors:
         raise ValueError("invalid mission draft: " + "; ".join(errors))
     normalized_outcome_response = None
@@ -1260,9 +1326,15 @@ def validate_mission_draft(payload: Dict[str, Any]) -> Dict[str, Any]:
         "next_probe": normalized_probe,
         "planner_brief": payload["planner_brief"].strip(),
         "uncertainty": uncertainty,
+        "work_scale": work_scale,
+        "surface_key": surface_key,
     }
     if normalized_outcome_response is not None:
         normalized["outcome_response"] = normalized_outcome_response
+    if normalized_prompt_agenda_response is not None:
+        normalized["prompt_agenda_response"] = normalized_prompt_agenda_response
+    if normalized_product_alignment_response is not None:
+        normalized["product_alignment_response"] = normalized_product_alignment_response
     mission_id = f"mission-{_fingerprint(normalized)[:12]}"
     return {
         "mission_contract_version": "palamedes-chat-mission/1",
@@ -1296,6 +1368,25 @@ Required shape:
   }},
   "planner_brief": "semantic handoff for a downstream planner",
   "uncertainty": 50,
+  "work_scale": "micro|component|product|service|portfolio",
+  "surface_key": "stable product or code surface label",
+  "prompt_agenda_response": {{
+    "prompt_agenda_ids": ["required fresh-eyes agenda IDs, when present"],
+    "action": "address",
+    "rationale": "how this non-micro mission answers the required zoom shift"
+  }},
+  "product_alignment_response": {{
+    "purposes": [{{"purpose_id":"...", "effect":"advances|neutral|conflicts|unknown", "rationale":"..."}}],
+    "capability_reuse": {{
+      "relevant_capability_ids":["..."],
+      "decision":"reuse|extend|new|not_applicable|unknown",
+      "rejection_evidence_ids":[],
+      "rationale":"..."
+    }},
+    "integration_gaps": [{{"gap_id":"...", "action":"audit|resolve|accept_debt", "rationale":"..."}}],
+    "constraint_review": {{"reviewed_constraint_ids":["..."], "rationale":"..."}},
+    "stage_claim": {{"advances_stage":false, "target_stage":"", "journey_evidence_ids":[]}}
+  }},
   "outcome_response": {{
     "related_outcome_ids": ["outcome IDs from open evidence gates, when present"],
     "action": "resolve|independent|accept_debt",
@@ -1365,6 +1456,49 @@ def approve_mission(
 ) -> Dict[str, Any]:
     if contract.get("status") != "draft":
         raise ValueError(f"mission is not approvable from status {contract.get('status')}")
+    from palamedes_prompt import PromptAgendaStore
+    from palamedes_product_alignment import (
+        ProductAlignmentStore,
+        validate_alignment_response,
+    )
+
+    prompt_store = PromptAgendaStore(mission_store.root / "prompt-intelligence")
+    alignment_store = ProductAlignmentStore(
+        mission_store.root.parent / "product-alignment"
+    )
+    validate_alignment_response(
+        contract,
+        alignment_store,
+        outcome_count=len(mission_store.outcomes()),
+    )
+    blocking_zoom = prompt_store.blocking_zoom_agendas()
+    if blocking_zoom:
+        response = contract.get("prompt_agenda_response")
+        response_ids = (
+            response.get("prompt_agenda_ids", []) if isinstance(response, dict) else []
+        )
+        unresolved = [
+            agenda
+            for agenda in blocking_zoom
+            if agenda["prompt_agenda_id"] not in response_ids
+        ]
+        if unresolved:
+            ids = ", ".join(item["prompt_agenda_id"] for item in unresolved)
+            raise ValueError(
+                "mission approval blocked by required fresh-eyes agendas: "
+                f"{ids}; respond with a component-or-higher research mission"
+            )
+        if contract.get("work_scale") not in {
+            "component",
+            "product",
+            "service",
+            "portfolio",
+        }:
+            raise ValueError(
+                "required fresh-eyes agenda cannot be addressed by another micro mission"
+            )
+        if response.get("action") != "address":
+            raise ValueError("fresh-eyes prompt_agenda_response must address the agenda")
     open_gates = mission_store.open_outcome_gates()
     if open_gates:
         response = contract.get("outcome_response")
@@ -1457,6 +1591,9 @@ def approve_mission(
     approved = dict(contract)
     approved.update({"status": "approved", "approved_at": ts, "session_id": session_id})
     mission_store.save_contract(approved)
+    if blocking_zoom:
+        for agenda in blocking_zoom:
+            prompt_store.address_agenda(agenda["prompt_agenda_id"], mission_id)
     if open_gates:
         for gate in open_gates:
             resolved = dict(gate)
@@ -1678,6 +1815,72 @@ def _print_help(output: TextIO) -> None:
     )
 
 
+def run_automatic_meta_learning(
+    *, provider: ChatProvider, mission_store: MissionStore, snapshot: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Wake bounded meta-learning only after a meaningful outcome history exists."""
+    from palamedes_prompt import (
+        PromptAgendaStore,
+        run_outcome_backfill,
+        run_prompt_architecture,
+    )
+    from palamedes_reference_intelligence import (
+        ReferenceIntelligenceStore,
+        run_reference_intelligence,
+    )
+
+    outcomes = mission_store.outcomes()
+    result: Dict[str, Any] = {
+        "status": "not_needed",
+        "outcome_count": len(outcomes),
+        "backfill": {"status": "not_needed"},
+        "reference_intelligence": {"status": "not_needed"},
+    }
+    if len(outcomes) < 5:
+        return result
+    prompt_store = PromptAgendaStore(mission_store.root / "prompt-intelligence")
+    interpreted_ids = {
+        item["outcome_id"] for item in mission_store.outcome_interpretations()
+    } | prompt_store.backfilled_outcome_ids()
+    pending_count = sum(
+        1 for item in outcomes if item.get("outcome_id") not in interpreted_ids
+    )
+    if pending_count:
+        backfill = run_outcome_backfill(
+            provider=provider,
+            store=prompt_store,
+            outcomes=outcomes,
+            already_interpreted_outcome_ids=interpreted_ids,
+            limit=min(12, pending_count),
+        )
+        result["backfill"] = backfill
+        zoom = backfill.get("zoom_pattern", {})
+        if zoom.get("status") == "required":
+            result["zoom_prompt_architecture"] = run_prompt_architecture(
+                provider=provider,
+                store=prompt_store,
+                cluster=zoom["cluster"],
+            )
+    reference_store = ReferenceIntelligenceStore(
+        mission_store.root / "reference-intelligence"
+    )
+    if not reference_store.has_runs():
+        intelligence = run_reference_intelligence(
+            provider=provider,
+            store=reference_store,
+            snapshot=snapshot,
+        )
+        result["reference_intelligence"] = {
+            "status": "completed",
+            "reference_intelligence_id": intelligence[
+                "reference_intelligence_id"
+            ],
+            "reference_mode": intelligence["reference_mode"],
+        }
+    result["status"] = "completed"
+    return result
+
+
 def run_chat(
     *,
     palamedes_module: Any,
@@ -1874,6 +2077,31 @@ def run_chat(
                     workspace,
                     ref_root=Path(ref_value).expanduser() if ref_value else None,
                 )
+                try:
+                    meta_learning = run_automatic_meta_learning(
+                        provider=provider,
+                        mission_store=mission_store,
+                        snapshot=latest_observation,
+                    )
+                    if meta_learning["status"] == "completed":
+                        output.write(
+                            "Automatic meta-learning refreshed bounded outcome and "
+                            "reference intelligence.\n"
+                        )
+                except (OSError, RuntimeError, ValueError) as exc:
+                    store.append(
+                        active_session,
+                        {
+                            "ts": utc_now(),
+                            "type": "automatic_meta_learning_failed",
+                            "error": str(exc),
+                            "observation_id": latest_observation["observation_id"],
+                        },
+                    )
+                    output.write(
+                        f"[automatic meta-learning degraded] {exc}; "
+                        "continuing with the existing evidence state.\n"
+                    )
                 grounded_context = (
                     f"User request:\n{context}\n\n"
                     "Bounded workspace observation:\n"
@@ -1887,6 +2115,18 @@ def run_chat(
                         ensure_ascii=False,
                     )
                 )
+                from palamedes_product_alignment import ProductAlignmentStore
+
+                alignment_context = ProductAlignmentStore(
+                    mission_store.root.parent / "product-alignment"
+                ).active_context()
+                if any(alignment_context.get(key) for key in alignment_context):
+                    grounded_context += (
+                        "\n\nProduct ground truth and architecture context "
+                        "(respond explicitly; do not optimize against an unknown or "
+                        "conflicting purpose):\n"
+                        + json.dumps(alignment_context, ensure_ascii=False)
+                    )
                 from palamedes_prompt import PromptAgendaStore
 
                 prompt_agendas = PromptAgendaStore(

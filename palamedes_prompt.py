@@ -89,6 +89,55 @@ class PromptAgendaStore:
         records.sort(key=lambda item: item.get("updated_at", ""), reverse=True)
         return records[:limit]
 
+    def backfilled_outcome_ids(self) -> set:
+        if not self.backfill_root.is_dir():
+            return set()
+        outcome_ids = set()
+        for path in self.backfill_root.glob("*.json"):
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(payload, dict) and isinstance(payload.get("outcome_id"), str):
+                outcome_ids.add(payload["outcome_id"])
+        return outcome_ids
+
+    def backfill_interpretations(self) -> List[Dict[str, Any]]:
+        if not self.backfill_root.is_dir():
+            return []
+        records = []
+        for path in self.backfill_root.glob("*.json"):
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(payload, dict):
+                records.append(payload)
+        records.sort(key=lambda item: item.get("recorded_at", ""))
+        return records
+
+    def blocking_zoom_agendas(self) -> List[Dict[str, Any]]:
+        blocking = []
+        for agenda in self.active_agendas(100):
+            cluster = self.load_cluster(str(agenda.get("causal_cluster_id", "")))
+            if cluster.get("fresh_eyes_required") and agenda.get("status") == "selected":
+                blocking.append(agenda)
+        return blocking
+
+    def address_agenda(self, agenda_id: str, mission_id: str) -> None:
+        path = self.agendas_root / f"{agenda_id}.json"
+        if not path.is_file():
+            raise ValueError(f"prompt agenda not found: {agenda_id}")
+        agenda = json.loads(path.read_text(encoding="utf-8"))
+        agenda.update(
+            {
+                "status": "addressed",
+                "addressed_by_mission_contract_id": mission_id,
+                "addressed_at": utc_now(),
+            }
+        )
+        self.save_agenda(agenda)
+
 
 def record_causal_pattern(
     *, store: PromptAgendaStore, interpretation: Dict[str, Any]
@@ -180,6 +229,7 @@ def record_zoom_pattern(
     cluster["zoom_shift_from"] = "micro"
     cluster["zoom_shift_to"] = "component_or_product"
     cluster["fresh_eyes_required"] = True
+    cluster["surface_key"] = surface
     store.save_cluster(cluster)
     store.append_event(
         {
@@ -328,7 +378,15 @@ Historical outcomes:
         record_causal_pattern(store=store, interpretation=record)
         record_design_hypothesis(store=store, interpretation=record)
         persisted.append(record)
-    zoom = record_zoom_pattern(store=store, interpretations=persisted)
+    records_by_outcome = {
+        item["outcome_id"]: item for item in store.backfill_interpretations()
+    }
+    ordered_records = [
+        records_by_outcome[item["outcome_id"]]
+        for item in outcomes
+        if item.get("outcome_id") in records_by_outcome
+    ]
+    zoom = record_zoom_pattern(store=store, interpretations=ordered_records)
     return {
         "status": "completed",
         "records": persisted,

@@ -143,6 +143,27 @@ capability, hypothesis, and agenda must cite an observed source ID. The stored
 agenda can steer a later cognition cycle but always has
 `delivery_authority_granted: false`.
 
+On projects with at least five recorded outcomes, `/cycle` now wakes bounded
+meta-learning automatically: it maps at most 12 legacy outcomes per cycle,
+creates a first source-bounded self/reference model when absent, and turns a
+five-outcome same-surface micro streak into a required fresh-eyes agenda. A
+selected zoom agenda is an approval gate, not advisory prose: another `micro`
+mission cannot address it. The next approved mission must explicitly cite the
+agenda and operate at component or higher scale, after which the agenda is
+closed with mission lineage. Provider scalar drift such as `"confidence":"90"`
+is repaired only for known typed fields; ambiguous content remains invalid.
+
+Product alignment now precedes local quality optimization. Source-bearing
+product invariants, reusable capabilities, temporary constraints, open
+integration gaps, and required product-stage journeys live in
+`.palamedes/product-alignment/state.json` and are injected into `/cycle`.
+Mission approval blocks conflict with an active product invariant, greenfield
+construction without evaluating an existing capability, silent reuse of an
+expired constraint, and stage advancement without configured journey evidence.
+The model supplies the source-linked interpretation; the deterministic gate
+checks IDs and declared effects rather than guessing product meaning from
+keywords.
+
 The first cross-repository case targets `insight-rag`. Palamedes selected a
 counterfactual action-choice benchmark instead of immediately expanding its
 analyzer or corpus. Its first real treatment packet was low-confidence and

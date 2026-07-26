@@ -242,6 +242,296 @@ class PalamedesIsolation:
 
 
 class PalamedesChatTests(unittest.TestCase):
+    def test_repeated_micro_delivery_without_product_purpose_is_blocked(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                mission_store = palamedes_chat.MissionStore(
+                    isolated.STATE_DIR / "missions"
+                )
+                for number in range(5):
+                    mission_store.append_outcome(
+                        {
+                            "outcome_id": f"outcome-purpose-{number}",
+                            "mission_contract_id": f"mission-purpose-{number}",
+                        }
+                    )
+                payload = StaticChatProvider._mission_payload()
+                payload["work_scale"] = "micro"
+                payload["surface_key"] = "game-screen"
+                contract = palamedes_chat.validate_mission_draft(payload)
+                with self.assertRaisesRegex(ValueError, "purpose remains ungrounded"):
+                    palamedes_chat.approve_mission(
+                        isolated, mission_store, contract, "purpose-test"
+                    )
+
+    def test_product_alignment_blocks_wrong_purpose_greenfield_and_stage_claim(self):
+        from palamedes_product_alignment import ProductAlignmentStore
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                mission_store = palamedes_chat.MissionStore(
+                    isolated.STATE_DIR / "missions"
+                )
+                alignment = ProductAlignmentStore(
+                    isolated.STATE_DIR / "product-alignment"
+                )
+                alignment.record_purpose(
+                    purpose_id="purpose-online-room",
+                    statement="Catalog games run through online rooms.",
+                    source_ids=["user"],
+                    surface_key="game-platform",
+                )
+                alignment.record_capability(
+                    capability_id="capability-realtime-runtime",
+                    statement="An authoritative realtime room runtime exists.",
+                    source_ids=["services/realtime"],
+                    surface_key="game-platform",
+                )
+                alignment.record_integration_gap(
+                    gap_id="gap-game-route-bypasses-runtime",
+                    surface_key="game-platform",
+                    expected_capability_id="capability-realtime-runtime",
+                    observed_path="mobile/game_route",
+                    evidence_ids=["route-source", "realtime-source"],
+                )
+                alignment.record_constraint(
+                    constraint_id="constraint-no-media-prototype",
+                    statement="Use no external media during the first prototype.",
+                    source_ids=["prototype-contract"],
+                    scope="game-platform",
+                    expires_when="prototype validation completes",
+                    status="expired_pending_review",
+                )
+                alignment.set_product_stage(
+                    stage="beta",
+                    required_journey_ids=["journey-two-client-reconnect"],
+                    evidence_ids=[],
+                )
+
+                payload = StaticChatProvider._mission_payload()
+                payload["work_scale"] = "micro"
+                payload["surface_key"] = "game-platform"
+                local_polish = palamedes_chat.validate_mission_draft(payload)
+                with self.assertRaisesRegex(ValueError, "product alignment response"):
+                    palamedes_chat.approve_mission(
+                        isolated, mission_store, local_polish, "alignment-test"
+                    )
+
+                payload["product_alignment_response"] = {
+                    "purposes": [
+                        {
+                            "purpose_id": "purpose-online-room",
+                            "effect": "conflicts",
+                            "rationale": "This keeps the local-only route.",
+                        }
+                    ],
+                    "capability_reuse": {
+                        "relevant_capability_ids": ["capability-realtime-runtime"],
+                        "decision": "new",
+                        "rejection_evidence_ids": [],
+                        "rationale": "",
+                    },
+                    "constraint_review": {
+                        "reviewed_constraint_ids": [],
+                        "rationale": "",
+                    },
+                    "integration_gaps": [
+                        {
+                            "gap_id": "gap-game-route-bypasses-runtime",
+                            "action": "audit",
+                            "rationale": "Trace the integration boundary.",
+                        }
+                    ],
+                    "stage_claim": {
+                        "advances_stage": True,
+                        "target_stage": "rc",
+                        "journey_evidence_ids": [],
+                    },
+                }
+                conflict = palamedes_chat.validate_mission_draft(payload)
+                with self.assertRaisesRegex(ValueError, "purpose conflict"):
+                    palamedes_chat.approve_mission(
+                        isolated, mission_store, conflict, "alignment-test"
+                    )
+
+                response = payload["product_alignment_response"]
+                response["purposes"][0]["effect"] = "advances"
+                greenfield = palamedes_chat.validate_mission_draft(payload)
+                with self.assertRaisesRegex(ValueError, "greenfield"):
+                    palamedes_chat.approve_mission(
+                        isolated, mission_store, greenfield, "alignment-test"
+                    )
+
+                response["capability_reuse"]["decision"] = "extend"
+                response["capability_reuse"]["rationale"] = "Extend the existing reducer."
+                expired = palamedes_chat.validate_mission_draft(payload)
+                with self.assertRaisesRegex(ValueError, "expired constraints"):
+                    palamedes_chat.approve_mission(
+                        isolated, mission_store, expired, "alignment-test"
+                    )
+
+                response["constraint_review"]["reviewed_constraint_ids"] = [
+                    "constraint-no-media-prototype"
+                ]
+                stage = palamedes_chat.validate_mission_draft(payload)
+                with self.assertRaisesRegex(ValueError, "journey evidence"):
+                    palamedes_chat.approve_mission(
+                        isolated, mission_store, stage, "alignment-test"
+                    )
+
+                response["stage_claim"]["advances_stage"] = False
+                corrected = palamedes_chat.validate_mission_draft(payload)
+                approved = palamedes_chat.approve_mission(
+                    isolated, mission_store, corrected, "alignment-test"
+                )
+
+        self.assertEqual(approved["contract"]["status"], "approved")
+
+    def test_provider_scalar_normalization_repairs_only_unambiguous_types(self):
+        normalized = palamedes_chat._normalize_provider_scalars(
+            {
+                "confidence": "90",
+                "followup_required": "false",
+                "claim": "90",
+                "nested": [{"exploration_value": "64"}],
+            }
+        )
+
+        self.assertEqual(normalized["confidence"], 90)
+        self.assertFalse(normalized["followup_required"])
+        self.assertEqual(normalized["claim"], "90")
+        self.assertEqual(normalized["nested"][0]["exploration_value"], 64)
+
+    def test_required_fresh_eyes_agenda_blocks_micro_reentry_until_addressed(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                mission_store = palamedes_chat.MissionStore(
+                    isolated.STATE_DIR / "missions"
+                )
+                from palamedes_prompt import PromptAgendaStore
+
+                prompt_store = PromptAgendaStore(
+                    mission_store.root / "prompt-intelligence"
+                )
+                cluster = {
+                    "causal_cluster_version": "palamedes-causal-cluster/1",
+                    "causal_cluster_id": "causal-cluster-aaaaaaaaaaaa",
+                    "causal_signature": "micro-cycle-streak:game-screen",
+                    "mechanism_summary": "Five micro outcomes stayed on one screen.",
+                    "outcome_ids": ["outcome-000000000001"],
+                    "mission_contract_ids": ["mission-000000000001"],
+                    "recurrence_count": 5,
+                    "meta_shift_required": True,
+                    "zoom_shift_from": "micro",
+                    "zoom_shift_to": "component_or_product",
+                    "fresh_eyes_required": True,
+                    "surface_key": "game-screen",
+                    "created_at": "2026-01-01T00:00:00+00:00",
+                    "updated_at": "2026-01-01T00:00:00+00:00",
+                }
+                prompt_store.save_cluster(cluster)
+                agenda = {
+                    "prompt_agenda_version": "palamedes-prompt-agenda/1",
+                    "prompt_agenda_id": "prompt-agenda-bbbbbbbbbbbb",
+                    "causal_cluster_id": cluster["causal_cluster_id"],
+                    "status": "selected",
+                    "created_at": "2026-01-01T00:00:00+00:00",
+                }
+                prompt_store.save_agenda(agenda)
+
+                payload = StaticChatProvider._mission_payload()
+                blocked = palamedes_chat.validate_mission_draft(payload)
+                with self.assertRaisesRegex(ValueError, "fresh-eyes"):
+                    palamedes_chat.approve_mission(
+                        isolated, mission_store, blocked, "zoom-test"
+                    )
+
+                payload["work_scale"] = "micro"
+                payload["surface_key"] = "game-screen"
+                payload["prompt_agenda_response"] = {
+                    "prompt_agenda_ids": [agenda["prompt_agenda_id"]],
+                    "action": "address",
+                    "rationale": "Attempt another local correction.",
+                }
+                micro = palamedes_chat.validate_mission_draft(payload)
+                with self.assertRaisesRegex(ValueError, "another micro"):
+                    palamedes_chat.approve_mission(
+                        isolated, mission_store, micro, "zoom-test"
+                    )
+
+                payload["work_scale"] = "product"
+                payload["rationale"] = "Audit whether local optimization still matters."
+                product = palamedes_chat.validate_mission_draft(payload)
+                approved = palamedes_chat.approve_mission(
+                    isolated, mission_store, product, "zoom-test"
+                )
+                saved_agenda = json.loads(
+                    (prompt_store.agendas_root / f"{agenda['prompt_agenda_id']}.json").read_text()
+                )
+
+        self.assertEqual(approved["contract"]["status"], "approved")
+        self.assertEqual(saved_agenda["status"], "addressed")
+
+    def test_automatic_meta_learning_stays_dormant_before_five_outcomes(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            store = palamedes_chat.MissionStore(root / "missions")
+            result = palamedes_chat.run_automatic_meta_learning(
+                provider=StaticChatProvider(),
+                mission_store=store,
+                snapshot={"observation_id": "observation-test"},
+            )
+
+        self.assertEqual(result["status"], "not_needed")
+        self.assertEqual(result["outcome_count"], 0)
+
+    def test_automatic_meta_learning_wakes_backfill_zoom_and_self_model(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            store = palamedes_chat.MissionStore(root / "missions")
+            for number in range(5):
+                store.append_outcome(
+                    {
+                        "outcome_id": f"outcome-{number:012x}",
+                        "mission_contract_id": f"mission-{number:012x}",
+                    }
+                )
+            cluster = {
+                "causal_cluster_id": "causal-cluster-aaaaaaaaaaaa",
+                "meta_shift_required": True,
+                "fresh_eyes_required": True,
+            }
+            with patch(
+                "palamedes_prompt.run_outcome_backfill",
+                return_value={
+                    "status": "completed",
+                    "records": [{"outcome_id": "outcome-000000000000"}],
+                    "zoom_pattern": {"status": "required", "cluster": cluster},
+                },
+            ) as backfill, patch(
+                "palamedes_prompt.run_prompt_architecture",
+                return_value={"status": "completed"},
+            ) as architecture, patch(
+                "palamedes_reference_intelligence.run_reference_intelligence",
+                return_value={
+                    "reference_intelligence_id": "reference-intelligence-bbbbbbbbbbbb",
+                    "reference_mode": "workspace_only",
+                },
+            ) as intelligence:
+                result = palamedes_chat.run_automatic_meta_learning(
+                    provider=StaticChatProvider(),
+                    mission_store=store,
+                    snapshot={"observation_id": "observation-test"},
+                )
+
+        self.assertEqual(result["status"], "completed")
+        backfill.assert_called_once()
+        architecture.assert_called_once()
+        intelligence.assert_called_once()
+
     def test_team_enabled_chat_receives_shared_plural_state(self):
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)

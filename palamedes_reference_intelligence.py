@@ -66,6 +66,9 @@ class ReferenceIntelligenceStore:
         records.sort(key=lambda item: item.get("created_at", ""), reverse=True)
         return records[:limit]
 
+    def has_runs(self) -> bool:
+        return self.runs_root.is_dir() and any(self.runs_root.glob("*.json"))
+
 
 def _extract_json_object(raw: str) -> Dict[str, Any]:
     start = raw.find("{")
