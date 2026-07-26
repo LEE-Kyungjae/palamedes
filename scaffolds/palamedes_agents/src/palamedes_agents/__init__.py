@@ -6,6 +6,7 @@ from .runtime.agent_cycle import AgentCycle
 from .runtime.host_events import build_error_event, build_success_event, summarize_for_host
 from .runtime.host_step import HostStep, action_contract, required_capabilities_for_action, role_has_action_capabilities
 from .runtime.policies import apply_idempotency_policy, build_idempotency_key, should_retry_stale_conflict
+from .team_cognition import TeamCognitionConflict, TeamCognitionStore
 from .workflows.planner_loop import PlannerLoop
 from .workflows.research_loop import ResearchLoop
 from .workflows.review_loop import ReviewLoop
@@ -29,4 +30,6 @@ __all__ = [
     "apply_idempotency_policy",
     "build_idempotency_key",
     "should_retry_stale_conflict",
+    "TeamCognitionStore",
+    "TeamCognitionConflict",
 ]

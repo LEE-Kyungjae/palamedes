@@ -61,8 +61,10 @@ world signals and accumulated references
 
 ## Current Status
 
-**Research Alpha.** The planning kernel is implemented and heavily tested. The
-autonomous pre-planner is an active, falsifiable product hypothesis.
+**Research Beta.** The planning kernel is implemented and heavily tested, the
+1:1 pre-planner has repeated production use, and two preregistered comparisons
+provide initial evidence beyond an internal prototype. This is not a claim that
+Palamedes improves startup or downstream business outcomes.
 
 - `core` contract surfaces such as persisted plan state, fingerprint conflict semantics, restore behavior, and documented HTTP envelopes are treated as stable according to `STABILITY.md`
 - `reference` surfaces such as host orchestration contracts, reference adapters, and example integrations are still experimental
@@ -73,6 +75,11 @@ autonomous pre-planner is an active, falsifiable product hypothesis.
 | --- | --- |
 | Stable plan-state kernel | Implemented with revision, restore, conflict, QA, and conformance surfaces |
 | Bounded pre-planner contracts | Implemented and covered by 1,209 mission tests and 298 experimental schemas |
+| Mission-quality proof | `proof-002` and `proof-003` provide initial blinded evidence against one-shot and equal-call strong comparators |
+| 1:1 Codex collaboration | Repeated live implementation cycles produced validated product improvements; Palamedes's causal increment over Codex alone is not yet isolated |
+| Local 1:N team cognition | Alpha: implemented with provenance, stale-world protection, competing hypotheses, mission ownership, bounded context, and blind commit–reveal exploration |
+| 1:N incremental advantage | Not yet proven over the working 1:1 Codex plus Palamedes loop |
+| Distributed team operation | Not implemented; the current ledger is a same-host transactional file surface |
 | Internal reasoning development | 401 recorded dependent cycles |
 | First real retrieval contact | 1,624 evidence records and 837 components indexed |
 | Reference-treatment safety | Correctly blocked the first packet with 9 explicit reasons |
@@ -274,6 +281,40 @@ observable outcomes returned to Palamedes
 
 Its authority ends at the mission boundary. It may recommend, reject, or reopen
 a direction; it does not silently acquire delivery authority.
+
+For a 1:N Paperclip-style team, Palamedes can also expose a shared epistemic
+ledger without becoming the scheduler. It preserves agent provenance,
+observation-surface bias, competing hypotheses, one-owner mission claims,
+stale-world conflicts, blind commit–reveal exploration, and explicit outcome
+attribution. The host still owns wakes, budgets, permissions, queues, and
+process lifecycle. See the
+[multi-agent team integration](docs/integration-agent-teams.md).
+
+```bash
+palamedes team snapshot --state .palamedes/team-cognition.json
+palamedes chat --provider codex --team-state .palamedes/team-cognition.json \
+  --agent-id palamedes-main --agent-role strategist
+```
+
+Team cognition flow:
+
+| Command | Purpose |
+| --- | --- |
+| `palamedes team observe` | Record an agent observation with source, surface, confidence, and coverage bias |
+| `palamedes team hypothesis` | Preserve a falsifiable interpretation without overwriting rivals |
+| `palamedes team round-begin` | Freeze participants, question, and evidence boundary for independent exploration |
+| `candidate-hash` → `candidate-commit` → `candidate-reveal` | Prevent early proposals from anchoring later agents |
+| `palamedes team claim` / `release` | Give a mission one active owner without moving scheduling into Palamedes |
+| `palamedes team outcome` | Record observed results with explicit contribution attribution totaling 100% |
+| `palamedes team snapshot` | Inspect the complete durable team ledger |
+
+Every write may provide `--expected-world-version`; stale writers must reread
+instead of silently replacing another agent's observation. Full history remains
+durable, while AI prompts receive a bounded context containing recent evidence,
+open hypotheses, active missions, outcomes, and only fully revealed exploration
+rounds. This team layer is a local-host Alpha surface within the Research Beta.
+Distributed teams should
+put the same schema and version contract behind transactional storage.
 
 ## What Makes It Different
 
@@ -481,7 +522,7 @@ python3 palamedes.py chat --provider openrouter --model <provider/model>
 The terminal is a persistent, streaming REPL:
 
 ```text
-Palamedes Research Alpha
+Palamedes Research Beta
 workspace: /path/to/project
 provider: openrouter
 model: <provider/model>

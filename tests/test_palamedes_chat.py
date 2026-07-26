@@ -230,6 +230,40 @@ class PalamedesIsolation:
 
 
 class PalamedesChatTests(unittest.TestCase):
+    def test_team_enabled_chat_receives_shared_plural_state(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            fake = FakePalamedes(root)
+            store = palamedes.team_cognition_store(root / "team.json")
+            store.record_observation(
+                {
+                    "observation_id": "obs-team-chat",
+                    "agent_id": "research-agent",
+                    "agent_role": "researcher",
+                    "content": "A quiet user group is absent from current feedback.",
+                    "source": "feedback sample",
+                    "observation_surface": "support tickets",
+                }
+            )
+            provider = StaticChatProvider()
+
+            result = palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=provider,
+                session_id="team-chat",
+                input_stream=io.StringIO("What deserves attention?\n/quit\n"),
+                output=io.StringIO(),
+                team_store=store,
+                agent_id="palamedes-main",
+                agent_role="strategist",
+            )
+
+        self.assertEqual(result, 0)
+        system = provider.calls[0][0]["content"]
+        self.assertIn("Shared team cognition", system)
+        self.assertIn("obs-team-chat", system)
+        self.assertIn("palamedes-main", system)
+
     def test_repl_streams_and_persists_turns(self):
         with tempfile.TemporaryDirectory() as tempdir:
             fake = FakePalamedes(Path(tempdir))

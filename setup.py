@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-from setuptools import setup
+from setuptools import find_packages, setup
+
+
+AGENTS_SRC = "scaffolds/palamedes_agents/src"
 
 
 setup(
@@ -24,6 +27,16 @@ setup(
         "palamedes_server",
         "palamedes_store",
     ],
-    packages=["palamedes_sdk"],
+    packages=["palamedes_sdk", *find_packages(where=AGENTS_SRC)],
+    package_dir={"palamedes_agents": f"{AGENTS_SRC}/palamedes_agents"},
+    package_data={
+        "palamedes_agents": [
+            "contracts/*.json",
+            "schemas/*.json",
+            "skills/*.json",
+            "skills/manifests/*.json",
+            "prompts/*.md",
+        ]
+    },
     entry_points={"console_scripts": ["palamedes=palamedes:main"]},
 )

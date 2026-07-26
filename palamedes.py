@@ -3602,6 +3602,107 @@ def cmd_ideate(args: argparse.Namespace) -> None:
         print_qa(score, checks, critical_failure)
 
 
+def _team_payload(args: argparse.Namespace) -> Dict[str, Any]:
+    payload_json = str(getattr(args, "payload_json", "") or "").strip()
+    payload_file = str(getattr(args, "payload_file", "") or "").strip()
+    if payload_json and payload_file:
+        raise ValueError("use either --payload-json or --payload-file, not both")
+    if payload_json:
+        payload = json.loads(payload_json)
+    elif payload_file:
+        payload = json.loads(Path(payload_file).read_text(encoding="utf-8"))
+    else:
+        payload = {}
+    if not isinstance(payload, dict):
+        raise ValueError("team payload must be a JSON object")
+    return payload
+
+
+def team_cognition_store(path: Path) -> Any:
+    """Load the packaged team ledger, with a source-checkout fallback."""
+    try:
+        from palamedes_agents.team_cognition import TeamCognitionStore
+    except ModuleNotFoundError:
+        agents_src = CODE_ROOT / "scaffolds" / "palamedes_agents" / "src"
+        if str(agents_src) not in sys.path:
+            sys.path.insert(0, str(agents_src))
+        from palamedes_agents.team_cognition import TeamCognitionStore
+
+    return TeamCognitionStore(path)
+
+
+def cmd_team(args: argparse.Namespace) -> None:
+    store = team_cognition_store(Path(args.state).expanduser())
+    expected = args.expected_world_version
+    if args.team_action == "snapshot":
+        result = {"state": store.snapshot()}
+    elif args.team_action == "candidate-hash":
+        payload = _team_payload(args)
+        result = {
+            "commitment": store.candidate_commitment(
+                payload.get("candidate", {}), str(payload.get("nonce", ""))
+            )
+        }
+    elif args.team_action == "round-begin":
+        result = store.begin_exploration(
+            _team_payload(args), expected_world_version=expected
+        )
+    elif args.team_action == "candidate-commit":
+        payload = _team_payload(args)
+        result = store.commit_candidate(
+            str(payload.get("round_id", "")),
+            str(payload.get("agent_id", "")),
+            str(payload.get("commitment", "")),
+            expected_world_version=expected,
+        )
+    elif args.team_action == "candidate-reveal":
+        payload = _team_payload(args)
+        result = store.reveal_candidate(
+            str(payload.get("round_id", "")),
+            str(payload.get("agent_id", "")),
+            payload.get("candidate", {}),
+            str(payload.get("nonce", "")),
+            expected_world_version=expected,
+        )
+    elif args.team_action == "observe":
+        result = store.record_observation(
+            _team_payload(args), expected_world_version=expected
+        )
+    elif args.team_action == "hypothesis":
+        result = store.propose_hypothesis(
+            _team_payload(args), expected_world_version=expected
+        )
+    elif args.team_action == "hypothesis-update":
+        result = store.update_hypothesis(
+            args.hypothesis_id,
+            args.status,
+            args.agent_id,
+            args.reason,
+            expected_world_version=expected,
+        )
+    elif args.team_action == "claim":
+        result = store.claim_mission(
+            args.mission_id,
+            args.agent_id,
+            basis_hypothesis_ids=args.basis_hypothesis_id,
+            expected_world_version=expected,
+        )
+    elif args.team_action == "release":
+        result = store.release_mission(
+            args.mission_id,
+            args.agent_id,
+            status=args.status,
+            expected_world_version=expected,
+        )
+    elif args.team_action == "outcome":
+        result = store.record_outcome(
+            _team_payload(args), expected_world_version=expected
+        )
+    else:  # pragma: no cover - argparse constrains this
+        raise ValueError(f"unsupported team action: {args.team_action}")
+    print(json.dumps({"ok": True, "type": f"team_{args.team_action}", **result}, indent=2, ensure_ascii=False))
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Palamedes local planning and mission intelligence")
     sub = p.add_subparsers(dest="command", required=True)
@@ -3614,7 +3715,43 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--session", type=str, default="")
     s.add_argument("--workspace", type=str, default="")
     s.add_argument("--history-limit", type=int, default=24)
+    s.add_argument("--team-state", type=str, default="")
+    s.add_argument("--agent-id", type=str, default="")
+    s.add_argument("--agent-role", type=str, default="strategist")
     s.set_defaults(func=cmd_chat)
+
+    s = sub.add_parser("team", help="Read or update shared 1:N team cognition state.")
+    s.add_argument(
+        "team_action",
+        choices=[
+            "snapshot",
+            "candidate-hash",
+            "round-begin",
+            "candidate-commit",
+            "candidate-reveal",
+            "observe",
+            "hypothesis",
+            "hypothesis-update",
+            "claim",
+            "release",
+            "outcome",
+        ],
+    )
+    s.add_argument("--state", type=str, default=".palamedes/team-cognition.json")
+    s.add_argument("--payload-json", type=str, default="")
+    s.add_argument("--payload-file", type=str, default="")
+    s.add_argument("--expected-world-version", type=int)
+    s.add_argument("--agent-id", type=str, default="")
+    s.add_argument("--mission-id", type=str, default="")
+    s.add_argument("--basis-hypothesis-id", action="append", default=[])
+    s.add_argument("--hypothesis-id", type=str, default="")
+    s.add_argument(
+        "--status",
+        choices=["open", "supported", "weakened", "rejected", "released", "completed"],
+        default="released",
+    )
+    s.add_argument("--reason", type=str, default="")
+    s.set_defaults(func=cmd_team)
 
     s = sub.add_parser("observe", help="Collect a bounded workspace observation.")
     s.add_argument("--workspace", type=str, default="")

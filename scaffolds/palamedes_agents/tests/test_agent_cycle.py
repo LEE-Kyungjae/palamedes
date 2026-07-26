@@ -2,6 +2,7 @@
 import copy
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -14,6 +15,7 @@ if str(SRC_ROOT) not in sys.path:
 from palamedes_agents.adapters.palamedes_adapter import PalamedesAdapter
 from palamedes_agents.runtime.agent_cycle import AgentCycle
 from palamedes_agents.strategy_llm import StaticStrategyProvider
+from palamedes_agents.team_cognition import TeamCognitionStore
 from scaffolds.palamedes_agents.tests.test_adapter_and_planner_loop import FakePalamedesClient
 from scaffolds.palamedes_agents.tests.test_strategy_llm import VALID_REPORT
 
@@ -90,6 +92,39 @@ class AgentCycleTests(unittest.TestCase):
 
         self.assertFalse(result["ok"])
         self.assertEqual(result["stop_reason"], "action_limit")
+
+    def test_team_cycle_records_origin_claims_mission_and_supplies_shared_world(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            store = TeamCognitionStore(Path(temporary) / "team.json")
+            cycle = AgentCycle(
+                PalamedesAdapter(FakePalamedesClient()),
+                StaticStrategyProvider(copy.deepcopy(VALID_REPORT)),
+                persist_insights=False,
+                team_store=store,
+            )
+
+            result = cycle.run(
+                {
+                    "payload": {"idea": "Improve hot-seat play"},
+                    "context": {
+                        "agent_id": "ux-agent",
+                        "agent_role": "researcher",
+                        "mission_id": "mission-hot-seat",
+                        "observation": {
+                            "content": "One phone is shared between players.",
+                            "source": "repository",
+                            "observation_surface": "implemented game flow",
+                        },
+                    },
+                }
+            )
+
+            self.assertTrue(result["ok"])
+            self.assertEqual(result["events"][0]["type"], "team_observation_recorded")
+            self.assertEqual(result["events"][1]["type"], "team_mission_claimed")
+            snapshot = store.snapshot()
+            self.assertEqual(snapshot["observations"][0]["agent_id"], "ux-agent")
+            self.assertEqual(snapshot["missions"][0]["agent_id"], "ux-agent")
 
 
 if __name__ == "__main__":

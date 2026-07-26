@@ -27,6 +27,7 @@ class AgentCycle:
     strategy_provider: Any
     max_actions: int = 5
     persist_insights: bool = True
+    team_store: Any = None
 
     def _validate(self, wake: Dict[str, Any]) -> tuple[str, Dict[str, Any], Dict[str, Any]]:
         if not isinstance(wake, dict):
@@ -47,6 +48,43 @@ class AgentCycle:
         session_id = str(context.get("session_id", "")).strip()
         wake_id = str(context.get("wake_id", "")).strip()
         events: List[Dict[str, Any]] = []
+        if self.team_store is not None:
+            agent_id = str(context.get("agent_id", "")).strip()
+            if not agent_id:
+                raise ValueError("team-enabled cycle requires context.agent_id")
+            observation = context.get("observation")
+            if observation:
+                if not isinstance(observation, dict):
+                    raise ValueError("context.observation must be an object")
+                prepared_observation = dict(observation)
+                prepared_observation.setdefault("agent_id", agent_id)
+                prepared_observation.setdefault(
+                    "agent_role", str(context.get("agent_role", "strategist")).strip()
+                )
+                recorded = self.team_store.record_observation(prepared_observation)
+                events.append(
+                    {
+                        "ok": True,
+                        "type": "team_observation_recorded",
+                        "role": prepared_observation["agent_role"],
+                        "result": recorded,
+                        "error": None,
+                    }
+                )
+            mission_id = str(context.get("mission_id", "")).strip()
+            if mission_id:
+                claimed = self.team_store.claim_mission(mission_id, agent_id)
+                events.append(
+                    {
+                        "ok": True,
+                        "type": "team_mission_claimed",
+                        "role": str(context.get("agent_role", "strategist")).strip(),
+                        "result": claimed,
+                        "error": None,
+                    }
+                )
+            payload = dict(payload)
+            payload["team_cognition"] = self.team_store.context_snapshot()
 
         strategy_event = HostStep(
             self.adapter,

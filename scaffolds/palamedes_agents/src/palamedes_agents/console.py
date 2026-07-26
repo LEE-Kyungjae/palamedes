@@ -27,6 +27,7 @@ from palamedes_agents.strategy_llm import (
 from palamedes_agents.strategy_benchmark import load_json_object, prepare_blind_packet, score_reviews
 from palamedes_agents.strategy_prompt import build_strategy_prompt_bundle
 from palamedes_agents.strategy_routes import route_strategy_next_actions
+from palamedes_agents.team_cognition import TeamCognitionStore
 
 
 DEFAULT_PAYLOADS: Dict[str, Dict[str, Any]] = {
@@ -152,6 +153,10 @@ def _reference_store(args: argparse.Namespace) -> ReferenceStore:
     return ReferenceStore(Path(str(args.reference_db)))
 
 
+def _team_store(args: argparse.Namespace) -> TeamCognitionStore:
+    return TeamCognitionStore(Path(str(args.team_state)))
+
+
 def _attach_reference_store(payload: Dict[str, Any], args: argparse.Namespace) -> Dict[str, Any]:
     prepared = dict(payload)
     path = Path(str(args.reference_db))
@@ -267,6 +272,7 @@ def cmd_cycle(args: argparse.Namespace) -> int:
         provider,
         max_actions=args.max_actions,
         persist_insights=not args.no_persist_insights,
+        team_store=_team_store(args) if args.team_state else None,
     ).run(
         {
             "action": args.action,
@@ -275,11 +281,122 @@ def cmd_cycle(args: argparse.Namespace) -> int:
                 "session_id": args.session_id,
                 "wake_id": args.wake_id,
                 "wake_reason": args.wake_reason,
+                "agent_id": args.agent_id,
+                "agent_role": args.agent_role,
+                "mission_id": args.mission_id,
             },
         }
     )
     print(_json_dumps(result))
     return 0 if result.get("ok") else 1
+
+
+def cmd_team_snapshot(args: argparse.Namespace) -> int:
+    print(_json_dumps({"ok": True, "type": "team_snapshot", "state": _team_store(args).snapshot()}))
+    return 0
+
+
+def cmd_team_candidate_hash(args: argparse.Namespace) -> int:
+    payload = _load_payload(args)
+    commitment = _team_store(args).candidate_commitment(
+        payload.get("candidate", {}), str(payload.get("nonce", ""))
+    )
+    print(_json_dumps({"ok": True, "type": "team_candidate_hash", "commitment": commitment}))
+    return 0
+
+
+def cmd_team_round_begin(args: argparse.Namespace) -> int:
+    result = _team_store(args).begin_exploration(
+        _load_payload(args), expected_world_version=args.expected_world_version
+    )
+    print(_json_dumps({"ok": True, "type": "team_round_begin", **result}))
+    return 0
+
+
+def cmd_team_candidate_commit(args: argparse.Namespace) -> int:
+    payload = _load_payload(args)
+    result = _team_store(args).commit_candidate(
+        str(payload.get("round_id", "")),
+        str(payload.get("agent_id", "")),
+        str(payload.get("commitment", "")),
+        expected_world_version=args.expected_world_version,
+    )
+    print(_json_dumps({"ok": True, "type": "team_candidate_commit", **result}))
+    return 0
+
+
+def cmd_team_candidate_reveal(args: argparse.Namespace) -> int:
+    payload = _load_payload(args)
+    result = _team_store(args).reveal_candidate(
+        str(payload.get("round_id", "")),
+        str(payload.get("agent_id", "")),
+        payload.get("candidate", {}),
+        str(payload.get("nonce", "")),
+        expected_world_version=args.expected_world_version,
+    )
+    print(_json_dumps({"ok": True, "type": "team_candidate_reveal", **result}))
+    return 0
+
+
+def cmd_team_observe(args: argparse.Namespace) -> int:
+    result = _team_store(args).record_observation(
+        _load_payload(args),
+        expected_world_version=args.expected_world_version,
+    )
+    print(_json_dumps({"ok": True, "type": "team_observation", **result}))
+    return 0
+
+
+def cmd_team_hypothesis(args: argparse.Namespace) -> int:
+    result = _team_store(args).propose_hypothesis(
+        _load_payload(args),
+        expected_world_version=args.expected_world_version,
+    )
+    print(_json_dumps({"ok": True, "type": "team_hypothesis", **result}))
+    return 0
+
+
+def cmd_team_hypothesis_update(args: argparse.Namespace) -> int:
+    result = _team_store(args).update_hypothesis(
+        args.hypothesis_id,
+        args.status,
+        args.agent_id,
+        args.reason,
+        expected_world_version=args.expected_world_version,
+    )
+    print(_json_dumps({"ok": True, "type": "team_hypothesis_update", **result}))
+    return 0
+
+
+def cmd_team_claim(args: argparse.Namespace) -> int:
+    result = _team_store(args).claim_mission(
+        args.mission_id,
+        args.agent_id,
+        basis_hypothesis_ids=list(args.basis_hypothesis_id),
+        expected_world_version=args.expected_world_version,
+    )
+    print(_json_dumps({"ok": True, "type": "team_mission_claim", **result}))
+    return 0
+
+
+def cmd_team_release(args: argparse.Namespace) -> int:
+    result = _team_store(args).release_mission(
+        args.mission_id,
+        args.agent_id,
+        status=args.status,
+        expected_world_version=args.expected_world_version,
+    )
+    print(_json_dumps({"ok": True, "type": "team_mission_release", **result}))
+    return 0
+
+
+def cmd_team_outcome(args: argparse.Namespace) -> int:
+    result = _team_store(args).record_outcome(
+        _load_payload(args),
+        expected_world_version=args.expected_world_version,
+    )
+    print(_json_dumps({"ok": True, "type": "team_outcome", **result}))
+    return 0
 
 
 def cmd_prompt(args: argparse.Namespace) -> int:
@@ -466,6 +583,10 @@ def build_parser() -> argparse.ArgumentParser:
     cycle.add_argument("--session-id", default="")
     cycle.add_argument("--wake-id", default="")
     cycle.add_argument("--wake-reason", default="user")
+    cycle.add_argument("--team-state", default="", help="Optional shared team cognition JSON state.")
+    cycle.add_argument("--agent-id", default="")
+    cycle.add_argument("--agent-role", default="strategist")
+    cycle.add_argument("--mission-id", default="")
     cycle.add_argument("--max-actions", type=int, default=5)
     cycle.add_argument("--no-persist-insights", action="store_true")
     cycle.add_argument("--provider", choices=["openai", "openrouter", "static"], default="openai")
@@ -473,6 +594,76 @@ def build_parser() -> argparse.ArgumentParser:
     cycle.add_argument("--static-report-json", default="")
     cycle.add_argument("--static-report-file", default="")
     cycle.set_defaults(func=cmd_cycle)
+
+    team_snapshot = sub.add_parser("team-snapshot", help="Read shared multi-agent cognition state.")
+    team_snapshot.add_argument("--team-state", default=".palamedes/team-cognition.json")
+    team_snapshot.set_defaults(func=cmd_team_snapshot)
+
+    for name, help_text, handler in [
+        ("team-candidate-hash", "Compute a blind candidate commitment without mutating state.", cmd_team_candidate_hash),
+        ("team-round-begin", "Begin an independent multi-agent exploration round.", cmd_team_round_begin),
+        ("team-candidate-commit", "Commit a candidate digest before seeing peer candidates.", cmd_team_candidate_commit),
+        ("team-candidate-reveal", "Reveal and verify a previously committed candidate.", cmd_team_candidate_reveal),
+    ]:
+        command = sub.add_parser(name, help=help_text)
+        command.add_argument("--team-state", default=".palamedes/team-cognition.json")
+        command.add_argument("--payload-json", default="")
+        command.add_argument("--payload-file", default="")
+        command.add_argument("--expected-world-version", type=int)
+        command.set_defaults(func=handler, action=name.replace("-", "_"))
+
+    team_observe = sub.add_parser("team-observe", help="Record a provenance-preserving agent observation.")
+    team_observe.add_argument("--team-state", default=".palamedes/team-cognition.json")
+    team_observe.add_argument("--payload-json", default="")
+    team_observe.add_argument("--payload-file", default="")
+    team_observe.add_argument("--expected-world-version", type=int)
+    team_observe.set_defaults(func=cmd_team_observe, action="team_observe")
+
+    team_hypothesis = sub.add_parser("team-hypothesis", help="Preserve one agent's falsifiable hypothesis.")
+    team_hypothesis.add_argument("--team-state", default=".palamedes/team-cognition.json")
+    team_hypothesis.add_argument("--payload-json", default="")
+    team_hypothesis.add_argument("--payload-file", default="")
+    team_hypothesis.add_argument("--expected-world-version", type=int)
+    team_hypothesis.set_defaults(func=cmd_team_hypothesis, action="team_hypothesis")
+
+    team_hypothesis_update = sub.add_parser(
+        "team-hypothesis-update",
+        help="Revise a hypothesis after new evidence without deleting its history.",
+    )
+    team_hypothesis_update.add_argument("--team-state", default=".palamedes/team-cognition.json")
+    team_hypothesis_update.add_argument("--hypothesis-id", required=True)
+    team_hypothesis_update.add_argument(
+        "--status",
+        choices=["open", "supported", "weakened", "rejected"],
+        required=True,
+    )
+    team_hypothesis_update.add_argument("--agent-id", required=True)
+    team_hypothesis_update.add_argument("--reason", required=True)
+    team_hypothesis_update.add_argument("--expected-world-version", type=int)
+    team_hypothesis_update.set_defaults(func=cmd_team_hypothesis_update)
+
+    team_claim = sub.add_parser("team-claim", help="Claim one mission for one agent without central scheduling.")
+    team_claim.add_argument("--team-state", default=".palamedes/team-cognition.json")
+    team_claim.add_argument("--mission-id", required=True)
+    team_claim.add_argument("--agent-id", required=True)
+    team_claim.add_argument("--basis-hypothesis-id", action="append", default=[])
+    team_claim.add_argument("--expected-world-version", type=int)
+    team_claim.set_defaults(func=cmd_team_claim)
+
+    team_release = sub.add_parser("team-release", help="Release or complete an owned team mission.")
+    team_release.add_argument("--team-state", default=".palamedes/team-cognition.json")
+    team_release.add_argument("--mission-id", required=True)
+    team_release.add_argument("--agent-id", required=True)
+    team_release.add_argument("--status", choices=["released", "completed"], default="released")
+    team_release.add_argument("--expected-world-version", type=int)
+    team_release.set_defaults(func=cmd_team_release)
+
+    team_outcome = sub.add_parser("team-outcome", help="Record mission outcome and explicit contribution attribution.")
+    team_outcome.add_argument("--team-state", default=".palamedes/team-cognition.json")
+    team_outcome.add_argument("--payload-json", default="")
+    team_outcome.add_argument("--payload-file", default="")
+    team_outcome.add_argument("--expected-world-version", type=int)
+    team_outcome.set_defaults(func=cmd_team_outcome, action="team_outcome")
 
     prompt = sub.add_parser("prompt", help="Build the strategist LLM prompt bundle without calling a provider.")
     prompt.add_argument(

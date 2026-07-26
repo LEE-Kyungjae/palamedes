@@ -1,6 +1,7 @@
 # palamedes-agents scaffold
 
-This scaffold is a minimal starting point for a separate `palamedes-agents` repo.
+This scaffold is an Alpha 1:N integration surface within the Palamedes Research
+Beta and a starting point for a separate `palamedes-agents` repo.
 
 It is intentionally small.
 It demonstrates:
@@ -20,12 +21,17 @@ It demonstrates:
 - host-facing event envelopes for workflow outputs
 - a role-aware `host_step` dispatcher over local action contracts
 - provenance-preserving Insight RAG with diverse reference-pattern retrieval and a deterministic sufficiency gate
+- local 1:N team cognition with observation-surface provenance, competing hypotheses, mission ownership, stale-world protection, and outcome attribution
 
 This scaffold does not include:
 
 - queue workers
 - network services
 - execution runtimes
+- a distributed team scheduler or manager hierarchy
+
+For Paperclip-style 1:N cooperation, see
+[`docs/integration-agent-teams.md`](../../docs/integration-agent-teams.md).
 
 ## Insight RAG
 

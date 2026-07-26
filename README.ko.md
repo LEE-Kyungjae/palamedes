@@ -37,13 +37,20 @@ Palamedes는 독창성이나 창업 성공을 보장하지 않습니다. 실행 
 
 ## 현재 상태
 
-**Research Alpha.** 계획 상태 커널은 구현되어 있고, 자율 프리플래너는
-검증 중인 제품 가설입니다.
+**Research Beta.** 계획 상태 커널은 충분히 구현·검증됐고, 1:1 프리플래너는
+실제 프로젝트에서 반복 사용됐으며, 두 번의 사전등록 비교에서 내부 프로토타입
+이상의 초기 증거를 확보했습니다. 이것이 창업이나 실제 사업 성과 개선까지
+증명했다는 뜻은 아닙니다.
 
 | 증거 수준 | 현재 결과 |
 | --- | --- |
 | 안정적인 계획 상태 커널 | 수정, 복원, 충돌 처리, QA, 호환성 검증 구현 |
 | 제한된 프리플래너 계약 | 미션 및 실험 스키마와 테스트 구현 |
+| 미션 품질 증명 | `proof-002`, `proof-003`에서 one-shot 및 동일 호출 강한 대조군 대비 블라인드 초기 증거 확보 |
+| 1:1 Codex 협업 | 실제 구현 사이클에서 검증 가능한 제품 개선이 반복됨; Codex 단독 대비 Palamedes의 인과적 추가 기여는 아직 미분리 |
+| 로컬 1:N 팀 인지 | Alpha: 출처·오래된 상태 차단·경쟁 가설·미션 소유권·제한 문맥·블라인드 commit–reveal 구현 |
+| 1:N 추가 우위 | 현재 작동하는 1:1 Codex+Palamedes 루프 대비 아직 미증명 |
+| 분산 팀 운영 | 미구현; 현재 원장은 동일 호스트의 트랜잭션 파일 방식 |
 | 내부 사고 개발 | 의존적인 추론 사이클 401개 기록 |
 | 실제 레퍼런스 접촉 | 근거 1,624건, 구성요소 837개 색인 |
 | 부적절한 검색 결과 차단 | 첫 처리 패킷을 9개 이유로 차단 |
@@ -116,6 +123,38 @@ Palamedes
       ↓
 관찰된 결과를 Palamedes에 반환
 ```
+
+Paperclip 같은 1:N 팀에서는 Palamedes가 스케줄러가 되는 대신 공유 인지
+원장을 제공할 수 있습니다. 에이전트별 관측 출처와 관측 편향, 서로 경쟁하는
+가설, 단일 미션 소유권, 오래된 세계 상태 쓰기 충돌, 블라인드 commit–reveal
+탐사, 결과 기여도를 보존합니다.
+호출·예산·권한·큐·프로세스 수명은 계속 외부 호스트가 담당합니다. 자세한
+계약은 [다중 에이전트 팀 통합 문서](docs/integration-agent-teams.md)에 있습니다.
+
+```bash
+palamedes team snapshot --state .palamedes/team-cognition.json
+palamedes chat --provider codex --team-state .palamedes/team-cognition.json \
+  --agent-id palamedes-main --agent-role strategist
+```
+
+팀 인지 흐름:
+
+| 명령 | 역할 |
+| --- | --- |
+| `palamedes team observe` | 출처·관측 표면·신뢰도·표본 편향을 포함한 에이전트 관측 기록 |
+| `palamedes team hypothesis` | 다른 해석을 덮어쓰지 않고 반증 가능한 가설 보존 |
+| `palamedes team round-begin` | 독립 탐사의 참여자·질문·근거 경계 동결 |
+| `candidate-hash` → `candidate-commit` → `candidate-reveal` | 먼저 공개된 제안이 후속 에이전트를 앵커링하는 현상 방지 |
+| `palamedes team claim` / `release` | 스케줄링 권한을 가져오지 않고 미션당 활성 소유자 한 명 보장 |
+| `palamedes team outcome` | 합계 100%의 명시적 기여도와 관측 결과 기록 |
+| `palamedes team snapshot` | 보존된 전체 팀 원장 확인 |
+
+모든 쓰기는 `--expected-world-version`을 사용할 수 있습니다. 오래된 상태를
+가진 에이전트는 다른 관측을 덮어쓰지 않고 새 상태를 다시 읽어야 합니다.
+전체 이력은 보존하지만 AI 프롬프트에는 최근 근거, 열린 가설, 활성 미션,
+결과, 모든 후보가 공개된 탐사 라운드만 제한적으로 전달합니다. 이 팀 계층은
+Research Beta 안의 동일 호스트용 Alpha 기능이며, 분산 팀은 같은 스키마와
+버전 계약을 트랜잭션 저장소 뒤에 연결해야 합니다.
 
 ## 구조
 

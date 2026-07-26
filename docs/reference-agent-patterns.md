@@ -13,6 +13,7 @@ reference implementations rather than from a single generic agent framework.
 | Within-cycle memory | Dexter | Scratchpad, bounded tool loop, context compaction, separate final synthesis | Owned by the cycle runner |
 | Specialist behavior | gstack | Role-specific skills, real-environment QA, context save/restore, eval persistence | Skills and evaluation layer |
 | Extensibility | OpenClaw | Lean core, plugins for optional capability, explicit channels and safe defaults | Plugins around the host |
+| Shared team cognition | Palamedes team ledger | Provenance, observation bias, competing hypotheses, single-owner missions, outcome attribution | Epistemic state only; host still schedules |
 
 Canonical source locations are recorded in
 `/Users/ze/work/ref/manifests/status-current.json`; automated keyword-level
@@ -34,6 +35,11 @@ wake
 The implementation is `runtime/agent_cycle.py` in the agent scaffold. It is
 deliberately bounded and does not add a queue, scheduler, shell executor, or
 manager-of-managers hierarchy to the Palamedes kernel.
+
+For 1:N teams, the companion
+[`team cognition contract`](integration-agent-teams.md) supplies shared
+world-state versioning and plural hypothesis memory without moving orchestration
+into the kernel.
 
 ## Rejected defaults
 

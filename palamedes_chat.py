@@ -1370,7 +1370,18 @@ def _plan_context(palamedes_module: Any) -> str:
     return json.dumps(fields, ensure_ascii=False, sort_keys=True)
 
 
-def system_prompt(palamedes_module: Any, workspace: Path) -> str:
+def system_prompt(
+    palamedes_module: Any,
+    workspace: Path,
+    team_context: Optional[Dict[str, Any]] = None,
+) -> str:
+    team_section = ""
+    if team_context is not None:
+        team_section = (
+            "\nShared team cognition (plural evidence, not managerial authority):\n"
+            + json.dumps(team_context, ensure_ascii=False, sort_keys=True)
+            + "\n"
+        )
     return f"""You are Palamedes, an autonomous pre-planner operating before planner -> task -> implementation.
 
 Your job is to notice what matters, form competing interpretations, originate worthwhile candidate missions, attack your own assumptions, and recommend the smallest informative next move.
@@ -1382,6 +1393,7 @@ You are plan-only in this terminal. You may propose mission contracts, evidence,
 Workspace: {workspace}
 Current bounded Palamedes plan context:
 {_plan_context(palamedes_module)}
+{team_section}
 """
 
 
@@ -1432,6 +1444,9 @@ def run_chat(
     history_limit: int = 24,
     input_stream: TextIO = sys.stdin,
     output: TextIO = sys.stdout,
+    team_store: Any = None,
+    agent_id: str = "",
+    agent_role: str = "strategist",
 ) -> int:
     store = ChatSessionStore(palamedes_module.STATE_DIR / "chat")
     mission_store = MissionStore(palamedes_module.STATE_DIR / "missions")
@@ -1441,7 +1456,18 @@ def run_chat(
     latest_observation: Optional[Dict[str, Any]] = None
     active_session = session_id
     workspace = Path(palamedes_module.ROOT)
-    output.write("Palamedes Research Alpha\n")
+    if team_store is not None and not agent_id:
+        raise ValueError("team-enabled chat requires agent_id")
+
+    def current_team_context() -> Optional[Dict[str, Any]]:
+        if team_store is None:
+            return None
+        return {
+            "active_agent": {"agent_id": agent_id, "agent_role": agent_role},
+            "shared_state": team_store.context_snapshot(),
+        }
+
+    output.write("Palamedes Research Beta\n")
     output.write(
         f"workspace: {workspace}\nprovider: {provider.provider_name}\n"
         f"model: {provider.model}\nsession: {active_session}\n"
@@ -1466,7 +1492,8 @@ def run_chat(
         if text == "/status":
             output.write(
                 f"provider={provider.provider_name} model={provider.model} "
-                f"workspace={workspace} session={active_session}\n"
+                f"workspace={workspace} session={active_session} "
+                f"team_agent={agent_id or 'disabled'}\n"
             )
             continue
         if text == "/sessions":
@@ -1554,6 +1581,12 @@ def run_chat(
                         ensure_ascii=False,
                     )
                 )
+                team_context = current_team_context()
+                if team_context is not None:
+                    grounded_context += (
+                        "\n\nShared team cognition:\n"
+                        + json.dumps(team_context, ensure_ascii=False)
+                    )
                 result = run_cognition_cycle(
                     provider=provider,
                     palamedes_module=palamedes_module,
@@ -1796,7 +1829,14 @@ def run_chat(
         )
         records = store.load(active_session)
         messages = [
-            {"role": "system", "content": system_prompt(palamedes_module, workspace)},
+            {
+                "role": "system",
+                "content": system_prompt(
+                    palamedes_module,
+                    workspace,
+                    current_team_context(),
+                ),
+            },
             *_history_messages(records[:-1], history_limit),
             {"role": "user", "content": user_content},
         ]
@@ -1868,9 +1908,18 @@ def cmd_chat(args: Any, palamedes_module: Any) -> None:
     if args.history_limit < 2 or args.history_limit > 200:
         raise ValueError("history-limit must be between 2 and 200")
     provider = provider_from_config(args.provider, args.model)
+    team_state = str(getattr(args, "team_state", "") or "").strip()
+    team_store = None
+    if team_state:
+        team_store = palamedes_module.team_cognition_store(
+            Path(team_state).expanduser().resolve()
+        )
     run_chat(
         palamedes_module=palamedes_module,
         provider=provider,
         session_id=session_id,
         history_limit=args.history_limit,
+        team_store=team_store,
+        agent_id=str(getattr(args, "agent_id", "") or "").strip(),
+        agent_role=str(getattr(args, "agent_role", "strategist") or "strategist").strip(),
     )

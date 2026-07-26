@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/team-cognition.schema.json",
+  "title": "Palamedes Team Cognition State",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "world_version",
+    "observations",
+    "hypotheses",
+    "missions",
+    "outcomes",
+    "exploration_rounds"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "palamedes-team-cognition/v1"
+    },
+    "world_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "observation_id",
+          "agent_id",
+          "agent_role",
+          "kind",
+          "content",
+          "source",
+          "observation_surface",
+          "observed_at",
+          "confidence",
+          "coverage"
+        ],
+        "properties": {
+          "observation_id": {"type": "string", "minLength": 1},
+          "agent_id": {"type": "string", "minLength": 1},
+          "agent_role": {"type": "string", "minLength": 1},
+          "kind": {
+            "enum": ["fact", "inference", "preference", "simulation", "commitment"]
+          },
+          "content": {"type": "string", "minLength": 1},
+          "source": {"type": "string", "minLength": 1},
+          "observation_surface": {"type": "string", "minLength": 1},
+          "observed_at": {"type": "string", "minLength": 1},
+          "commit_sha": {"type": "string"},
+          "confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+          "coverage": {
+            "type": "object",
+            "required": ["observed_population", "missing_perspectives", "selection_bias"],
+            "properties": {
+              "observed_population": {"type": "string"},
+              "missing_perspectives": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "selection_bias": {"type": "string"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "hypotheses": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "missions": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "outcomes": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "exploration_rounds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "round_id",
+          "question",
+          "participant_ids",
+          "evidence_boundary",
+          "phase",
+          "commitments",
+          "reveals",
+          "created_at"
+        ],
+        "properties": {
+          "round_id": {"type": "string", "minLength": 1},
+          "question": {"type": "string", "minLength": 1},
+          "participant_ids": {
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "evidence_boundary": {"type": "array", "items": {"type": "string"}},
+          "phase": {"enum": ["commit", "reveal", "ready"]},
+          "commitments": {"type": "array", "items": {"type": "object"}},
+          "reveals": {"type": "array", "items": {"type": "object"}},
+          "created_at": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
