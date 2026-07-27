@@ -11,7 +11,7 @@
 > **Palamedes decides what mission is worth planning before execution agents
 > decide how to implement it.**
 
-Palamedes is a research-alpha autonomous pre-planner and plan-state kernel. It
+Palamedes is a research-beta autonomous pre-planner and plan-state kernel. It
 works before the familiar `planner -> task -> implementation` pipeline:
 noticing what matters, forming competing interpretations, originating a
 justified mission, attempting to falsify it, and handing only the surviving
@@ -88,6 +88,19 @@ Palamedes improves startup or downstream business outcomes.
 | Equal-call strong comparator | `proof-003`: Palamedes won 7/9 votes and 2/3 cases with 12 calls each and 1.045x input tokens |
 | Attributable downstream choice | 1 recorded: `proof-002` mission caused the `proof-003` equal-call experiment before feature expansion |
 | Owner labor retirement | Not yet owner-attested |
+| Autonomous upstream origination | Vision Genesis and low-cost Vision Scout implemented; a real-project Scout originated an unsupplied founder prompt |
+| Independent human/behavioral evidence | Blind review and preregistered behavioral-probe paths implemented; no completed independent evidence yet |
+
+## Live Project Demo
+
+[![Yut quality-cycle demo produced with Palamedes and Codex](assets/demo/yut-gameplay-demo.jpg)](assets/demo/yut-gameplay-demo.mp4)
+
+Click the image to open a 35-second MP4. This Yut game is a concrete artifact of repeated
+1:1 Palamedes-plus-Codex quality cycles across rendered behavior, rules boundaries,
+accessibility, motion, and regression evidence. It is not proof that Palamedes guarantees
+product success or even initial product alignment. A later audit found that this polished
+local game diverged from the original online-multiplayer intent. The case therefore shows
+both local quality depth and why upstream product invariants must constrain that depth.
 
 Outcome semantics are separated rather than collapsed into one success or stop
 label:
@@ -163,6 +176,228 @@ expired constraint, and stage advancement without configured journey evidence.
 The model supplies the source-linked interpretation; the deterministic gate
 checks IDs and declared effects rather than guessing product meaning from
 keywords.
+
+### Vision Genesis: origination before elaboration
+
+Palamedes now separates inventing a product world from compiling an implementation
+mission. On the first `/cycle`, and again when its evidence-based investment envelope is
+exhausted, an autonomous vision wake runs seven isolated roles:
+
+```text
+self-authored exploration-agenda architect
+  → latent desire and affect interpreter
+  → distant-domain analogy explorer
+  → forced mechanism-fusion inventor
+  → three-world product-world builder
+  → maniac critic and natural-language vision author
+  → reality and opportunity-cost governor
+```
+
+The first role writes four to six upstream research prompts that the user did not supply
+and selects two or three. Its default adaptive condition must compare frontier questions
+that reverse assumptions, conventional questions grounded in current product journeys,
+and bridge questions that connect a distant human mechanism to a concrete product engine.
+It spans at least six territories but may not seed named solution patterns, answer its own
+prompts, or grant authority. The selected agenda is passed as advisory data to later roles. This makes
+prompt origination an inspectable artifact rather than hiding it inside a fixed system
+prompt or pretending that a downstream feature list was an original question.
+`/vision-agenda-ablation <case> <challenger> <comparator>` compares any two distinct
+`adaptive|frontier|conventional` strategies; its default is adaptive against a strong
+conventional product-question agenda. Both conditions receive identical context,
+use the same model family and the same seven generation roles, and are origin-blinded to a
+judge. The record reports condition order, call counts, score deltas, and custody. A challenger win
+supports only same-model equal-call machine preference; it is not equal-token or human
+evidence, and a peer/conventional result grants no advantage claim.
+An ablation pair has a one-attempt preregistered budget. Palamedes appends `started`
+before the first provider call; malformed JSON, provider failure, and judge failure are
+stored as `failed`, preserve available usage custody, consume the pair, and cannot be
+retried into a favorable result. Successful attempts are linked to the ablation record.
+Provider JSON custody records the raw SHA-256, length, and parse mode for every call.
+Recovery is limited to meaning-preserving lexical operations: extracting one balanced
+object from a fenced/text envelope and removing structural trailing commas. Ambiguous
+damage such as missing commas, quotes, or fields is never guessed or model-repaired; it
+fails and still consumes provider usage and the ablation attempt. Raw response content is
+not duplicated into custody.
+
+The affect model is valence-neutral: belonging, delight, anger, rivalry, anxiety,
+status, habit, and mediated community emotion may all be relevant, while harm and
+exploitation boundaries remain explicit. The analogy role must leave adjacent software
+features, the fusion role must combine multiple mechanisms, and the world builder must
+produce a repeated emotional/behavioral loop with identity, social consequences, and a
+multi-year content or rule engine. A selected vision is stored under
+`.palamedes/visions/`, injected into later cognition as a hypothesis, and always retains
+`delivery_authority_granted: false`. `/vision <context>` forces a wake and `/visions`
+shows the latest authored proposal.
+
+The selecting role writes a 180–1200 character `founder_prompt` separately from the
+detailed `vision_brief`. It must itself introduce an unsupplied human tension, product
+mechanism, affective or behavioral loop, and durable expansion direction, without internal
+role/vision IDs or narration of the generation process. A generic request to make the
+product more engaging does not qualify.
+
+Both forced and automatic wakes use one structured vision-context contract. It combines
+the user context and bounded workspace observation with source-bearing product purposes,
+existing capabilities, temporary constraints, open integration gaps, product stage, and
+open outcome gates. Product invariants outrank a polished local implementation, and an
+existing capability must be considered before greenfield invention. The selected vision
+carries a product-ground-truth fingerprint into mission lineage; approval rejects that
+lineage if alignment changes and requires a fresh vision wake. An aligned successor is not
+blocked: it can proceed when it advances the recorded purpose, reuses or explicitly rejects
+relevant capabilities, and responds to open integration gaps.
+
+Three blinded origination cases distinguish creation from elaboration. The generator sees
+only product context; a separate judge sees the hidden human reference afterward. The
+collection case hides discovery, collection, avatar, and cultural-source concepts. The
+rule-fusion case hides the human pattern exemplified by cross-genre competitive puzzle
+fusion. The social case hides the charged combination of group belonging, bounded anger,
+a low-cost expression economy, and anti-harassment repair constraints.
+`/vision-benchmark collection`, `/vision-benchmark fusion`, or
+`/vision-benchmark social` records seven axes:
+origination, conceptual distance, affective depth, mechanism fusion, world coherence,
+three-year generativity, and likely human approval value. These fixtures prove the
+blindness and evaluation contract; live-model scores remain empirical evidence, not a
+claim guaranteed by the architecture.
+
+`/vision-benchmark-suite all 3` repeats all blinded cases three times (bounded to
+1–5 runs per case), gives every trial and human-review packet a distinct identity, and
+persists a suite manifest. `/vision-benchmark-summary` reports pass rate, mean axis
+scores, reference relation, judge custody, case coverage, and selected-title diversity.
+A suite isolates each trial's vision memory so earlier novelty exclusions cannot make a
+later sample look more diverse.
+A high pass rate with low diversity is therefore visible as convergence, not promoted to
+stable creative ability. Repeated model judgment is still not human evidence.
+High originality also cannot compensate for omitting the input's core product objective.
+Vision Genesis carries source-bearing context requirements through world construction and
+criticism; selection requires every core item to be satisfied. Benchmark gate v3 separates
+detailed-vision quality from founder-prompt origination. A second blind judge scores problem
+reframing, an unsupplied mechanism, affective thesis, product-world seed, and whether the
+text could substitute for a human's upstream prompt. If the central solution was already
+present in generator input, or the generated text is a generic request, the benchmark fails
+regardless of the polished vision score. Human A/B packets compare the `founder_prompt`, not
+the downstream full brief, with the hidden human founder text. The existing
+`core_requirements_satisfied` and empty `unmet_core_requirements` checks remain mandatory.
+
+The first gate-v3 live sample, `vision-benchmark-edf12f163696`, did not see the hidden
+collection reference and originated **The Caravan of Living Games**, a different world of
+temporary stewardship, rule mutation, relinquishment, and rediscovery through descendant
+games. The same Codex judge scored the five founder-prompt axes 94–98, which is correlated
+machine evidence only. Nine calls consumed 176,536 total tokens, so cost efficiency is also
+unproven. The CLI therefore reports
+`MACHINE PASS (correlated same-provider judge)` rather than a bare PASS.
+
+A low-cost `Vision Scout` path addresses the cost of applying full Genesis to every idea.
+`/vision-scout-benchmark collection|fusion|social` uses three roles to originate three
+causally distinct candidates, falsify and select at most one, and let a reality governor
+choose only discard or blind human review. One separate judge then sees the hidden human
+text, so the normal path is three generation calls plus one evaluation call. A machine
+pass can create only a human A/B packet. Scout records
+`full_genesis_authorized=false` and `delivery_authority_granted=false`; it cannot promote
+itself into full Genesis or implementation without later independent human or behavioral
+renewal evidence. Review packets identify whether their source artifact is a
+`vision_scout` or `vision_genesis`, rather than presenting a cheap draft as a completed
+vision.
+The same case and context are preregistered in a one-attempt ledger before generation;
+failed responses also consume the attempt, preventing retries that hide weak ideas.
+
+The first live Scout sample, `vision-scout-benchmark-5661177d748b`, originated a direction
+different from the hidden collection reference: actions across small games alter one
+persistent world's future possibilities. The correlated same-Codex judge scored its five
+axes 93–97 and called it stronger, which remains machine evidence only. Four calls consumed
+71,495 tokens—59.5% fewer tokens and 55.6% fewer calls than the nine-call, 176,536-token
+full baseline. One sample proves neither expected cost nor human-level creativity; blind
+human packet `vision-review-9db2913d3906` remains unreviewed.
+
+Use `/vision-scout <context>` for a real project rather than a fixed benchmark. Palamedes
+combines current product ground truth and bounded workspace observation, then screens a
+founder prompt in three calls. Identical user requests reuse the prior Scout despite
+timestamp or state-file changes, using a separate request fingerprint. The full original
+context is retained in a private local context record while the public Scout record carries
+its fingerprint, allowing a later evidence-backed Genesis to continue from the same
+information boundary.
+
+`/vision-scout-promote <vision-scout-id>` runs the seven-role Genesis at most once and only
+after two distinct independent human reviewers, confidence at least 60, unanimous generated
+preference or peer judgment, and no mean axis deficit below -5. Model reviewers and team
+reviewers do not count toward the quorum. Promotion still grants no delivery authority.
+For a project Scout, a behavioral path is also available. `/vision-scout-probe <id> <JSON>`
+preregisters one hypothesis, metric, comparison operator and threshold, sample size of at
+least five, duration up to 30 days, and data source before observing a result.
+`/vision-scout-probe-outcome <id> <JSON>` records exactly one attributable measured or
+external-dataset result. Support is computed mechanically from the preregistered operator;
+a failed outcome cannot be replaced. A passing probe can renew full Genesis instead of the
+human quorum, but still cannot grant delivery authority.
+
+Project Scout generation is also preregistered once per request fingerprint in an
+append-only ledger. JSON or contract failures retain provider-token custody and block a
+same-version retry. Source quotations allow only whitespace normalization across wrapped
+lines; semantic rewrites remain invalid.
+
+Real-project validation has reached V4. V3 originated an upstream decision environment in
+which persuasive prose cannot acquire authority by itself: small claims are placed at risk
+in the world, changing one's mind becomes competent progress rather than defeat, and
+contradictions alter what may be asked next. This was not a restatement of a supplied
+feature list, but it cost 122,709 tokens across three calls. V4 compacted the source-bearing
+project context below 10 KB and targeted roughly 75k tokens for a successful run. Its
+originator and critic completed, but the governor provider call failed. Palamedes now stores
+immutable per-role checkpoints and permits bounded infrastructure resume, so completed
+creative outputs are reused rather than regenerated or cherry-picked. Because V4 predates
+that checkpoint surface, it is not retroactively rescued. The next live condition is a V5
+one-shot with checkpoints active from the first role.
+
+Every newly selected vision also passes a reality governor before it can influence
+delivery. It compares `full_build`, `minimal_probe`, `manual_probe`, `reuse_or_buy`,
+`do_nothing`, and `alternative_opportunity` with engineering, AI, infrastructure,
+maintenance, reversibility, learning, and opportunity-cost ranges. A speculative vision
+cannot select `full_build`, and its lineage cannot approve a product/service/portfolio
+delivery mission before the selected probe produces renewal evidence. Debt, scale, and
+kill guards travel with the later mission contract. Cost estimates also become an
+enforceable outcome horizon: speculative, behavioral, demand, and revenue evidence permit
+1, 2, 3, and 5 outcomes respectively before a fresh vision and investment review is
+mandatory.
+
+Benchmark custody is explicit. Generator and judge callables and identities may differ;
+the record says whether independent-provider evaluation is actually claimed. Every run
+also emits a randomized A/B human-review packet under
+`.palamedes/vision-benchmarks/human-review/`, while authorship keys are stored separately
+under `answer-keys/`. Same-provider judging is correlated evidence, never independent
+proof. Set `PALAMEDES_VISION_JUDGE_PROVIDER` (and optionally
+`PALAMEDES_VISION_JUDGE_MODEL`) to use a genuinely separate configured judge. Submit a
+completed blinded packet with `/vision-review-submit <packet-id> <JSON>`; authorship is
+revealed only into a separate resolution record, duplicate reviewer submissions are
+rejected, and `/vision-review-summary` aggregates human preference and score deltas.
+`/vision-review-next` prints the least-reviewed blinded packet without its answer key.
+Every response declares `reviewer_kind: human|model`; model and unattested records remain
+available for audit but are excluded from human-evidence totals.
+It also declares `reviewer_relationship: independent|team|author|unknown`; self-attested
+human reviews and independent-human reviews are reported separately.
+`/vision-review-bundle` creates a self-contained offline review page containing no
+answer keys. It downloads a response JSON carrying the exact packet fingerprint;
+`/vision-review-import <response.json>` rejects stale or mismatched packets before
+resolving authorship.
+`/vision-review-gate` applies cross-case independent-human quorum and non-inferiority
+thresholds. A pass permits only the narrow claim
+`repeated_blind_human_founder_prompt_support`; it never permits a human-level-creativity or
+market-success claim.
+
+The three repository cases are calibration, not generalization proof. Import a private,
+externally human-authored holdout with `/vision-holdout-import <case.json>`, then run it via
+`/vision-benchmark holdout:<case-id>`. The imported reference lives under local
+`.palamedes/vision-benchmarks/holdout-cases/`, is fingerprinted, and is never inserted into
+the generator prompt. The evidence gate ignores builtin calibration reviews and requires
+three external holdout cases. `independent` authorship remains self-attested, not identity-
+verified or cryptographically sealed. Local storage is recorded, but whether the imported
+source file was ever committed elsewhere remains explicitly unverified.
+The author identifier stays in the private answer key, never the blinded packet; a reviewer
+using the same stable ID is rejected. Promotion also requires three distinct holdout
+fingerprints, so renaming one case cannot manufacture coverage.
+Each imported holdout preregisters `evaluation_trial_count` (1-3). Palamedes appends a
+`started` attempt before calling the generator, so a crash or weak generation consumes the
+declared budget instead of disappearing. The promotion gate treats every imported case and
+every preregistered trial as the evaluation cohort, requires a completed attributable
+attempt plus reviewer quorum for each trial, and therefore cannot pass by reviewing only
+the best run or quietly omitting an unfavorable imported case. The append-only local ledger
+prevents ordinary single-process cherry-picking; it is not a remote timestamp authority or
+concurrency-safe cryptographic registry.
 
 The first cross-repository case targets `insight-rag`. Palamedes selected a
 counterfactual action-choice benchmark instead of immediately expanding its
@@ -613,6 +848,7 @@ palamedes> /preview
 palamedes> /approve
 palamedes> /handoff
 palamedes> /outcome success The probe produced the precommitted result
+palamedes> /outcome-json {"status":"mixed","observation":"Probe result","actual_investment":{"engineering_days":0.5,"ai_cost":3,"input_tokens":12000,"output_tokens":1800,"monthly_infrastructure":0,"evidence_source":"measured","notes":"time log + provider export"}}
 ```
 
 Available commands:
@@ -629,6 +865,8 @@ Available commands:
 - `/reject`: preserve and reject a draft with an explicit reason
 - `/handoff`: inspect the immutable planner-facing mission handoff
 - `/outcome`: append an observed result and update linked hypothesis/probe state
+- `/outcome-json`: record the same result with attributable engineering days, AI cost,
+  token usage, monthly infrastructure, and measurement provenance
 - `/status`, `/history`, `/sessions`, `/new`, `/help`, `/quit`
 
 The current directory is the default workspace; `--workspace` selects another
@@ -638,6 +876,14 @@ not written to session state. OpenRouter and the OpenAI Responses API use
 provider API keys and provider-side API billing. The `codex` provider instead
 invokes an installed, authenticated Codex CLI and can reuse its saved
 ChatGPT-managed Codex authentication.
+
+When a provider reports token usage, every cognition role artifact preserves normalized
+input, cached-input, output, and total-token counts. Vision Genesis aggregates its six
+role calls and records metered versus unmetered custody. OpenRouter explicitly requests
+streaming usage; OpenAI response-completed and Codex JSONL usage are normalized to the same
+fields. Missing provider usage remains `unmetered` rather than being recorded as zero cost.
+The next automatic vision receives these provider totals beside the prior delivery spend
+and investment envelope.
 
 The chat surface is deliberately plan-only. Model output can recommend a
 mission or plan change, but it cannot silently mutate a plan or claim that

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-scout-project-attempt.schema.json",
+  "title": "Palamedes Project Vision Scout One-Shot Attempt",
+  "type": "object",
+  "required": [
+    "vision_scout_project_attempt_version", "attempt_id", "attempt_key",
+    "request_fingerprint", "context_fingerprint", "status", "started_at"
+  ],
+  "properties": {
+    "vision_scout_project_attempt_version": {"const": "palamedes-vision-scout-project-attempt/1"},
+    "attempt_id": {"type": "string", "pattern": "^vision-scout-project-attempt-[a-f0-9]{12}$"},
+    "attempt_key": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "request_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "context_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "status": {"enum": ["started", "resumed", "completed", "failed"]},
+    "started_at": {"type": "string", "minLength": 1},
+    "vision_scout_id": {"type": "string", "pattern": "^vision-scout-[a-f0-9]{12}$"},
+    "provider_usage": {"type": "object"},
+    "completed_at": {"type": "string", "minLength": 1},
+    "error_type": {"type": "string", "minLength": 1},
+    "failed_at": {"type": "string", "minLength": 1}
+    ,"resume_count": {"type": "integer", "minimum": 1, "maximum": 2}
+    ,"resumed_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-human-evidence-gate.schema.json",
+  "title": "Palamedes Vision Human Evidence Gate",
+  "type": "object",
+  "required": [
+    "gate_version",
+    "status",
+    "claim_scope",
+    "evaluation_artifact",
+    "qualifying_review_count",
+    "minimum_confidence",
+    "minimum_independent_reviewers_per_case",
+    "minimum_holdout_cases",
+    "independent_reviewer_count_by_case",
+    "independent_reviewer_count_by_trial",
+    "preregistered_trial_count",
+    "completed_trial_count",
+    "distinct_holdout_fingerprint_count",
+    "preference_counts",
+    "generated_or_peer_rate",
+    "reference_preference_rate",
+    "neither_rate",
+    "mean_score_deltas",
+    "failure_reasons",
+    "human_level_creativity_claim_allowed",
+    "market_success_claim_allowed",
+    "custody_boundary"
+  ],
+  "properties": {
+    "gate_version": {"const": "palamedes-vision-human-evidence-gate/3"},
+    "status": {"enum": ["pass", "fail"]},
+    "claim_scope": {"enum": ["none", "repeated_blind_human_founder_prompt_support"]},
+    "evaluation_artifact": {"const": "founder_prompt"},
+    "qualifying_review_count": {"type": "integer", "minimum": 0},
+    "minimum_confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+    "minimum_independent_reviewers_per_case": {"type": "integer", "minimum": 1},
+    "minimum_holdout_cases": {"type": "integer", "minimum": 1},
+    "independent_reviewer_count_by_case": {
+      "type": "object",
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    },
+    "independent_reviewer_count_by_trial": {
+      "type": "object",
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    },
+    "preregistered_trial_count": {"type": "integer", "minimum": 0},
+    "completed_trial_count": {"type": "integer", "minimum": 0},
+    "distinct_holdout_fingerprint_count": {"type": "integer", "minimum": 0},
+    "preference_counts": {
+      "type": "object",
+      "required": ["generated_preferred", "reference_preferred", "peer", "neither"],
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    },
+    "generated_or_peer_rate": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "reference_preference_rate": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "neither_rate": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "mean_score_deltas": {
+      "type": "object",
+      "additionalProperties": {"type": "number"}
+    },
+    "failure_reasons": {"type": "array", "items": {"type": "string"}},
+    "human_level_creativity_claim_allowed": {"const": false},
+    "market_success_claim_allowed": {"const": false},
+    "custody_boundary": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

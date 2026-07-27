@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-scout-promotion-gate.schema.json",
+  "title": "Palamedes Vision Scout Promotion Gate",
+  "type": "object",
+  "required": [
+    "vision_scout_promotion_gate_version", "vision_scout_id",
+    "minimum_independent_reviewers", "minimum_confidence",
+    "qualifying_review_count", "distinct_independent_reviewer_count",
+    "mean_score_deltas", "human_review_path_passed", "behavioral_probe_path_passed",
+    "probe_outcome_id", "passed", "failure_reasons",
+    "full_genesis_authorized", "delivery_authority_granted", "evaluated_at"
+  ],
+  "properties": {
+    "vision_scout_promotion_gate_version": {"const": "palamedes-vision-scout-promotion-gate/1"},
+    "vision_scout_id": {"type": "string", "pattern": "^vision-scout-[a-f0-9]{12}$"},
+    "minimum_independent_reviewers": {"type": "integer", "minimum": 1},
+    "minimum_confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+    "qualifying_review_count": {"type": "integer", "minimum": 0},
+    "distinct_independent_reviewer_count": {"type": "integer", "minimum": 0},
+    "mean_score_deltas": {"type": "object", "additionalProperties": {"type": "number"}},
+    "human_review_path_passed": {"type": "boolean"},
+    "behavioral_probe_path_passed": {"type": "boolean"},
+    "probe_outcome_id": {"type": "string"},
+    "passed": {"type": "boolean"},
+    "failure_reasons": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "full_genesis_authorized": {"type": "boolean"},
+    "delivery_authority_granted": {"const": false},
+    "evaluated_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-scout-probe-outcome.schema.json",
+  "title": "Palamedes Vision Scout Probe Outcome",
+  "type": "object",
+  "required": [
+    "vision_scout_probe_outcome_version", "probe_outcome_id", "vision_scout_id",
+    "probe_id", "observed_value", "sample_size", "measurement_provenance",
+    "source_reference", "metric_name", "success_operator", "threshold",
+    "observation", "supports_full_genesis_renewal", "delivery_authority_granted",
+    "recorded_at"
+  ],
+  "properties": {
+    "vision_scout_probe_outcome_version": {"const": "palamedes-vision-scout-probe-outcome/1"},
+    "probe_outcome_id": {"type": "string", "pattern": "^vision-scout-probe-outcome-[a-f0-9]{12}$"},
+    "vision_scout_id": {"type": "string", "pattern": "^vision-scout-[a-f0-9]{12}$"},
+    "probe_id": {"type": "string", "pattern": "^vision-scout-probe-[a-f0-9]{12}$"},
+    "observed_value": {"type": "number"},
+    "sample_size": {"type": "integer", "minimum": 5},
+    "measurement_provenance": {"enum": ["measured", "external_dataset"]},
+    "source_reference": {"type": "string", "minLength": 1},
+    "metric_name": {"type": "string", "minLength": 1},
+    "success_operator": {"enum": ["gt", "gte", "lt", "lte"]},
+    "threshold": {"type": "number"},
+    "observation": {"type": "string", "minLength": 1},
+    "supports_full_genesis_renewal": {"type": "boolean"},
+    "delivery_authority_granted": {"const": false},
+    "recorded_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

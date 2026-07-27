@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-scout-project-checkpoint.schema.json",
+  "title": "Palamedes Project Vision Scout Role Checkpoint",
+  "type": "object",
+  "required": ["vision_scout_project_checkpoint_version", "attempt_id", "roles"],
+  "properties": {
+    "vision_scout_project_checkpoint_version": {"const": "palamedes-vision-scout-project-checkpoint/1"},
+    "attempt_id": {"type": "string", "pattern": "^vision-scout-project-attempt-[a-f0-9]{12}$"},
+    "roles": {
+      "type": "object",
+      "propertyNames": {"enum": ["vision_scout_originator", "vision_scout_critic", "vision_scout_governor"]},
+      "additionalProperties": {
+        "type": "object",
+        "required": ["output", "usage", "output_fingerprint", "saved_at"],
+        "properties": {
+          "output": {"type": "object"},
+          "usage": {"type": "object"},
+          "output_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "saved_at": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

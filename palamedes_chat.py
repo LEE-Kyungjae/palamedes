@@ -80,17 +80,91 @@ def _open(request: urllib.request.Request, provider_name: str) -> Any:
         raise RuntimeError(f"{provider_name} connection failed: {exc.reason}") from exc
 
 
+def _normalize_token_usage(usage: Dict[str, Any]) -> Dict[str, int]:
+    aliases = {
+        "input_tokens": ("input_tokens", "prompt_tokens"),
+        "output_tokens": ("output_tokens", "completion_tokens"),
+        "cached_input_tokens": ("cached_input_tokens",),
+        "total_tokens": ("total_tokens",),
+    }
+    normalized: Dict[str, int] = {}
+    for target, candidates in aliases.items():
+        for candidate in candidates:
+            value = usage.get(candidate)
+            if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+                normalized[target] = value
+                break
+    if "total_tokens" not in normalized and {
+        "input_tokens",
+        "output_tokens",
+    } <= normalized.keys():
+        normalized["total_tokens"] = (
+            normalized["input_tokens"] + normalized["output_tokens"]
+        )
+    return normalized
+
+
+def _provider_usage_summary(
+    provider: Any, role_usage: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    totals: Dict[str, int] = {}
+    for row in role_usage:
+        for key, value in row.get("usage", {}).items():
+            totals[key] = totals.get(key, 0) + value
+    return {
+        "provider": provider.provider_name,
+        "model": provider.model,
+        "attempted_calls": len(role_usage),
+        "metered_calls": sum(
+            row.get("custody") == "provider_reported" for row in role_usage
+        ),
+        "unmetered_calls": sum(
+            row.get("custody") == "unmetered" for row in role_usage
+        ),
+        "totals": totals,
+        "roles": role_usage,
+    }
+
+
+def _capture_provider_usage(provider: Any, role: str) -> Dict[str, Any]:
+    usage = getattr(provider, "last_usage", None)
+    row = {
+        "role": role,
+        "custody": (
+            "provider_reported"
+            if isinstance(usage, dict) and usage
+            else "unmetered"
+        ),
+        "usage": (
+            _normalize_token_usage(usage)
+            if isinstance(usage, dict) and usage
+            else {}
+        ),
+    }
+    json_custody = getattr(provider, "last_json_custody", None)
+    if isinstance(json_custody, dict):
+        row["json_custody"] = dict(json_custody)
+    return row
+
+
 @dataclass
 class OpenRouterChatProvider:
     model: str = DEFAULT_OPENROUTER_MODEL
     base_url: str = "https://openrouter.ai/api/v1"
     provider_name: str = "openrouter"
+    last_usage: Optional[Dict[str, int]] = None
 
     def stream(self, messages: List[Dict[str, str]]) -> Iterable[str]:
+        self.last_usage = None
         api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
         if not api_key:
             raise RuntimeError("OpenRouter requires OPENROUTER_API_KEY")
-        payload = {"model": self.model, "messages": messages, "stream": True}
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "stream": True,
+            "stream_options": {"include_usage": True},
+        }
         request = urllib.request.Request(
             f"{self.base_url.rstrip('/')}/chat/completions",
             data=json.dumps(payload).encode("utf-8"),
@@ -107,6 +181,9 @@ class OpenRouterChatProvider:
         )
         with _open(request, "OpenRouter") as response:
             for event in _sse_events(response):
+                usage = event.get("usage")
+                if isinstance(usage, dict):
+                    self.last_usage = _normalize_token_usage(usage)
                 choices = event.get("choices", [])
                 if not choices:
                     continue
@@ -121,8 +198,10 @@ class OpenAIResponsesChatProvider:
     model: str = DEFAULT_OPENAI_MODEL
     base_url: str = "https://api.openai.com/v1"
     provider_name: str = "openai"
+    last_usage: Optional[Dict[str, int]] = None
 
     def stream(self, messages: List[Dict[str, str]]) -> Iterable[str]:
+        self.last_usage = None
         api_key = os.environ.get("OPENAI_API_KEY", "").strip()
         if not api_key:
             raise RuntimeError("OpenAI requires OPENAI_API_KEY")
@@ -152,6 +231,15 @@ class OpenAIResponsesChatProvider:
         )
         with _open(request, "OpenAI") as response:
             for event in _sse_events(response):
+                if event.get("type") == "response.completed":
+                    response_payload = event.get("response", {})
+                    usage = (
+                        response_payload.get("usage")
+                        if isinstance(response_payload, dict)
+                        else None
+                    )
+                    if isinstance(usage, dict):
+                        self.last_usage = _normalize_token_usage(usage)
                 if event.get("type") == "response.output_text.delta":
                     delta = event.get("delta", "")
                     if isinstance(delta, str) and delta:
@@ -347,6 +435,19 @@ class MissionStore:
             raise ValueError("mission contract must be an object")
         return payload
 
+    def contracts(self) -> List[Dict[str, Any]]:
+        if not self.root.is_dir():
+            return []
+        contracts = []
+        for path in sorted(self.root.glob("mission-*.json")):
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(payload, dict):
+                contracts.append(payload)
+        return contracts
+
     def save_handoff(self, handoff: Dict[str, Any]) -> Path:
         self.handoff_root.mkdir(parents=True, exist_ok=True)
         path = self.handoff_root / f"{handoff['handoff_id']}.json"
@@ -373,6 +474,40 @@ class MissionStore:
             if isinstance(payload, dict):
                 records.append(payload)
         return records
+
+    def vision_investment_summary(self, vision_genesis_id: str) -> Dict[str, Any]:
+        mission_ids = {
+            row.get("mission_id")
+            for row in self.contracts()
+            if row.get("vision_lineage", {}).get("vision_genesis_id")
+            == vision_genesis_id
+        }
+        summary = {
+            "engineering_days": 0.0,
+            "ai_cost": 0.0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "monthly_infrastructure_peak": 0.0,
+            "measured_outcome_count": 0,
+            "missing_measurement_count": 0,
+        }
+        for outcome in self.outcomes():
+            if outcome.get("mission_contract_id") not in mission_ids:
+                continue
+            actual = outcome.get("actual_investment")
+            if not isinstance(actual, dict):
+                summary["missing_measurement_count"] += 1
+                continue
+            summary["measured_outcome_count"] += 1
+            for field in ("engineering_days", "ai_cost"):
+                summary[field] += float(actual.get(field, 0))
+            for field in ("input_tokens", "output_tokens"):
+                summary[field] += int(actual.get(field, 0))
+            summary["monthly_infrastructure_peak"] = max(
+                summary["monthly_infrastructure_peak"],
+                float(actual.get("monthly_infrastructure", 0)),
+            )
+        return summary
 
     def append_outcome_interpretation(self, interpretation: Dict[str, Any]) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
@@ -454,6 +589,7 @@ def _provider_json(
     system: str,
     prompt: str,
 ) -> Dict[str, Any]:
+    provider.last_json_custody = None
     raw = "".join(
         provider.stream(
             [
@@ -462,7 +598,13 @@ def _provider_json(
             ]
         )
     )
-    return _normalize_provider_scalars(_extract_json_object(raw))
+    try:
+        payload, custody = _extract_json_object_with_custody(raw)
+    except ProviderJSONError as exc:
+        provider.last_json_custody = exc.custody
+        raise
+    provider.last_json_custody = custody
+    return _normalize_provider_scalars(payload)
 
 
 def _normalize_provider_scalars(value: Any, key: str = "") -> Any:
@@ -509,7 +651,7 @@ def _role_artifact(
     output: Dict[str, Any],
     provider: ChatProvider,
 ) -> Dict[str, Any]:
-    return {
+    artifact = {
         "role": role,
         "call_index": call_index,
         "provider": provider.provider_name,
@@ -519,6 +661,13 @@ def _role_artifact(
         "output_fingerprint": _fingerprint(output),
         "output": output,
     }
+    usage = getattr(provider, "last_usage", None)
+    if isinstance(usage, dict) and usage:
+        artifact["provider_usage"] = _normalize_token_usage(usage)
+        artifact["usage_custody"] = "provider_reported"
+    else:
+        artifact["usage_custody"] = "unmetered"
+    return artifact
 
 
 def run_cognition_cycle(
@@ -1169,17 +1318,126 @@ Known causal clusters:
     }
 
 
-def _extract_json_object(text: str) -> Dict[str, Any]:
-    candidate = text.strip()
-    if candidate.startswith("```"):
-        candidate = re.sub(r"^```(?:json)?\s*", "", candidate)
-        candidate = re.sub(r"\s*```$", "", candidate)
+class ProviderJSONError(ValueError):
+    def __init__(self, message: str, custody: Dict[str, Any]) -> None:
+        super().__init__(message)
+        self.custody = custody
+
+
+def _balanced_json_object(text: str) -> tuple[str, str]:
+    stripped = text.strip()
+    fenced = stripped.startswith("```")
+    if fenced:
+        stripped = re.sub(r"^```(?:json)?\s*", "", stripped)
+        stripped = re.sub(r"\s*```$", "", stripped)
+    start = stripped.find("{")
+    if start < 0:
+        raise ValueError("response contains no JSON object")
+    depth = 0
+    in_string = False
+    escaped = False
+    end = None
+    for index, character in enumerate(stripped[start:], start=start):
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+            continue
+        if character == '"':
+            in_string = True
+        elif character == "{":
+            depth += 1
+        elif character == "}":
+            depth -= 1
+            if depth == 0:
+                end = index + 1
+                break
+            if depth < 0:
+                break
+    if end is None:
+        raise ValueError("response contains an unclosed JSON object")
+    prefix = stripped[:start].strip()
+    suffix = stripped[end:].strip()
+    if "{" in prefix or "}" in prefix or "{" in suffix or "}" in suffix:
+        raise ValueError("response contains more than one or an ambiguous JSON object")
+    mode = "strict"
+    if fenced or prefix or suffix:
+        mode = "fenced_envelope" if fenced and not prefix and not suffix else "text_envelope"
+    return stripped[start:end], mode
+
+
+def _remove_structural_trailing_commas(candidate: str) -> tuple[str, int]:
+    output: List[str] = []
+    in_string = False
+    escaped = False
+    removed = 0
+    for index, character in enumerate(candidate):
+        if in_string:
+            output.append(character)
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+            continue
+        if character == '"':
+            in_string = True
+            output.append(character)
+            continue
+        if character == ",":
+            cursor = index + 1
+            while cursor < len(candidate) and candidate[cursor].isspace():
+                cursor += 1
+            if cursor < len(candidate) and candidate[cursor] in "}]":
+                removed += 1
+                continue
+        output.append(character)
+    return "".join(output), removed
+
+
+def _extract_json_object_with_custody(
+    text: str,
+) -> tuple[Dict[str, Any], Dict[str, Any]]:
+    custody: Dict[str, Any] = {
+        "raw_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+        "raw_length": len(text),
+        "status": "failed",
+        "parse_mode": "unparsed",
+        "transforms": [],
+    }
     try:
-        payload = json.loads(candidate)
-    except json.JSONDecodeError as exc:
-        raise ValueError(f"mission response must be one JSON object: {exc}") from exc
-    if not isinstance(payload, dict):
-        raise ValueError("mission response must be a JSON object")
+        candidate, envelope_mode = _balanced_json_object(text)
+        custody["parse_mode"] = envelope_mode
+        if envelope_mode != "strict":
+            custody["transforms"].append(envelope_mode)
+        try:
+            payload = json.loads(candidate)
+        except json.JSONDecodeError as strict_error:
+            normalized, removed = _remove_structural_trailing_commas(candidate)
+            if not removed:
+                raise strict_error
+            custody["transforms"].append(
+                f"removed_structural_trailing_commas:{removed}"
+            )
+            custody["parse_mode"] = "trailing_comma_normalized"
+            payload = json.loads(normalized)
+        if not isinstance(payload, dict):
+            raise ValueError("mission response must be a JSON object")
+    except (json.JSONDecodeError, ValueError) as exc:
+        custody["error"] = f"{type(exc).__name__}: {exc}"
+        raise ProviderJSONError(
+            f"mission response must be one JSON object: {exc}", custody
+        ) from exc
+    custody["status"] = "parsed"
+    return payload, custody
+
+
+def _extract_json_object(text: str) -> Dict[str, Any]:
+    payload, _ = _extract_json_object_with_custody(text)
     return payload
 
 
@@ -1456,6 +1714,94 @@ def approve_mission(
 ) -> Dict[str, Any]:
     if contract.get("status") != "draft":
         raise ValueError(f"mission is not approvable from status {contract.get('status')}")
+    vision_lineage = contract.get("vision_lineage")
+    if isinstance(vision_lineage, dict):
+        if vision_lineage.get("delivery_authority_granted") is not False:
+            raise ValueError("vision lineage cannot grant delivery authority")
+        if (
+            vision_lineage.get("evidence_maturity") == "speculative"
+            and contract.get("work_scale") in {"product", "service", "portfolio"}
+        ):
+            raise ValueError(
+                "speculative vision cannot approve product-scale delivery; "
+                "run the selected reality probe first"
+            )
+        if vision_lineage.get("selected_alternative") == "full_build" and not all(
+            vision_lineage.get(field)
+            for field in ("renewal_evidence", "kill_criteria", "debt_guard", "scale_guard")
+        ):
+            raise ValueError("full-build vision lineage lacks renewal and stop evidence")
+        if vision_lineage.get("requirement_gate_passed") is not True:
+            raise ValueError("vision lineage lacks a passed core-requirement gate")
+        expected_alignment = str(
+            vision_lineage.get("product_ground_truth_fingerprint", "")
+        )
+        if not expected_alignment:
+            raise ValueError("vision lineage lacks product-ground-truth fingerprint")
+        from palamedes_product_alignment import ProductAlignmentStore
+
+        current_alignment = _fingerprint(
+            ProductAlignmentStore(
+                mission_store.root.parent / "product-alignment"
+            ).active_context()
+        )
+        if current_alignment != expected_alignment:
+            raise ValueError(
+                "vision lineage is stale after product-ground-truth change; "
+                "regenerate the autonomous vision before approval"
+            )
+        investment_envelope = vision_lineage.get("investment_envelope", {})
+        outcome_budget = investment_envelope.get("max_outcomes_before_reassessment")
+        if (
+            not isinstance(outcome_budget, int)
+            or isinstance(outcome_budget, bool)
+            or not 1 <= outcome_budget <= 5
+        ):
+            raise ValueError("vision lineage lacks a valid investment outcome budget")
+        vision_id = vision_lineage.get("vision_genesis_id")
+        prior_mission_ids = {
+            row.get("mission_id")
+            for row in mission_store.contracts()
+            if row.get("status") in {"approved", "outcome_recorded"}
+            and row.get("vision_lineage", {}).get("vision_genesis_id") == vision_id
+        }
+        realized_outcomes = {
+            row.get("mission_contract_id")
+            for row in mission_store.outcomes()
+            if row.get("mission_contract_id") in prior_mission_ids
+        }
+        if len(realized_outcomes) >= outcome_budget:
+            raise ValueError(
+                "vision investment outcome budget exhausted; regenerate the "
+                "autonomous vision before approving more work"
+            )
+        actual = mission_store.vision_investment_summary(str(vision_id))
+        exhausted_actual_fields = []
+        for actual_field, budget_field in (
+            ("engineering_days", "engineering_days_high"),
+            ("ai_cost", "ai_cost_high"),
+        ):
+            budget = investment_envelope.get(budget_field)
+            spent = actual[actual_field]
+            if isinstance(budget, int) and (
+                (budget == 0 and spent > 0) or (budget > 0 and spent >= budget)
+            ):
+                exhausted_actual_fields.append(actual_field)
+        infrastructure_budget = investment_envelope.get(
+            "monthly_infrastructure_high"
+        )
+        infrastructure_peak = actual["monthly_infrastructure_peak"]
+        if isinstance(infrastructure_budget, int) and (
+            (infrastructure_budget == 0 and infrastructure_peak > 0)
+            or infrastructure_peak > infrastructure_budget
+        ):
+            exhausted_actual_fields.append("monthly_infrastructure")
+        if exhausted_actual_fields:
+            raise ValueError(
+                "vision actual investment budget exhausted for "
+                + ", ".join(exhausted_actual_fields)
+                + "; regenerate the autonomous vision before approving more work"
+            )
     from palamedes_prompt import PromptAgendaStore
     from palamedes_product_alignment import (
         ProductAlignmentStore,
@@ -1636,12 +1982,47 @@ def approve_mission(
     return {"contract": approved, "handoff": handoff, "handoff_path": handoff_path}
 
 
+def _normalize_actual_investment(value: Any) -> Optional[Dict[str, Any]]:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise ValueError("actual_investment must be an object")
+    normalized: Dict[str, Any] = {}
+    for field in (
+        "engineering_days",
+        "ai_cost",
+        "monthly_infrastructure",
+    ):
+        amount = value.get(field, 0)
+        if (
+            not isinstance(amount, (int, float))
+            or isinstance(amount, bool)
+            or amount < 0
+        ):
+            raise ValueError(f"actual_investment {field} must be non-negative")
+        normalized[field] = float(amount)
+    for field in ("input_tokens", "output_tokens"):
+        amount = value.get(field, 0)
+        if not isinstance(amount, int) or isinstance(amount, bool) or amount < 0:
+            raise ValueError(f"actual_investment {field} must be a non-negative integer")
+        normalized[field] = amount
+    evidence_source = str(value.get("evidence_source", "")).strip()
+    if evidence_source not in {"measured", "invoice", "estimate", "unknown"}:
+        raise ValueError(
+            "actual_investment evidence_source must be measured, invoice, estimate, or unknown"
+        )
+    normalized["evidence_source"] = evidence_source
+    normalized["notes"] = str(value.get("notes", "")).strip()
+    return normalized
+
+
 def record_mission_outcome(
     palamedes_module: Any,
     mission_store: MissionStore,
     contract: Dict[str, Any],
     status: str,
     observation: str,
+    actual_investment: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     if contract.get("status") not in {"approved", "outcome_recorded"}:
         raise ValueError("outcomes require an approved mission")
@@ -1649,6 +2030,7 @@ def record_mission_outcome(
         raise ValueError("outcome status must be success, failure, mixed, or unknown")
     ts = utc_now()
     mission_id = contract["mission_id"]
+    normalized_investment = _normalize_actual_investment(actual_investment)
     outcome = {
         "outcome_version": "palamedes-mission-outcome/1",
         "outcome_id": f"outcome-{uuid.uuid4().hex[:12]}",
@@ -1661,6 +2043,8 @@ def record_mission_outcome(
         "evidence_source_type": "implementer_claim",
         "may_rewrite_prior_history": False,
     }
+    if normalized_investment is not None:
+        outcome["actual_investment"] = normalized_investment
 
     def apply(plan: Dict[str, Any]) -> None:
         palamedes_module.add_evidence(
@@ -1793,6 +2177,38 @@ def _print_help(output: TextIO) -> None:
                 "  /research <question> identify the minimum missing evidence",
                 "  /mission <context>   draft a mission contract",
                 "  /cycle <context>     run interpreter→inventor→adversary→selector",
+                "  /vision <context>    force a desire→analogy→fusion→world vision cycle",
+                "  /vision-scout <context>",
+                "                       originate a low-cost upstream founder prompt",
+                "  /vision-scout-promote <vision-scout-id>",
+                "                       run full Genesis only after independent-human gate",
+                "  /vision-scout-probe <vision-scout-id> <JSON>",
+                "                       preregister one bounded behavioral test",
+                "  /vision-scout-probe-outcome <vision-scout-id> <JSON>",
+                "                       record the single attributable measured result",
+                "  /visions             show the latest autonomous product vision",
+                "  /vision-benchmark [collection|fusion|social]",
+                "  /vision-scout-benchmark [collection|fusion|social]",
+                "  /vision-agenda-ablation [case] [challenger] [comparator]",
+                "                       run a hidden-human-reference origination case",
+                "  /vision-holdout-import <case.json>",
+                "                       import an external-human private holdout case",
+                "  /vision-benchmark holdout:<case-id>",
+                "                       run one imported holdout without revealing its reference",
+                "  /vision-benchmark-suite [all|collection|fusion|social] [1-5]",
+                "                       repeat blinded cases and preserve distinct trials",
+                "  /vision-benchmark-summary",
+                "                       aggregate machine scores, custody, and diversity",
+                "  /vision-review-submit <packet-id> <JSON>",
+                "                       record one blinded human A/B judgment",
+                "  /vision-review-next show the least-reviewed blinded packet",
+                "  /vision-review-bundle",
+                "                       build an offline answer-key-free review page",
+                "  /vision-review-import <response.json>",
+                "                       validate and import a downloaded review response",
+                "  /vision-review-summary",
+                "                       aggregate resolved human preference evidence",
+                "  /vision-review-gate show cross-case independent-human evidence gate",
                 "  /observe             collect project, Git, state, TODO, and ref signals",
                 "  /reference-intelligence [path]",
                 "                       build a source-bounded self-model and research agenda",
@@ -1803,6 +2219,7 @@ def _print_help(output: TextIO) -> None:
                 "  /handoff             show the latest planner handoff",
                 "  /outcome <status> <observation>",
                 "                       record success|failure|mixed|unknown",
+                "  /outcome-json <JSON> record outcome plus measured investment",
                 "  /status              show provider, model, workspace, and session",
                 "  /history             show persisted turns in this session",
                 "  /sessions            list local session IDs",
@@ -1813,6 +2230,275 @@ def _print_help(output: TextIO) -> None:
             ]
         )
     )
+
+
+def run_autonomous_vision(
+    *, provider: ChatProvider, mission_store: MissionStore, context: str
+) -> Dict[str, Any]:
+    from palamedes_vision import VisionStore, run_vision_genesis
+
+    vision_store = VisionStore(mission_store.root.parent / "visions")
+    role_usage: List[Dict[str, Any]] = []
+
+    def ask(role: str, prompt: str) -> Dict[str, Any]:
+        try:
+            return _provider_json(
+                provider,
+                system=(
+                    f"ROLE: {role}. You originate product possibilities but grant no "
+                    "delivery authority. Return exactly one JSON object."
+                ),
+                prompt=f"ROLE: {role}\n{prompt}",
+            )
+        finally:
+            role_usage.append(_capture_provider_usage(provider, role))
+
+    record = run_vision_genesis(
+        ask=ask,
+        store=vision_store,
+        context=context,
+        outcome_count=len(mission_store.outcomes()),
+    )
+    record["provider_usage"] = _provider_usage_summary(provider, role_usage)
+    vision_store.save(record)
+    return record
+
+
+def run_autonomous_vision_scout(
+    *,
+    provider: ChatProvider,
+    mission_store: MissionStore,
+    context: str,
+    request_context: str = "",
+) -> Dict[str, Any]:
+    from palamedes_vision import fingerprint
+    from palamedes_vision_scout import VisionScoutStore, run_vision_scout
+
+    scout_store = VisionScoutStore(mission_store.root.parent / "vision-scouts")
+    request_fingerprint = fingerprint(request_context) if request_context else ""
+    existing = (
+        scout_store.find_by_request_fingerprint(request_fingerprint)
+        if request_fingerprint
+        else scout_store.find_by_context(context)
+    )
+    if existing is not None:
+        reused = dict(existing)
+        reused["reused_existing_context"] = True
+        return reused
+    role_usage: List[Dict[str, Any]] = []
+    attempt = scout_store.reserve_project_attempt(
+        request_fingerprint=request_fingerprint or fingerprint(context),
+        context_fingerprint=fingerprint(context),
+    )
+    checkpoint = scout_store.project_checkpoint(attempt["attempt_id"])
+
+    def ask(role: str, prompt: str) -> Dict[str, Any]:
+        cached = checkpoint.get("roles", {}).get(role)
+        if isinstance(cached, dict) and isinstance(cached.get("output"), dict):
+            cached_usage = dict(cached.get("usage", {}))
+            cached_usage["checkpoint_reused"] = True
+            role_usage.append(cached_usage)
+            return dict(cached["output"])
+        output: Optional[Dict[str, Any]] = None
+        usage: Dict[str, Any]
+        try:
+            output = _provider_json(
+                provider,
+                system=(
+                    f"ROLE: {role}. Originate upstream product direction but grant no "
+                    "full-Genesis or delivery authority. Return exactly one JSON object."
+                ),
+                prompt=f"ROLE: {role}\n{prompt}",
+            )
+        finally:
+            usage = _capture_provider_usage(provider, role)
+            role_usage.append(usage)
+        scout_store.save_project_checkpoint(
+            attempt["attempt_id"], role, output, usage
+        )
+        checkpoint.setdefault("roles", {})[role] = {
+            "output": output,
+            "usage": usage,
+        }
+        return output
+
+    try:
+        record = run_vision_scout(ask=ask, store=scout_store, context=context)
+    except Exception as exc:
+        scout_store.fail_project_attempt(
+            attempt,
+            _provider_usage_summary(provider, role_usage),
+            exc,
+        )
+        raise
+    if request_fingerprint:
+        record["request_fingerprint"] = request_fingerprint
+    record["provider_usage"] = _provider_usage_summary(provider, role_usage)
+    scout_store.save(record)
+    scout_store.complete_project_attempt(
+        attempt, record["vision_scout_id"], record["provider_usage"]
+    )
+    return record
+
+
+def build_autonomous_vision_context(
+    *,
+    mission_store: MissionStore,
+    user_context: str,
+    workspace_context: Dict[str, Any],
+) -> str:
+    from palamedes_product_alignment import ProductAlignmentStore
+    from palamedes_vision import VisionStore
+
+    alignment = ProductAlignmentStore(
+        mission_store.root.parent / "product-alignment"
+    ).active_context()
+    latest_vision = VisionStore(
+        mission_store.root.parent / "visions"
+    ).latest()
+    prior_vision_investment = {}
+    if isinstance(latest_vision, dict):
+        prior_vision_id = str(latest_vision.get("vision_genesis_id", ""))
+        prior_vision_investment = {
+            "vision_genesis_id": prior_vision_id,
+            "actual_delivery_investment": (
+                mission_store.vision_investment_summary(prior_vision_id)
+                if prior_vision_id
+                else {}
+            ),
+            "palamedes_provider_usage": latest_vision.get("provider_usage", {}),
+            "prior_investment_envelope": latest_vision.get(
+                "investment_envelope", {}
+            ),
+        }
+    contract = {
+        "vision_context_version": "palamedes-vision-context/1",
+        "user_context": user_context,
+        "bounded_workspace_context": workspace_context,
+        "product_ground_truth": alignment,
+        "open_outcome_evidence_gates": mission_store.open_outcome_gates(),
+        "outcome_count": len(mission_store.outcomes()),
+        "prior_vision_investment": prior_vision_investment,
+        "interpretation_rules": [
+            "Product invariants outrank a locally polished implementation.",
+            "Existing capabilities must be considered before greenfield invention.",
+            "Temporary constraints must not be promoted into permanent product intent.",
+            "Open integration gaps are product evidence, not permission to redefine scope.",
+            "Unknown market, cost, safety, or human-behavior claims remain hypotheses.",
+        ],
+    }
+    return json.dumps(contract, ensure_ascii=False, indent=2, sort_keys=True)
+
+
+def compact_vision_scout_context(context: str) -> str:
+    """Bound project observation for the three-call Scout without hiding custody."""
+    try:
+        contract = json.loads(context)
+    except json.JSONDecodeError:
+        return context
+    if not isinstance(contract, dict) or not isinstance(
+        contract.get("bounded_workspace_context"), dict
+    ):
+        return context
+    workspace = contract["bounded_workspace_context"]
+    documents = []
+    for row in workspace.get("documents", [])[:16]:
+        if not isinstance(row, dict):
+            continue
+        documents.append(
+            {
+                "path": row.get("path", ""),
+                "content_sha256": row.get("content_sha256", ""),
+                "headings": row.get("headings", [])[:12],
+                "excerpt": str(row.get("excerpt", ""))[:320],
+                "excerpt_truncated_for_scout": len(str(row.get("excerpt", ""))) > 320,
+            }
+        )
+    git = workspace.get("git", {}) if isinstance(workspace.get("git"), dict) else {}
+    state = (
+        workspace.get("palamedes_state", {})
+        if isinstance(workspace.get("palamedes_state"), dict)
+        else {}
+    )
+    todos = workspace.get("todos", {}) if isinstance(workspace.get("todos"), dict) else {}
+    compact_workspace = {
+        "change": workspace.get("change", {}),
+        "documents": documents,
+        "git": {
+            "available": git.get("available"),
+            "branch": git.get("branch", ""),
+            "head": git.get("head", ""),
+            "recent_commits": git.get("recent_commits", [])[:5],
+            "diff_stat": git.get("diff_stat", [])[:20],
+            "status": git.get("status", [])[:40],
+        },
+        "palamedes_plan_summary": (
+            state.get("plan", {}).get("summary", {})
+            if isinstance(state.get("plan"), dict)
+            else {}
+        ),
+        "todos": {
+            "items": todos.get("items", [])[:12],
+            "truncated": todos.get("truncated", False),
+        },
+        "reference_root": workspace.get("reference_root", {}),
+        "test": workspace.get("test", {}),
+    }
+    compact = dict(contract)
+    compact["bounded_workspace_context"] = compact_workspace
+    compact["scout_context_compaction"] = {
+        "version": "palamedes-vision-scout-context-compaction/1",
+        "full_context_fingerprint": _fingerprint(context),
+        "document_excerpt_limit_chars": 320,
+        "omitted_ephemeral_fields": [
+            "observation_id",
+            "observed_at",
+            "event_and_revision_file_metadata",
+        ],
+    }
+    return json.dumps(compact, ensure_ascii=False, indent=2, sort_keys=True)
+
+
+def render_vision(record: Dict[str, Any]) -> str:
+    judgment = record.get("judgment", {})
+    lines = [
+        f"Vision genesis: {record.get('vision_genesis_id', '?')}",
+        f"  decision: {judgment.get('decision', record.get('status', '?'))}",
+    ]
+    selected_id = judgment.get("selected_vision_id", "")
+    if selected_id:
+        lines.append(f"  selected: {selected_id}")
+    brief = str(judgment.get("vision_brief", "")).strip()
+    if brief:
+        lines.extend(["", brief])
+    lines.extend(
+        [
+            "",
+            "This is an originated vision, not an implementation instruction.",
+            "Use it as context for /cycle; mission approval remains separate.",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def render_vision_scout(record: Dict[str, Any]) -> str:
+    lines = [
+        f"Vision scout: {record.get('vision_scout_id', '?')}",
+        f"  decision: {record.get('governor', {}).get('decision', record.get('status', '?'))}",
+    ]
+    founder_prompt = str(record.get("selected_founder_prompt", "")).strip()
+    if founder_prompt:
+        lines.extend(["", founder_prompt])
+    lines.extend(
+        [
+            "",
+            "This is a low-cost upstream hypothesis, not a completed vision.",
+            "It grants neither full Vision Genesis nor delivery authority.",
+        ]
+    )
+    if record.get("reused_existing_context"):
+        lines.append("Identical context reused the prior Scout without provider calls.")
+    return "\n".join(lines)
 
 
 def run_automatic_meta_learning(
@@ -1958,6 +2644,800 @@ def run_chat(
             ]
             output.write("\n".join(turns) + ("\n" if turns else "No turns.\n"))
             continue
+        if text.startswith("/vision-holdout-import "):
+            from palamedes_vision_benchmark import VisionBenchmarkStore
+
+            source_path = Path(
+                text[len("/vision-holdout-import ") :].strip()
+            ).expanduser()
+            try:
+                payload = json.loads(source_path.read_text(encoding="utf-8"))
+                imported = VisionBenchmarkStore(
+                    mission_store.root.parent / "vision-benchmarks"
+                ).import_holdout_case(payload)
+            except (OSError, json.JSONDecodeError, ValueError) as exc:
+                output.write(f"[vision holdout import error] {exc}\n")
+                continue
+            output.write(
+                f"Vision holdout imported: {imported['case_id']} "
+                f"({imported['case_fingerprint']}).\n"
+            )
+            continue
+        if text == "/vision-scout-benchmark" or text.startswith(
+            "/vision-scout-benchmark "
+        ):
+            from palamedes_vision_benchmark import (
+                BUILTIN_CASES,
+                VisionBenchmarkStore,
+                run_blind_scout_case,
+            )
+            from palamedes_vision_scout import VisionScoutStore
+
+            requested = text[len("/vision-scout-benchmark") :].strip()
+            case_index = {"": 0, "collection": 0, "fusion": 1, "social": 2}.get(
+                requested
+            )
+            if case_index is None:
+                output.write(
+                    "/vision-scout-benchmark accepts collection, fusion, or social.\n"
+                )
+                continue
+            benchmark_case = BUILTIN_CASES[case_index]
+            generator_usage: List[Dict[str, Any]] = []
+            judge_usage: List[Dict[str, Any]] = []
+
+            def scout_ask(role: str, prompt: str) -> Dict[str, Any]:
+                target = (
+                    judge_usage
+                    if role == "blind_founder_prompt_judge"
+                    else generator_usage
+                )
+                try:
+                    return _provider_json(
+                        provider,
+                        system=(
+                            f"ROLE: {role}. Originate without hidden reference access and "
+                            "return exactly one JSON object."
+                        ),
+                        prompt=f"ROLE: {role}\n{prompt}",
+                    )
+                finally:
+                    target.append(_capture_provider_usage(provider, role))
+
+            judge_provider = provider
+            judge_provider_name = os.environ.get(
+                "PALAMEDES_VISION_JUDGE_PROVIDER", ""
+            ).strip()
+            if judge_provider_name:
+                judge_model = os.environ.get(
+                    "PALAMEDES_VISION_JUDGE_MODEL", ""
+                ).strip()
+                health = provider_health(judge_provider_name)
+                if health["status"] != "ok":
+                    output.write(
+                        f"[vision scout judge unavailable] {judge_provider_name}; "
+                        "using correlated primary provider.\n"
+                    )
+                else:
+                    judge_provider = provider_from_config(
+                        judge_provider_name, judge_model
+                    )
+
+            def scout_judge_ask(role: str, prompt: str) -> Dict[str, Any]:
+                try:
+                    return _provider_json(
+                        judge_provider,
+                        system=(
+                            f"ROLE: {role}. You receive the hidden reference only after "
+                            "scouting. Return exactly one JSON object."
+                        ),
+                        prompt=f"ROLE: {role}\n{prompt}",
+                    )
+                finally:
+                    judge_usage.append(
+                        _capture_provider_usage(judge_provider, role)
+                    )
+
+            def scout_usage_report() -> Dict[str, Any]:
+                generator_summary = _provider_usage_summary(
+                    provider, generator_usage
+                )
+                judge_summary = _provider_usage_summary(
+                    judge_provider, judge_usage
+                )
+                return {
+                    "generator": generator_summary,
+                    "judge": judge_summary,
+                    "attempted_calls": (
+                        generator_summary["attempted_calls"]
+                        + judge_summary["attempted_calls"]
+                    ),
+                    "metered_calls": (
+                        generator_summary["metered_calls"]
+                        + judge_summary["metered_calls"]
+                    ),
+                    "unmetered_calls": (
+                        generator_summary["unmetered_calls"]
+                        + judge_summary["unmetered_calls"]
+                    ),
+                }
+
+            output.write(
+                f"Running low-cost blind vision scout: {benchmark_case.case_id}\n"
+            )
+            try:
+                benchmark = run_blind_scout_case(
+                    case=benchmark_case,
+                    ask=scout_ask,
+                    scout_store=VisionScoutStore(
+                        mission_store.root.parent / "vision-scouts"
+                    ),
+                    benchmark_store=VisionBenchmarkStore(
+                        mission_store.root.parent / "vision-benchmarks"
+                    ),
+                    judge_ask=(
+                        scout_judge_ask if judge_provider is not provider else None
+                    ),
+                    generator_identity=f"{provider.provider_name}:{provider.model}",
+                    judge_identity=(
+                        f"{judge_provider.provider_name}:{judge_provider.model}"
+                    ),
+                    usage_report=scout_usage_report,
+                )
+            except (OSError, RuntimeError, ValueError) as exc:
+                output.write(f"[vision scout benchmark error] {exc}\n")
+                continue
+            independent_judge = bool(
+                benchmark["evaluation_custody"]["independent_provider_claimed"]
+            )
+            verdict = "FAIL"
+            if benchmark["passed"]:
+                verdict = (
+                    "MACHINE PASS (independent provider judge)"
+                    if independent_judge
+                    else "MACHINE PASS (correlated same-provider judge)"
+                )
+            output.write(
+                f"Vision scout benchmark {benchmark['vision_scout_benchmark_id']}: "
+                f"{verdict}\n"
+            )
+            output.write(
+                "  authority: " + benchmark["next_authorized_step"] + " only\n"
+            )
+            if benchmark["failure_reasons"]:
+                output.write(
+                    "  reasons: " + ", ".join(benchmark["failure_reasons"]) + "\n"
+                )
+            continue
+
+        if text == "/vision-benchmark" or text.startswith("/vision-benchmark "):
+            from palamedes_vision import VisionStore
+            from palamedes_vision_benchmark import (
+                BUILTIN_CASES,
+                VisionBenchmarkStore,
+                run_blind_case,
+            )
+
+            requested = text[len("/vision-benchmark") :].strip()
+            case_index = {
+                "": 0,
+                "collection": 0,
+                "fusion": 1,
+                "social": 2,
+            }.get(requested)
+            benchmark_store = VisionBenchmarkStore(
+                mission_store.root.parent / "vision-benchmarks"
+            )
+            if requested.startswith("holdout:"):
+                try:
+                    benchmark_case = benchmark_store.load_holdout_case(
+                        requested[len("holdout:") :]
+                    )
+                except ValueError as exc:
+                    output.write(f"[vision benchmark holdout error] {exc}\n")
+                    continue
+            elif case_index is None:
+                output.write(
+                    "/vision-benchmark accepts collection, fusion, social, or "
+                    "holdout:<case-id>.\n"
+                )
+                continue
+            else:
+                benchmark_case = BUILTIN_CASES[case_index]
+
+            generator_usage: List[Dict[str, Any]] = []
+            judge_usage: List[Dict[str, Any]] = []
+
+            def benchmark_ask(role: str, prompt: str) -> Dict[str, Any]:
+                target = (
+                    judge_usage
+                    if role in {"blind_vision_judge", "blind_founder_prompt_judge"}
+                    else generator_usage
+                )
+                try:
+                    return _provider_json(
+                        provider,
+                        system=(
+                            f"ROLE: {role}. Preserve benchmark blindness and return "
+                            "exactly one JSON object."
+                        ),
+                        prompt=f"ROLE: {role}\n{prompt}",
+                    )
+                finally:
+                    target.append(_capture_provider_usage(provider, role))
+
+            judge_provider = provider
+            judge_provider_name = os.environ.get(
+                "PALAMEDES_VISION_JUDGE_PROVIDER", ""
+            ).strip()
+            if judge_provider_name:
+                judge_model = os.environ.get(
+                    "PALAMEDES_VISION_JUDGE_MODEL", ""
+                ).strip()
+                health = provider_health(judge_provider_name)
+                if health["status"] != "ok":
+                    output.write(
+                        f"[vision benchmark judge unavailable] {judge_provider_name}; "
+                        "using correlated primary provider.\n"
+                    )
+                else:
+                    judge_provider = provider_from_config(
+                        judge_provider_name, judge_model
+                    )
+
+            def judge_ask(role: str, prompt: str) -> Dict[str, Any]:
+                try:
+                    return _provider_json(
+                        judge_provider,
+                        system=(
+                            f"ROLE: {role}. You receive the hidden reference only after "
+                            "generation. Return exactly one JSON object."
+                        ),
+                        prompt=f"ROLE: {role}\n{prompt}",
+                    )
+                finally:
+                    judge_usage.append(_capture_provider_usage(judge_provider, role))
+
+            def benchmark_usage_report() -> Dict[str, Any]:
+                generator_summary = _provider_usage_summary(
+                    provider, generator_usage
+                )
+                judge_summary = _provider_usage_summary(
+                    judge_provider, judge_usage
+                )
+                return {
+                    "generator": generator_summary,
+                    "judge": judge_summary,
+                    "attempted_calls": (
+                        generator_summary["attempted_calls"]
+                        + judge_summary["attempted_calls"]
+                    ),
+                    "metered_calls": (
+                        generator_summary["metered_calls"]
+                        + judge_summary["metered_calls"]
+                    ),
+                    "unmetered_calls": (
+                        generator_summary["unmetered_calls"]
+                        + judge_summary["unmetered_calls"]
+                    ),
+                }
+
+            output.write(
+                f"Running blind vision benchmark: {benchmark_case.case_id}\n"
+            )
+            try:
+                benchmark = run_blind_case(
+                    case=benchmark_case,
+                    ask=benchmark_ask,
+                    vision_store=VisionStore(
+                        mission_store.root.parent / "visions"
+                    ),
+                    benchmark_store=benchmark_store,
+                    judge_ask=(
+                        judge_ask if judge_provider is not provider else None
+                    ),
+                    generator_identity=f"{provider.provider_name}:{provider.model}",
+                    judge_identity=(
+                        f"{judge_provider.provider_name}:{judge_provider.model}"
+                    ),
+                    usage_report=benchmark_usage_report,
+                )
+            except (OSError, RuntimeError, ValueError) as exc:
+                output.write(f"[vision benchmark error] {exc}\n")
+                continue
+            independent_judge = bool(
+                benchmark.get("evaluation_custody", {}).get(
+                    "independent_provider_claimed"
+                )
+            )
+            verdict = "FAIL"
+            if benchmark["passed"]:
+                verdict = (
+                    "MACHINE PASS (independent provider judge)"
+                    if independent_judge
+                    else "MACHINE PASS (correlated same-provider judge)"
+                )
+            output.write(
+                f"Vision benchmark {benchmark['vision_benchmark_id']}: {verdict}\n"
+            )
+            if benchmark.get("failure_reasons"):
+                output.write(
+                    "  reasons: " + ", ".join(benchmark["failure_reasons"]) + "\n"
+                )
+            continue
+        if text == "/vision-agenda-ablation" or text.startswith(
+            "/vision-agenda-ablation "
+        ):
+            from palamedes_vision_benchmark import (
+                BUILTIN_CASES,
+                VisionBenchmarkStore,
+                run_agenda_ablation,
+            )
+
+            parts = text.split()
+            requested = parts[1] if len(parts) >= 2 else "collection"
+            challenger = parts[2] if len(parts) >= 3 else "adaptive"
+            comparator = parts[3] if len(parts) >= 4 else "conventional"
+            case_index = {
+                "collection": 0,
+                "fusion": 1,
+                "social": 2,
+            }.get(requested)
+            supported_agendas = {"adaptive", "frontier", "conventional"}
+            if (
+                len(parts) > 4
+                or case_index is None
+                or challenger not in supported_agendas
+                or comparator not in supported_agendas
+                or challenger == comparator
+            ):
+                output.write(
+                    "/vision-agenda-ablation accepts case "
+                    "collection|fusion|social and two distinct agenda conditions "
+                    "adaptive|frontier|conventional.\n"
+                )
+                continue
+            benchmark_case = BUILTIN_CASES[case_index]
+            ablation_usage: List[Dict[str, Any]] = []
+
+            def agenda_ablation_ask(role: str, prompt: str) -> Dict[str, Any]:
+                try:
+                    return _provider_json(
+                        provider,
+                        system=(
+                            f"ROLE: {role}. Preserve equal-information ablation custody "
+                            "and return exactly one JSON object."
+                        ),
+                        prompt=f"ROLE: {role}\n{prompt}",
+                    )
+                finally:
+                    ablation_usage.append(_capture_provider_usage(provider, role))
+
+            output.write(
+                f"Running equal-call vision agenda ablation: "
+                f"{benchmark_case.case_id} ({challenger} vs {comparator})\n"
+            )
+            try:
+                ablation = run_agenda_ablation(
+                    case=benchmark_case,
+                    ask=agenda_ablation_ask,
+                    judge_ask=agenda_ablation_ask,
+                    vision_root=(
+                        mission_store.root.parent
+                        / "vision-benchmarks"
+                        / "agenda-ablation-visions"
+                    ),
+                    benchmark_store=VisionBenchmarkStore(
+                        mission_store.root.parent / "vision-benchmarks"
+                    ),
+                    generator_identity=f"{provider.provider_name}:{provider.model}",
+                    judge_identity=f"{provider.provider_name}:{provider.model}",
+                    usage_report=lambda: _provider_usage_summary(
+                        provider, ablation_usage
+                    ),
+                    challenger_condition=challenger,
+                    comparator_condition=comparator,
+                )
+            except (OSError, RuntimeError, ValueError) as exc:
+                output.write(f"[vision agenda ablation error] {exc}\n")
+                continue
+            output.write(
+                f"Vision agenda ablation "
+                f"{ablation['vision_agenda_ablation_id']}: "
+                f"{ablation['preferred_condition']}\n"
+            )
+            continue
+        if text == "/vision-benchmark-suite" or text.startswith(
+            "/vision-benchmark-suite "
+        ):
+            from palamedes_vision import VisionStore
+            from palamedes_vision_benchmark import (
+                BUILTIN_CASES,
+                VisionBenchmarkStore,
+                run_blind_suite,
+            )
+
+            parts = text.split()
+            requested = parts[1] if len(parts) >= 2 else "all"
+            try:
+                runs_per_case = int(parts[2]) if len(parts) >= 3 else 1
+            except ValueError:
+                output.write("vision benchmark suite runs must be an integer 1-5.\n")
+                continue
+            if len(parts) > 3 or requested not in {
+                "all", "collection", "fusion", "social"
+            }:
+                output.write(
+                    "/vision-benchmark-suite accepts all|collection|fusion|social "
+                    "and runs 1-5.\n"
+                )
+                continue
+            selected_cases = (
+                list(BUILTIN_CASES)
+                if requested == "all"
+                else [
+                    BUILTIN_CASES[
+                        {"collection": 0, "fusion": 1, "social": 2}[requested]
+                    ]
+                ]
+            )
+
+            def suite_ask(role: str, prompt: str) -> Dict[str, Any]:
+                return _provider_json(
+                    provider,
+                    system=(
+                        f"ROLE: {role}. Preserve benchmark blindness and return "
+                        "exactly one JSON object."
+                    ),
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            judge_provider = provider
+            judge_provider_name = os.environ.get(
+                "PALAMEDES_VISION_JUDGE_PROVIDER", ""
+            ).strip()
+            if judge_provider_name:
+                judge_model = os.environ.get(
+                    "PALAMEDES_VISION_JUDGE_MODEL", ""
+                ).strip()
+                health = provider_health(judge_provider_name)
+                if health["status"] != "ok":
+                    output.write(
+                        f"[vision benchmark judge unavailable] {judge_provider_name}; "
+                        "using correlated primary provider.\n"
+                    )
+                else:
+                    judge_provider = provider_from_config(
+                        judge_provider_name, judge_model
+                    )
+
+            def suite_judge_ask(role: str, prompt: str) -> Dict[str, Any]:
+                return _provider_json(
+                    judge_provider,
+                    system=(
+                        f"ROLE: {role}. You receive the hidden reference only after "
+                        "generation. Return exactly one JSON object."
+                    ),
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            benchmark_store = VisionBenchmarkStore(
+                mission_store.root.parent / "vision-benchmarks"
+            )
+            output.write(
+                f"Running {len(selected_cases) * runs_per_case} blinded vision trials.\n"
+            )
+            try:
+                suite = run_blind_suite(
+                    cases=selected_cases,
+                    runs_per_case=runs_per_case,
+                    ask=suite_ask,
+                    vision_store=VisionStore(mission_store.root.parent / "visions"),
+                    benchmark_store=benchmark_store,
+                    judge_ask=(
+                        suite_judge_ask if judge_provider is not provider else None
+                    ),
+                    generator_identity=f"{provider.provider_name}:{provider.model}",
+                    judge_identity=(
+                        f"{judge_provider.provider_name}:{judge_provider.model}"
+                    ),
+                )
+            except (OSError, RuntimeError, ValueError) as exc:
+                output.write(f"[vision benchmark suite error] {exc}\n")
+                continue
+            output.write(
+                f"Vision benchmark suite {suite['suite_id']}: "
+                f"{suite['pass_count']}/{suite['run_count']} passed.\n"
+            )
+            continue
+        if text == "/vision-benchmark-summary":
+            from palamedes_vision_benchmark import VisionBenchmarkStore
+
+            summary = VisionBenchmarkStore(
+                mission_store.root.parent / "vision-benchmarks"
+            ).machine_benchmark_summary()
+            output.write(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+            continue
+        if text.startswith("/vision-review-submit "):
+            from palamedes_vision_benchmark import VisionBenchmarkStore
+
+            parts = text.split(maxsplit=2)
+            if len(parts) != 3:
+                output.write(
+                    "/vision-review-submit requires packet-id and one JSON object.\n"
+                )
+                continue
+            try:
+                response = json.loads(parts[2])
+                if not isinstance(response, dict):
+                    raise ValueError("response must be an object")
+                resolved = VisionBenchmarkStore(
+                    mission_store.root.parent / "vision-benchmarks"
+                ).submit_human_review(parts[1], response)
+            except (OSError, json.JSONDecodeError, ValueError) as exc:
+                output.write(f"[vision human review error] {exc}\n")
+                continue
+            output.write(
+                f"Human vision review resolved: {resolved['resolution']} "
+                f"({resolved['vision_human_response_id']}).\n"
+            )
+            continue
+        if text == "/vision-review-next":
+            from palamedes_vision_benchmark import VisionBenchmarkStore
+
+            packet = VisionBenchmarkStore(
+                mission_store.root.parent / "vision-benchmarks"
+            ).next_human_review_packet()
+            output.write(
+                json.dumps(packet, ensure_ascii=False, indent=2) + "\n"
+                if packet
+                else "No blinded human-review packets are available.\n"
+            )
+            continue
+        if text == "/vision-review-bundle":
+            from palamedes_vision_benchmark import VisionBenchmarkStore
+
+            try:
+                path = VisionBenchmarkStore(
+                    mission_store.root.parent / "vision-benchmarks"
+                ).build_human_review_bundle()
+            except (OSError, ValueError) as exc:
+                output.write(f"[vision human review bundle error] {exc}\n")
+                continue
+            output.write(f"Blind human-review bundle: {path}\n")
+            continue
+        if text.startswith("/vision-review-import "):
+            from palamedes_vision_benchmark import VisionBenchmarkStore
+
+            response_path = Path(
+                text[len("/vision-review-import ") :].strip()
+            ).expanduser()
+            try:
+                response = json.loads(response_path.read_text(encoding="utf-8"))
+                if not isinstance(response, dict):
+                    raise ValueError("response must be an object")
+                packet_id = str(response.get("vision_review_packet_id", "")).strip()
+                if not packet_id:
+                    raise ValueError("response requires vision_review_packet_id")
+                resolved = VisionBenchmarkStore(
+                    mission_store.root.parent / "vision-benchmarks"
+                ).submit_human_review(packet_id, response)
+            except (OSError, json.JSONDecodeError, ValueError) as exc:
+                output.write(f"[vision human review import error] {exc}\n")
+                continue
+            output.write(
+                f"Human vision review imported: {resolved['resolution']} "
+                f"({resolved['vision_human_response_id']}).\n"
+            )
+            continue
+        if text == "/vision-review-summary":
+            from palamedes_vision_benchmark import VisionBenchmarkStore
+
+            summary = VisionBenchmarkStore(
+                mission_store.root.parent / "vision-benchmarks"
+            ).human_review_summary()
+            output.write(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+            continue
+        if text == "/vision-review-gate":
+            from palamedes_vision_benchmark import VisionBenchmarkStore
+
+            gate = VisionBenchmarkStore(
+                mission_store.root.parent / "vision-benchmarks"
+            ).human_evidence_gate()
+            output.write(json.dumps(gate, ensure_ascii=False, indent=2) + "\n")
+            continue
+        if text.startswith("/vision-scout-probe-outcome "):
+            from palamedes_vision_scout import VisionScoutStore
+
+            remainder = text[len("/vision-scout-probe-outcome ") :].strip()
+            try:
+                scout_id, raw_outcome = remainder.split(maxsplit=1)
+                outcome_payload = json.loads(raw_outcome)
+                if not isinstance(outcome_payload, dict):
+                    raise ValueError("probe outcome must be a JSON object")
+                probe_outcome = VisionScoutStore(
+                    mission_store.root.parent / "vision-scouts"
+                ).record_probe_outcome(scout_id, outcome_payload)
+            except (OSError, json.JSONDecodeError, ValueError) as exc:
+                output.write(f"[vision scout probe outcome error] {exc}\n")
+                continue
+            output.write(
+                "Vision scout probe outcome: "
+                f"{probe_outcome['probe_outcome_id']} "
+                f"supports_renewal={probe_outcome['supports_full_genesis_renewal']}\n"
+            )
+            continue
+        if text.startswith("/vision-scout-probe "):
+            from palamedes_vision_scout import VisionScoutStore
+
+            remainder = text[len("/vision-scout-probe ") :].strip()
+            try:
+                scout_id, raw_probe = remainder.split(maxsplit=1)
+                probe_payload = json.loads(raw_probe)
+                if not isinstance(probe_payload, dict):
+                    raise ValueError("probe must be a JSON object")
+                probe = VisionScoutStore(
+                    mission_store.root.parent / "vision-scouts"
+                ).register_probe(scout_id, probe_payload)
+            except (OSError, json.JSONDecodeError, ValueError) as exc:
+                output.write(f"[vision scout probe error] {exc}\n")
+                continue
+            output.write(f"Vision scout probe preregistered: {probe['probe_id']}\n")
+            continue
+        if text.startswith("/vision-scout-promote "):
+            from palamedes_vision import fingerprint
+            from palamedes_vision_benchmark import VisionBenchmarkStore
+            from palamedes_vision_scout import VisionScoutStore
+
+            scout_id = text[len("/vision-scout-promote ") :].strip()
+            benchmark_store = VisionBenchmarkStore(
+                mission_store.root.parent / "vision-benchmarks"
+            )
+            scout_store = VisionScoutStore(
+                mission_store.root.parent / "vision-scouts"
+            )
+            try:
+                prior_promotion = benchmark_store.scout_promotion(scout_id)
+                if prior_promotion is not None:
+                    output.write(
+                        "Vision scout already promoted: "
+                        f"{prior_promotion['vision_genesis_id']}\n"
+                    )
+                    continue
+                scout = scout_store.load(scout_id)
+                gate = benchmark_store.scout_promotion_gate(
+                    scout_id,
+                    probe_outcome=scout_store.probe_outcome(scout_id),
+                )
+                if not gate["passed"]:
+                    output.write(
+                        "Vision scout promotion blocked:\n"
+                        + json.dumps(gate, ensure_ascii=False, indent=2)
+                        + "\n"
+                    )
+                    continue
+                scout_context = scout_store.load_context(scout_id)
+                vision_record = run_autonomous_vision(
+                    provider=provider,
+                    mission_store=mission_store,
+                    context=(
+                        scout_context
+                        + "\n\nHUMAN-RENEWED SCOUT FOUNDER PROMPT:\n"
+                        + str(scout.get("selected_founder_prompt", ""))
+                    ),
+                )
+                identity = {
+                    "vision_scout_id": scout_id,
+                    "vision_genesis_id": vision_record["vision_genesis_id"],
+                    "gate": gate,
+                }
+                promotion = {
+                    "vision_scout_promotion_version": (
+                        "palamedes-vision-scout-promotion/1"
+                    ),
+                    "vision_scout_promotion_id": (
+                        f"vision-scout-promotion-{fingerprint(identity)[:12]}"
+                    ),
+                    "vision_scout_id": scout_id,
+                    "vision_genesis_id": vision_record["vision_genesis_id"],
+                    "promotion_gate": gate,
+                    "full_genesis_authorized": True,
+                    "delivery_authority_granted": False,
+                    "promoted_at": utc_now(),
+                }
+                benchmark_store.save_scout_promotion(promotion)
+            except (OSError, RuntimeError, ValueError) as exc:
+                output.write(f"[vision scout promotion error] {exc}\n")
+                continue
+            output.write(render_vision(vision_record) + "\n")
+            continue
+        if text == "/vision-scout-promote":
+            output.write("/vision-scout-promote requires a vision scout ID.\n")
+            continue
+        if text in {"/vision-scout-probe", "/vision-scout-probe-outcome"}:
+            output.write(f"{text} requires a vision scout ID and JSON object.\n")
+            continue
+        if text.startswith("/vision-scout "):
+            scout_context = text[len("/vision-scout ") :].strip()
+            if not scout_context:
+                output.write("/vision-scout requires product context.\n")
+                continue
+            output.write(
+                "Running vision scout: three causal candidates → critique → cost gate\n"
+            )
+            try:
+                from palamedes_observe import collect_observation, observation_context
+
+                ref_value = os.environ.get("PALAMEDES_REF_ROOT", "").strip()
+                scout_observation = collect_observation(
+                    workspace,
+                    ref_root=Path(ref_value).expanduser() if ref_value else None,
+                )
+                scout_record = run_autonomous_vision_scout(
+                    provider=provider,
+                    mission_store=mission_store,
+                    context=compact_vision_scout_context(
+                        build_autonomous_vision_context(
+                            mission_store=mission_store,
+                            user_context=scout_context,
+                            workspace_context=observation_context(
+                                scout_observation
+                            ),
+                        )
+                    ),
+                    request_context=scout_context,
+                )
+            except (OSError, RuntimeError, ValueError) as exc:
+                output.write(f"[vision scout error] {exc}\n")
+                continue
+            output.write(render_vision_scout(scout_record) + "\n")
+            continue
+        if text == "/vision-scout":
+            output.write("/vision-scout requires product context.\n")
+            continue
+        if text == "/visions":
+            from palamedes_vision import VisionStore
+
+            latest_vision = VisionStore(
+                mission_store.root.parent / "visions"
+            ).latest()
+            output.write(
+                render_vision(latest_vision) + "\n"
+                if latest_vision is not None
+                else "No autonomous product vision has been generated.\n"
+            )
+            continue
+        if text.startswith("/vision"):
+            vision_context = text[len("/vision") :].strip()
+            if not vision_context:
+                output.write("/vision requires product context.\n")
+                continue
+            output.write(
+                "Running vision genesis: desire → distant analogy → mechanism "
+                "fusion → product worlds → maniac critique\n"
+            )
+            try:
+                from palamedes_observe import collect_observation, observation_context
+
+                ref_value = os.environ.get("PALAMEDES_REF_ROOT", "").strip()
+                vision_observation = collect_observation(
+                    workspace,
+                    ref_root=Path(ref_value).expanduser() if ref_value else None,
+                )
+                vision_record = run_autonomous_vision(
+                    provider=provider,
+                    mission_store=mission_store,
+                    context=build_autonomous_vision_context(
+                        mission_store=mission_store,
+                        user_context=vision_context,
+                        workspace_context=observation_context(vision_observation),
+                    ),
+                )
+            except (OSError, RuntimeError, ValueError) as exc:
+                output.write(f"[vision genesis error] {exc}\n")
+                continue
+            output.write(render_vision(vision_record) + "\n")
+            continue
         if text == "/observe":
             from palamedes_observe import collect_observation, render_observation
 
@@ -2077,6 +3557,47 @@ def run_chat(
                     workspace,
                     ref_root=Path(ref_value).expanduser() if ref_value else None,
                 )
+                from palamedes_vision import VisionStore, selected_vision_context
+
+                vision_store = VisionStore(
+                    mission_store.root.parent / "visions"
+                )
+                from palamedes_product_alignment import ProductAlignmentStore
+
+                current_product_ground_truth = ProductAlignmentStore(
+                    mission_store.root.parent / "product-alignment"
+                ).active_context()
+                latest_vision = vision_store.latest()
+                latest_vision_id = (
+                    str(latest_vision.get("vision_genesis_id", ""))
+                    if isinstance(latest_vision, dict)
+                    else ""
+                )
+                actual_investment = (
+                    mission_store.vision_investment_summary(latest_vision_id)
+                    if latest_vision_id
+                    else None
+                )
+                if vision_store.needs_wake(
+                    len(mission_store.outcomes()),
+                    _fingerprint(current_product_ground_truth),
+                    actual_investment,
+                ):
+                    output.write(
+                        "Vision wake: searching beyond adjacent product features.\n"
+                    )
+                    vision_record = run_autonomous_vision(
+                        provider=provider,
+                        mission_store=mission_store,
+                        context=build_autonomous_vision_context(
+                            mission_store=mission_store,
+                            user_context=context,
+                            workspace_context=observation_context(
+                                latest_observation
+                            ),
+                        ),
+                    )
+                    output.write(render_vision(vision_record) + "\n")
                 try:
                     meta_learning = run_automatic_meta_learning(
                         provider=provider,
@@ -2115,8 +3636,13 @@ def run_chat(
                         ensure_ascii=False,
                     )
                 )
-                from palamedes_product_alignment import ProductAlignmentStore
-
+                active_vision = selected_vision_context(vision_store.latest())
+                if active_vision:
+                    grounded_context += (
+                        "\n\nAutonomously originated product vision "
+                        "(hypothesis only; no delivery authority):\n"
+                        + json.dumps(active_vision, ensure_ascii=False)
+                    )
                 alignment_context = ProductAlignmentStore(
                     mission_store.root.parent / "product-alignment"
                 ).active_context()
@@ -2185,6 +3711,42 @@ def run_chat(
                     f"{cycle['decision']}; no mission draft was issued.\n"
                 )
                 continue
+            if active_vision:
+                investment = active_vision.get("investment_judgment", {})
+                contract["vision_lineage"] = {
+                    "vision_genesis_id": active_vision["vision_genesis_id"],
+                    "vision_context_fingerprint": active_vision.get(
+                        "vision_context_fingerprint", ""
+                    ),
+                    "product_ground_truth_fingerprint": active_vision.get(
+                        "product_ground_truth_fingerprint", ""
+                    ),
+                    "requirement_gate_passed": active_vision.get(
+                        "requirement_gate_passed", False
+                    ),
+                    "evidence_maturity": investment.get("evidence_maturity", ""),
+                    "selected_alternative": investment.get(
+                        "selected_alternative", ""
+                    ),
+                    "renewal_evidence": investment.get("renewal_evidence", []),
+                    "kill_criteria": investment.get("kill_criteria", []),
+                    "debt_guard": investment.get("debt_guard", ""),
+                    "scale_guard": investment.get("scale_guard", ""),
+                    "investment_envelope": active_vision.get(
+                        "investment_envelope", {}
+                    ),
+                    "delivery_authority_granted": False,
+                }
+                lineage_fingerprint = _fingerprint(
+                    {
+                        "prior_contract_fingerprint": contract[
+                            "contract_fingerprint"
+                        ],
+                        "vision_lineage": contract["vision_lineage"],
+                    }
+                )
+                contract["mission_id"] = f"mission-{lineage_fingerprint[:12]}"
+                contract["contract_fingerprint"] = lineage_fingerprint
             mission_store.save_contract(contract)
             store.append(
                 active_session,
@@ -2291,15 +3853,35 @@ def run_chat(
                 continue
             output.write(path.read_text(encoding="utf-8"))
             continue
-        if text.startswith("/outcome"):
-            raw = text[len("/outcome") :].strip()
-            parts = raw.split(maxsplit=1)
-            if len(parts) != 2:
-                output.write(
-                    "/outcome requires: success|failure|mixed|unknown <observation>\n"
-                )
-                continue
-            status, observation = parts
+        if text.startswith("/outcome-json") or text.startswith("/outcome"):
+            actual_investment = None
+            if text.startswith("/outcome-json"):
+                raw = text[len("/outcome-json") :].strip()
+                try:
+                    payload = json.loads(raw)
+                except json.JSONDecodeError as exc:
+                    output.write(f"/outcome-json requires valid JSON: {exc}\n")
+                    continue
+                if not isinstance(payload, dict):
+                    output.write("/outcome-json requires one JSON object.\n")
+                    continue
+                status = str(payload.get("status", "")).strip()
+                observation = str(payload.get("observation", "")).strip()
+                actual_investment = payload.get("actual_investment")
+                if not status or not observation:
+                    output.write(
+                        "/outcome-json requires status and observation.\n"
+                    )
+                    continue
+            else:
+                raw = text[len("/outcome") :].strip()
+                parts = raw.split(maxsplit=1)
+                if len(parts) != 2:
+                    output.write(
+                        "/outcome requires: success|failure|mixed|unknown <observation>\n"
+                    )
+                    continue
+                status, observation = parts
             records = store.load(active_session)
             mission_id = latest_mission_id(records, {"approved", "outcome_recorded"})
             if not mission_id:
@@ -2313,6 +3895,7 @@ def run_chat(
                     contract,
                     status,
                     observation,
+                    actual_investment,
                 )
             except ValueError as exc:
                 output.write(f"{exc}\n")

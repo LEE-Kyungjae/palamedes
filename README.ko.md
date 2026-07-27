@@ -11,7 +11,7 @@
 > **Palamedes는 실행 에이전트가 구현 방법을 계획하기 전에, 어떤 미션이
 > 계획할 가치가 있는지를 판단합니다.**
 
-Palamedes는 `planner → task → implementation` 앞에서 작동하는 연구 알파
+Palamedes는 `planner → task → implementation` 앞에서 작동하는 연구 베타
 단계의 자율 프리플래너이자 계획 상태 커널입니다. 중요한 신호를 발견하고,
 서로 경쟁하는 해석과 미션을 만들고, 반증을 시도한 뒤 살아남은 미션만
 하위 실행 에이전트에 전달합니다.
@@ -59,6 +59,19 @@ Palamedes는 독창성이나 창업 성공을 보장하지 않습니다. 실행 
 | 동일 호출 강한 대조군 | `proof-003`: 양쪽 12회 호출·입력 토큰 1.045배에서 9표 중 7표, 3개 중 2개 사례 승리 |
 | 귀속 가능한 후속 선택 | 1건 기록: `proof-002` 임무에 따라 기능 확장 전에 `proof-003` 동일 호출 실험 수행 |
 | 소유자 사고노동 감소 | 아직 소유자 확인 없음 |
+| 자율 상위기획 발원 | Vision Genesis와 저비용 Vision Scout 구현; 실제 프로젝트에서 사용자가 주지 않은 founder prompt 발원 |
+| 독립 인간·행동 검증 | 블라인드 검토 및 사전등록 행동 probe 경로 구현; 실제 독립 증거는 아직 없음 |
+
+## 실제 프로젝트 데모
+
+[![Palamedes와 Codex의 윷놀이 품질 사이클 데모](assets/demo/yut-gameplay-demo.jpg)](assets/demo/yut-gameplay-demo.mp4)
+
+위 이미지를 누르면 35초 MP4 데모가 열립니다. 이 윷놀이는 Palamedes와 Codex의
+1:1 반복 품질 사이클이 실제 화면·규칙 경계·접근성·모션 회귀를 개선한 산출물입니다.
+다만 이는 Palamedes가 제품 성공이나 원래 기획 정렬을 보장한다는 증명이 아닙니다.
+후속 감사에서는 잘 다듬어진 로컬 게임이 원래 온라인 멀티게임 목적과 어긋났다는
+더 큰 범위 오류도 발견했습니다. 이 사례는 Palamedes의 국소 품질 탐색 능력과 함께,
+상위 제품 목적을 먼저 고정해야 한다는 한계를 동시에 보여줍니다.
 
 outcome은 하나의 성공·중단 값으로 합치지 않고 다음 의미를 분리합니다.
 
@@ -124,6 +137,215 @@ fresh-eyes 의제로 바꿉니다. 선택된 줌 의제는 참고 문구가 아�
 만료 제약의 무언 재사용, 필수 여정 증거 없는 단계 승격을 각각 차단합니다.
 의미 해석은 모델이 출처 ID와 함께 제출하고, 결정론적 gate는 키워드로 제품
 의도를 추측하지 않고 ID와 선언된 효과만 검증합니다.
+
+### Vision Genesis: 보완 전에 최초 기획 발명
+
+Palamedes는 이제 제품 세계를 발명하는 단계와 구현 미션으로 컴파일하는 단계를
+분리합니다. 첫 `/cycle`과 근거 수준에 따른 투자 envelope가 소진될 때 다음 일곱
+독립 역할이 자동으로 깨어납니다.
+
+```text
+사용자가 주지 않은 탐사 의제·질문 작성
+  → 잠재 욕구·감정 해석
+  → 먼 영역 유추 탐색
+  → 메커니즘 강제 융합
+  → 서로 다른 제품 세계 3개 구성
+  → 매니악 비평과 자연어 상위 기획문 작성
+  → 현실성·기회비용 통제
+```
+
+첫 역할은 사용자가 제공하지 않은 상위 탐사 프롬프트 4~6개를 직접 쓰고 2~3개를
+선택합니다. 기본 adaptive 조건은 가정을 뒤집는 frontier 질문, 현재 제품 여정과
+역량에 붙어 있는 conventional 질문, 먼 인간 메커니즘을 구체적인 제품 엔진과 잇는
+bridge 질문을 반드시 경쟁시킵니다. 전체 후보는 최소 여섯 탐색 영역을 포함합니다.
+이 역할은 이름 붙은 해법을 미리 심거나 자기 질문에 답하거나 구현 권한을 줄 수
+없습니다. 선택된 의제는 후속 역할에 권한이 아닌 탐색 데이터로 전달됩니다. 따라서
+프롬프트 최초 생성이 고정 system prompt 안에 숨지 않고 검토 가능한 산출물로 남습니다.
+`/vision-agenda-ablation <case> <challenger> <comparator>`는 서로 다른
+`adaptive|frontier|conventional` 전략 둘을 비교하며 기본값은 adaptive 대 강한 일반
+제품 질문입니다. 두 조건은 동일 맥락, 같은 모델 계열, 같은 생성 역할
+7회를 사용하고 출처를 가린 채 심판에게 전달됩니다. 기록에는 조건 순서·호출 수·점수·
+custody가 남습니다. challenger 승리는 같은 모델·동일 호출의 기계 선호만 지지하며,
+동일 토큰이나 사람 증거가 아닙니다. 동률 또는 conventional 승리에서는 우위를 주장하지
+않습니다.
+ablation 쌍은 사전등록된 1회 시도만 허용합니다. 첫 provider 호출 전에 `started`를
+append하고 JSON 오류·provider 오류·심판 오류도 `failed`와 가능한 사용량을 보존한 채
+시도를 소비합니다. 따라서 실패를 버리고 유리한 결과가 나올 때까지 재실행할 수 없습니다.
+provider JSON은 원문 SHA-256·길이·파싱 방식을 호출별 custody로 남깁니다. 코드펜스나
+텍스트 포장 안의 균형 잡힌 단일 객체 추출과 구조적 trailing comma 제거처럼 의미가
+유일하게 보존되는 변환만 허용합니다. 누락된 쉼표·따옴표·필드처럼 해석이 갈리는 오류는
+추측해 고치지 않고 실패시키며, 그 실패 호출도 토큰 사용량과 ablation 시도 예산에
+포함합니다. 원문 내용 자체는 custody에 복제하지 않습니다.
+
+감정 모델은 긍정 편향을 두지 않습니다. 소속·기쁨뿐 아니라 분노·경쟁·불안·
+지위·습관·커뮤니티가 매개하는 감정도 후보이며 피해와 착취 경계를 함께
+기록합니다. 유추 역할은 인접 소프트웨어 기능을 벗어나야 하고, 융합 역할은
+복수 메커니즘을 결합해야 합니다. 제품 세계는 감정·행동의 반복 루프, 정체성,
+사회적 결과, 수년간 확장 가능한 콘텐츠나 규칙 엔진을 포함합니다. 선택 비전은
+`.palamedes/visions/`에 저장되고 다음 cognition의 가설 맥락으로 들어가지만
+항상 `delivery_authority_granted: false`입니다. `/vision <context>`로 강제 실행하고
+`/visions`로 최신 기획문을 볼 수 있습니다.
+
+선택 역할은 상세 `vision_brief`와 별도로 180~1200자의 `founder_prompt`를 씁니다.
+이 문장은 사용자가 주지 않은 인간 긴장·제품 메커니즘·감정/행동 루프·장기 확장 방향을
+스스로 도입해야 하며, 내부 role/vision ID나 생성 과정 설명 없이 사람이 최초 기획 때
+보낼 수 있는 독립 텍스트여야 합니다. “재미있게”, “참여를 높여라” 같은 일반 요청만으로는
+인정되지 않습니다.
+
+강제 실행과 자동 wake는 같은 구조화된 vision-context contract를 사용합니다. 사용자
+맥락·제한된 저장소 관찰과 함께 출처가 있는 제품 목적, 기존 역량, 임시 제약, 열린
+통합 격차, 제품 단계, outcome gate를 전달합니다. 제품 invariant는 잘 다듬어진 로컬
+구현보다 우선하며 기존 역량을 검토하기 전 greenfield 발명을 허용하지 않습니다.
+선택 비전의 product-ground-truth fingerprint는 mission lineage로 이어지고, 정렬 상태가
+바뀌면 승인을 차단해 새 vision wake를 요구합니다. 반대로 기록된 목적을 진전시키고,
+관련 기존 역량의 재사용 또는 기각 근거와 열린 통합 격차에 명시적으로 응답한 후속 미션은
+승인할 수 있어 정렬 게이트가 자율 비전을 영구적인 제안으로만 가두지 않습니다.
+
+최초 발명과 사용자 아이디어 보완을 구분하기 위해 세 블라인드 benchmark도
+추가했습니다. 생성기에는 제품 맥락만 제공하고 사람의 기획은 숨긴 뒤 별도
+심판에게만 공개합니다. 컬렉션 case는 발견·컬렉션·아바타·문화 원천을 숨기고,
+장르 융합 case는 서로 다른 퍼즐 규칙을 충돌시키는 인간 발상을 숨깁니다. social
+case는 집단 소속감, 제한된 분노 표출, 소액 경제, 괴롭힘 방지·관계 복구 제약의
+결합을 숨깁니다. `/vision-benchmark collection`, `/vision-benchmark fusion`,
+`/vision-benchmark social`은 최초 발원·개념적
+거리·감정 깊이·메커니즘 융합·세계 일관성·3년 확장성·인간 승인 가치를
+기록합니다. fixture는 블라인드 구조와 평가 계약을 증명하며, 실제 모델의 점수는
+별도 실증 결과이지 아키텍처만으로 보장되는 주장이 아닙니다.
+
+`/vision-benchmark-suite all 3`은 모든 블라인드 case를 각각 3회 반복합니다(case당
+1~5회로 제한). 각 trial과 인간 평가 packet은 서로 다른 ID를 가지며 suite manifest도
+저장됩니다. `/vision-benchmark-summary`는 통과율, 축별 평균, 사람 기획과의 관계,
+심판 custody, case 범위, 선택된 기획 제목의 다양성을 집계합니다. 각 trial의 비전
+기억도 격리해 앞선 novelty exclusion이 뒤 표본을 인위적으로 다르게 만들지 못하게
+합니다. 따라서 통과율은
+높지만 같은 발상만 반복하는 경우를 안정적인 창의력으로 승격하지 않습니다. 반복된
+모델 평가는 여전히 사람 증거가 아닙니다.
+독창성 점수가 높아도 입력의 핵심 제품 목적을 빠뜨리면 통과할 수 없습니다. Vision
+Genesis는 출처가 있는 context requirement를 제품 세계 구성과 비평까지 전달하고,
+모든 core 항목이 충족돼야 선택합니다. benchmark gate v3는 상세 비전 평가와
+founder-prompt 발원 평가를 분리합니다. 두 번째 블라인드 심판은 문제 재구성, 입력에 없던
+메커니즘, 감정 가설, 제품 세계의 씨앗, 사람의 상위 프롬프트 대체 가능성을 채점합니다.
+중앙 해결안이 입력에 이미 있었거나 문장이 일반 요청이면 상세 비전 점수와 무관하게
+실패합니다. 인간 A/B packet도 상세 완성안이 아닌 `founder_prompt` 대 숨겨진 인간
+기획문을 비교합니다. 기존 `core_requirements_satisfied`와 빈
+`unmet_core_requirements`도 계속 PASS 조건입니다.
+
+첫 gate-v3 실모델 표본 `vision-benchmark-edf12f163696`은 사람의 컬렉션 원안을 보지
+않고 임시 관리·규칙 변형·양도·후손 재발견으로 이어지는 **The Caravan of Living
+Games**를 발원했습니다. 동일 Codex 심판은 founder-prompt 5축을 94~98점으로 평가했지만
+이는 상관된 기계 증거입니다. 9회 호출에 총 176,536토큰이 사용돼 비용 효율도 증명되지
+않았습니다. 따라서 CLI는 이를 단순 PASS가 아니라
+`MACHINE PASS (correlated same-provider judge)`로 표시합니다.
+
+전체 Genesis를 모든 아이디어에 적용하는 비용 문제를 줄이기 위해 저비용
+`Vision Scout` 경로도 제공합니다. `/vision-scout-benchmark collection|fusion|social`은
+세 역할만 사용해 서로 다른 인과 영역의 후보 세 개를 만들고, 하나를 반증·선택하고,
+현실성 관리자가 폐기 또는 블라인드 인간 검토만 결정하게 합니다. 선택된 founder
+prompt는 숨겨진 사람 기획문을 보는 별도 심판 한 번으로 평가되므로 정상 경로는 생성
+3회와 평가 1회입니다. machine pass가 열 수 있는 다음 단계는 인간 A/B packet뿐입니다.
+Scout는 `full_genesis_authorized=false`와 `delivery_authority_granted=false`를 기록하며,
+독립 사람 또는 행동 증거 없이 전체 Genesis나 구현으로 자동 승격할 수 없습니다.
+검토 packet도 산출물 출처가 `vision_scout`인지 `vision_genesis`인지 명시해 저비용
+초안을 완성된 비전으로 위장하지 않습니다.
+같은 사례·맥락은 생성 호출 전에 1회 시도 원장에 기록되며, 응답 실패도 시도 예산을
+소비해 약한 결과를 버리고 다시 뽑는 선택 편향을 막습니다.
+
+첫 Scout 실모델 표본 `vision-scout-benchmark-5661177d748b`은 숨겨진 컬렉션 원안과
+다른 ‘작은 게임의 행동이 하나의 지속 세계와 미래 가능성을 바꾸는’ founder prompt를
+발원했습니다. 동일 Codex 심판은 5축 93~97점과 stronger를 기록했지만 상관된 기계
+증거일 뿐입니다. 4회 호출·71,495토큰으로 기존 9회·176,536토큰보다 토큰 59.5%,
+호출 55.6%가 적었습니다. 단일 표본이므로 기대 비용이나 사람 수준 창의성을 증명하지
+않으며, 생성된 `vision-review-9db2913d3906`의 독립 인간 평가가 남아 있습니다.
+
+고정 benchmark가 아닌 실제 프로젝트에서는 `/vision-scout <맥락>`을 사용합니다.
+Palamedes는 현재 제품 ground truth와 저장소 관찰을 함께 읽되 3회 호출로 founder
+prompt 후보를 선별해 화면에 표시합니다. 동일한 사용자 요청은 관찰 timestamp나 상태
+파일이 바뀌어도 request fingerprint로 기존 Scout를 재사용하므로 반복 비용이 들지
+않습니다. 원래 전체 context는 fingerprint만 공개 record에 두고 별도 local context
+record에 보존해, 나중에 증거가 생기면 동일 정보 경계에서 Genesis를 이어갈 수 있습니다.
+
+`/vision-scout-promote <vision-scout-id>`는 독립 인간 검토자 두 명 이상의 quorum,
+confidence 60 이상, 모두 생성안 선호 또는 동급, 7개 축 평균 열세 5점 이내를 만족할
+때만 전체 7역할 Genesis를 한 번 실행합니다. model reviewer와 팀 내부 reviewer는 이
+quorum에 포함되지 않습니다. 재호출은 기존 promotion을 재사용하며, 승격 후에도
+delivery 권한은 계속 false입니다. 현재 실프로젝트 Scout에는 비교용 독립 인간 packet을
+자동 생성하지 않으므로, 이 승격 경로는 출처가 명확한 블라인드 Scout 검증에 우선
+적용됩니다.
+
+실프로젝트에는 행동 증거 경로도 있습니다. `/vision-scout-probe <id> <JSON>`으로
+가설, 단일 metric, 비교 연산자와 threshold, 최소 표본(5 이상), 최대 30일, 데이터
+출처를 결과 관찰 전에 고정합니다. `/vision-scout-probe-outcome <id> <JSON>`은 해당
+probe ID, 관찰값, 사전등록 이상 표본, `measured|external_dataset` provenance, 출처와
+관찰을 한 번만 기록합니다. 판정은 선언이 아니라 연산자와 threshold로 기계 계산되며,
+실패 outcome도 교체할 수 없습니다. 성공한 행동 probe는 독립 인간 quorum의 대체
+renewal 경로로 전체 Genesis만 열 수 있고 delivery 권한은 열지 않습니다.
+
+실프로젝트 Scout도 생성 전에 request fingerprint별 1회 시도를 append-only 원장에
+기록합니다. JSON 파싱이나 계약 검증 실패도 제공자 token custody와 함께 실패로 남고
+같은 버전·요청의 재시도를 차단합니다. 출처 인용은 줄바꿈·연속 공백 정규화만 허용하며,
+의미를 바꿔 쓴 문장은 계속 거절합니다.
+
+실프로젝트 검증은 현재 V4까지 진행됐습니다. V3는 저장소 문맥만으로 “설득력 있는
+문장보다 현실에 걸어 둔 작은 가설이 권위를 얻고, 생각을 바꾸는 일을 패배가 아니라
+유능한 진전으로 느끼게 하는 의사결정 환경”을 발원했습니다. 이는 사용자가 직접 준
+기능 목록의 재서술이 아닌 상위 제품 방향이지만, 3회 호출에 122,709토큰을 사용했습니다.
+V4는 전체 문맥을 10KB 미만의 출처 보존 요약으로 압축해 성공 시 약 7.5만 토큰 수준을
+목표로 했습니다. originator와 critic은 성공했으나 governor 제공자 호출이 실패했습니다.
+이 실패 뒤 역할별 불변 체크포인트와 제한 재개를 구현해, 완료된 역할을 다시 생성하거나
+유리한 결과가 나올 때까지 재시도하지 않고 남은 역할만 이어갈 수 있게 했습니다.
+체크포인트 도입 전 발생한 V4 결과는 소급 복구하지 않습니다. 다음 실증 조건은 이
+체크포인트가 처음부터 적용되는 V5 one-shot입니다.
+
+새로 선택된 모든 비전은 delivery에 영향을 주기 전에 reality governor를
+통과합니다. 전체 구현·최소 software probe·수동 probe·기존 역량 재사용/구매·
+미구현·다른 기회 투자를 엔지니어링/AI/인프라/유지보수 비용, 가역성, 학습 가치,
+기회비용으로 비교합니다. 추측 단계 비전은 `full_build`를 선택할 수 없고, 선택된
+probe가 renewal evidence를 만들기 전에는 product/service/portfolio 규모의 구현
+미션도 승인할 수 없습니다. debt·scale·kill guard는 후속 미션 lineage에 따라갑니다.
+비용 추정은 집행 가능한 outcome 지평으로도 변환됩니다. speculative·behavioral·
+demand·revenue 근거는 각각 1·2·3·5개 outcome 뒤에 새 비전과 투자 재평가를
+강제합니다.
+
+benchmark의 평가 custody도 명시합니다. 생성자와 심판 callable·identity를 분리할
+수 있으며 실제로 다른 provider인지 record에 남깁니다. 각 실행은 무작위 A/B 인간
+평가 packet을 `.palamedes/vision-benchmarks/human-review/`에 만들고 정답 key는
+`answer-keys/`에 별도 보관합니다. 같은 provider의 별도 심판은 상관된 증거이며
+독립 증명으로 주장하지 않습니다. 실제 다른 심판은
+`PALAMEDES_VISION_JUDGE_PROVIDER`와 선택적인 `PALAMEDES_VISION_JUDGE_MODEL`로
+지정합니다. 완료한 블라인드 packet은 `/vision-review-submit <packet-id> <JSON>`으로
+제출하며, 저자 정보는 별도 resolution record에서만 공개됩니다. 같은 reviewer의
+중복 제출은 거절되고 `/vision-review-summary`가 사람 선호와 점수 차이를 집계합니다.
+`/vision-review-next`는 정답 key 없이 가장 적게 평가된 packet을 보여줍니다. 각 응답은
+`reviewer_kind: human|model`을 선언하며 model·미확인 응답은 감사 기록에는 남지만
+사람 증거 합계에서는 제외됩니다.
+또한 `reviewer_relationship: independent|team|author|unknown`을 기록해 사람 자기표시
+평가와 독립된 사람 평가 수를 분리합니다.
+`/vision-review-bundle`은 정답 key가 없는 독립 실행형 오프라인 검토 화면을 만듭니다.
+화면이 내려받는 응답 JSON에는 정확한 packet fingerprint가 포함되며,
+`/vision-review-import <response.json>`은 오래되거나 다른 packet의 응답을 저자 공개
+전에 거절합니다.
+`/vision-review-gate`는 사례별 독립 인간 quorum과 비열등성 기준을 적용합니다.
+PASS여도 허용되는 주장은 `repeated_blind_human_founder_prompt_support`뿐이며 인간 수준
+창의성이나 시장 성공 주장은 허용하지 않습니다.
+
+저장소의 세 사례는 calibration이지 일반화 증명이 아닙니다. 외부 사람이 작성한 비공개
+holdout은 `/vision-holdout-import <case.json>`으로 가져오고
+`/vision-benchmark holdout:<case-id>`로 실행합니다. 숨겨진 기준안은 로컬
+`.palamedes/vision-benchmarks/holdout-cases/`에 fingerprint와 함께 보관되며 생성기
+prompt에 들어가지 않습니다. 인간 증거 게이트는 builtin 리뷰를 제외하고 외부 holdout
+세 사례를 요구합니다. 작성자의 `independent` 표시는 자기신고이며 신원 검증이나
+암호학적 sealing을 의미하지 않습니다. 로컬 상태 저장은 기록하지만 가져온 원본이
+다른 저장소에 커밋된 적 없는지는 명시적으로 미확인 상태로 남깁니다.
+작성자 ID는 비공개 answer key에만 보존되고 블라인드 packet에는 나오지 않으며 같은
+stable ID로 자기 사례를 평가하면 거절합니다. 승격은 서로 다른 holdout fingerprint
+세 개도 요구하므로 같은 사례의 이름만 바꿔 coverage를 만들 수 없습니다.
+각 holdout은 가져올 때 `evaluation_trial_count`를 1~3회로 사전등록합니다. 생성기를
+호출하기 전에 append-only 원장에 `started` 시도를 기록하므로 실패하거나 약한 생성도
+시도 예산을 소비하며 사라질 수 없습니다. 승격 게이트의 모집단은 좋은 리뷰가 아니라
+가져온 모든 사례와 사전등록된 모든 시도입니다. 각 시도마다 귀속 가능한 완료 기록과
+독립 인간 reviewer quorum이 있어야 하므로 가장 잘 나온 실행만 평가하거나 불리한
+사례를 조용히 빼고 통과할 수 없습니다. 이 로컬 원장은 단일 프로세스의 일반적인
+선택 편향을 막지만 원격 타임스탬프 기관이나 동시성 안전 암호 원장은 아닙니다.
 
 첫 교차 저장소 실험은 `insight-rag`를 대상으로 합니다. 첫 검색 처리 결과가
 실제 과제와 무관하자 Palamedes는 이를 권위 있는 근거로 포장하지 않고
@@ -340,6 +562,14 @@ Codex provider는 프로젝트를 직접 탐색하는 실행 에이전트로 사
 각 호출은 격리된 임시 디렉터리에서 `read-only`, `ephemeral` 모드로 실행되고,
 Palamedes가 만든 제한된 observation만 전달받습니다.
 
+provider가 토큰 사용량을 보고하면 각 cognition 역할 artifact에 입력·캐시 입력·출력·
+전체 토큰을 표준 형식으로 보존합니다. Vision Genesis는 여섯 역할 호출을 합산하고
+측정·미측정 custody를 기록합니다. OpenRouter streaming usage, OpenAI 완료 usage,
+Codex JSONL usage가 같은 필드로 정규화되며 usage를 주지 않는 provider는 비용 0이
+아니라 `unmetered`로 남습니다.
+다음 자동 비전은 이 provider 합계를 이전 delivery 실비와 투자 envelope 옆에서 함께
+받습니다.
+
 ### OpenRouter 사용
 
 ```bash
@@ -377,6 +607,7 @@ palamedes> /preview
 palamedes> /approve
 palamedes> /handoff
 palamedes> /outcome success 사전 약속한 결과가 관찰되었다
+palamedes> /outcome-json {"status":"mixed","observation":"probe 결과","actual_investment":{"engineering_days":0.5,"ai_cost":3,"input_tokens":12000,"output_tokens":1800,"monthly_infrastructure":0,"evidence_source":"measured","notes":"작업 기록 + provider export"}}
 ```
 
 주요 명령:
@@ -393,6 +624,7 @@ palamedes> /outcome success 사전 약속한 결과가 관찰되었다
 - `/reject`: 이유와 함께 초안 거부
 - `/handoff`: planner용 불변 미션 계약 확인
 - `/outcome`: 관찰된 결과를 추가하고 연결 상태 갱신
+- `/outcome-json`: 같은 결과에 실제 작업일·AI 비용·토큰·월 인프라와 측정 출처를 귀속
 
 세션은 프로젝트의 `.palamedes/chat/` 아래 JSONL로 저장됩니다.
 

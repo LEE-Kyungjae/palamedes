@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-agenda-ablation-attempt.schema.json",
+  "title": "Palamedes Vision Agenda Ablation Attempt",
+  "type": "object",
+  "required": [
+    "vision_agenda_ablation_attempt_version",
+    "attempt_id",
+    "attempt_key",
+    "case_id",
+    "case_origin",
+    "generator_context_fingerprint",
+    "challenger_condition",
+    "comparator_condition",
+    "status",
+    "started_at"
+  ],
+  "properties": {
+    "vision_agenda_ablation_attempt_version": {"const": "palamedes-vision-agenda-ablation-attempt/1"},
+    "attempt_id": {"type": "string", "pattern": "^vision-agenda-ablation-attempt-[a-f0-9]{12}$"},
+    "attempt_key": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "case_id": {"type": "string", "minLength": 1},
+    "case_origin": {"enum": ["calibration_builtin", "external_human_holdout"]},
+    "generator_context_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "challenger_condition": {"enum": ["adaptive", "frontier", "conventional"]},
+    "comparator_condition": {"enum": ["adaptive", "frontier", "conventional"]},
+    "status": {"enum": ["started", "completed", "failed"]},
+    "started_at": {"type": "string", "minLength": 1},
+    "finished_at": {"type": "string", "minLength": 1},
+    "vision_agenda_ablation_id": {"type": "string", "pattern": "^vision-agenda-ablation-[a-f0-9]{12}$"},
+    "error": {"type": "string", "minLength": 1},
+    "provider_usage": {"type": "object"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"enum": ["completed", "failed"]}}},
+      "then": {"required": ["finished_at"]}
+    },
+    {
+      "if": {"properties": {"status": {"const": "completed"}}},
+      "then": {"required": ["vision_agenda_ablation_id"]}
+    },
+    {
+      "if": {"properties": {"status": {"const": "failed"}}},
+      "then": {"required": ["error"]}
+    }
+  ],
+  "additionalProperties": false
+}

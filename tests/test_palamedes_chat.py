@@ -37,6 +37,29 @@ class FakePalamedes:
 class StaticChatProvider:
     provider_name = "static"
     model = "fixture"
+    scout_prompts = [
+        (
+            "Turn each ordinary session into a rule seed that another participant must "
+            "transform under one preserved constraint, so play becomes a chain of causal "
+            "inheritance rather than isolated completion. Let anticipation, surprise, and "
+            "recognition of an earlier contribution power return behavior, with reversible "
+            "forks and visible provenance preventing ownership conflict or harmful capture."
+        ),
+        (
+            "Let recurring activity gradually compose a private-to-public identity artifact "
+            "whose meaning comes from remembered choices rather than points. Users decide "
+            "which fragments to reveal, reinterpret, or let fade; return behavior comes from "
+            "recognizing how the artifact has changed and how trusted others read it. Keep "
+            "silence, deletion, consent, and non-participation as first-class boundaries."
+        ),
+        (
+            "Create temporary commons around neglected parts of the service: small groups "
+            "receive limited stewardship, must make one consequential change, publish why, "
+            "and relinquish control. The emotional loop joins responsibility, disagreement, "
+            "loss, and later pride when a successor revives or overturns the work. Rotation, "
+            "forks, appeal, and hard labor caps prevent permanent elites and coerced upkeep."
+        ),
+    ]
 
     def __init__(self) -> None:
         self.calls = []
@@ -44,6 +67,408 @@ class StaticChatProvider:
     def stream(self, messages):
         self.calls.append(messages)
         prompt = messages[-1]["content"]
+        if prompt.startswith("ROLE: vision_scout_originator"):
+            context = prompt.split("Product context:\n", 1)[-1].strip()
+            source_quote = context.split(".", 1)[0].strip() + "."
+            yield json.dumps(
+                {
+                    "context_requirements": [
+                        {
+                            "requirement_id": "req-1",
+                            "source_anchor_id": "anchor-1",
+                            "source_quote": source_quote,
+                            "requirement": "Originate a durable product direction.",
+                            "criticality": "core",
+                        }
+                    ],
+                    "candidates": [
+                        {
+                            "candidate_id": f"candidate-{index}",
+                            "causal_lane": lane,
+                            "founder_prompt": self.scout_prompts[index - 1],
+                            "human_tension": f"human tension {index}",
+                            "unsupplied_mechanism": f"unsupplied mechanism {index}",
+                            "affective_loop": f"affective loop {index}",
+                            "durable_expansion_engine": f"durable engine {index}",
+                            "harm_boundary": f"harm boundary {index}",
+                            "smallest_disconfirming_probe": f"manual probe {index}",
+                        }
+                        for index, lane in enumerate(
+                            [
+                                "rules_interaction",
+                                "meaning_identity",
+                                "resources_institutions_social",
+                            ],
+                            start=1,
+                        )
+                    ],
+                }
+            )
+            return
+        if prompt.startswith("ROLE: vision_scout_critic"):
+            yield json.dumps(
+                {
+                    "critiques": [
+                        {
+                            "candidate_id": f"candidate-{index}",
+                            "problem_reframing": f"reframing {index}",
+                            "mechanism_originality": f"originality {index}",
+                            "affective_truth": f"affect {index}",
+                            "world_seed": f"world {index}",
+                            "context_fit": f"fit {index}",
+                            "cost_or_harm_risk": f"risk {index}",
+                            "verdict": "advance" if index == 2 else "reject",
+                        }
+                        for index in range(1, 4)
+                    ],
+                    "decision": "select",
+                    "selected_candidate_id": "candidate-2",
+                    "selected_founder_prompt": self.scout_prompts[1],
+                    "selection_reason": "It creates identity meaning without a feature list.",
+                    "requirement_coverage": [
+                        {
+                            "requirement_id": "req-1",
+                            "status": "satisfied",
+                            "evidence": "The prompt originates a durable direction.",
+                        }
+                    ],
+                    "assumptions": ["Users value an evolving identity artifact."],
+                    "falsifiers": ["Users call it a decorative activity summary."],
+                    "delivery_authority_granted": False,
+                }
+            )
+            return
+        if prompt.startswith("ROLE: vision_scout_governor"):
+            yield json.dumps(
+                {
+                    "alternatives": [
+                        {
+                            "alternative": name,
+                            "estimated_next_provider_calls": calls,
+                            "learning_value": f"learning {name}",
+                            "opportunity_cost": f"cost {name}",
+                            "failure_mode": f"failure {name}",
+                        }
+                        for name, calls in [
+                            ("discard", 0),
+                            ("blind_human_review", 0),
+                            ("full_genesis", 7),
+                        ]
+                    ],
+                    "decision": "blind_human_review",
+                    "decision_rationale": "Human review is cheaper than full Genesis.",
+                    "full_genesis_renewal_evidence": [
+                        "Independent reviewers prefer or tie the scout prompt."
+                    ],
+                    "kill_criteria": ["Reviewers find it generic."],
+                    "delivery_authority_granted": False,
+                }
+            )
+            return
+        if prompt.startswith("ROLE: vision_agenda_architect"):
+            if "Condition: conventional" in prompt:
+                question_modes = ["conventional"] * 4
+            elif "Condition: frontier" in prompt:
+                question_modes = ["frontier"] * 4
+            else:
+                question_modes = [
+                    "frontier", "conventional", "bridge", "frontier"
+                ]
+            territories = [
+                ["pilgrimage", "improvisational theatre", "mutual aid"],
+                ["ecological succession", "oral history", "gift economies"],
+                ["competitive cooking", "constitutional design", "fashion subcultures"],
+                ["restorative justice", "folk ritual", "experimental music"],
+            ]
+            yield json.dumps(
+                {
+                    "questions": [
+                        {
+                            "question_id": f"question-{index}",
+                            "question_mode": question_modes[index - 1],
+                            "self_authored_research_prompt": (
+                                f"What product world emerges if ordinary use becomes "
+                                f"a consequential practice rather than a completed task {index}?"
+                            ),
+                            "assumption_reversed": (
+                                f"Users need an explicit feature request before meaning {index}."
+                            ),
+                            "human_behavior_to_explain": (
+                                f"Why people voluntarily retell and revisit charged events {index}."
+                            ),
+                            "why_the_obvious_question_is_too_small": (
+                                "It would optimize an existing screen instead of originating a world."
+                            ),
+                            "search_territories": territory_set,
+                            "forbidden_default_answers": [
+                                "badges and points",
+                                "another feed or leaderboard",
+                            ],
+                            "disconfirming_observation": (
+                                f"People cannot distinguish the proposal from generic rewards {index}."
+                            ),
+                        }
+                        for index, territory_set in enumerate(territories, 1)
+                    ],
+                    "selected_question_ids": ["question-1", "question-2"],
+                    "selection_reason": (
+                        "They expose different human tensions and six distant territories."
+                    ),
+                    "agenda_is_advisory": True,
+                }
+            )
+            return
+        if prompt.startswith("ROLE: desire_interpreter"):
+            context_text = prompt.rsplit("Context:\n", 1)[-1].strip()
+            source_quote = context_text.splitlines()[0]
+            yield json.dumps(
+                {
+                    "latent_desires": [
+                        {
+                            "desire_id": f"desire-{index}",
+                            "human_state_before": f"unresolved state {index}",
+                            "sought_or_charged_state": f"charged state {index}",
+                            "affect_source": ["direct", "mediated", "social", "instrumental"][index - 1],
+                            "valence": ["positive", "negative", "mixed", "mixed"][index - 1],
+                            "behavioral_energy": f"return or share because of tension {index}",
+                            "evidence_or_assumption": "bounded product context, interpreted as a hypothesis",
+                            "harm_boundary": f"do not exploit vulnerable behavior {index}",
+                        }
+                        for index in range(1, 5)
+                    ],
+                    "unspoken_questions": [
+                        "What becomes meaningful?",
+                        "What becomes ownable?",
+                        "What creates return tension?",
+                    ],
+                    "explicit_context_requirements": [
+                        {
+                            "requirement_id": "req-1",
+                            "requirement": "Originate a durable product world.",
+                            "source_quote": source_quote,
+                            "kind": "objective",
+                            "criticality": "core",
+                        }
+                    ],
+                }
+            )
+            return
+        if prompt.startswith("ROLE: distant_analogy_explorer"):
+            domains = ["museum", "ritual", "trading", "pilgrimage", "theatre", "ecology"]
+            yield json.dumps(
+                {
+                    "analogies": [
+                        {
+                            "analogy_id": f"analogy-{index}",
+                            "source_domain": domain,
+                            "source_pattern": f"pattern from {domain}",
+                            "transferable_mechanism": f"mechanism {index}",
+                            "target_tension": f"tension {index}",
+                            "related_desire_ids": [f"desire-{(index - 1) % 4 + 1}"],
+                            "distance_reason": "It is outside adjacent software features.",
+                            "misuse_risk": "A shallow copy would become decorative gamification.",
+                        }
+                        for index, domain in enumerate(domains, 1)
+                    ]
+                }
+            )
+            return
+        if prompt.startswith("ROLE: mechanism_fusion_inventor"):
+            yield json.dumps(
+                {
+                    "fusions": [
+                        {
+                            "fusion_id": f"fusion-{index}",
+                            "analogy_ids": [f"analogy-{index}", f"analogy-{index % 6 + 1}"],
+                            "mechanism": f"collision mechanism {index}",
+                            "new_user_behavior": f"new repeated behavior {index}",
+                            "emotional_tension": f"mixed emotional tension {index}",
+                            "why_not_an_adjacent_feature": "It changes the meaning of ordinary actions.",
+                            "conceptual_distance": 65 + index,
+                            "smallest_reality_probe": f"paper probe {index}",
+                        }
+                        for index in range(1, 6)
+                    ]
+                }
+            )
+            return
+        if prompt.startswith("ROLE: product_world_builder"):
+            yield json.dumps(
+                {
+                    "worlds": [
+                        {
+                            "vision_id": f"vision-{index}",
+                            "title": ["Hidden cultural atlas", "Rule collision arena", "Social memory ritual"][index - 1],
+                            "causal_lane": [
+                                "meaning_identity",
+                                "rules_interaction",
+                                "resources_institutions_social",
+                            ][index - 1],
+                            "premise": f"A product world premise {index}",
+                            "fusion_ids": [f"fusion-{index}"],
+                            "central_human_tension": f"Human tension {index}",
+                            "experience_loop": ["ordinary action", "hidden threshold", "surprise", "lasting meaning", "return curiosity"],
+                            "identity_expression": f"identity expression {index}",
+                            "social_dynamics": f"social consequence {index}",
+                            "content_or_rule_engine": f"generative engine {index}",
+                            "three_year_generativity": f"new worlds keep branching for theme {index}",
+                            "why_users_would_tell_someone": f"a surprising story {index}",
+                            "why_this_is_not_a_feature_pack": "The loop changes why the whole service is revisited.",
+                            "counterfactual_without_it": "The service remains a set of isolated utilities.",
+                            "harm_and_exploitation_risks": ["Do not convert curiosity into coercive compulsion."],
+                            "first_probe": f"Test whether five users retell world {index} unaided.",
+                        }
+                        for index in range(1, 4)
+                    ]
+                }
+            )
+            return
+        if prompt.startswith("ROLE: maniac_critic_and_vision_author"):
+            yield json.dumps(
+                {
+                    "critiques": [
+                        {
+                            "vision_id": f"vision-{index}",
+                            "genericity_failure": "Reject if it collapses into badges and a checklist.",
+                            "mechanism_depth": f"mechanism depth {index}",
+                            "fan_depth": f"interpretive fan depth {index}",
+                            "emotional_truth": f"emotional truth {index}",
+                            "economic_or_scale_risk": f"scale risk {index}",
+                            "portfolio_difference": f"distinct frontier {index}",
+                            "verdict": "advance" if index == 1 else "incubate",
+                        }
+                        for index in range(1, 4)
+                    ],
+                    "decision": "select",
+                    "selected_vision_id": "vision-1",
+                    "selection_reason": "It turns existing behavior into a service-wide world rather than another game feature.",
+                    "vision_brief": (
+                        "Create a hidden cultural atlas across the service. Ordinary actions sometimes satisfy undisclosed, fair conditions and reveal a lasting artifact rather than a disposable badge. Each artifact combines visual, sound, or motion with a sourced cultural interpretation, enters a browsable collection, and can become part of the user's public identity. The loop moves from action to surprise, from surprise to meaning, from meaning to ownership, and from ownership to curiosity about what remains unseen. Communities may compare interpretations and discovery stories without exposing exact conditions. Begin with a paper prototype of twelve discoveries and test whether users can recall, retell, and voluntarily seek another discovery before building a production reward engine."
+                    ),
+                    "founder_prompt": (
+                        "Turn ordinary service behavior into occasional hidden discoveries "
+                        "that carry lasting cultural meaning rather than disposable points. "
+                        "Let each discovery become a collectible part of the user's identity, "
+                        "combine visual or audible interpretation with carefully sourced human "
+                        "stories, and make curiosity about what remains unseen the reason to "
+                        "return. Design the system so people can remember and retell discoveries "
+                        "without exposing exact conditions or turning surprise into coercion."
+                    ),
+                    "requirement_coverage": [
+                        {
+                            "requirement_id": "req-1",
+                            "status": "satisfied",
+                            "evidence": "The selected world defines a durable loop.",
+                        }
+                    ],
+                    "originality_case": "It fuses museums, hidden rituals, and identity systems into one service-wide meta-world.",
+                    "assumptions": ["Surprise remains fair when conditions are hidden."],
+                    "falsifiers": ["Users describe it only as another achievement list."],
+                    "delivery_authority_granted": False,
+                }
+            )
+            return
+        if prompt.startswith("ROLE: blind_vision_judge"):
+            yield json.dumps(
+                {
+                    "scores": {
+                        "origination": 82,
+                        "conceptual_distance": 76,
+                        "affective_depth": 78,
+                        "mechanism_fusion": 74,
+                        "world_coherence": 81,
+                        "three_year_generativity": 79,
+                        "human_approval_value": 80,
+                    },
+                    "reference_relation": "different_peer",
+                    "generic_feature_pack": False,
+                    "core_requirements_satisfied": True,
+                    "unmet_core_requirements": [],
+                    "decisive_strength": "It originates a service-wide meaning loop.",
+                    "decisive_weakness": "The first probe still needs real users.",
+                    "would_human_likely_approve_exploration": True,
+                    "rationale": "The generated world is independently coherent and testable.",
+                }
+            )
+            return
+        if prompt.startswith("ROLE: blind_founder_prompt_judge"):
+            yield json.dumps(
+                {
+                    "scores": {
+                        "problem_reframing": 84,
+                        "unsupplied_mechanism": 86,
+                        "affective_thesis": 82,
+                        "product_world_seed": 85,
+                        "human_prompt_substitutability": 83,
+                    },
+                    "reference_relation": "different_peer",
+                    "solution_was_present_in_input": False,
+                    "generic_request": False,
+                    "decisive_difference": (
+                        "The generated prompt independently proposes a durable discovery world."
+                    ),
+                    "rationale": (
+                        "It could initiate exploration without the human reference's solution."
+                    ),
+                }
+            )
+            return
+        if prompt.startswith("ROLE: blind_agenda_ablation_judge"):
+            scores = {
+                "origination": 80,
+                "conceptual_distance": 78,
+                "affective_depth": 79,
+                "mechanism_fusion": 77,
+                "world_coherence": 81,
+                "three_year_generativity": 80,
+                "human_approval_value": 79,
+            }
+            yield json.dumps(
+                {
+                    "preferred": "peer",
+                    "scores_A": scores,
+                    "scores_B": scores,
+                    "decisive_difference": "The fixture intentionally ties both conditions.",
+                    "rationale": "Equal fixture briefs establish blind plumbing, not advantage.",
+                }
+            )
+            return
+        if prompt.startswith("ROLE: vision_reality_governor"):
+            alternatives = [
+                "full_build", "minimal_probe", "manual_probe", "reuse_or_buy",
+                "do_nothing", "alternative_opportunity",
+            ]
+            yield json.dumps(
+                {
+                    "evidence_maturity": "speculative",
+                    "alternatives": [
+                        {
+                            "alternative": name,
+                            "learning_value": f"learning from {name}",
+                            "engineering_days_low": 0 if name == "do_nothing" else 1,
+                            "engineering_days_high": 0 if name == "do_nothing" else 5,
+                            "ai_cost_low": 0,
+                            "ai_cost_high": 10,
+                            "monthly_infrastructure_low": 0,
+                            "monthly_infrastructure_high": 10,
+                            "maintenance_burden": f"burden of {name}",
+                            "reversibility": "high" if name != "full_build" else "low",
+                            "opportunity_cost": f"foregone option for {name}",
+                            "failure_mode": f"failure of {name}",
+                        }
+                        for name in alternatives
+                    ],
+                    "decision": "probe",
+                    "selected_alternative": "manual_probe",
+                    "decision_rationale": "Test retelling and return desire before software investment.",
+                    "renewal_evidence": ["Users voluntarily seek a second discovery."],
+                    "kill_criteria": ["Users describe the world only as decorative badges."],
+                    "debt_guard": "No persistent production schema before the probe passes.",
+                    "scale_guard": "Run with five people and no new infrastructure.",
+                    "delivery_authority_granted": False,
+                }
+            )
+            return
         if "ROLE: interpreter" in prompt:
             yield json.dumps(
                 {
@@ -242,6 +667,2168 @@ class PalamedesIsolation:
 
 
 class PalamedesChatTests(unittest.TestCase):
+    def test_builtin_vision_cases_keep_human_leaps_hidden_from_generators(self):
+        from palamedes_vision_benchmark import BUILTIN_CASES
+
+        self.assertGreaterEqual(len(BUILTIN_CASES), 3)
+        for case in BUILTIN_CASES:
+            context = case.generator_context.lower()
+            self.assertFalse(
+                [term for term in case.hidden_anchor_terms if term.lower() in context],
+                case.case_id,
+            )
+
+    def test_vision_genesis_originates_product_world_before_mission(self):
+        from palamedes_vision import VisionStore, run_vision_genesis
+
+        provider = StaticChatProvider()
+        with tempfile.TemporaryDirectory() as tempdir:
+            store = VisionStore(Path(tempdir) / "visions")
+
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            record = run_vision_genesis(
+                ask=ask,
+                store=store,
+                context=(
+                    "The service has several small games, profiles, media-generation "
+                    "capacity, and ordinary user activity records. Increase enduring "
+                    "engagement without assuming a requested feature."
+                ),
+            )
+
+        self.assertEqual(record["status"], "selected")
+        self.assertEqual(record["agenda_strategy"], "adaptive")
+        self.assertEqual(len(record["exploration_agenda"]["questions"]), 4)
+        self.assertEqual(
+            record["exploration_agenda"]["selected_question_ids"],
+            ["question-1", "question-2"],
+        )
+        self.assertTrue(record["exploration_agenda"]["agenda_is_advisory"])
+        self.assertEqual(len(record["product_worlds"]["worlds"]), 3)
+        self.assertGreaterEqual(
+            len(record["judgment"]["vision_brief"]), 240
+        )
+        self.assertIn("hidden cultural atlas", record["judgment"]["vision_brief"])
+        self.assertIn("hidden discoveries", record["judgment"]["founder_prompt"])
+        self.assertNotIn("collection", provider.calls[0][-1]["content"].lower())
+        self.assertNotIn("rule fusion", provider.calls[0][-1]["content"].lower())
+        self.assertIn(
+            "self_authored_research_prompt",
+            provider.calls[1][-1]["content"],
+        )
+        self.assertFalse(record["delivery_authority_granted"])
+        self.assertEqual(
+            record["investment_envelope"]["max_outcomes_before_reassessment"],
+            1,
+        )
+        self.assertEqual(
+            record["investment_envelope"]["budget_exhaustion_action"],
+            "regenerate_vision",
+        )
+        self.assertEqual(
+            [call[-1]["content"].splitlines()[0] for call in provider.calls],
+            [
+                "ROLE: vision_agenda_architect",
+                "ROLE: desire_interpreter",
+                "ROLE: distant_analogy_explorer",
+                "ROLE: mechanism_fusion_inventor",
+                "ROLE: product_world_builder",
+                "ROLE: maniac_critic_and_vision_author",
+                "ROLE: vision_reality_governor",
+            ],
+        )
+
+    def test_vision_scout_originates_prompt_in_three_calls_without_authority(self):
+        from palamedes_vision_scout import VisionScoutStore, run_vision_scout
+
+        provider = StaticChatProvider()
+        with tempfile.TemporaryDirectory() as tempdir:
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            record = run_vision_scout(
+                ask=ask,
+                store=VisionScoutStore(Path(tempdir) / "scouts"),
+                context=(
+                    "A service needs a durable product direction. It has profiles, "
+                    "recurring activity, and several small interaction surfaces."
+                ),
+            )
+
+        self.assertEqual(record["status"], "candidate_for_human_review")
+        self.assertEqual(record["vision_scout_version"], "palamedes-vision-scout/4")
+        self.assertEqual(record["generation_call_count"], 3)
+        self.assertEqual(record["selected_founder_prompt"], provider.scout_prompts[1])
+        self.assertIn(
+            record["originator"]["context_requirements"][0]["source_quote"],
+            (
+                "A service needs a durable product direction. It has profiles, "
+                "recurring activity, and several small interaction surfaces."
+            ),
+        )
+        self.assertFalse(record["full_genesis_authorized"])
+        self.assertFalse(record["delivery_authority_granted"])
+        self.assertEqual(
+            [call[-1]["content"].splitlines()[0] for call in provider.calls],
+            [
+                "ROLE: vision_scout_originator",
+                "ROLE: vision_scout_critic",
+                "ROLE: vision_scout_governor",
+            ],
+        )
+
+    def test_autonomous_scout_is_idempotent_for_identical_project_context(self):
+        provider = StaticChatProvider()
+        context = (
+            "A service needs a durable product direction. It has profiles, recurring "
+            "activity, and several small interaction surfaces."
+        )
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            mission_store = palamedes_chat.MissionStore(
+                fake.STATE_DIR / "missions"
+            )
+            first = palamedes_chat.run_autonomous_vision_scout(
+                provider=provider,
+                mission_store=mission_store,
+                context=context,
+            )
+            second = palamedes_chat.run_autonomous_vision_scout(
+                provider=provider,
+                mission_store=mission_store,
+                context=context,
+            )
+            from palamedes_vision_scout import VisionScoutStore
+            private_context = VisionScoutStore(
+                fake.STATE_DIR / "vision-scouts"
+            ).load_context(first["vision_scout_id"])
+
+        self.assertEqual(first["vision_scout_id"], second["vision_scout_id"])
+        self.assertEqual(len(provider.calls), 3)
+        self.assertTrue(second["reused_existing_context"])
+        self.assertEqual(first["provider_usage"]["attempted_calls"], 3)
+        self.assertFalse(first["full_genesis_authorized"])
+        self.assertFalse(first["delivery_authority_granted"])
+        self.assertEqual(private_context, context)
+
+    def test_project_scout_does_not_reuse_same_request_from_older_version(self):
+        from palamedes_vision import fingerprint
+        from palamedes_vision_scout import VisionScoutStore
+
+        provider = StaticChatProvider()
+        context = "A service needs a durable product direction."
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            scout_store = VisionScoutStore(fake.STATE_DIR / "vision-scouts")
+            scout_store.save(
+                {
+                    "vision_scout_id": "vision-scout-aaaaaaaaaaaa",
+                    "vision_scout_version": "palamedes-vision-scout/3",
+                    "request_fingerprint": fingerprint(context),
+                    "context_fingerprint": fingerprint("older context"),
+                }
+            )
+            record = palamedes_chat.run_autonomous_vision_scout(
+                provider=provider,
+                mission_store=palamedes_chat.MissionStore(
+                    fake.STATE_DIR / "missions"
+                ),
+                context=context,
+                request_context=context,
+            )
+
+        self.assertEqual(record["vision_scout_version"], "palamedes-vision-scout/4")
+        self.assertEqual(len(provider.calls), 3)
+
+    def test_project_scout_context_compaction_bounds_document_excerpts(self):
+        contract = {
+            "vision_context_version": "palamedes-vision-context/1",
+            "user_context": "Originate a durable product direction.",
+            "product_ground_truth": {"purpose": "Improve upstream decisions."},
+            "bounded_workspace_context": {
+                "observation_id": "ephemeral-observation",
+                "observed_at": "future-time",
+                "documents": [
+                    {
+                        "path": f"docs/{index}.md",
+                        "content_sha256": f"sha-{index}",
+                        "headings": ["Purpose", "Evidence"],
+                        "excerpt": "x" * 8000,
+                    }
+                    for index in range(12)
+                ],
+                "git": {
+                    "available": True,
+                    "branch": "main",
+                    "head": "abc",
+                    "recent_commits": ["one"],
+                    "status": ["M README.md"],
+                    "diff_stat": ["README.md | 1 +"],
+                },
+                "palamedes_state": {
+                    "events": {"size_bytes": 999999},
+                    "plan": {"summary": {"goal": "Retire owner judgment."}},
+                },
+                "todos": {"items": ["verify cost"], "truncated": False},
+                "reference_root": {"available": True},
+                "test": {"executed": False},
+            },
+        }
+        raw = json.dumps(contract)
+        compact = palamedes_chat.compact_vision_scout_context(raw)
+        payload = json.loads(compact)
+
+        self.assertLess(len(compact), 10000)
+        self.assertEqual(payload["user_context"], contract["user_context"])
+        self.assertEqual(
+            payload["bounded_workspace_context"]["palamedes_plan_summary"]["goal"],
+            "Retire owner judgment.",
+        )
+        self.assertEqual(
+            len(payload["bounded_workspace_context"]["documents"][0]["excerpt"]),
+            320,
+        )
+        self.assertNotIn("observation_id", payload["bounded_workspace_context"])
+        self.assertNotIn("events", payload["bounded_workspace_context"])
+
+    def test_project_scout_failure_is_metered_and_consumes_one_shot_attempt(self):
+        class MalformedScoutProvider:
+            provider_name = "fixture"
+            model = "malformed-scout"
+
+            def __init__(self):
+                self.calls = 0
+                self.last_usage = None
+                self.last_json_custody = None
+
+            def stream(self, messages):
+                self.calls += 1
+                self.last_usage = {"input_tokens": 50, "output_tokens": 5}
+                yield '{"context_requirements": [] "broken": true}'
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = MalformedScoutProvider()
+            mission_store = palamedes_chat.MissionStore(
+                fake.STATE_DIR / "missions"
+            )
+            context = "A service needs a durable product direction."
+            with self.assertRaises(ValueError):
+                palamedes_chat.run_autonomous_vision_scout(
+                    provider=provider,
+                    mission_store=mission_store,
+                    context=context,
+                    request_context=context,
+                )
+            with self.assertRaisesRegex(ValueError, "trial budget exhausted"):
+                palamedes_chat.run_autonomous_vision_scout(
+                    provider=provider,
+                    mission_store=mission_store,
+                    context=context,
+                    request_context=context,
+                )
+            from palamedes_vision_scout import VisionScoutStore
+
+            attempts = VisionScoutStore(
+                fake.STATE_DIR / "vision-scouts"
+            ).project_attempts()
+
+        self.assertEqual(provider.calls, 1)
+        self.assertEqual([row["status"] for row in attempts], ["started", "failed"])
+        self.assertEqual(attempts[-1]["provider_usage"]["attempted_calls"], 1)
+        self.assertEqual(attempts[-1]["provider_usage"]["totals"]["total_tokens"], 55)
+
+    def test_project_scout_resumes_runtime_failure_from_immutable_role_checkpoints(self):
+        class GovernorFailsOnceProvider(StaticChatProvider):
+            def __init__(self):
+                super().__init__()
+                self.failed_governor = False
+
+            def stream(self, messages):
+                prompt = messages[-1]["content"]
+                if (
+                    prompt.startswith("ROLE: vision_scout_governor")
+                    and not self.failed_governor
+                ):
+                    self.calls.append(messages)
+                    self.failed_governor = True
+                    raise RuntimeError("transient provider process failure")
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = GovernorFailsOnceProvider()
+            mission_store = palamedes_chat.MissionStore(
+                fake.STATE_DIR / "missions"
+            )
+            context = "A service needs a durable product direction."
+            with self.assertRaisesRegex(RuntimeError, "transient provider"):
+                palamedes_chat.run_autonomous_vision_scout(
+                    provider=provider,
+                    mission_store=mission_store,
+                    context=context,
+                    request_context=context,
+                )
+            record = palamedes_chat.run_autonomous_vision_scout(
+                provider=provider,
+                mission_store=mission_store,
+                context=context,
+                request_context=context,
+            )
+            from palamedes_vision_scout import VisionScoutStore
+
+            store = VisionScoutStore(fake.STATE_DIR / "vision-scouts")
+            attempts = store.project_attempts()
+            checkpoint = store.project_checkpoint(attempts[0]["attempt_id"])
+
+        self.assertEqual(len(provider.calls), 4)
+        self.assertEqual(
+            [row["status"] for row in attempts],
+            ["started", "failed", "resumed", "completed"],
+        )
+        self.assertEqual(
+            set(checkpoint["roles"]),
+            {
+                "vision_scout_originator",
+                "vision_scout_critic",
+                "vision_scout_governor",
+            },
+        )
+        self.assertTrue(
+            record["provider_usage"]["roles"][0]["checkpoint_reused"]
+        )
+        self.assertTrue(
+            record["provider_usage"]["roles"][1]["checkpoint_reused"]
+        )
+
+    def test_scout_source_quote_allows_only_whitespace_normalization(self):
+        from palamedes_vision_scout import _source_quote_present
+
+        context = "A durable product\n direction must remain attributable."
+        self.assertTrue(
+            _source_quote_present(
+                "A durable product direction must remain attributable.", context
+            )
+        )
+        self.assertFalse(
+            _source_quote_present("A rewritten strategic requirement.", context)
+        )
+
+    def test_scout_rejects_model_invented_source_anchor_id(self):
+        from palamedes_vision_scout import VisionScoutStore, run_vision_scout
+
+        class InventedAnchorProvider(StaticChatProvider):
+            def stream(self, messages):
+                prompt = messages[-1]["content"]
+                if prompt.startswith("ROLE: vision_scout_originator"):
+                    raw = "".join(super().stream(messages))
+                    payload = json.loads(raw)
+                    payload["context_requirements"][0]["source_anchor_id"] = (
+                        "anchor-999"
+                    )
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        provider = InventedAnchorProvider()
+        with tempfile.TemporaryDirectory() as tempdir:
+            with self.assertRaisesRegex(ValueError, "source anchor is invalid"):
+                run_vision_scout(
+                    ask=lambda role, prompt: palamedes_chat._provider_json(
+                        provider,
+                        system=f"ROLE: {role}",
+                        prompt=f"ROLE: {role}\n{prompt}",
+                    ),
+                    store=VisionScoutStore(Path(tempdir) / "scouts"),
+                    context="A service needs a durable product direction.",
+                )
+
+    def test_blind_scout_benchmark_uses_three_generation_calls_and_one_judge(self):
+        from palamedes_vision_benchmark import (
+            VisionBenchmarkCase,
+            VisionBenchmarkStore,
+            run_blind_scout_case,
+        )
+        from palamedes_vision_scout import VisionScoutStore
+
+        provider = StaticChatProvider()
+        case = VisionBenchmarkCase(
+            case_id="scout-fixture",
+            generator_context=(
+                "A service needs a durable product direction. It has profiles, "
+                "recurring activity, and several small interaction surfaces."
+            ),
+            hidden_human_reference=(
+                "Create a hidden collection whose discoveries become profile identity "
+                "and whose meaning expands through carefully sourced cultural stories."
+            ),
+            hidden_anchor_terms=["hidden collection", "cultural stories"],
+        )
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            record = run_blind_scout_case(
+                case=case,
+                ask=ask,
+                scout_store=VisionScoutStore(root / "scouts"),
+                benchmark_store=VisionBenchmarkStore(root / "benchmarks"),
+                generator_identity="static:same",
+                judge_identity="static:same",
+                usage_report=lambda: {
+                    "generator": {"attempted_calls": 3},
+                    "judge": {"attempted_calls": 1},
+                    "attempted_calls": 4,
+                    "metered_calls": 0,
+                    "unmetered_calls": 4,
+                },
+            )
+
+            packet = json.loads(
+                next((root / "benchmarks" / "human-review").glob("*.json"))
+                .read_text(encoding="utf-8")
+            )
+            stored = json.loads(
+                next(
+                    (root / "benchmarks" / "scout-benchmarks").glob("*.json")
+                ).read_text(encoding="utf-8")
+            )
+            call_count = len(provider.calls)
+            with self.assertRaisesRegex(ValueError, "trial budget exhausted"):
+                run_blind_scout_case(
+                    case=case,
+                    ask=ask,
+                    scout_store=VisionScoutStore(root / "scouts-retry"),
+                    benchmark_store=VisionBenchmarkStore(root / "benchmarks"),
+                )
+
+        self.assertTrue(record["passed"])
+        self.assertEqual(record["scout_generation_call_count"], 3)
+        self.assertEqual(record["judge_call_count"], 1)
+        self.assertEqual(record["provider_usage"]["attempted_calls"], 4)
+        self.assertFalse(record["full_genesis_authorized"])
+        self.assertFalse(record["delivery_authority_granted"])
+        self.assertEqual(record["next_authorized_step"], "blind_human_review")
+        self.assertEqual(packet["source_artifact_type"], "vision_scout")
+        self.assertEqual(packet["source_artifact_id"], record["vision_scout_id"])
+        self.assertEqual(stored, record)
+        self.assertEqual(len(provider.calls), call_count)
+        self.assertEqual(
+            [call[-1]["content"].splitlines()[0] for call in provider.calls],
+            [
+                "ROLE: vision_scout_originator",
+                "ROLE: vision_scout_critic",
+                "ROLE: vision_scout_governor",
+                "ROLE: blind_founder_prompt_judge",
+            ],
+        )
+
+    def test_failed_scout_call_consumes_the_preregistered_attempt(self):
+        from palamedes_vision_benchmark import (
+            VisionBenchmarkCase,
+            VisionBenchmarkStore,
+            run_blind_scout_case,
+        )
+        from palamedes_vision_scout import VisionScoutStore
+
+        case = VisionBenchmarkCase(
+            case_id="failed-scout",
+            generator_context="A service needs a durable product direction.",
+            hidden_human_reference="A hidden human direction.",
+            hidden_anchor_terms=["hidden human direction"],
+        )
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            store = VisionBenchmarkStore(root / "benchmarks")
+
+            def fail(role, prompt):
+                raise RuntimeError("malformed provider response")
+
+            with self.assertRaisesRegex(RuntimeError, "malformed provider"):
+                run_blind_scout_case(
+                    case=case,
+                    ask=fail,
+                    scout_store=VisionScoutStore(root / "scouts"),
+                    benchmark_store=store,
+                )
+            with self.assertRaisesRegex(ValueError, "trial budget exhausted"):
+                run_blind_scout_case(
+                    case=case,
+                    ask=fail,
+                    scout_store=VisionScoutStore(root / "scouts-retry"),
+                    benchmark_store=store,
+                )
+            attempts = store.scout_attempts()
+
+        self.assertEqual(len(attempts), 1)
+        self.assertEqual(attempts[0]["status"], "started")
+
+    def test_scout_promotion_requires_two_independent_humans_and_runs_once(self):
+        from palamedes_vision import fingerprint
+        from palamedes_vision_benchmark import (
+            VisionBenchmarkCase,
+            VisionBenchmarkStore,
+            run_blind_scout_case,
+        )
+        from palamedes_vision_scout import VisionScoutStore
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = StaticChatProvider()
+            benchmark_store = VisionBenchmarkStore(
+                fake.STATE_DIR / "vision-benchmarks"
+            )
+            scout_store = VisionScoutStore(fake.STATE_DIR / "vision-scouts")
+            case = VisionBenchmarkCase(
+                case_id="promotion-fixture",
+                generator_context=(
+                    "A service needs a durable product direction. It has profiles "
+                    "and recurring activity."
+                ),
+                hidden_human_reference="A hidden collection becomes profile identity.",
+                hidden_anchor_terms=["hidden collection"],
+            )
+
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            benchmark = run_blind_scout_case(
+                case=case,
+                ask=ask,
+                scout_store=scout_store,
+                benchmark_store=benchmark_store,
+            )
+            scout_id = benchmark["vision_scout_id"]
+            blocked = benchmark_store.scout_promotion_gate(scout_id)
+            self.assertFalse(blocked["passed"])
+            packet_id = benchmark["human_review_packet_id"]
+            packet_path = (
+                fake.STATE_DIR
+                / "vision-benchmarks"
+                / "human-review"
+                / f"{packet_id}.json"
+            )
+            key_path = (
+                fake.STATE_DIR
+                / "vision-benchmarks"
+                / "answer-keys"
+                / f"{packet_id}.json"
+            )
+            packet = json.loads(packet_path.read_text(encoding="utf-8"))
+            key = json.loads(key_path.read_text(encoding="utf-8"))
+            scores = {axis: 82 for axis in packet["axes"]}
+            reference_scores = {axis: 80 for axis in packet["axes"]}
+            for reviewer_id, reviewer_kind, relationship in (
+                ("model-reviewer", "model", "independent"),
+                ("team-reviewer", "human", "team"),
+            ):
+                benchmark_store.submit_human_review(
+                    packet_id,
+                    {
+                        "reviewer_id": reviewer_id,
+                        "reviewer_kind": reviewer_kind,
+                        "reviewer_relationship": relationship,
+                        "packet_fingerprint": fingerprint(packet),
+                        "preferred": key["generated_label"],
+                        "scores_A": scores,
+                        "scores_B": reference_scores,
+                        "rationale": "This non-independent review cannot promote.",
+                        "confidence": 95,
+                    },
+                )
+            still_blocked = benchmark_store.scout_promotion_gate(scout_id)
+            self.assertFalse(still_blocked["passed"])
+            self.assertEqual(still_blocked["qualifying_review_count"], 0)
+            for reviewer_id in ("independent-one", "independent-two"):
+                benchmark_store.submit_human_review(
+                    packet_id,
+                    {
+                        "reviewer_id": reviewer_id,
+                        "reviewer_kind": "human",
+                        "reviewer_relationship": "independent",
+                        "packet_fingerprint": fingerprint(packet),
+                        "preferred": key["generated_label"],
+                        "scores_A": (
+                            scores
+                            if key["generated_label"] == "A"
+                            else reference_scores
+                        ),
+                        "scores_B": (
+                            scores
+                            if key["generated_label"] == "B"
+                            else reference_scores
+                        ),
+                        "rationale": "The generated prompt is independently actionable.",
+                        "confidence": 80,
+                    },
+                )
+            passed = benchmark_store.scout_promotion_gate(scout_id)
+            calls_before_promotion = len(provider.calls)
+            output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=provider,
+                session_id="promote-scout",
+                input_stream=io.StringIO(
+                    f"/vision-scout-promote {scout_id}\n"
+                    f"/vision-scout-promote {scout_id}\n/quit\n"
+                ),
+                output=output,
+            )
+            promotions = list(
+                (
+                    fake.STATE_DIR
+                    / "vision-benchmarks"
+                    / "scout-promotions"
+                ).glob("*.json")
+            )
+
+        self.assertTrue(passed["passed"])
+        self.assertTrue(passed["full_genesis_authorized"])
+        self.assertFalse(passed["delivery_authority_granted"])
+        self.assertEqual(len(provider.calls) - calls_before_promotion, 7)
+        self.assertEqual(len(promotions), 1)
+        self.assertIn("Vision genesis: vision-genesis-", output.getvalue())
+        self.assertIn("Vision scout already promoted", output.getvalue())
+
+    def test_preregistered_behavioral_probe_can_promote_project_scout_once(self):
+        from palamedes_vision_benchmark import VisionBenchmarkStore
+        from palamedes_vision_scout import VisionScoutStore
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = StaticChatProvider()
+            mission_store = palamedes_chat.MissionStore(
+                fake.STATE_DIR / "missions"
+            )
+            context = (
+                "A service needs a durable product direction. It has recurring activity."
+            )
+            scout = palamedes_chat.run_autonomous_vision_scout(
+                provider=provider,
+                mission_store=mission_store,
+                context=context,
+                request_context=context,
+            )
+            scout_id = scout["vision_scout_id"]
+            store = VisionScoutStore(fake.STATE_DIR / "vision-scouts")
+            with self.assertRaisesRegex(ValueError, "not preregistered"):
+                store.record_probe_outcome(scout_id, {})
+            probe = store.register_probe(
+                scout_id,
+                {
+                    "hypothesis": "At least half of invited users request another session.",
+                    "metric_name": "return_request_rate",
+                    "success_operator": "gte",
+                    "threshold": 0.5,
+                    "minimum_sample_size": 8,
+                    "max_duration_days": 7,
+                    "data_source": "signed manual-session worksheet",
+                },
+            )
+            with self.assertRaisesRegex(ValueError, "sample size is below"):
+                store.record_probe_outcome(
+                    scout_id,
+                    {
+                        "probe_id": probe["probe_id"],
+                        "observed_value": 1.0,
+                        "sample_size": 3,
+                        "measurement_provenance": "measured",
+                        "source_reference": "worksheet:probe-1",
+                        "observation": "Too few participants.",
+                    },
+                )
+            outcome = store.record_probe_outcome(
+                scout_id,
+                {
+                    "probe_id": probe["probe_id"],
+                    "observed_value": 0.625,
+                    "sample_size": 8,
+                    "measurement_provenance": "measured",
+                    "source_reference": "worksheet:probe-1",
+                    "observation": "Five of eight requested another session.",
+                },
+            )
+            with self.assertRaisesRegex(ValueError, "already recorded"):
+                store.record_probe_outcome(
+                    scout_id,
+                    {
+                        "probe_id": probe["probe_id"],
+                        "observed_value": 1.0,
+                        "sample_size": 8,
+                        "measurement_provenance": "measured",
+                        "source_reference": "worksheet:retry",
+                        "observation": "A forbidden favorable retry.",
+                    },
+                )
+            gate = VisionBenchmarkStore(
+                fake.STATE_DIR / "vision-benchmarks"
+            ).scout_promotion_gate(scout_id, probe_outcome=outcome)
+            calls_before_promotion = len(provider.calls)
+            output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=provider,
+                session_id="behavioral-promote",
+                input_stream=io.StringIO(
+                    f"/vision-scout-promote {scout_id}\n/quit\n"
+                ),
+                output=output,
+            )
+
+        self.assertTrue(outcome["supports_full_genesis_renewal"])
+        self.assertTrue(gate["passed"])
+        self.assertFalse(gate["human_review_path_passed"])
+        self.assertTrue(gate["behavioral_probe_path_passed"])
+        self.assertEqual(gate["failure_reasons"], [])
+        self.assertEqual(len(provider.calls) - calls_before_promotion, 7)
+        self.assertIn("Vision genesis: vision-genesis-", output.getvalue())
+
+    def test_failed_behavioral_probe_permanently_blocks_model_only_promotion(self):
+        from palamedes_vision_benchmark import VisionBenchmarkStore
+        from palamedes_vision_scout import VisionScoutStore
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = StaticChatProvider()
+            mission_store = palamedes_chat.MissionStore(
+                fake.STATE_DIR / "missions"
+            )
+            context = "A service needs a durable product direction."
+            scout = palamedes_chat.run_autonomous_vision_scout(
+                provider=provider,
+                mission_store=mission_store,
+                context=context,
+            )
+            store = VisionScoutStore(fake.STATE_DIR / "vision-scouts")
+            probe = store.register_probe(
+                scout["vision_scout_id"],
+                {
+                    "hypothesis": "A bounded session creates voluntary return intent.",
+                    "metric_name": "return_request_rate",
+                    "success_operator": "gte",
+                    "threshold": 0.5,
+                    "minimum_sample_size": 8,
+                    "max_duration_days": 7,
+                    "data_source": "manual worksheet",
+                },
+            )
+            outcome = store.record_probe_outcome(
+                scout["vision_scout_id"],
+                {
+                    "probe_id": probe["probe_id"],
+                    "observed_value": 0.25,
+                    "sample_size": 8,
+                    "measurement_provenance": "measured",
+                    "source_reference": "worksheet:failed-probe",
+                    "observation": "Only two of eight requested another session.",
+                },
+            )
+            gate = VisionBenchmarkStore(
+                fake.STATE_DIR / "vision-benchmarks"
+            ).scout_promotion_gate(
+                scout["vision_scout_id"], probe_outcome=outcome
+            )
+            calls_before = len(provider.calls)
+            output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=provider,
+                session_id="failed-behavioral-promote",
+                input_stream=io.StringIO(
+                    f"/vision-scout-promote {scout['vision_scout_id']}\n/quit\n"
+                ),
+                output=output,
+            )
+
+        self.assertFalse(outcome["supports_full_genesis_renewal"])
+        self.assertFalse(gate["passed"])
+        self.assertEqual(len(provider.calls), calls_before)
+        self.assertIn("Vision scout promotion blocked", output.getvalue())
+
+    def test_chat_preregisters_and_records_scout_probe_json(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = StaticChatProvider()
+            mission_store = palamedes_chat.MissionStore(
+                fake.STATE_DIR / "missions"
+            )
+            context = "A service needs a durable product direction."
+            scout = palamedes_chat.run_autonomous_vision_scout(
+                provider=provider,
+                mission_store=mission_store,
+                context=context,
+            )
+            scout_id = scout["vision_scout_id"]
+            probe_payload = json.dumps(
+                {
+                    "hypothesis": "Users voluntarily request another session.",
+                    "metric_name": "return_request_rate",
+                    "success_operator": "gte",
+                    "threshold": 0.5,
+                    "minimum_sample_size": 8,
+                    "max_duration_days": 7,
+                    "data_source": "manual worksheet",
+                }
+            )
+            from palamedes_vision_scout import VisionScoutStore
+
+            # Register through chat first, then read its immutable ID for the outcome.
+            first_output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=provider,
+                session_id="probe-register",
+                input_stream=io.StringIO(
+                    f"/vision-scout-probe {scout_id} {probe_payload}\n/quit\n"
+                ),
+                output=first_output,
+            )
+            probe = VisionScoutStore(
+                fake.STATE_DIR / "vision-scouts"
+            ).load_probe(scout_id)
+            outcome_payload = json.dumps(
+                {
+                    "probe_id": probe["probe_id"],
+                    "observed_value": 0.625,
+                    "sample_size": 8,
+                    "measurement_provenance": "measured",
+                    "source_reference": "worksheet:chat-probe",
+                    "observation": "Five of eight requested another session.",
+                }
+            )
+            second_output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=provider,
+                session_id="probe-outcome",
+                input_stream=io.StringIO(
+                    f"/vision-scout-probe-outcome {scout_id} {outcome_payload}\n"
+                    "/quit\n"
+                ),
+                output=second_output,
+            )
+
+        self.assertIn("probe preregistered", first_output.getvalue())
+        self.assertIn("supports_renewal=True", second_output.getvalue())
+        self.assertEqual(len(provider.calls), 3)
+
+    def test_vision_and_cognition_preserve_provider_reported_usage(self):
+        class MeteredStaticProvider(StaticChatProvider):
+            def __init__(self):
+                super().__init__()
+                self.last_usage = None
+
+            def stream(self, messages):
+                self.last_usage = None
+                yield from super().stream(messages)
+                self.last_usage = {
+                    "input_tokens": 100,
+                    "output_tokens": 20,
+                    "total_tokens": 120,
+                }
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            mission_store = palamedes_chat.MissionStore(
+                fake.STATE_DIR / "missions"
+            )
+            provider = MeteredStaticProvider()
+            vision = palamedes_chat.run_autonomous_vision(
+                provider=provider,
+                mission_store=mission_store,
+                context="Originate a durable product world from ordinary activity.",
+            )
+            cycle = palamedes_chat.run_cognition_cycle(
+                provider=provider,
+                palamedes_module=fake,
+                context="Select one bounded probe from the vision.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+            )
+            next_context = json.loads(
+                palamedes_chat.build_autonomous_vision_context(
+                    mission_store=mission_store,
+                    user_context="Reassess the next investment.",
+                    workspace_context={},
+                )
+            )
+
+        usage = vision["provider_usage"]
+        self.assertEqual(usage["attempted_calls"], 7)
+        self.assertEqual(usage["metered_calls"], 7)
+        self.assertEqual(usage["unmetered_calls"], 0)
+        self.assertEqual(usage["totals"]["input_tokens"], 700)
+        self.assertEqual(usage["totals"]["output_tokens"], 140)
+        self.assertEqual(
+            next_context["prior_vision_investment"]["palamedes_provider_usage"][
+                "totals"
+            ]["total_tokens"],
+            840,
+        )
+        self.assertTrue(
+            all(
+                artifact["usage_custody"] == "provider_reported"
+                and artifact["provider_usage"]["total_tokens"] == 120
+                for artifact in cycle["cycle"]["artifacts"]
+            )
+        )
+
+    def test_vision_genesis_exposes_equal_call_conventional_agenda_control(self):
+        from palamedes_vision import VisionStore, run_vision_genesis
+
+        provider = StaticChatProvider()
+        with tempfile.TemporaryDirectory() as tempdir:
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            record = run_vision_genesis(
+                ask=ask,
+                store=VisionStore(Path(tempdir) / "visions"),
+                context=(
+                    "A service has profiles, recurring activity, and existing media "
+                    "capabilities. Find a durable reason for people to return."
+                ),
+                agenda_strategy="conventional",
+            )
+
+        self.assertEqual(record["agenda_strategy"], "conventional")
+        self.assertEqual(len(provider.calls), 7)
+        agenda_prompt = provider.calls[0][-1]["content"]
+        self.assertIn("Condition: conventional", agenda_prompt)
+        self.assertIn("Stay within the explicit product category", agenda_prompt)
+        self.assertNotIn("Condition: frontier", agenda_prompt)
+
+    def test_vision_genesis_rejects_selection_with_unresolved_core_requirement(self):
+        from palamedes_vision import VisionStore, run_vision_genesis
+
+        class CoreRequirementOmittingProvider(StaticChatProvider):
+            def stream(self, messages):
+                if messages[-1]["content"].startswith(
+                    "ROLE: maniac_critic_and_vision_author"
+                ):
+                    payload = json.loads("".join(super().stream(messages)))
+                    payload["requirement_coverage"][0]["status"] = "partial"
+                    payload["requirement_coverage"][0]["evidence"] = (
+                        "The selected world leaves the payment mechanism unresolved."
+                    )
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        provider = CoreRequirementOmittingProvider()
+        with tempfile.TemporaryDirectory() as tempdir:
+            store = VisionStore(Path(tempdir) / "visions")
+
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            record = run_vision_genesis(
+                ask=ask,
+                store=store,
+                context="Originate a world with a coherent payment mechanism.",
+            )
+
+        self.assertEqual(record["status"], "blocked_core_requirements")
+        self.assertFalse(record["requirement_gate"]["passed"])
+        self.assertEqual(
+            record["requirement_gate"]["unresolved_core_requirement_ids"],
+            ["req-1"],
+        )
+
+    def test_vision_genesis_rejects_requirement_quote_from_its_own_instructions(self):
+        from palamedes_vision import VisionStore, run_vision_genesis
+
+        class InstructionLeakProvider(StaticChatProvider):
+            def stream(self, messages):
+                if messages[-1]["content"].startswith("ROLE: desire_interpreter"):
+                    payload = json.loads("".join(super().stream(messages)))
+                    payload["explicit_context_requirements"][0]["source_quote"] = (
+                        "Do not repeat a prior vision's central tension merely with new nouns."
+                    )
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        provider = InstructionLeakProvider()
+        with tempfile.TemporaryDirectory() as tempdir:
+
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            with self.assertRaisesRegex(ValueError, "not in product context"):
+                run_vision_genesis(
+                    ask=ask,
+                    store=VisionStore(Path(tempdir) / "visions"),
+                    context="Originate a durable social world.",
+                )
+
+    def test_vision_genesis_allows_core_constraint_satisfied_with_validation(self):
+        from palamedes_vision import VisionStore, run_vision_genesis
+
+        class ValidationBoundProvider(StaticChatProvider):
+            def stream(self, messages):
+                if messages[-1]["content"].startswith(
+                    "ROLE: maniac_critic_and_vision_author"
+                ):
+                    payload = json.loads("".join(super().stream(messages)))
+                    payload["requirement_coverage"][0]["status"] = (
+                        "satisfied_with_validation"
+                    )
+                    payload["requirement_coverage"][0]["evidence"] = (
+                        "The design obeys the constraint; its safety thesis remains testable."
+                    )
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        provider = ValidationBoundProvider()
+        with tempfile.TemporaryDirectory() as tempdir:
+
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            record = run_vision_genesis(
+                ask=ask,
+                store=VisionStore(Path(tempdir) / "visions"),
+                context="Originate a durable social world with bounded harm.",
+            )
+
+        self.assertEqual(record["status"], "selected")
+        self.assertTrue(record["requirement_gate"]["passed"])
+
+
+    def test_hidden_human_idea_is_revealed_only_to_blind_vision_judge(self):
+        from palamedes_vision import VisionStore
+        from palamedes_vision_benchmark import (
+            BUILTIN_CASES,
+            VisionBenchmarkStore,
+            run_blind_case,
+        )
+
+        provider = StaticChatProvider()
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            benchmark_store = VisionBenchmarkStore(root / "benchmarks")
+            result = run_blind_case(
+                case=BUILTIN_CASES[0],
+                ask=ask,
+                vision_store=VisionStore(root / "visions"),
+                benchmark_store=benchmark_store,
+                generator_identity="static:generator",
+                judge_identity="static:generator",
+            )
+            review_packet = json.loads(
+                next((root / "benchmarks" / "human-review").glob("*.json")).read_text()
+            )
+            review_key = json.loads(
+                next((root / "benchmarks" / "answer-keys").glob("*.json")).read_text()
+            )
+            scores = {axis: 80 for axis in review_packet["axes"]}
+            scores_reference = {axis: 70 for axis in review_packet["axes"]}
+            from palamedes_vision import fingerprint
+            packet_fingerprint = fingerprint(review_packet)
+            with self.assertRaisesRegex(ValueError, "invalid.*packet ID"):
+                benchmark_store.submit_human_review("../../answer-keys", {})
+            with self.assertRaisesRegex(ValueError, "unsafe characters"):
+                benchmark_store.submit_human_review(
+                    review_packet["vision_review_packet_id"],
+                    {
+                        "reviewer_id": "../outside",
+                        "reviewer_kind": "human",
+                        "reviewer_relationship": "independent",
+                        "packet_fingerprint": packet_fingerprint,
+                        "preferred": "peer",
+                        "scores_A": scores,
+                        "scores_B": scores_reference,
+                        "rationale": "Unsafe reviewer IDs cannot become paths.",
+                        "confidence": 50,
+                    },
+                )
+            with self.assertRaisesRegex(ValueError, "fingerprint mismatch"):
+                benchmark_store.submit_human_review(
+                    review_packet["vision_review_packet_id"],
+                    {
+                        "reviewer_id": "tampered-packet-reviewer",
+                        "reviewer_kind": "human",
+                        "reviewer_relationship": "independent",
+                        "packet_fingerprint": "0" * 64,
+                        "preferred": "peer",
+                        "scores_A": scores,
+                        "scores_B": scores_reference,
+                        "rationale": "This response belongs to a different packet.",
+                        "confidence": 50,
+                    },
+                )
+            submitted = benchmark_store.submit_human_review(
+                review_packet["vision_review_packet_id"],
+                {
+                    "reviewer_id": "human-fixture-1",
+                    "reviewer_kind": "human",
+                    "reviewer_relationship": "independent",
+                    "packet_fingerprint": packet_fingerprint,
+                    "preferred": review_key["generated_label"],
+                    f"scores_{review_key['generated_label']}": scores,
+                    f"scores_{review_key['human_reference_label']}": scores_reference,
+                    "rationale": "The generated world has a stronger causal loop.",
+                    "confidence": 75,
+                },
+            )
+            with self.assertRaisesRegex(ValueError, "already submitted"):
+                benchmark_store.submit_human_review(
+                    review_packet["vision_review_packet_id"],
+                    {
+                        "reviewer_id": "human-fixture-1",
+                        "reviewer_kind": "human",
+                        "reviewer_relationship": "independent",
+                        "packet_fingerprint": packet_fingerprint,
+                        "preferred": "peer",
+                        "scores_A": scores,
+                        "scores_B": scores_reference,
+                        "rationale": "Duplicate response must not alter evidence.",
+                        "confidence": 50,
+                    },
+                )
+            benchmark_store.submit_human_review(
+                review_packet["vision_review_packet_id"],
+                {
+                    "reviewer_id": "model-fixture-1",
+                    "reviewer_kind": "model",
+                    "reviewer_relationship": "unknown",
+                    "packet_fingerprint": packet_fingerprint,
+                    "preferred": review_key["human_reference_label"],
+                    "scores_A": scores,
+                    "scores_B": scores_reference,
+                    "rationale": "Model custody must not count as human evidence.",
+                    "confidence": 60,
+                },
+            )
+            summary = benchmark_store.human_review_summary()
+
+        generator_prompts = [call[-1]["content"] for call in provider.calls[:-2]]
+        judge_prompts = [call[-1]["content"] for call in provider.calls[-2:]]
+        self.assertTrue(result["passed"])
+        self.assertTrue(result["hidden_anchors_verified_absent"])
+        self.assertFalse(
+            result["evaluation_custody"]["independent_provider_claimed"]
+        )
+        self.assertFalse(any("Shakespeare" in prompt for prompt in generator_prompts))
+        self.assertTrue(all("Shakespeare" in prompt for prompt in judge_prompts))
+        self.assertTrue(review_packet["authorship_hidden"])
+        self.assertEqual(review_packet["evaluation_artifact"], "founder_prompt")
+        generated_option = review_packet["options"][review_key["generated_label"]]
+        self.assertIn("hidden discoveries", generated_option)
+        self.assertNotIn("paper prototype of twelve", generated_option)
+        self.assertNotIn("generated_label", review_packet)
+        self.assertIn(review_key["generated_label"], {"A", "B"})
+        self.assertNotEqual(
+            review_key["generated_label"], review_key["human_reference_label"]
+        )
+        self.assertEqual(submitted["resolution"], "generated_preferred")
+        self.assertEqual(summary["review_count"], 1)
+        self.assertEqual(summary["total_resolved_review_count"], 2)
+
+        self.assertEqual(summary["model_or_unattested_review_count"], 1)
+        self.assertEqual(summary["generated_preference_rate"], 1.0)
+        self.assertTrue(summary["independent_human_evidence_available"])
+        self.assertTrue(summary["human_attested_evidence_available"])
+        self.assertEqual(summary["independent_human_review_count"], 1)
+        self.assertFalse(summary["human_level_creativity_claim_allowed"])
+        self.assertEqual(
+            summary["exploration_evidence_gate"]["status"], "fail"
+        )
+        self.assertIn(
+            "external holdout coverage is 0/3 cases",
+            " ".join(
+                summary["exploration_evidence_gate"]["failure_reasons"]
+            ),
+        )
+        self.assertEqual(
+            summary["per_case"]["service-wide-hidden-meaning"][
+                "generated_preferred"
+            ],
+            1,
+        )
+
+    def test_generic_founder_prompt_cannot_pass_origination_gate(self):
+        from palamedes_vision import VisionStore
+        from palamedes_vision_benchmark import (
+            BUILTIN_CASES,
+            VisionBenchmarkStore,
+            run_blind_case,
+        )
+
+        class GenericPromptJudge(StaticChatProvider):
+            def stream(self, messages):
+                prompt = messages[-1]["content"]
+                if prompt.startswith("ROLE: blind_founder_prompt_judge"):
+                    self.calls.append(messages)
+                    yield json.dumps(
+                        {
+                            "scores": {
+                                "problem_reframing": 40,
+                                "unsupplied_mechanism": 35,
+                                "affective_thesis": 45,
+                                "product_world_seed": 38,
+                                "human_prompt_substitutability": 30,
+                            },
+                            "reference_relation": "weaker",
+                            "solution_was_present_in_input": False,
+                            "generic_request": True,
+                            "decisive_difference": "It does not originate a mechanism.",
+                            "rationale": "A human would still need to supply the product idea.",
+                        }
+                    )
+                    return
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            provider = GenericPromptJudge()
+
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            result = run_blind_case(
+                case=BUILTIN_CASES[1],
+                ask=ask,
+                vision_store=VisionStore(root / "visions"),
+                benchmark_store=VisionBenchmarkStore(root / "benchmarks"),
+            )
+
+        self.assertFalse(result["passed"])
+        self.assertFalse(result["founder_prompt_gate_passed"])
+        self.assertIn("founder_prompt_is_generic_request", result["failure_reasons"])
+        self.assertIn(
+            "founder_prompt_score_below_threshold:human_prompt_substitutability",
+            result["failure_reasons"],
+        )
+
+    def test_human_evidence_gate_requires_cross_case_independent_quorum(self):
+        from palamedes_vision_benchmark import VisionBenchmarkStore
+
+        axes = {
+            "origination",
+            "conceptual_distance",
+            "affective_depth",
+            "mechanism_fusion",
+            "world_coherence",
+            "three_year_generativity",
+            "human_approval_value",
+        }
+        with tempfile.TemporaryDirectory() as tempdir:
+            store = VisionBenchmarkStore(Path(tempdir) / "benchmarks")
+            resolved_root = store.root / "resolved-human-reviews"
+            resolved_root.mkdir(parents=True)
+
+            def import_case(case_id):
+                return store.import_holdout_case(
+                    {
+                        "case_id": case_id,
+                        "author_id": f"author-{case_id}",
+                        "author_kind": "human",
+                        "author_relationship": "independent",
+                        "evaluation_trial_count": 1,
+                        "generator_context": (
+                            "An established digital service has recurring activity, "
+                            "identity, and community surfaces but needs an original "
+                            "product direction. Generate a durable causal world without "
+                            "seeing the independent author's proposed mechanism or terms."
+                        ),
+                        "hidden_human_reference": (
+                            f"The independent author for {case_id} proposes a deliberately "
+                            "unfamiliar mechanism that connects identity, recurring action, "
+                            "and shared consequences into a coherent world whose value can "
+                            "be judged against an independently generated alternative."
+                        ),
+                        "hidden_anchor_terms": [
+                            f"private anchor {case_id}",
+                            f"unseen mechanism {case_id}",
+                        ],
+                    }
+                )
+
+            for case_id in (
+                "holdout-ritual-coordination",
+                "holdout-creative-tool",
+                "holdout-market-tension",
+            ):
+                imported = import_case(case_id)
+                case = store.load_holdout_case(case_id)
+                attempt = store.reserve_holdout_attempt(case)
+                store.complete_holdout_attempt(
+                    attempt, f"vision-benchmark-{case_id}"
+                )
+                for reviewer_index in range(3):
+                    row = {
+                        "vision_human_review_resolution_version": (
+                            "palamedes-vision-human-review-resolution/1"
+                        ),
+                        "vision_human_response_id": (
+                            f"response-{case_id}-{reviewer_index}"
+                        ),
+                        "vision_review_packet_id": f"packet-{case_id}",
+                        "case_id": case_id,
+                        "case_origin": "external_human_holdout",
+                        "case_fingerprint": imported["case_fingerprint"],
+                        "trial_id": attempt["trial_id"],
+                        "evaluation_artifact": "founder_prompt",
+                        "reviewer_id": f"independent-{reviewer_index}",
+                        "reviewer_kind": "human",
+                        "reviewer_relationship": "independent",
+                        "reviewer_is_case_author": False,
+                        "resolution": (
+                            "generated_preferred"
+                            if reviewer_index < 2
+                            else "peer"
+                        ),
+                        "score_deltas": {axis: 0 for axis in axes},
+                        "confidence": 80,
+                    }
+                    (resolved_root / f"{case_id}-{reviewer_index}.json").write_text(
+                        json.dumps(row), encoding="utf-8"
+                    )
+            legacy = dict(row)
+            legacy.update(
+                {
+                    "vision_human_response_id": "legacy-full-brief-review",
+                    "reviewer_id": "legacy-independent-reviewer",
+                    "evaluation_artifact": "legacy_vision_brief",
+                    "resolution": "generated_preferred",
+                }
+            )
+            (resolved_root / "legacy-full-brief-review.json").write_text(
+                json.dumps(legacy), encoding="utf-8"
+            )
+            summary = store.human_review_summary()
+            imported_but_unreviewed = import_case("holdout-unreported-result")
+            self.assertTrue(imported_but_unreviewed["case_fingerprint"])
+            selection_gate = store.human_evidence_gate()
+
+        gate = summary["exploration_evidence_gate"]
+        self.assertEqual(gate["status"], "pass")
+        self.assertEqual(
+            gate["claim_scope"], "repeated_blind_human_founder_prompt_support"
+        )
+        self.assertEqual(gate["qualifying_review_count"], 9)
+        self.assertEqual(gate["distinct_holdout_fingerprint_count"], 3)
+        self.assertTrue(
+            all(count == 3 for count in gate["independent_reviewer_count_by_case"].values())
+        )
+        self.assertEqual(gate["preregistered_trial_count"], 3)
+        self.assertEqual(gate["completed_trial_count"], 3)
+        self.assertTrue(
+            all(
+                count == 3
+                for count in gate["independent_reviewer_count_by_trial"].values()
+            )
+        )
+        self.assertEqual(gate["generated_or_peer_rate"], 1.0)
+        self.assertFalse(gate["human_level_creativity_claim_allowed"])
+        self.assertFalse(gate["market_success_claim_allowed"])
+        self.assertEqual(selection_gate["status"], "fail")
+        self.assertTrue(
+            any(
+                "holdout-unreported-result:preregistered:1 has no "
+                "preregistered attempt record" in reason
+                for reason in selection_gate["failure_reasons"]
+            ),
+        )
+
+    def test_external_holdout_stays_out_of_builtin_prompt_and_preserves_custody(self):
+        from palamedes_vision import VisionStore
+        from palamedes_vision_benchmark import (
+            VisionBenchmarkStore,
+            run_blind_case,
+        )
+
+        provider = StaticChatProvider()
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            store = VisionBenchmarkStore(root / "benchmarks")
+            imported = store.import_holdout_case(
+                {
+                    "case_id": "holdout-unfamiliar-coordination",
+                    "author_id": "external-author-1",
+                    "author_kind": "human",
+                    "author_relationship": "independent",
+                    "evaluation_trial_count": 1,
+                    "generator_context": (
+                        "A mature service has recurring individual actions, a small "
+                        "community surface, and limited operational capacity. Originate "
+                        "a durable product world that changes why people return without "
+                        "assuming achievements, feeds, collections, or another game mode."
+                    ),
+                    "hidden_human_reference": (
+                        "The external author proposes a rotating civic rehearsal where "
+                        "ordinary actions allocate temporary stewardship of shared rules; "
+                        "participants inherit unresolved consequences and must leave a "
+                        "public amendment for the next cohort, creating memory without "
+                        "permanent hierarchy."
+                    ),
+                    "hidden_anchor_terms": [
+                        "rotating civic rehearsal",
+                        "temporary stewardship",
+                        "public amendment",
+                    ],
+                }
+            )
+            case = store.load_holdout_case(imported["case_id"])
+
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            result = run_blind_case(
+                case=case,
+                ask=ask,
+                vision_store=VisionStore(root / "visions"),
+                benchmark_store=store,
+            )
+            packet = json.loads(
+                next((store.root / "human-review").glob("*.json")).read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertNotIn("case_author_id", packet)
+            scores = {axis: 80 for axis in packet["axes"]}
+            with self.assertRaisesRegex(ValueError, "author cannot review"):
+                store.submit_human_review(
+                    packet["vision_review_packet_id"],
+                    {
+                        "reviewer_id": "external-author-1",
+                        "reviewer_kind": "human",
+                        "reviewer_relationship": "independent",
+                        "packet_fingerprint": palamedes_chat._fingerprint(packet),
+                        "preferred": "peer",
+                        "scores_A": scores,
+                        "scores_B": scores,
+                        "rationale": "An author must not validate their own holdout.",
+                        "confidence": 90,
+                    },
+                )
+            with self.assertRaisesRegex(ValueError, "trial budget exhausted"):
+                run_blind_case(
+                    case=case,
+                    ask=ask,
+                    vision_store=VisionStore(root / "visions-second-attempt"),
+                    benchmark_store=store,
+                )
+
+        generator_prompts = [
+            call[-1]["content"]
+            for call in provider.calls
+            if not call[-1]["content"].startswith(
+                ("ROLE: blind_vision_judge", "ROLE: blind_founder_prompt_judge")
+            )
+        ]
+        self.assertEqual(result["case_origin"], "external_human_holdout")
+        self.assertEqual(result["case_fingerprint"], imported["case_fingerprint"])
+        self.assertTrue(imported["custody"]["stored_under_local_state"])
+        self.assertEqual(
+            imported["custody"]["source_repository_status"], "unverified"
+        )
+        self.assertEqual(packet["case_origin"], "external_human_holdout")
+        self.assertTrue(packet["authorship_hidden"])
+        self.assertTrue(
+            all("rotating civic rehearsal" not in prompt for prompt in generator_prompts)
+        )
+
+    def test_external_holdout_failed_generation_consumes_preregistered_trial(self):
+        from palamedes_vision import VisionStore
+        from palamedes_vision_benchmark import (
+            VisionBenchmarkStore,
+            run_blind_case,
+        )
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            store = VisionBenchmarkStore(root / "benchmarks")
+            imported = store.import_holdout_case(
+                {
+                    "case_id": "holdout-failed-generation",
+                    "author_id": "external-author-failure",
+                    "author_kind": "human",
+                    "author_relationship": "independent",
+                    "evaluation_trial_count": 1,
+                    "generator_context": (
+                        "A mature digital product has identity, recurring actions, and "
+                        "social contact, but its next product world is unknown. Originate "
+                        "a durable direction without access to the external author's "
+                        "private mechanism, terminology, or evaluation reference."
+                    ),
+                    "hidden_human_reference": (
+                        "The external author proposes a temporary institution in which "
+                        "ordinary use transfers stewardship of one shared convention, "
+                        "forcing each cohort to inherit, contest, and visibly amend the "
+                        "consequences left by the prior cohort."
+                    ),
+                    "hidden_anchor_terms": [
+                        "temporary institution",
+                        "transfers stewardship",
+                    ],
+                }
+            )
+            case = store.load_holdout_case(imported["case_id"])
+
+            def failing_ask(role, prompt):
+                raise RuntimeError("simulated provider failure")
+
+            with self.assertRaisesRegex(RuntimeError, "provider failure"):
+                run_blind_case(
+                    case=case,
+                    ask=failing_ask,
+                    vision_store=VisionStore(root / "visions"),
+                    benchmark_store=store,
+                )
+            attempts = store.holdout_attempts()
+            self.assertEqual(len(attempts), 1)
+            self.assertEqual(attempts[0]["status"], "started")
+            with self.assertRaisesRegex(ValueError, "trial budget exhausted"):
+                run_blind_case(
+                    case=case,
+                    ask=failing_ask,
+                    vision_store=VisionStore(root / "visions-retry"),
+                    benchmark_store=store,
+                )
+
+    def test_blind_benchmark_fails_original_world_that_omits_core_requirement(self):
+        from palamedes_vision import VisionStore
+        from palamedes_vision_benchmark import (
+            BUILTIN_CASES,
+            VisionBenchmarkStore,
+            run_blind_case,
+        )
+
+        class MissingRequirementJudge(StaticChatProvider):
+            def stream(self, messages):
+                prompt = messages[-1]["content"]
+                if prompt.startswith("ROLE: blind_vision_judge"):
+                    payload = {
+                        "scores": {
+                            "origination": 96,
+                            "conceptual_distance": 93,
+                            "affective_depth": 92,
+                            "mechanism_fusion": 89,
+                            "world_coherence": 94,
+                            "three_year_generativity": 95,
+                            "human_approval_value": 88,
+                        },
+                        "reference_relation": "different_peer",
+                        "generic_feature_pack": False,
+                        "core_requirements_satisfied": False,
+                        "unmet_core_requirements": [
+                            "No coherent reason to pay or virtual-currency mechanism."
+                        ],
+                        "decisive_strength": "The world is highly original.",
+                        "decisive_weakness": "The explicit payment objective is omitted.",
+                        "would_human_likely_approve_exploration": True,
+                        "rationale": "Originality cannot erase a missing core objective.",
+                    }
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        provider = MissingRequirementJudge()
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            result = run_blind_case(
+                case=BUILTIN_CASES[2],
+                ask=ask,
+                vision_store=VisionStore(root / "visions"),
+                benchmark_store=VisionBenchmarkStore(root / "benchmarks"),
+            )
+
+        self.assertFalse(result["passed"])
+        self.assertEqual(
+            result["quality_gate_version"],
+            "palamedes-vision-benchmark-gate/3",
+        )
+        self.assertGreaterEqual(min(result["judgment"]["scores"].values()), 88)
+        self.assertIn("judge_core_requirements_unresolved", result["failure_reasons"])
+
+    def test_repeated_blind_suite_preserves_trials_and_aggregates_diversity(self):
+        from palamedes_vision import VisionStore
+        from palamedes_vision_benchmark import (
+            BUILTIN_CASES,
+            VisionBenchmarkStore,
+            run_blind_suite,
+        )
+
+        generator = StaticChatProvider()
+        judge = StaticChatProvider()
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+
+            def generator_ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    generator,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            def judge_ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    judge,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            benchmark_store = VisionBenchmarkStore(root / "benchmarks")
+            suite = run_blind_suite(
+                cases=[BUILTIN_CASES[0]],
+                runs_per_case=2,
+                ask=generator_ask,
+                judge_ask=judge_ask,
+                vision_store=VisionStore(root / "visions"),
+                benchmark_store=benchmark_store,
+                generator_identity="static:generator",
+                judge_identity="static:independent-judge",
+                suite_id="suite-fixture",
+            )
+            summary = benchmark_store.machine_benchmark_summary()
+            records = [
+                json.loads(path.read_text(encoding="utf-8"))
+                for path in (root / "benchmarks").glob("vision-benchmark-*.json")
+            ]
+            packets = list((root / "benchmarks" / "human-review").glob("*.json"))
+            queue = benchmark_store.human_review_queue()
+            next_packet = benchmark_store.next_human_review_packet()
+            bundle_path = benchmark_store.build_human_review_bundle()
+            bundle = bundle_path.read_text(encoding="utf-8")
+
+        self.assertEqual(suite["run_count"], 2)
+        self.assertEqual(suite["pass_count"], 2)
+        self.assertEqual(len(set(suite["record_ids"])), 2)
+        self.assertEqual(len(packets), 2)
+        self.assertEqual(len(queue), 2)
+        self.assertEqual(queue[0]["response_count"], 0)
+        self.assertIn(next_packet["vision_review_packet_id"], {row["vision_review_packet_id"] for row in queue})
+        self.assertIn("Blind product-vision review", bundle)
+        self.assertIn("packet_fingerprint", bundle)
+        self.assertNotIn("generated_label", bundle)
+        self.assertNotIn("human_reference_label", bundle)
+        self.assertEqual(summary["benchmark_count"], 2)
+        self.assertFalse(summary["human_level_creativity_claim_allowed"])
+        self.assertEqual(summary["current_gate"]["benchmark_count"], 2)
+        self.assertEqual(summary["current_gate"]["pass_rate"], 1.0)
+        self.assertEqual(summary["pass_rate"], 1.0)
+        self.assertEqual(summary["independent_provider_judgment_count"], 2)
+        self.assertEqual(summary["unique_selected_title_count"], 1)
+        self.assertEqual(summary["title_diversity_rate"], 0.5)
+        self.assertEqual(
+            summary["per_case"]["service-wide-hidden-meaning"]["pass_rate"],
+            1.0,
+        )
+        self.assertTrue(
+            all(
+                row["evaluation_custody"]["independent_provider_claimed"]
+                for row in records
+            )
+        )
+        self.assertTrue(all(row["trial_id"].startswith("suite-fixture:") for row in records))
+        desire_prompts = [
+            call[-1]["content"]
+            for call in generator.calls
+            if call[-1]["content"].startswith("ROLE: desire_interpreter")
+        ]
+        self.assertEqual(len(desire_prompts), 2)
+        self.assertTrue(all("Hidden cultural atlas" not in prompt for prompt in desire_prompts))
+
+    def test_chat_exposes_repeated_vision_suite_and_machine_summary(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=StaticChatProvider(),
+                session_id="vision-suite",
+                input_stream=io.StringIO(
+                    "/vision-benchmark-suite collection 2\n"
+                    "/vision-review-bundle\n"
+                    "/vision-benchmark-summary\n/quit\n"
+                ),
+                output=output,
+            )
+            suites = list(
+                (fake.STATE_DIR / "vision-benchmarks" / "suites").glob("*.json")
+            )
+
+        rendered = output.getvalue()
+        self.assertIn("2/2 passed", rendered)
+        self.assertIn("Blind human-review bundle:", rendered)
+        self.assertIn('"benchmark_count": 2', rendered)
+        self.assertIn('"title_diversity_rate": 0.5', rendered)
+        self.assertEqual(len(suites), 1)
+
+    def test_chat_runs_low_cost_scout_without_genesis_or_delivery_authority(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = StaticChatProvider()
+            output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=provider,
+                session_id="vision-scout-benchmark",
+                input_stream=io.StringIO(
+                    "/vision-scout-benchmark collection\n/quit\n"
+                ),
+                output=output,
+            )
+            records = list(
+                (
+                    fake.STATE_DIR
+                    / "vision-benchmarks"
+                    / "scout-benchmarks"
+                ).glob("*.json")
+            )
+            record = json.loads(records[0].read_text(encoding="utf-8"))
+
+        self.assertEqual(len(records), 1)
+        self.assertEqual(len(provider.calls), 4)
+        self.assertIn(
+            "MACHINE PASS (correlated same-provider judge)", output.getvalue()
+        )
+        self.assertIn("authority: blind_human_review only", output.getvalue())
+        self.assertEqual(record["provider_usage"]["generator"]["attempted_calls"], 3)
+        self.assertEqual(record["provider_usage"]["judge"]["attempted_calls"], 1)
+        self.assertFalse(record["full_genesis_authorized"])
+        self.assertFalse(record["delivery_authority_granted"])
+
+    def test_chat_exposes_project_context_scout_without_running_full_genesis(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = StaticChatProvider()
+            output = io.StringIO()
+            command = (
+                "/vision-scout A service needs a durable product direction. "
+                "Find an emotionally meaningful product world.\n"
+            )
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=provider,
+                session_id="project-vision-scout",
+                input_stream=io.StringIO(command + command + "/quit\n"),
+                output=output,
+            )
+
+        rendered = output.getvalue()
+        self.assertEqual(len(provider.calls), 3)
+        self.assertIn("Vision scout: vision-scout-", rendered)
+        self.assertIn("Identical context reused the prior Scout", rendered)
+        self.assertNotIn("Vision genesis:", rendered)
+        self.assertIn("grants neither full Vision Genesis", rendered)
+
+    def test_agenda_ablation_matches_information_and_generation_calls(self):
+        from palamedes_vision_benchmark import (
+            BUILTIN_CASES,
+            VisionBenchmarkStore,
+            run_agenda_ablation,
+        )
+
+        provider = StaticChatProvider()
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            store = VisionBenchmarkStore(root / "benchmarks")
+
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            record = run_agenda_ablation(
+                case=BUILTIN_CASES[0],
+                ask=ask,
+                judge_ask=ask,
+                vision_root=root / "ablation-visions",
+                benchmark_store=store,
+                generator_identity="static:fixture",
+                judge_identity="static:fixture",
+                challenger_condition="frontier",
+                comparator_condition="conventional",
+            )
+            saved_ablation_count = len(
+                list((store.root / "agenda-ablations").glob("*.json"))
+            )
+            attempt_status = store.agenda_ablation_attempts()[0]["status"]
+
+        self.assertEqual(
+            record["condition_call_counts"],
+            {"frontier": 7, "conventional": 7},
+        )
+        self.assertTrue(record["equal_generation_call_count"])
+        self.assertEqual(record["challenger_condition"], "frontier")
+        self.assertEqual(record["comparator_condition"], "conventional")
+        self.assertEqual(record["preferred_condition"], "peer")
+        self.assertEqual(record["claim_scope"], "none")
+        self.assertFalse(record["judge_independent_provider_claimed"])
+        self.assertFalse(record["human_level_creativity_claim_allowed"])
+        self.assertEqual(saved_ablation_count, 1)
+        self.assertEqual(attempt_status, "completed")
+
+    def test_agenda_ablation_failed_generation_consumes_only_trial(self):
+        from palamedes_vision_benchmark import (
+            BUILTIN_CASES,
+            VisionBenchmarkStore,
+            run_agenda_ablation,
+        )
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            store = VisionBenchmarkStore(root / "benchmarks")
+
+            def failing_ask(role, prompt):
+                raise RuntimeError("simulated malformed provider response")
+
+            with self.assertRaisesRegex(RuntimeError, "malformed provider"):
+                run_agenda_ablation(
+                    case=BUILTIN_CASES[1],
+                    ask=failing_ask,
+                    judge_ask=failing_ask,
+                    vision_root=root / "visions",
+                    benchmark_store=store,
+                )
+            attempts = store.agenda_ablation_attempts()
+            self.assertEqual(len(attempts), 1)
+            self.assertEqual(attempts[0]["status"], "failed")
+            self.assertIn("RuntimeError", attempts[0]["error"])
+            with self.assertRaisesRegex(ValueError, "trial budget exhausted"):
+                run_agenda_ablation(
+                    case=BUILTIN_CASES[1],
+                    ask=failing_ask,
+                    judge_ask=failing_ask,
+                    vision_root=root / "visions-retry",
+                    benchmark_store=store,
+                    challenger_condition="conventional",
+                    comparator_condition="adaptive",
+                )
+
+    def test_chat_agenda_ablation_accounts_for_malformed_provider_call(self):
+        class MalformedMeteredProvider:
+            provider_name = "fixture"
+            model = "malformed-metered"
+
+            def __init__(self):
+                self.calls = 0
+                self.last_usage = None
+
+            def stream(self, messages):
+                self.calls += 1
+                self.last_usage = {"input_tokens": 31, "output_tokens": 13}
+                yield '{"questions": [] "missing_comma": true}'
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = MalformedMeteredProvider()
+            output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=provider,
+                session_id="malformed-ablation-custody",
+                input_stream=io.StringIO(
+                    "/vision-agenda-ablation fusion adaptive conventional\n"
+                    "/vision-agenda-ablation fusion conventional adaptive\n"
+                    "/quit\n"
+                ),
+                output=output,
+            )
+            from palamedes_vision_benchmark import VisionBenchmarkStore
+
+            store = VisionBenchmarkStore(fake.STATE_DIR / "vision-benchmarks")
+            attempts = store.agenda_ablation_attempts()
+
+        self.assertEqual(provider.calls, 1)
+        self.assertEqual(len(attempts), 1)
+        self.assertEqual(attempts[0]["status"], "failed")
+        provider_usage = attempts[0]["provider_usage"]
+        self.assertEqual(provider_usage["attempted_calls"], 1)
+        self.assertEqual(provider_usage["metered_calls"], 1)
+        self.assertEqual(provider_usage["totals"]["input_tokens"], 31)
+        custody = provider_usage["roles"][0]["json_custody"]
+        self.assertEqual(custody["status"], "failed")
+        self.assertEqual(custody["parse_mode"], "strict")
+        self.assertIn("trial budget exhausted", output.getvalue())
+
+    def test_chat_single_vision_benchmark_records_generator_and_judge_usage(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=StaticChatProvider(),
+                session_id="vision-metering",
+                input_stream=io.StringIO(
+                    "/vision-benchmark collection\n/quit\n"
+                ),
+                output=output,
+            )
+            record_path = next(
+                (fake.STATE_DIR / "vision-benchmarks").glob(
+                    "vision-benchmark-*.json"
+                )
+            )
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+
+        usage = record["provider_usage"]
+        self.assertEqual(usage["generator"]["attempted_calls"], 7)
+        self.assertEqual(usage["judge"]["attempted_calls"], 2)
+        self.assertEqual(usage["attempted_calls"], 9)
+        self.assertEqual(usage["metered_calls"], 0)
+        self.assertEqual(usage["unmetered_calls"], 9)
+        self.assertIn("PASS", output.getvalue())
+        self.assertIn("correlated same-provider judge", output.getvalue())
+
+    def test_chat_agenda_ablation_records_full_call_cost_custody(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=StaticChatProvider(),
+                session_id="agenda-ablation-metering",
+                input_stream=io.StringIO(
+                    "/vision-agenda-ablation collection\n/quit\n"
+                ),
+                output=output,
+            )
+            path = next(
+                (
+                    fake.STATE_DIR
+                    / "vision-benchmarks"
+                    / "agenda-ablations"
+                ).glob("*.json")
+            )
+            record = json.loads(path.read_text(encoding="utf-8"))
+
+        usage = record["provider_usage"]
+        self.assertEqual(usage["attempted_calls"], 15)
+        self.assertEqual(usage["metered_calls"], 0)
+        self.assertEqual(usage["unmetered_calls"], 15)
+        self.assertEqual(len(usage["roles"]), 15)
+        self.assertIn("peer", output.getvalue())
+
+    def test_chat_imports_fingerprinted_model_review_without_human_claim(self):
+        from palamedes_vision import VisionStore, fingerprint
+        from palamedes_vision_benchmark import (
+            BUILTIN_CASES,
+            VisionBenchmarkStore,
+            run_blind_case,
+        )
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = StaticChatProvider()
+
+            def ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            benchmark_store = VisionBenchmarkStore(
+                fake.STATE_DIR / "vision-benchmarks"
+            )
+            result = run_blind_case(
+                case=BUILTIN_CASES[0],
+                ask=ask,
+                vision_store=VisionStore(fake.STATE_DIR / "visions"),
+                benchmark_store=benchmark_store,
+            )
+            packet = benchmark_store.next_human_review_packet()
+            scores = {axis: 75 for axis in packet["axes"]}
+            response_path = Path(tempdir) / "model-review.json"
+            response_path.write_text(
+                json.dumps(
+                    {
+                        "vision_review_packet_id": packet["vision_review_packet_id"],
+                        "packet_fingerprint": fingerprint(packet),
+                        "reviewer_id": "model-reviewer",
+                        "reviewer_kind": "model",
+                        "reviewer_relationship": "unknown",
+                        "preferred": "peer",
+                        "scores_A": scores,
+                        "scores_B": scores,
+                        "rationale": "A model smoke response is not human evidence.",
+                        "confidence": 70,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=StaticChatProvider(),
+                session_id="vision-import",
+                input_stream=io.StringIO(
+                    f"/vision-review-import {response_path}\n/quit\n"
+                ),
+                output=output,
+            )
+            summary = benchmark_store.human_review_summary()
+
+        self.assertTrue(result["passed"])
+        self.assertIn("Human vision review imported: peer", output.getvalue())
+        self.assertEqual(summary["review_count"], 0)
+        self.assertEqual(summary["model_or_unattested_review_count"], 1)
+        self.assertFalse(summary["independent_human_evidence_available"])
+
+    def test_later_vision_wake_receives_prior_frontier_as_novelty_exclusion(self):
+        from palamedes_vision import VisionStore, run_vision_genesis
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            store = VisionStore(Path(tempdir) / "visions")
+            first_provider = StaticChatProvider()
+
+            def first_ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    first_provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            first = run_vision_genesis(
+                ask=first_ask, store=store, context="Initial product context"
+            )
+            second_provider = StaticChatProvider()
+
+            def second_ask(role, prompt):
+                return palamedes_chat._provider_json(
+                    second_provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                )
+
+            second = run_vision_genesis(
+                ask=second_ask, store=store, context="Changed product context"
+            )
+
+        self.assertEqual(
+            second["prior_vision_ids_considered"], [first["vision_genesis_id"]]
+        )
+        self.assertTrue(
+            all(
+                "Hidden cultural atlas" in call[-1]["content"]
+                for call in second_provider.calls[:-1]
+            )
+        )
+
+    def test_speculative_vision_cannot_select_full_build(self):
+        from palamedes_vision import VisionStore, run_vision_genesis
+
+        class OverbuildProvider(StaticChatProvider):
+            def stream(self, messages):
+                if messages[-1]["content"].startswith("ROLE: vision_reality_governor"):
+                    payload = json.loads("".join(super().stream(messages)))
+                    payload["selected_alternative"] = "full_build"
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        provider = OverbuildProvider()
+
+        def ask(role, prompt):
+            return palamedes_chat._provider_json(
+                provider,
+                system=f"ROLE: {role}",
+                prompt=f"ROLE: {role}\n{prompt}",
+            )
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            with self.assertRaisesRegex(ValueError, "cannot authorize a full build"):
+                run_vision_genesis(
+                    ask=ask,
+                    store=VisionStore(Path(tempdir) / "visions"),
+                    context="A speculative product possibility",
+                )
+
+    def test_speculative_vision_lineage_blocks_product_scale_delivery(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                store = palamedes_chat.MissionStore(
+                    isolated.STATE_DIR / "missions"
+                )
+                payload = StaticChatProvider._mission_payload()
+                payload["work_scale"] = "product"
+                contract = palamedes_chat.validate_mission_draft(payload)
+                contract["vision_lineage"] = {
+                    "vision_genesis_id": "vision-genesis-aaaaaaaaaaaa",
+                    "evidence_maturity": "speculative",
+                    "selected_alternative": "manual_probe",
+                    "renewal_evidence": ["five users seek a second session"],
+                    "kill_criteria": ["no voluntary return"],
+                    "debt_guard": "no production persistence",
+                    "scale_guard": "five users",
+                    "delivery_authority_granted": False,
+                }
+                with self.assertRaisesRegex(ValueError, "product-scale delivery"):
+                    palamedes_chat.approve_mission(
+                        isolated, store, contract, "vision-scale-test"
+                    )
+
     def test_repeated_micro_delivery_without_product_purpose_is_blocked(self):
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
@@ -389,6 +2976,271 @@ class PalamedesChatTests(unittest.TestCase):
 
         self.assertEqual(approved["contract"]["status"], "approved")
 
+    def test_automatic_vision_wake_receives_product_ground_truth_and_capabilities(self):
+        from palamedes_product_alignment import ProductAlignmentStore
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            alignment = ProductAlignmentStore(
+                fake.STATE_DIR / "product-alignment"
+            )
+            alignment.record_purpose(
+                purpose_id="purpose-online-multiplayer",
+                statement="Games are online multiplayer experiences, not local pass-and-play.",
+                source_ids=["user-product-brief"],
+                surface_key="games",
+            )
+            alignment.record_capability(
+                capability_id="capability-rust-realtime",
+                statement="An authoritative Rust realtime room runtime already exists.",
+                source_ids=["services/game-realtime"],
+                surface_key="games",
+            )
+            alignment.record_integration_gap(
+                gap_id="gap-local-game-bypass",
+                surface_key="games",
+                expected_capability_id="capability-rust-realtime",
+                observed_path="mobile/local_game_screen",
+                evidence_ids=["route-audit"],
+            )
+            provider = StaticChatProvider()
+            output = io.StringIO()
+            palamedes_chat.run_chat(
+                palamedes_module=fake,
+                provider=provider,
+                session_id="vision-product-ground-truth",
+                input_stream=io.StringIO(
+                    "/cycle improve the game product without assuming greenfield work\n"
+                    "/quit\n"
+                ),
+                output=output,
+            )
+            contracts = list((fake.STATE_DIR / "missions").glob("mission-*.json"))
+            contract = json.loads(contracts[0].read_text(encoding="utf-8"))
+            from palamedes_vision import VisionStore
+
+            vision_store = VisionStore(fake.STATE_DIR / "visions")
+            self.assertFalse(
+                vision_store.needs_wake(
+                    0,
+                    palamedes_chat._fingerprint(alignment.active_context()),
+                )
+            )
+            aligned_payload = StaticChatProvider._mission_payload()
+            aligned_payload["work_scale"] = "micro"
+            aligned_payload["surface_key"] = "games"
+            aligned_payload["product_alignment_response"] = {
+                "purposes": [
+                    {
+                        "purpose_id": "purpose-online-multiplayer",
+                        "effect": "advances",
+                        "rationale": (
+                            "The probe keeps online multiplayer as the product "
+                            "invariant instead of polishing a local substitute."
+                        ),
+                    }
+                ],
+                "capability_reuse": {
+                    "relevant_capability_ids": ["capability-rust-realtime"],
+                    "decision": "extend",
+                    "rejection_evidence_ids": [],
+                    "rationale": (
+                        "Extend the existing authoritative runtime rather than "
+                        "creating a parallel room system."
+                    ),
+                },
+                "integration_gaps": [
+                    {
+                        "gap_id": "gap-local-game-bypass",
+                        "action": "audit",
+                        "rationale": (
+                            "Trace the smallest command and state boundary needed "
+                            "to remove the local bypass."
+                        ),
+                    }
+                ],
+                "constraint_review": {
+                    "reviewed_constraint_ids": [],
+                    "rationale": "No active temporary constraint applies.",
+                },
+                "stage_claim": {
+                    "advances_stage": False,
+                    "target_stage": "",
+                    "journey_evidence_ids": [],
+                },
+            }
+            aligned_contract = palamedes_chat.validate_mission_draft(
+                aligned_payload
+            )
+            aligned_contract["vision_lineage"] = json.loads(
+                json.dumps(contract["vision_lineage"])
+            )
+            fake.add_evidence = lambda plan, claim, source, confidence, axis, metadata=None: (
+                plan.setdefault(axis, []).append(
+                    {
+                        "claim": claim,
+                        "source": source,
+                        "confidence": confidence,
+                        "metadata": metadata or {},
+                    }
+                )
+            )
+            fake.mutate_plan_state = lambda apply, **_: apply(fake.load_plan())
+            approved = palamedes_chat.approve_mission(
+                fake,
+                palamedes_chat.MissionStore(fake.STATE_DIR / "missions"),
+                aligned_contract,
+                "aligned-vision-test",
+            )
+            self.assertEqual(approved["contract"]["status"], "approved")
+            mission_store = palamedes_chat.MissionStore(
+                fake.STATE_DIR / "missions"
+            )
+            palamedes_chat.record_mission_outcome(
+                fake,
+                mission_store,
+                approved["contract"],
+                "mixed",
+                "The first bounded probe produced ambiguous behavioral evidence.",
+            )
+            self.assertTrue(
+                vision_store.needs_wake(
+                    1,
+                    palamedes_chat._fingerprint(alignment.active_context()),
+                )
+            )
+            with self.assertRaisesRegex(ValueError, "outcome budget exhausted"):
+                palamedes_chat.approve_mission(
+                    fake,
+                    mission_store,
+                    aligned_contract,
+                    "exhausted-vision-test",
+                )
+            alignment.record_capability(
+                capability_id="capability-rust-realtime",
+                statement="The authoritative runtime changed its command contract.",
+                source_ids=["services/game-realtime-v2"],
+                surface_key="games",
+            )
+            self.assertTrue(
+                vision_store.needs_wake(
+                    0,
+                    palamedes_chat._fingerprint(alignment.active_context()),
+                )
+            )
+            with self.assertRaisesRegex(ValueError, "vision lineage is stale"):
+                palamedes_chat.approve_mission(
+                    fake,
+                    palamedes_chat.MissionStore(fake.STATE_DIR / "missions"),
+                    contract,
+                    "stale-vision-test",
+                )
+
+        desire_prompt = next(
+            call[-1]["content"]
+            for call in provider.calls
+            if call[-1]["content"].startswith("ROLE: desire_interpreter")
+        )
+        self.assertIn("purpose-online-multiplayer", desire_prompt)
+        self.assertIn("capability-rust-realtime", desire_prompt)
+        self.assertIn("gap-local-game-bypass", desire_prompt)
+        self.assertIn("Product invariants outrank", desire_prompt)
+        self.assertIn("Vision wake:", output.getvalue())
+        self.assertEqual(len(contracts), 1)
+        self.assertIn("vision_lineage", contract)
+        self.assertTrue(contract["vision_lineage"]["requirement_gate_passed"])
+        self.assertEqual(
+            len(contract["vision_lineage"]["product_ground_truth_fingerprint"]),
+            64,
+        )
+
+    def test_measured_investment_exhausts_vision_before_outcome_count_limit(self):
+        from palamedes_product_alignment import ProductAlignmentStore
+        from palamedes_vision import VisionStore
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            fake.add_evidence = lambda plan, claim, source, confidence, axis, metadata=None: (
+                plan.setdefault(axis, []).append({"claim": claim})
+            )
+            fake.mutate_plan_state = lambda apply, **_: apply(fake.load_plan())
+            mission_store = palamedes_chat.MissionStore(
+                fake.STATE_DIR / "missions"
+            )
+            alignment = ProductAlignmentStore(
+                fake.STATE_DIR / "product-alignment"
+            )
+            alignment_fingerprint = palamedes_chat._fingerprint(
+                alignment.active_context()
+            )
+            envelope = {
+                "evidence_maturity": "behavioral",
+                "selected_alternative": "manual_probe",
+                "max_outcomes_before_reassessment": 2,
+                "engineering_days_high": 1,
+                "ai_cost_high": 10,
+                "monthly_infrastructure_high": 5,
+                "budget_exhaustion_action": "regenerate_vision",
+            }
+            payload = StaticChatProvider._mission_payload()
+            payload["work_scale"] = "micro"
+            contract = palamedes_chat.validate_mission_draft(payload)
+            contract["vision_lineage"] = {
+                "vision_genesis_id": "vision-genesis-aaaaaaaaaaaa",
+                "delivery_authority_granted": False,
+                "evidence_maturity": "behavioral",
+                "selected_alternative": "manual_probe",
+                "requirement_gate_passed": True,
+                "product_ground_truth_fingerprint": alignment_fingerprint,
+                "investment_envelope": envelope,
+            }
+            approved = palamedes_chat.approve_mission(
+                fake, mission_store, contract, "measured-investment"
+            )["contract"]
+            palamedes_chat.record_mission_outcome(
+                fake,
+                mission_store,
+                approved,
+                "mixed",
+                "The first probe used the entire engineering allocation.",
+                {
+                    "engineering_days": 1,
+                    "ai_cost": 2,
+                    "input_tokens": 1000,
+                    "output_tokens": 200,
+                    "monthly_infrastructure": 0,
+                    "evidence_source": "measured",
+                    "notes": "Time log and provider usage export.",
+                },
+            )
+            summary = mission_store.vision_investment_summary(
+                "vision-genesis-aaaaaaaaaaaa"
+            )
+            self.assertEqual(summary["engineering_days"], 1)
+            self.assertEqual(summary["input_tokens"], 1000)
+            self.assertEqual(summary["measured_outcome_count"], 1)
+            self.assertEqual(summary["missing_measurement_count"], 0)
+
+            vision_store = VisionStore(fake.STATE_DIR / "visions")
+            vision_store.save(
+                {
+                    "vision_genesis_id": "vision-genesis-aaaaaaaaaaaa",
+                    "product_ground_truth_fingerprint": alignment_fingerprint,
+                    "outcome_count_at_creation": 0,
+                    "investment_envelope": envelope,
+                    "created_at": "2026-01-01T00:00:00+00:00",
+                }
+            )
+            self.assertTrue(
+                vision_store.needs_wake(1, alignment_fingerprint, summary)
+            )
+            with self.assertRaisesRegex(
+                ValueError, "actual investment budget exhausted"
+            ):
+                palamedes_chat.approve_mission(
+                    fake, mission_store, contract, "measured-investment-2"
+                )
+
     def test_provider_scalar_normalization_repairs_only_unambiguous_types(self):
         normalized = palamedes_chat._normalize_provider_scalars(
             {
@@ -403,6 +3255,64 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertFalse(normalized["followup_required"])
         self.assertEqual(normalized["claim"], "90")
         self.assertEqual(normalized["nested"][0]["exploration_value"], 64)
+
+    def test_provider_json_records_meaning_preserving_envelope_custody(self):
+        class EnvelopeProvider:
+            provider_name = "fixture"
+            model = "envelope"
+            last_usage = {"input_tokens": 10, "output_tokens": 5}
+
+            def stream(self, messages):
+                yield 'Preface\n```json\n{"claim":"brace } in string",}\n```\nAfterword'
+
+        provider = EnvelopeProvider()
+        payload = palamedes_chat._provider_json(
+            provider, system="return JSON", prompt="test"
+        )
+        usage = palamedes_chat._capture_provider_usage(provider, "test_role")
+
+        self.assertEqual(payload, {"claim": "brace } in string"})
+        self.assertEqual(usage["json_custody"]["status"], "parsed")
+        self.assertEqual(
+            usage["json_custody"]["parse_mode"], "trailing_comma_normalized"
+        )
+        self.assertEqual(
+            usage["json_custody"]["transforms"],
+            ["text_envelope", "removed_structural_trailing_commas:1"],
+        )
+        self.assertEqual(len(usage["json_custody"]["raw_sha256"]), 64)
+        self.assertNotIn("raw", usage["json_custody"])
+
+    def test_provider_json_does_not_guess_ambiguous_missing_comma(self):
+        class MalformedProvider:
+            provider_name = "fixture"
+            model = "malformed"
+            last_usage = {"input_tokens": 20, "output_tokens": 8}
+
+            def stream(self, messages):
+                yield '{"first": 1 "second": 2}'
+
+        provider = MalformedProvider()
+        with self.assertRaisesRegex(
+            palamedes_chat.ProviderJSONError,
+            "mission response must be one JSON object",
+        ):
+            palamedes_chat._provider_json(
+                provider, system="return JSON", prompt="test"
+            )
+        usage = palamedes_chat._capture_provider_usage(provider, "failed_role")
+
+        self.assertEqual(usage["json_custody"]["status"], "failed")
+        self.assertEqual(usage["json_custody"]["parse_mode"], "strict")
+        self.assertEqual(usage["json_custody"]["transforms"], [])
+        self.assertIn("JSONDecodeError", usage["json_custody"]["error"])
+        self.assertEqual(usage["custody"], "provider_reported")
+
+    def test_provider_json_rejects_multiple_objects_in_text_envelope(self):
+        with self.assertRaisesRegex(
+            palamedes_chat.ProviderJSONError, "more than one or an ambiguous"
+        ):
+            palamedes_chat._extract_json_object('{"first": 1}\n{"second": 2}')
 
     def test_required_fresh_eyes_agenda_blocks_micro_reentry_until_addressed(self):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -710,6 +3620,13 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertEqual(
             [call[-1]["content"].splitlines()[0] for call in provider.calls],
             [
+                "ROLE: vision_agenda_architect",
+                "ROLE: desire_interpreter",
+                "ROLE: distant_analogy_explorer",
+                "ROLE: mechanism_fusion_inventor",
+                "ROLE: product_world_builder",
+                "ROLE: maniac_critic_and_vision_author",
+                "ROLE: vision_reality_governor",
                 "ROLE: interpreter",
                 "ROLE: inventor",
                 "ROLE: adversary",

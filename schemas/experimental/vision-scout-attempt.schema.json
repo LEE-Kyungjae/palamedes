@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-scout-attempt.schema.json",
+  "title": "Palamedes Vision Scout One-Shot Attempt",
+  "type": "object",
+  "required": [
+    "vision_scout_attempt_version", "attempt_id", "attempt_key", "case_id",
+    "generator_context_fingerprint", "status", "started_at"
+  ],
+  "properties": {
+    "vision_scout_attempt_version": {"const": "palamedes-vision-scout-attempt/1"},
+    "attempt_id": {"type": "string", "pattern": "^vision-scout-attempt-[a-f0-9]{12}$"},
+    "attempt_key": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "case_id": {"type": "string", "minLength": 1},
+    "generator_context_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "status": {"enum": ["started", "completed"]},
+    "started_at": {"type": "string", "minLength": 1},
+    "vision_scout_benchmark_id": {"type": "string", "pattern": "^vision-scout-benchmark-[a-f0-9]{12}$"},
+    "completed_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

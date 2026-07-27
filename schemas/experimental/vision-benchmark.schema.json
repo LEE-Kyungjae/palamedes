@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-benchmark.schema.json",
+  "title": "Palamedes Blinded Vision Benchmark",
+  "type": "object",
+  "required": [
+    "vision_benchmark_version",
+    "vision_benchmark_id",
+    "case_id",
+    "case_origin",
+    "case_fingerprint",
+    "generator_context_fingerprint",
+    "hidden_reference_fingerprint",
+    "hidden_anchors_verified_absent",
+    "vision_genesis_id",
+    "judgment",
+    "founder_prompt_fingerprint",
+    "founder_prompt_judgment",
+    "founder_prompt_thresholds",
+    "founder_prompt_gate_passed",
+    "thresholds",
+    "passed",
+    "created_at"
+  ],
+  "properties": {
+    "vision_benchmark_version": {"const": "palamedes-vision-benchmark/1"},
+    "vision_benchmark_id": {"type": "string", "pattern": "^vision-benchmark-[a-f0-9]{12}$"},
+    "case_id": {"type": "string", "minLength": 1},
+    "case_origin": {"enum": ["calibration_builtin", "external_human_holdout"]},
+    "case_fingerprint": {"type": "string"},
+    "trial_id": {"type": "string"},
+    "generator_context_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "hidden_reference_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "hidden_anchors_verified_absent": {"const": true},
+    "evaluation_custody": {
+      "type": "object",
+      "required": ["generator_identity", "judge_identity", "independent_provider_claimed"],
+      "properties": {
+        "generator_identity": {"type": "string", "minLength": 1},
+        "judge_identity": {"type": "string", "minLength": 1},
+        "independent_provider_claimed": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "vision_genesis_id": {"type": "string", "minLength": 1},
+    "selected_title": {"type": "string"},
+    "quality_gate_version": {"enum": ["palamedes-vision-benchmark-gate/3"]},
+    "genesis_requirement_gate_passed": {"type": "boolean"},
+    "human_review_packet_id": {"type": "string", "pattern": "^vision-review-[a-f0-9]{12}$"},
+    "judgment": {"type": "object"},
+    "founder_prompt_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "founder_prompt_judgment": {"type": "object"},
+    "founder_prompt_thresholds": {"type": "object"},
+    "founder_prompt_gate_passed": {"type": "boolean"},
+    "thresholds": {"type": "object"},
+    "passed": {"type": "boolean"},
+    "failure_reasons": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "provider_usage": {
+      "type": "object",
+      "required": ["generator", "judge", "attempted_calls", "metered_calls", "unmetered_calls"],
+      "properties": {
+        "generator": {"type": "object"},
+        "judge": {"type": "object"},
+        "attempted_calls": {"type": "integer", "minimum": 0},
+        "metered_calls": {"type": "integer", "minimum": 0},
+        "unmetered_calls": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

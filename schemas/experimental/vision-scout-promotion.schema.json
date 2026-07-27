@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-scout-promotion.schema.json",
+  "title": "Palamedes Vision Scout to Full Genesis Promotion",
+  "type": "object",
+  "required": [
+    "vision_scout_promotion_version", "vision_scout_promotion_id",
+    "vision_scout_id", "vision_genesis_id", "promotion_gate",
+    "full_genesis_authorized", "delivery_authority_granted", "promoted_at"
+  ],
+  "properties": {
+    "vision_scout_promotion_version": {"const": "palamedes-vision-scout-promotion/1"},
+    "vision_scout_promotion_id": {"type": "string", "pattern": "^vision-scout-promotion-[a-f0-9]{12}$"},
+    "vision_scout_id": {"type": "string", "pattern": "^vision-scout-[a-f0-9]{12}$"},
+    "vision_genesis_id": {"type": "string", "pattern": "^vision-genesis-[a-f0-9]{12}$"},
+    "promotion_gate": {"type": "object"},
+    "full_genesis_authorized": {"const": true},
+    "delivery_authority_granted": {"const": false},
+    "promoted_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

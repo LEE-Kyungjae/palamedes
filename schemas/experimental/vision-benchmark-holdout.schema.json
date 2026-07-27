@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-benchmark-holdout.schema.json",
+  "title": "Palamedes External Vision Benchmark Holdout",
+  "type": "object",
+  "required": [
+    "vision_benchmark_holdout_version",
+    "case_id",
+    "case_origin",
+    "case_fingerprint",
+    "author_id",
+    "author_kind",
+    "author_relationship",
+    "evaluation_trial_count",
+    "generator_context",
+    "hidden_human_reference",
+    "hidden_anchor_terms",
+    "custody",
+    "imported_at"
+  ],
+  "properties": {
+    "vision_benchmark_holdout_version": {"const": "palamedes-vision-benchmark-holdout/1"},
+    "case_id": {"type": "string", "pattern": "^holdout-[a-z0-9][a-z0-9-]{2,63}$"},
+    "case_origin": {"const": "external_human_holdout"},
+    "case_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "author_id": {"type": "string", "minLength": 1},
+    "author_kind": {"const": "human"},
+    "author_relationship": {"const": "independent"},
+    "evaluation_trial_count": {"type": "integer", "minimum": 1, "maximum": 3},
+    "generator_context": {"type": "string", "minLength": 120},
+    "hidden_human_reference": {"type": "string", "minLength": 120},
+    "hidden_anchor_terms": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 1}},
+    "custody": {
+      "type": "object",
+      "required": ["stored_under_local_state", "source_repository_status", "generator_reference_access", "author_independence_identity_verified"],
+      "properties": {
+        "stored_under_local_state": {"const": true},
+        "source_repository_status": {"const": "unverified"},
+        "generator_reference_access": {"const": false},
+        "author_independence_identity_verified": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "imported_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

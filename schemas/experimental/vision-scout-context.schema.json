@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-scout-context.schema.json",
+  "title": "Palamedes Private Vision Scout Context",
+  "type": "object",
+  "required": ["vision_scout_context_version", "vision_scout_id", "context", "context_fingerprint", "stored_at"],
+  "properties": {
+    "vision_scout_context_version": {"const": "palamedes-vision-scout-context/1"},
+    "vision_scout_id": {"type": "string", "pattern": "^vision-scout-[a-f0-9]{12}$"},
+    "context": {"type": "string", "minLength": 1},
+    "context_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "stored_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

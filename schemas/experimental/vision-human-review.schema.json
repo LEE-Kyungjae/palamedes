@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-human-review.schema.json",
+  "title": "Palamedes Blind Human Vision Review Packet",
+  "type": "object",
+  "required": ["vision_review_packet_version", "vision_review_packet_id", "case_id", "case_origin", "case_fingerprint", "generator_context", "evaluation_artifact", "source_artifact_type", "source_artifact_id", "instructions", "options", "axes", "response_shape", "authorship_hidden", "created_at"],
+  "properties": {
+    "vision_review_packet_version": {"const": "palamedes-vision-human-review/1"},
+    "vision_review_packet_id": {"type": "string", "pattern": "^vision-review-[a-f0-9]{12}$"},
+    "case_id": {"type": "string", "minLength": 1},
+    "case_origin": {"enum": ["calibration_builtin", "external_human_holdout"]},
+    "case_fingerprint": {"type": "string"},
+    "trial_id": {"type": "string"},
+    "generator_context": {"type": "string", "minLength": 1},
+    "evaluation_artifact": {"const": "founder_prompt"},
+    "source_artifact_type": {"enum": ["vision_genesis", "vision_scout"]},
+    "source_artifact_id": {"type": "string", "minLength": 1},
+    "instructions": {"type": "string", "minLength": 1},
+    "options": {
+      "type": "object",
+      "required": ["A", "B"],
+      "properties": {"A": {"type": "string", "minLength": 1}, "B": {"type": "string", "minLength": 1}},
+      "additionalProperties": false
+    },
+    "axes": {"type": "array", "minItems": 7, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "response_shape": {"type": "object"},
+    "authorship_hidden": {"const": true},
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

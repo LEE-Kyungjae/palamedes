@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-human-response.schema.json",
+  "title": "Palamedes Blind Human Vision Response",
+  "type": "object",
+  "required": ["vision_human_response_version", "vision_human_response_id", "vision_review_packet_id", "packet_fingerprint", "evaluation_artifact", "reviewer_id", "reviewer_kind", "reviewer_relationship", "preferred", "scores_A", "scores_B", "rationale", "confidence", "submitted_at"],
+  "properties": {
+    "vision_human_response_version": {"const": "palamedes-vision-human-response/1"},
+    "vision_human_response_id": {"type": "string", "pattern": "^vision-human-review-[a-f0-9]{12}$"},
+    "vision_review_packet_id": {"type": "string", "pattern": "^vision-review-[a-f0-9]{12}$"},
+    "packet_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "case_id": {"type": "string"},
+    "case_origin": {"enum": ["calibration_builtin", "external_human_holdout"]},
+    "case_fingerprint": {"type": "string"},
+    "trial_id": {"type": "string"},
+    "evaluation_artifact": {"const": "founder_prompt"},
+    "source_artifact_type": {"enum": ["vision_genesis", "vision_scout"]},
+    "source_artifact_id": {"type": "string"},
+    "reviewer_id": {"type": "string", "minLength": 1},
+    "reviewer_kind": {"enum": ["human", "model"]},
+    "reviewer_relationship": {"enum": ["independent", "team", "author", "unknown"]},
+    "reviewer_is_case_author": {"type": "boolean"},
+    "preferred": {"enum": ["A", "B", "peer", "neither"]},
+    "scores_A": {"$ref": "#/$defs/scores"},
+    "scores_B": {"$ref": "#/$defs/scores"},
+    "rationale": {"type": "string", "minLength": 1},
+    "confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+    "submitted_at": {"type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "scores": {
+      "type": "object",
+      "required": ["origination", "conceptual_distance", "affective_depth", "mechanism_fusion", "world_coherence", "three_year_generativity", "human_approval_value"],
+      "additionalProperties": {"type": "integer", "minimum": 0, "maximum": 100}
+    }
+  },
+  "additionalProperties": false
+}

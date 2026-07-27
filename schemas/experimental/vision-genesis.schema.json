@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-genesis.schema.json",
+  "title": "Palamedes Vision Genesis",
+  "type": "object",
+  "required": [
+    "vision_genesis_version",
+    "vision_genesis_id",
+    "status",
+    "context_fingerprint",
+    "agenda_strategy",
+    "exploration_agenda",
+    "desire_interpretation",
+    "distant_analogies",
+    "mechanism_fusions",
+    "product_worlds",
+    "judgment",
+    "investment_envelope",
+    "delivery_authority_granted",
+    "created_at"
+  ],
+  "properties": {
+    "vision_genesis_version": {"const": "palamedes-vision-genesis/3"},
+    "vision_genesis_id": {"type": "string", "pattern": "^vision-genesis-[a-f0-9]{12}$"},
+    "status": {"enum": ["selected", "incubate_all", "reject_all", "blocked_core_requirements"]},
+    "context_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "agenda_strategy": {"enum": ["adaptive", "frontier", "conventional"]},
+    "product_ground_truth_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "outcome_count_at_creation": {"type": "integer", "minimum": 0},
+    "prior_vision_ids_considered": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "exploration_agenda": {
+      "type": "object",
+      "required": ["questions", "selected_question_ids", "selection_reason", "agenda_is_advisory"],
+      "properties": {
+        "questions": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "required": [
+              "question_id",
+              "question_mode",
+              "self_authored_research_prompt",
+              "assumption_reversed",
+              "human_behavior_to_explain",
+              "why_the_obvious_question_is_too_small",
+              "search_territories",
+              "forbidden_default_answers",
+              "disconfirming_observation"
+            ],
+            "properties": {
+              "question_id": {"type": "string", "minLength": 1},
+              "question_mode": {"enum": ["frontier", "conventional", "bridge"]},
+              "self_authored_research_prompt": {"type": "string", "minLength": 1},
+              "assumption_reversed": {"type": "string", "minLength": 1},
+              "human_behavior_to_explain": {"type": "string", "minLength": 1},
+              "why_the_obvious_question_is_too_small": {"type": "string", "minLength": 1},
+              "search_territories": {"type": "array", "minItems": 3, "items": {"type": "string", "minLength": 1}},
+              "forbidden_default_answers": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 1}},
+              "disconfirming_observation": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
+        "selected_question_ids": {"type": "array", "minItems": 2, "maxItems": 3, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "selection_reason": {"type": "string", "minLength": 1},
+        "agenda_is_advisory": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "desire_interpretation": {"type": "object"},
+    "distant_analogies": {"type": "object"},
+    "mechanism_fusions": {"type": "object"},
+    "product_worlds": {"type": "object"},
+    "judgment": {
+      "type": "object",
+      "required": ["founder_prompt"],
+      "properties": {
+        "founder_prompt": {"type": "string", "minLength": 180, "maxLength": 1200}
+      }
+    },
+    "requirement_gate": {
+      "type": "object",
+      "required": ["passed", "unresolved_core_requirement_ids"],
+      "properties": {
+        "passed": {"type": "boolean"},
+        "unresolved_core_requirement_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "investment_judgment": {"type": "object"},
+    "investment_envelope": {
+      "type": "object",
+      "required": [
+        "evidence_maturity",
+        "selected_alternative",
+        "max_outcomes_before_reassessment",
+        "engineering_days_high",
+        "ai_cost_high",
+        "monthly_infrastructure_high",
+        "budget_exhaustion_action"
+      ],
+      "properties": {
+        "evidence_maturity": {"enum": ["speculative", "behavioral", "demand", "revenue"]},
+        "selected_alternative": {"type": "string", "minLength": 1},
+        "max_outcomes_before_reassessment": {"type": "integer", "minimum": 1, "maximum": 5},
+        "engineering_days_high": {"type": "integer", "minimum": 0},
+        "ai_cost_high": {"type": "integer", "minimum": 0},
+        "monthly_infrastructure_high": {"type": "integer", "minimum": 0},
+        "budget_exhaustion_action": {"const": "regenerate_vision"}
+      },
+      "additionalProperties": false
+    },
+    "provider_usage": {
+      "type": "object",
+      "required": [
+        "provider",
+        "model",
+        "attempted_calls",
+        "metered_calls",
+        "unmetered_calls",
+        "totals",
+        "roles"
+      ],
+      "properties": {
+        "provider": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "attempted_calls": {"type": "integer", "minimum": 0},
+        "metered_calls": {"type": "integer", "minimum": 0},
+        "unmetered_calls": {"type": "integer", "minimum": 0},
+        "totals": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "roles": {"type": "array", "items": {"type": "object"}}
+      },
+      "additionalProperties": false
+    },
+    "delivery_authority_granted": {"const": false},
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

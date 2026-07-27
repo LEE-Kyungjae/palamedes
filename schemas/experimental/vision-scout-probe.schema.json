@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-scout-probe.schema.json",
+  "title": "Palamedes Preregistered Vision Scout Probe",
+  "type": "object",
+  "required": [
+    "vision_scout_probe_version", "probe_id", "vision_scout_id", "hypothesis",
+    "metric_name", "success_operator", "threshold", "minimum_sample_size",
+    "max_duration_days", "data_source", "status", "registered_at"
+  ],
+  "properties": {
+    "vision_scout_probe_version": {"const": "palamedes-vision-scout-probe/1"},
+    "probe_id": {"type": "string", "pattern": "^vision-scout-probe-[a-f0-9]{12}$"},
+    "vision_scout_id": {"type": "string", "pattern": "^vision-scout-[a-f0-9]{12}$"},
+    "hypothesis": {"type": "string", "minLength": 1},
+    "metric_name": {"type": "string", "minLength": 1},
+    "success_operator": {"enum": ["gt", "gte", "lt", "lte"]},
+    "threshold": {"type": "number"},
+    "minimum_sample_size": {"type": "integer", "minimum": 5},
+    "max_duration_days": {"type": "integer", "minimum": 1, "maximum": 30},
+    "data_source": {"type": "string", "minLength": 1},
+    "status": {"const": "preregistered"},
+    "registered_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

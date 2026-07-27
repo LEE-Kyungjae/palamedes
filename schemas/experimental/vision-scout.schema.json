@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-scout.schema.json",
+  "title": "Palamedes Low-Cost Vision Scout",
+  "type": "object",
+  "required": [
+    "vision_scout_version", "vision_scout_id", "status", "context_fingerprint",
+    "originator", "critique", "governor", "selected_founder_prompt",
+    "unresolved_core_requirement_ids", "generation_call_count",
+    "full_genesis_authorized", "delivery_authority_granted", "created_at"
+  ],
+  "properties": {
+    "vision_scout_version": {"enum": ["palamedes-vision-scout/1", "palamedes-vision-scout/2", "palamedes-vision-scout/3", "palamedes-vision-scout/4"]},
+    "vision_scout_id": {"type": "string", "pattern": "^vision-scout-[a-f0-9]{12}$"},
+    "status": {"enum": ["candidate_for_human_review", "discarded"]},
+    "context_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "request_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "provider_usage": {"type": "object"},
+    "originator": {"type": "object"},
+    "critique": {"type": "object"},
+    "governor": {"type": "object"},
+    "selected_founder_prompt": {"type": "string", "maxLength": 1200},
+    "unresolved_core_requirement_ids": {
+      "type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true
+    },
+    "generation_call_count": {"const": 3},
+    "full_genesis_authorized": {"const": false},
+    "delivery_authority_granted": {"const": false},
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}
