@@ -766,7 +766,7 @@ class PalamedesChatTests(unittest.TestCase):
             )
 
         self.assertEqual(record["status"], "candidate_for_human_review")
-        self.assertEqual(record["vision_scout_version"], "palamedes-vision-scout/4")
+        self.assertEqual(record["vision_scout_version"], "palamedes-vision-scout/6")
         self.assertEqual(record["generation_call_count"], 3)
         self.assertEqual(record["selected_founder_prompt"], provider.scout_prompts[1])
         self.assertIn(
@@ -786,6 +786,95 @@ class PalamedesChatTests(unittest.TestCase):
                 "ROLE: vision_scout_governor",
             ],
         )
+
+    def test_vision_scout_discards_unresolved_core_before_governor_call(self):
+        from palamedes_vision_scout import VisionScoutStore, run_vision_scout
+
+        class PartialCoreProvider(StaticChatProvider):
+            def stream(self, messages):
+                prompt = messages[-1]["content"]
+                if prompt.startswith("ROLE: vision_scout_critic"):
+                    chunks = list(super().stream(messages))
+                    payload = json.loads("".join(chunks))
+                    payload["requirement_coverage"][0]["status"] = "partial"
+                    payload["requirement_coverage"][0]["evidence"] = (
+                        "The direction is promising but lacks a bounded cost ceiling."
+                    )
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        provider = PartialCoreProvider()
+        with tempfile.TemporaryDirectory() as tempdir:
+            record = run_vision_scout(
+                ask=lambda role, prompt: palamedes_chat._provider_json(
+                    provider,
+                    system=f"ROLE: {role}",
+                    prompt=f"ROLE: {role}\n{prompt}",
+                ),
+                store=VisionScoutStore(Path(tempdir) / "scouts"),
+                context="A service needs a durable direction with a bounded cost ceiling.",
+            )
+
+        self.assertEqual(len(provider.calls), 2)
+        self.assertEqual(record["status"], "discarded")
+        self.assertEqual(record["generation_call_count"], 2)
+        self.assertEqual(record["unresolved_core_requirement_ids"], ["req-1"])
+        self.assertEqual(
+            record["governor"]["decision_source"],
+            "deterministic_core_requirement_gate",
+        )
+        self.assertFalse(record["delivery_authority_granted"])
+
+    def test_project_scout_review_packet_requires_two_strong_independent_humans(self):
+        from palamedes_vision import fingerprint
+        from palamedes_vision_benchmark import VisionBenchmarkStore
+        from palamedes_vision_scout import PROJECT_REVIEW_AXES, VisionScoutStore
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            state = Path(tempdir) / ".palamedes"
+            scout_store = VisionScoutStore(state / "vision-scouts")
+            scout_id = "vision-scout-abcdef123456"
+            scout_store.save(
+                {
+                    "vision_scout_id": scout_id,
+                    "status": "candidate_for_human_review",
+                    "selected_founder_prompt": StaticChatProvider.scout_prompts[1],
+                }
+            )
+            packet = scout_store.ensure_project_review_packet(scout_id)
+            self.assertIsNotNone(packet)
+            packet_id = packet["vision_scout_project_review_id"]
+            packet_fingerprint = fingerprint(packet)
+
+            def submit(reviewer_id, kind, relationship, recommendation="advance", score=80):
+                return scout_store.submit_project_review(
+                    packet_id,
+                    {
+                        "packet_fingerprint": packet_fingerprint,
+                        "reviewer_id": reviewer_id,
+                        "reviewer_kind": kind,
+                        "reviewer_relationship": relationship,
+                        "recommendation": recommendation,
+                        "scores": {axis: score for axis in PROJECT_REVIEW_AXES},
+                        "confidence": 80,
+                        "rationale": "This originates a consequential world with bounded risk.",
+                    },
+                )
+
+            submit("model-1", "model", "independent")
+            submit("team-1", "human", "team")
+            blocked = VisionBenchmarkStore(state / "vision-benchmarks").scout_promotion_gate(scout_id)
+            submit("human-1", "human", "independent")
+            still_blocked = VisionBenchmarkStore(state / "vision-benchmarks").scout_promotion_gate(scout_id)
+            submit("human-2", "human", "independent")
+            passed = VisionBenchmarkStore(state / "vision-benchmarks").scout_promotion_gate(scout_id)
+
+        self.assertFalse(blocked["passed"])
+        self.assertFalse(still_blocked["passed"])
+        self.assertTrue(passed["human_review_path_passed"])
+        self.assertTrue(passed["full_genesis_authorized"])
+        self.assertFalse(passed["delivery_authority_granted"])
 
     def test_autonomous_scout_is_idempotent_for_identical_project_context(self):
         provider = StaticChatProvider()
@@ -847,7 +936,7 @@ class PalamedesChatTests(unittest.TestCase):
                 request_context=context,
             )
 
-        self.assertEqual(record["vision_scout_version"], "palamedes-vision-scout/4")
+        self.assertEqual(record["vision_scout_version"], "palamedes-vision-scout/6")
         self.assertEqual(len(provider.calls), 3)
 
     def test_project_scout_context_compaction_bounds_document_excerpts(self):

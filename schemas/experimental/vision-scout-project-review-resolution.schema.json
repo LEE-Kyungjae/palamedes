@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-scout-project-review-resolution.schema.json",
+  "title": "Palamedes Project Scout Blind Review Resolution",
+  "type": "object",
+  "required": ["vision_scout_project_review_resolution_version", "vision_scout_project_review_response_id", "vision_scout_project_review_id", "vision_scout_id", "reviewer_id", "reviewer_kind", "reviewer_relationship", "recommendation", "scores", "confidence", "rationale", "delivery_authority_granted", "resolved_at"],
+  "properties": {
+    "vision_scout_project_review_resolution_version": {"const": "palamedes-vision-scout-project-review-resolution/1"},
+    "vision_scout_project_review_response_id": {"type": "string", "pattern": "^vision-scout-review-response-[a-f0-9]{12}$"},
+    "vision_scout_project_review_id": {"type": "string", "pattern": "^vision-scout-review-[a-f0-9]{12}$"},
+    "vision_scout_id": {"type": "string", "pattern": "^vision-scout-[a-f0-9]{12}$"},
+    "reviewer_id": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,80}$"},
+    "reviewer_kind": {"enum": ["human", "model"]},
+    "reviewer_relationship": {"enum": ["independent", "team", "author", "unknown"]},
+    "recommendation": {"enum": ["advance", "revise", "reject"]},
+    "scores": {"type": "object", "minProperties": 7, "maxProperties": 7, "additionalProperties": {"type": "integer", "minimum": 0, "maximum": 100}},
+    "confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+    "rationale": {"type": "string", "minLength": 1},
+    "delivery_authority_granted": {"const": false},
+    "resolved_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

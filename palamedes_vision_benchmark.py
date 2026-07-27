@@ -689,6 +689,41 @@ class VisionBenchmarkStore:
             and not missing_axes
             and all(delta >= -5 for delta in mean_deltas.values())
         )
+        project_review_root = self.root.parent / "vision-scouts" / "project-review-resolutions"
+        project_rows = []
+        if project_review_root.is_dir():
+            for path in project_review_root.glob("vision-scout-review-*.json"):
+                try:
+                    row = json.loads(path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError):
+                    continue
+                if (
+                    isinstance(row, dict)
+                    and row.get("vision_scout_id") == vision_scout_id
+                    and row.get("reviewer_kind") == "human"
+                    and row.get("reviewer_relationship") == "independent"
+                    and isinstance(row.get("confidence"), int)
+                    and not isinstance(row.get("confidence"), bool)
+                    and row["confidence"] >= minimum_confidence
+                ):
+                    project_rows.append(row)
+        project_reviewers = {
+            str(row.get("reviewer_id", "")).strip()
+            for row in project_rows
+            if str(row.get("reviewer_id", "")).strip()
+        }
+        project_scores_valid = all(
+            isinstance(row.get("scores"), dict)
+            and len(row["scores"]) == 7
+            and min(row["scores"].values()) >= 60
+            and sum(row["scores"].values()) / len(row["scores"]) >= 70
+            for row in project_rows
+        )
+        project_human_path_passed = (
+            len(project_reviewers) >= minimum_independent_reviewers
+            and all(row.get("recommendation") == "advance" for row in project_rows)
+            and project_scores_valid
+        )
         behavioral_path_passed = bool(
             isinstance(probe_outcome, dict)
             and probe_outcome.get("vision_scout_id") == vision_scout_id
@@ -697,9 +732,10 @@ class VisionBenchmarkStore:
             and probe_outcome.get("supports_full_genesis_renewal") is True
             and probe_outcome.get("delivery_authority_granted") is False
         )
-        passed = human_path_passed or behavioral_path_passed
+        passed = human_path_passed or project_human_path_passed or behavioral_path_passed
         reasons = []
-        if len(reviewers) < minimum_independent_reviewers:
+        combined_reviewers = reviewers | project_reviewers
+        if len(combined_reviewers) < minimum_independent_reviewers:
             reasons.append("independent_human_reviewer_quorum_missing")
         if unfavorable:
             reasons.append("independent_human_reference_or_neither_preferred")
@@ -707,7 +743,9 @@ class VisionBenchmarkStore:
             reasons.append("review_score_axes_incomplete")
         if any(delta < -5 for delta in mean_deltas.values()):
             reasons.append("founder_prompt_mean_axis_delta_below_minus_five")
-        if not human_path_passed and not behavioral_path_passed:
+        if project_rows and not project_human_path_passed:
+            reasons.append("project_scout_absolute_review_threshold_not_met")
+        if not human_path_passed and not project_human_path_passed and not behavioral_path_passed:
             reasons.append("no_human_or_behavioral_renewal_path_passed")
         if passed:
             reasons = []
@@ -718,10 +756,10 @@ class VisionBenchmarkStore:
             "vision_scout_id": vision_scout_id,
             "minimum_independent_reviewers": minimum_independent_reviewers,
             "minimum_confidence": minimum_confidence,
-            "qualifying_review_count": len(qualifying),
-            "distinct_independent_reviewer_count": len(reviewers),
+            "qualifying_review_count": len(qualifying) + len(project_rows),
+            "distinct_independent_reviewer_count": len(combined_reviewers),
             "mean_score_deltas": mean_deltas,
-            "human_review_path_passed": human_path_passed,
+            "human_review_path_passed": human_path_passed or project_human_path_passed,
             "behavioral_probe_path_passed": behavioral_path_passed,
             "probe_outcome_id": (
                 str(probe_outcome.get("probe_outcome_id", ""))

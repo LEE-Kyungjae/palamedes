@@ -534,3 +534,56 @@ and invoking only the missing role. Contract or semantic-validation failures sti
 the one-shot attempt and cannot be retried creatively. The V4 outputs predated this feature,
 so they were deliberately not reconstructed after the fact. V5 is the first eligible live
 condition with checkpoint custody active from the initial call.
+
+## V5 checkpointed live result and V6 correction
+
+V5 (`palamedes-project-scout-live-005`) proved that immutable role checkpoints work in a
+live provider run. Originator, critic, and governor outputs were each saved before final
+assembly. The originator produced three causal worlds and the critic selected an expiring
+identity hypothesis: Palamedes would articulate which future identity a project asks people
+to inhabit, attach observable sacrifices and counterexamples, and make the identity expire
+rather than harden into doctrine. This was a materially upstream direction, not a micro-
+surface proposal.
+
+The critic also marked a core requirement partial because the proposed probe did not state
+credible AI-cost, elapsed-time, maintenance, and remediation ceilings. The governor still
+recommended blind human review. The deterministic policy correctly refused to advance the
+candidate, but V5 represented this as a `ValueError` after all three calls instead of a
+normal discard. The failed attempt `vision-scout-project-attempt-4e44af9d550c` preserves
+72,401 total tokens and all three immutable role artifacts; it is not retried.
+
+V6 moves this already-determined policy boundary ahead of the governor call. If the critic
+rejects all candidates or leaves any core requirement unresolved, Palamedes emits a
+deterministic `discarded` record after two calls. It does not reinterpret the model output,
+repair the candidate, weaken the core gate, or spend a third judgment call whose decision
+cannot legally change the result. Only aligned candidates still invoke the governor.
+
+The first V6 live run completed as `vision-scout-2a657a5bfc10` under attempt
+`vision-scout-project-attempt-259dabe8ce66`. Unlike V5, its critic marked every core
+requirement satisfied, so the governor call remained decision-relevant and selected blind
+human review. The founder prompt makes Palamedes a steward of an evolving builder identity:
+it infers that identity from decisions, sacrifices, reversals, and beneficiaries, then
+originates missions that express or challenge it. Recognition, pride, belonging, discomfort,
+anger, and grief form the repeated affective motive, while expiration, counterevidence, and
+private dissent prevent identity from becoming a worth judgment or conformity mandate.
+
+All three calls were strictly parsed and checkpointed. Originator used 22,268 tokens,
+critic 23,653, and governor 24,815, totaling 70,736. The result grants neither full Genesis
+nor delivery authority. It is an attributable second live origination example and a cost
+improvement over V3, but it remains same-provider evidence awaiting independent blind human
+review or a preregistered behavioral probe.
+
+## Executable project human-review path
+
+The V6 governor's `blind_human_review` decision now produces a standalone packet instead of
+stopping at prose. The first packet is `vision-scout-review-ac808500d146`; fetching it after
+the Scout result reused the existing Scout with zero provider calls. It exposes the founder
+prompt and seven absolute axes while omitting provider and authorship information, and carries
+a fingerprint that must match the submitted response.
+
+This packet is deliberately not forced into the benchmark A/B format because a real project
+request has no hidden human founder prompt. Two distinct independent humans must each return
+`advance`, confidence at least 60, every axis at least 60, and mean score at least 70. Model,
+team, author, and unknown reviewers are stored but excluded from quorum. Passing this gate
+can renew full Genesis only; delivery authority remains false. The evidence type remains
+standalone absolute human review and cannot be reported as comparison with a human baseline.

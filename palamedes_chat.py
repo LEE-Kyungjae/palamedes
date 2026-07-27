@@ -2182,6 +2182,10 @@ def _print_help(output: TextIO) -> None:
                 "                       originate a low-cost upstream founder prompt",
                 "  /vision-scout-promote <vision-scout-id>",
                 "                       run full Genesis only after independent-human gate",
+                "  /vision-scout-review-next",
+                "                       show the least-reviewed standalone project packet",
+                "  /vision-scout-review-submit <packet-id> <JSON>",
+                "                       record one absolute blind project review",
                 "  /vision-scout-probe <vision-scout-id> <JSON>",
                 "                       preregister one bounded behavioral test",
                 "  /vision-scout-probe-outcome <vision-scout-id> <JSON>",
@@ -2282,6 +2286,13 @@ def run_autonomous_vision_scout(
         else scout_store.find_by_context(context)
     )
     if existing is not None:
+        packet = scout_store.ensure_project_review_packet(existing["vision_scout_id"])
+        if packet is not None and not existing.get("project_human_review_packet_id"):
+            existing = dict(existing)
+            existing["project_human_review_packet_id"] = packet[
+                "vision_scout_project_review_id"
+            ]
+            scout_store.save(existing)
         reused = dict(existing)
         reused["reused_existing_context"] = True
         return reused
@@ -2334,6 +2345,11 @@ def run_autonomous_vision_scout(
     if request_fingerprint:
         record["request_fingerprint"] = request_fingerprint
     record["provider_usage"] = _provider_usage_summary(provider, role_usage)
+    packet = scout_store.ensure_project_review_packet(record["vision_scout_id"])
+    if packet is not None:
+        record["project_human_review_packet_id"] = packet[
+            "vision_scout_project_review_id"
+        ]
     scout_store.save(record)
     scout_store.complete_project_attempt(
         attempt, record["vision_scout_id"], record["provider_usage"]
@@ -3245,6 +3261,45 @@ def run_chat(
                 mission_store.root.parent / "vision-benchmarks"
             ).human_evidence_gate()
             output.write(json.dumps(gate, ensure_ascii=False, indent=2) + "\n")
+            continue
+        if text == "/vision-scout-review-next":
+            from palamedes_vision import fingerprint
+            from palamedes_vision_scout import VisionScoutStore
+
+            packet = VisionScoutStore(
+                mission_store.root.parent / "vision-scouts"
+            ).next_project_review_packet()
+            if packet is None:
+                output.write("No project Scout review packets are available.\n")
+            else:
+                rendered = dict(packet)
+                rendered["packet_fingerprint"] = fingerprint(packet)
+                output.write(json.dumps(rendered, ensure_ascii=False, indent=2) + "\n")
+            continue
+        if text.startswith("/vision-scout-review-submit "):
+            from palamedes_vision_scout import VisionScoutStore
+
+            parts = text.split(maxsplit=2)
+            if len(parts) != 3:
+                output.write(
+                    "/vision-scout-review-submit requires packet-id and one JSON object.\n"
+                )
+                continue
+            try:
+                response = json.loads(parts[2])
+                if not isinstance(response, dict):
+                    raise ValueError("response must be an object")
+                resolved = VisionScoutStore(
+                    mission_store.root.parent / "vision-scouts"
+                ).submit_project_review(parts[1], response)
+            except (OSError, json.JSONDecodeError, ValueError) as exc:
+                output.write(f"[project Scout review error] {exc}\n")
+                continue
+            output.write(
+                "Project Scout review recorded: "
+                f"{resolved['recommendation']} "
+                f"({resolved['vision_scout_project_review_response_id']}).\n"
+            )
             continue
         if text.startswith("/vision-scout-probe-outcome "):
             from palamedes_vision_scout import VisionScoutStore

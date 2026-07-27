@@ -309,7 +309,8 @@ human packet `vision-review-9db2913d3906` remains unreviewed.
 
 Use `/vision-scout <context>` for a real project rather than a fixed benchmark. Palamedes
 combines current product ground truth and bounded workspace observation, then screens a
-founder prompt in three calls. Identical user requests reuse the prior Scout despite
+founder prompt in two or three calls. Unresolved core requirements produce a deterministic
+discard after two calls; only aligned candidates receive the third governor call. Identical user requests reuse the prior Scout despite
 timestamp or state-file changes, using a separate request fingerprint. The full original
 context is retained in a private local context record while the public Scout record carries
 its fingerprint, allowing a later evidence-backed Genesis to continue from the same
@@ -341,8 +342,33 @@ project context below 10 KB and targeted roughly 75k tokens for a successful run
 originator and critic completed, but the governor provider call failed. Palamedes now stores
 immutable per-role checkpoints and permits bounded infrastructure resume, so completed
 creative outputs are reused rather than regenerated or cherry-picked. Because V4 predates
-that checkpoint surface, it is not retroactively rescued. The next live condition is a V5
-one-shot with checkpoints active from the first role.
+that checkpoint surface, it is not retroactively rescued. V5 began with checkpoints active
+and preserved all three role outputs and 72,401 tokens. It originated an expiring project-
+identity hypothesis, but the critic marked core cost, duration, and remediation bounds
+partial; the governor nevertheless requested human review, so the deterministic gate
+blocked it. The rejection was correct, but it appeared as a contract failure and spent an
+unnecessary third call. V6 now closes an all-rejected or core-misaligned critique as a
+deterministic two-call `discarded` outcome without invoking the governor. This preserves the
+gate while correcting outcome semantics and waste.
+
+The first V6 live one-shot, `vision-scout-2a657a5bfc10`, satisfied every core requirement,
+therefore invoked the governor, and used 70,736 tokens. It proposed that Palamedes infer the
+builder identity a project is becoming from decisions, sacrifices, reversals, and
+beneficiaries, then originate missions that either express or deliberately challenge that
+identity. Its repeated affect includes recognition, belonging, and pride as well as
+discomfort, anger, and grief when work contradicts professed values. Identity remains an
+expiring hypothesis exposed to counterevidence and private dissent. The governor opened
+blind human review only. This is a second live origination example, not human-preference or
+behavioral-effect evidence.
+
+When a real-project Scout selects `blind_human_review`, Palamedes now creates a standalone
+blind packet rather than inventing a human comparator. `/vision-scout-review-next` exposes
+the authorship-hidden founder prompt, seven absolute axes, and its packet fingerprint;
+`/vision-scout-review-submit <packet-id> <JSON>` records a review. The human path requires
+two distinct independent humans with confidence at least 60, every axis at least 60, mean
+score at least 70, and unanimous `advance`. Model, team, author, and unknown reviews remain
+auditable but do not count. Standalone review does not establish non-inferiority to a hidden
+human reference and is not merged with A/B benchmark evidence.
 
 Every newly selected vision also passes a reality governor before it can influence
 delivery. It compares `full_build`, `minimal_probe`, `manual_probe`, `reuse_or_buy`,

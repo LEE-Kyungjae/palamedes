@@ -10,12 +10,13 @@
     "full_genesis_authorized", "delivery_authority_granted", "created_at"
   ],
   "properties": {
-    "vision_scout_version": {"enum": ["palamedes-vision-scout/1", "palamedes-vision-scout/2", "palamedes-vision-scout/3", "palamedes-vision-scout/4"]},
+    "vision_scout_version": {"enum": ["palamedes-vision-scout/1", "palamedes-vision-scout/2", "palamedes-vision-scout/3", "palamedes-vision-scout/4", "palamedes-vision-scout/5", "palamedes-vision-scout/6"]},
     "vision_scout_id": {"type": "string", "pattern": "^vision-scout-[a-f0-9]{12}$"},
     "status": {"enum": ["candidate_for_human_review", "discarded"]},
     "context_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "request_fingerprint": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
     "provider_usage": {"type": "object"},
+    "project_human_review_packet_id": {"type": "string", "pattern": "^vision-scout-review-[a-f0-9]{12}$"},
     "originator": {"type": "object"},
     "critique": {"type": "object"},
     "governor": {"type": "object"},
@@ -23,7 +24,7 @@
     "unresolved_core_requirement_ids": {
       "type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true
     },
-    "generation_call_count": {"const": 3},
+    "generation_call_count": {"type": "integer", "minimum": 2, "maximum": 3},
     "full_genesis_authorized": {"const": false},
     "delivery_authority_granted": {"const": false},
     "created_at": {"type": "string", "minLength": 1}

@@ -258,8 +258,9 @@ Scout는 `full_genesis_authorized=false`와 `delivery_authority_granted=false`�
 않으며, 생성된 `vision-review-9db2913d3906`의 독립 인간 평가가 남아 있습니다.
 
 고정 benchmark가 아닌 실제 프로젝트에서는 `/vision-scout <맥락>`을 사용합니다.
-Palamedes는 현재 제품 ground truth와 저장소 관찰을 함께 읽되 3회 호출로 founder
-prompt 후보를 선별해 화면에 표시합니다. 동일한 사용자 요청은 관찰 timestamp나 상태
+Palamedes는 현재 제품 ground truth와 저장소 관찰을 함께 읽되 2~3회 호출로 founder
+prompt 후보를 선별해 화면에 표시합니다. core requirement가 미충족이면 2회 후
+결정론적으로 폐기하고, 통과한 후보만 세 번째 governor 판단을 받습니다. 동일한 사용자 요청은 관찰 timestamp나 상태
 파일이 바뀌어도 request fingerprint로 기존 Scout를 재사용하므로 반복 비용이 들지
 않습니다. 원래 전체 context는 fingerprint만 공개 record에 두고 별도 local context
 record에 보존해, 나중에 증거가 생기면 동일 정보 경계에서 Genesis를 이어갈 수 있습니다.
@@ -293,8 +294,33 @@ V4는 전체 문맥을 10KB 미만의 출처 보존 요약으로 압축해 성�
 목표로 했습니다. originator와 critic은 성공했으나 governor 제공자 호출이 실패했습니다.
 이 실패 뒤 역할별 불변 체크포인트와 제한 재개를 구현해, 완료된 역할을 다시 생성하거나
 유리한 결과가 나올 때까지 재시도하지 않고 남은 역할만 이어갈 수 있게 했습니다.
-체크포인트 도입 전 발생한 V4 결과는 소급 복구하지 않습니다. 다음 실증 조건은 이
-체크포인트가 처음부터 적용되는 V5 one-shot입니다.
+체크포인트 도입 전 발생한 V4 결과는 소급 복구하지 않습니다. 체크포인트가 처음부터
+적용된 V5는 originator·critic·governor 세 결과와 72,401토큰을 모두 보존했습니다.
+“만료 가능한 프로젝트 정체성 가설”이라는 새 방향을 만들었지만 critic이 핵심 비용·기간·
+복구 한도를 `partial`로 판정한 뒤 governor가 인간 검토를 선택해 결정론적 gate가
+차단했습니다. 이 과정은 후보 기각을 올바르게 지켰지만 정상적인 `discarded` 결과 대신
+계약 실패로 끝나고 불필요한 세 번째 호출을 사용했습니다. V6는 critic이 후보를 모두
+기각했거나 core requirement가 하나라도 미충족이면 governor를 호출하지 않고 2회
+호출의 결정론적 `discarded` outcome으로 닫습니다. gate를 낮추지 않고 실패 의미와
+비용만 바로잡은 변경입니다.
+
+첫 V6 live one-shot `vision-scout-2a657a5bfc10`은 모든 core requirement를 통과해
+세 번째 governor까지 실행됐고 70,736토큰을 사용했습니다. 선택 방향은 Palamedes가
+결정·희생·반전·수혜자에서 “프로젝트가 어떤 builder 정체성이 되어 가는가”를 추론하고,
+그 정체성을 표현하거나 의도적으로 반박하는 미션을 발원하게 하는 것입니다. 반복 감정은
+인정·소속·자부심뿐 아니라 현재 작업이 표방 가치와 충돌할 때의 불편·분노·상실이며,
+정체성은 만료 가능하고 반례·비공개 이견으로 수정돼야 합니다. governor는 블라인드 인간
+검토만 선택했습니다. 이는 자율 발원의 두 번째 실사례지만 사람 선호나 행동 효과 증거는
+아직 아닙니다.
+
+실프로젝트 Scout가 `blind_human_review`를 선택하면 이제 비교 기준안을 꾸며내지 않고
+단독 블라인드 packet을 자동 생성합니다. `/vision-scout-review-next`는 모델·저자 정보를
+숨긴 founder prompt와 7개 절대 평가축, packet fingerprint를 보여줍니다.
+`/vision-scout-review-submit <packet-id> <JSON>`으로 평가를 제출합니다. 서로 다른 독립
+인간 2명이 confidence 60 이상, 모든 축 60 이상·평균 70 이상으로 모두 `advance`해야
+사람 경로가 Genesis 승격 gate를 통과합니다. model·team·author·unknown 평가는 감사
+기록에는 남지만 quorum에는 포함되지 않습니다. 이 단독 평가는 숨겨진 사람 원안과의
+비열등성을 증명하지 않으므로 기존 A/B benchmark 증거와 합치지 않습니다.
 
 새로 선택된 모든 비전은 delivery에 영향을 주기 전에 reality governor를
 통과합니다. 전체 구현·최소 software probe·수동 probe·기존 역량 재사용/구매·

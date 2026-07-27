@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://palamedes.local/schemas/experimental/vision-scout-project-review.schema.json",
+  "title": "Palamedes Project Scout Blind Review Packet",
+  "type": "object",
+  "required": ["vision_scout_project_review_version", "vision_scout_project_review_id", "vision_scout_id", "founder_prompt", "instructions", "axes", "authorship_hidden", "delivery_authority_granted", "created_at"],
+  "properties": {
+    "vision_scout_project_review_version": {"const": "palamedes-vision-scout-project-review/1"},
+    "vision_scout_project_review_id": {"type": "string", "pattern": "^vision-scout-review-[a-f0-9]{12}$"},
+    "vision_scout_id": {"type": "string", "pattern": "^vision-scout-[a-f0-9]{12}$"},
+    "founder_prompt": {"type": "string", "minLength": 180, "maxLength": 1200},
+    "instructions": {"type": "string", "minLength": 1},
+    "axes": {"type": "array", "minItems": 7, "maxItems": 7, "items": {"type": "string"}, "uniqueItems": true},
+    "authorship_hidden": {"const": true},
+    "delivery_authority_granted": {"const": false},
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

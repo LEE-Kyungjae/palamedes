@@ -12,7 +12,16 @@ from palamedes_observe import utc_now
 from palamedes_vision import fingerprint
 
 
-VISION_SCOUT_VERSION = "palamedes-vision-scout/4"
+VISION_SCOUT_VERSION = "palamedes-vision-scout/6"
+PROJECT_REVIEW_AXES = [
+    "origination",
+    "conceptual_distance",
+    "affective_depth",
+    "mechanism_fusion",
+    "world_coherence",
+    "three_year_generativity",
+    "human_approval_value",
+]
 
 
 def _strings(value: Any, field: str, minimum: int = 1) -> List[str]:
@@ -114,6 +123,108 @@ class VisionScoutStore:
         if fingerprint(context) != payload.get("context_fingerprint"):
             raise ValueError("vision scout context fingerprint mismatch")
         return context
+
+    def ensure_project_review_packet(self, vision_scout_id: str) -> Optional[Dict[str, Any]]:
+        scout = self.load(vision_scout_id)
+        if scout.get("status") != "candidate_for_human_review":
+            return None
+        founder_prompt = str(scout.get("selected_founder_prompt", "")).strip()
+        if not founder_prompt:
+            raise ValueError("project Scout review requires a founder prompt")
+        identity = fingerprint({"vision_scout_id": vision_scout_id, "founder_prompt": founder_prompt})
+        packet_id = f"vision-scout-review-{identity[:12]}"
+        root = self.root / "project-human-review"
+        root.mkdir(parents=True, exist_ok=True)
+        path = root / f"{packet_id}.json"
+        if path.is_file():
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            return payload if isinstance(payload, dict) else None
+        packet = {
+            "vision_scout_project_review_version": "palamedes-vision-scout-project-review/1",
+            "vision_scout_project_review_id": packet_id,
+            "vision_scout_id": vision_scout_id,
+            "founder_prompt": founder_prompt,
+            "instructions": (
+                "Review this upstream founder prompt without guessing its author or model. "
+                "Score whether it originates a consequential product direction rather than "
+                "polishing supplied features. Do not evaluate implementation quality."
+            ),
+            "axes": PROJECT_REVIEW_AXES,
+            "authorship_hidden": True,
+            "delivery_authority_granted": False,
+            "created_at": utc_now(),
+        }
+        path.write_text(json.dumps(packet, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        return packet
+
+    def next_project_review_packet(self) -> Optional[Dict[str, Any]]:
+        root = self.root / "project-human-review"
+        if not root.is_dir():
+            return None
+        packets = []
+        for path in sorted(root.glob("vision-scout-review-*.json")):
+            packet = json.loads(path.read_text(encoding="utf-8"))
+            review_count = len(list((self.root / "project-review-resolutions").glob(
+                f"{packet['vision_scout_project_review_id']}--*.json"
+            )))
+            packets.append((review_count, packet["created_at"], packet))
+        return sorted(packets, key=lambda row: (row[0], row[1]))[0][2] if packets else None
+
+    def submit_project_review(self, packet_id: str, response: Dict[str, Any]) -> Dict[str, Any]:
+        if not re.fullmatch(r"vision-scout-review-[a-f0-9]{12}", packet_id):
+            raise ValueError("invalid project Scout review packet ID")
+        path = self.root / "project-human-review" / f"{packet_id}.json"
+        if not path.is_file():
+            raise ValueError("unknown project Scout review packet")
+        packet = json.loads(path.read_text(encoding="utf-8"))
+        if response.get("packet_fingerprint") != fingerprint(packet):
+            raise ValueError("project Scout review packet fingerprint mismatch")
+        reviewer_id = str(response.get("reviewer_id", "")).strip()
+        reviewer_kind = response.get("reviewer_kind")
+        relationship = response.get("reviewer_relationship")
+        recommendation = response.get("recommendation")
+        confidence = response.get("confidence")
+        rationale = str(response.get("rationale", "")).strip()
+        scores = response.get("scores")
+        if not re.fullmatch(r"[A-Za-z0-9._-]{1,80}", reviewer_id):
+            raise ValueError("project Scout review requires a safe reviewer_id")
+        if reviewer_kind not in {"human", "model"}:
+            raise ValueError("project Scout reviewer_kind must be human or model")
+        if relationship not in {"independent", "team", "author", "unknown"}:
+            raise ValueError("project Scout reviewer_relationship is invalid")
+        if recommendation not in {"advance", "revise", "reject"}:
+            raise ValueError("project Scout review recommendation is invalid")
+        if not isinstance(confidence, int) or isinstance(confidence, bool) or not 0 <= confidence <= 100:
+            raise ValueError("project Scout review confidence must be integer 0-100")
+        if not rationale:
+            raise ValueError("project Scout review requires rationale")
+        if not isinstance(scores, dict) or set(scores) != set(PROJECT_REVIEW_AXES):
+            raise ValueError("project Scout review scores must cover every axis")
+        if any(not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 100 for value in scores.values()):
+            raise ValueError("project Scout review scores must be integers 0-100")
+        root = self.root / "project-review-resolutions"
+        root.mkdir(parents=True, exist_ok=True)
+        if list(root.glob(f"{packet_id}--{reviewer_id}--*.json")):
+            raise ValueError("reviewer already submitted this project Scout packet")
+        identity = fingerprint({"packet_id": packet_id, "reviewer_id": reviewer_id, "response": response})
+        record = {
+            "vision_scout_project_review_resolution_version": "palamedes-vision-scout-project-review-resolution/1",
+            "vision_scout_project_review_response_id": f"vision-scout-review-response-{identity[:12]}",
+            "vision_scout_project_review_id": packet_id,
+            "vision_scout_id": packet["vision_scout_id"],
+            "reviewer_id": reviewer_id,
+            "reviewer_kind": reviewer_kind,
+            "reviewer_relationship": relationship,
+            "recommendation": recommendation,
+            "scores": scores,
+            "confidence": confidence,
+            "rationale": rationale,
+            "delivery_authority_granted": False,
+            "resolved_at": utc_now(),
+        }
+        output_path = root / f"{packet_id}--{reviewer_id}--{record['vision_scout_project_review_response_id']}.json"
+        output_path.write_text(json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        return record
 
     def register_probe(self, vision_scout_id: str, proposal: Dict[str, Any]) -> Dict[str, Any]:
         scout = self.load(vision_scout_id)
@@ -444,7 +555,7 @@ def run_vision_scout(
     store: VisionScoutStore,
     context: str,
 ) -> Dict[str, Any]:
-    """Originate and screen a founder prompt in three provider calls, with no delivery authority."""
+    """Originate and screen a founder prompt in two or three calls, with no delivery authority."""
     source_anchors = _source_anchors(context)
     origin = ask(
         "vision_scout_originator",
@@ -611,9 +722,56 @@ Originator output:
     if critique.get("delivery_authority_granted") is not False:
         raise ValueError("vision scout cannot grant delivery authority")
 
-    governor = ask(
-        "vision_scout_governor",
-        f"""Decide whether this low-cost scout deserves no further work, one blind human
+    policy_discard = decision != "select" or bool(unresolved_core)
+    if policy_discard:
+        reasons = (
+            ["the critic rejected every candidate"]
+            if decision != "select"
+            else [
+                "core requirement " + requirement_id + " is unresolved"
+                for requirement_id in unresolved_core
+            ]
+        )
+        governor = {
+            "alternatives": [
+                {
+                    "alternative": "discard",
+                    "estimated_next_provider_calls": 0,
+                    "learning_value": (
+                        "Preserve the unmet core requirement as evidence for a future "
+                        "version without spending another model call."
+                    ),
+                    "opportunity_cost": "The current candidate does not advance to review.",
+                    "failure_mode": "A repairable candidate may be discarded conservatively.",
+                },
+                {
+                    "alternative": "blind_human_review",
+                    "estimated_next_provider_calls": 0,
+                    "learning_value": "Not available while a core requirement is unresolved.",
+                    "opportunity_cost": "Would consume scarce human review attention.",
+                    "failure_mode": "Persuasive prose could bypass the declared core gate.",
+                },
+                {
+                    "alternative": "full_genesis",
+                    "estimated_next_provider_calls": 7,
+                    "learning_value": "Not available without later renewal evidence.",
+                    "opportunity_cost": "Would spend the expensive path on a misaligned seed.",
+                    "failure_mode": "More synthesis could manufacture confidence.",
+                },
+            ],
+            "decision": "discard",
+            "decision_rationale": "Deterministic policy gate: " + "; ".join(reasons) + ".",
+            "full_genesis_renewal_evidence": [
+                "A new version must satisfy every core context requirement before review."
+            ],
+            "kill_criteria": reasons,
+            "delivery_authority_granted": False,
+            "decision_source": "deterministic_core_requirement_gate",
+        }
+    else:
+        governor = ask(
+            "vision_scout_governor",
+            f"""Decide whether this low-cost scout deserves no further work, one blind human
 review packet, or the expensive seven-role Vision Genesis. Evidence is speculative and no
 delivery may be authorized. Return JSON:
 {{"alternatives":[{{"alternative":"discard|blind_human_review|full_genesis",
@@ -632,7 +790,7 @@ Critic output:
 {json.dumps(critique, ensure_ascii=False)}
 Unresolved core requirements:
 {json.dumps(unresolved_core)}""",
-    )
+        )
     alternatives = governor.get("alternatives")
     expected_alternatives = {"discard", "blind_human_review", "full_genesis"}
     if not isinstance(alternatives, list) or {
@@ -648,9 +806,8 @@ Unresolved core requirements:
                 raise ValueError(f"vision scout alternative requires {field}")
     if governor.get("decision") not in {"discard", "blind_human_review"}:
         raise ValueError("vision scout cannot directly select full Genesis")
-    if decision != "select" or unresolved_core:
-        if governor["decision"] != "discard":
-            raise ValueError("vision scout must discard rejected or misaligned candidates")
+    if policy_discard and governor["decision"] != "discard":
+        raise ValueError("vision scout must discard rejected or misaligned candidates")
     for field in ("decision_rationale",):
         if not str(governor.get(field, "")).strip():
             raise ValueError(f"vision scout governor requires {field}")
@@ -679,7 +836,7 @@ Unresolved core requirements:
         "governor": governor,
         "selected_founder_prompt": selected_prompt,
         "unresolved_core_requirement_ids": unresolved_core,
-        "generation_call_count": 3,
+        "generation_call_count": 2 if policy_discard else 3,
         "full_genesis_authorized": False,
         "delivery_authority_granted": False,
         "created_at": utc_now(),
