@@ -1361,6 +1361,60 @@ Start the local service:
 python3 palamedes_server.py --host 127.0.0.1 --port 8787
 ```
 
+Open `http://127.0.0.1:8787/observatory/view` for the read-only Palamedes
+Observatory. It refreshes every five seconds and combines Vision Genesis, Vision
+Scout, Product Invention, cognition decisions, candidate fates, mission contracts, outcomes,
+evidence gates, and plan revisions into one filterable timeline. Each event can
+be expanded to inspect the planning content that produced it. The UI writes no
+state and uses the same persisted artifacts as the CLI:
+
+```bash
+python3 palamedes.py observatory --limit 50
+python3 palamedes.py observatory --limit 200 --json
+```
+
+## Product Invention
+
+`/cycle` remains the bounded product-audit and mission-selection path. Use
+`/invent <context>` when Palamedes must originate the product mechanic itself:
+
+```text
+/invent 온라인 윷놀이의 반복 플레이와 팀 몰입도를 높여라. 현재 규칙과 구현을 유지할 필요는 없다.
+/inventions
+```
+
+The invention pipeline maps direct and socially mediated emotion, originates at
+least five structurally distant worlds, compiles every world into a playable
+contract, attacks fun/harm/balance/content/infrastructure risk, and selects only
+an already-originated candidate for a small probe. Candidate distance is explicit
+across player relationship, victory, information, resources, time, risk ownership,
+emotion source, and repeat motive. Provenance records whether the decisive seed
+was human-, reference-, Palamedes-, or jointly originated. An invention never
+grants mission approval or delivery authority; implementation still requires the
+normal mission gate.
+
+## Domain-general pursuits
+
+`/pursue <objective>` sits above product-specific modes. The user states the
+outcome, not the research method or tool sequence:
+
+```text
+/pursue 폐배터리 재활용에서 논문으로 만들 새로운 연구를 찾아 원고를 작성하라.
+/pursue 향후 12개월 구리 가격의 상승·하락 조건을 조사해 위원회 보고서를 작성하라.
+/pursue 반복 사용자가 대화 작업에 집중할 수 있는 경험을 만들어라.
+/pursuits
+```
+
+Palamedes composes `discover`, `explain`, `predict`, `invent`, `design`,
+`decide`, `evaluate`, `author`, and `operate` rather than selecting a hard-coded
+industry template. It produces an Unknown Map, dynamically acquired domain
+protocol, capability graph, evidence and re-observation policy, deliverable
+compiler, and autonomy envelope. The stored pursuit is deliberately marked
+`execution_started: false`: composing a rigorous workflow is not evidence that
+retrieval, experiments, prediction, or writing occurred. Purchases, human
+contact, publication, sensitive data, and real financial actions remain explicit
+human gates. Pursuits and their full decision history appear in Observatory.
+
 Available endpoints:
 
 - `GET /plan`: current plan, summary, validation, fingerprint
@@ -1368,6 +1422,8 @@ Available endpoints:
 - `GET /health`: storage health and recovery diagnostics
 - `GET /cycle`: plan + QA + health + recent history snapshot
 - `GET /history`: revision history
+- `GET /observatory?limit=200`: combined read-only planning and evidence timeline
+- `GET /observatory/view`: dependency-free live Observatory UI
 - `GET /validate`: structural validation
 - `GET /tools`: agent tool schemas
 - `POST /plan`: update plan fields

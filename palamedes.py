@@ -3181,6 +3181,16 @@ def cmd_history(args: argparse.Namespace) -> None:
         print(f"{item['revision_id']} | {item['ts']} | {item['source']}{reason}{qa_label}{goal_label}")
 
 
+def cmd_observatory(args: argparse.Namespace) -> None:
+    from palamedes_observatory import build_observatory, render_cli
+
+    snapshot = build_observatory(STATE_DIR, limit=args.limit)
+    if args.json:
+        print(json.dumps(snapshot, indent=2, ensure_ascii=False))
+        return
+    print(render_cli(snapshot))
+
+
 def cmd_restore(args: argparse.Namespace) -> None:
     if getattr(args, "preview", False):
         preview = restore_preview(getattr(args, "revision_id", ""), previous=getattr(args, "previous", False))
@@ -3965,6 +3975,11 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--limit", type=int, default=10)
     s.add_argument("--json", action="store_true")
     s.set_defaults(func=cmd_history)
+
+    s = sub.add_parser("observatory")
+    s.add_argument("--limit", type=int, default=50)
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(func=cmd_observatory)
 
     s = sub.add_parser("restore")
     s.add_argument("--revision-id", type=str, default="")

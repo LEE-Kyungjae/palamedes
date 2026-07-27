@@ -207,6 +207,9 @@ class PalamedesClient:
     def get_history(self) -> Dict[str, Any]:
         return self.request("GET", "/history")
 
+    def get_observatory(self, *, limit: int = 200) -> Dict[str, Any]:
+        return self.request("GET", f"/observatory?limit={int(limit)}")
+
     def get_reviews(
         self,
         *,

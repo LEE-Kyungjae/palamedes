@@ -72,6 +72,30 @@ def decode_response(handler: PalamedesHandler):
 
 
 class PalamedesServerTests(unittest.TestCase):
+    def test_get_observatory_returns_read_only_projection(self):
+        with PalamedesStateIsolation():
+            palamedes.ensure_state()
+            handler = build_handler("GET", "/observatory?limit=25")
+            handler.do_GET()
+            status, payload, headers = decode_response(handler)
+
+        self.assertEqual(status, 200)
+        self.assertTrue(payload["read_only"])
+        self.assertEqual(payload["event_limit"], 25)
+        self.assertEqual(headers["Cache-Control"], "no-store")
+
+    def test_get_observatory_view_returns_dependency_free_html(self):
+        handler = build_handler("GET", "/observatory/view")
+        handler.do_GET()
+        document = handler.wfile.getvalue().decode("utf-8")
+
+        self.assertEqual(handler._status, 200)
+        self.assertEqual(
+            handler._sent_headers["Content-Type"], "text/html; charset=utf-8"
+        )
+        self.assertIn("Palamedes Observatory", document)
+        self.assertIn("/observatory?limit=300", document)
+
     def test_get_plan_returns_fingerprint_and_etag(self):
         with PalamedesStateIsolation():
             palamedes.ensure_state()

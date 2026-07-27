@@ -2179,6 +2179,10 @@ def _print_help(output: TextIO) -> None:
                 "  /research <question> identify the minimum missing evidence",
                 "  /mission <context>   draft a mission contract",
                 "  /cycle <context>     run interpreter→inventor→adversary→selector",
+                "  /invent <context>    originate distant playable systems from human emotion",
+                "  /inventions          show the latest product invention",
+                "  /pursue <objective>  compose a domain-general evidence-producing pursuit",
+                "  /pursuits            show the latest pursuit",
                 "  /vision <context>    force a desire→analogy→fusion→world vision cycle",
                 "  /vision-scout <context>",
                 "                       originate a low-cost upstream founder prompt",
@@ -2297,6 +2301,60 @@ def run_autonomous_vision(
         raise
     record["provider_usage"] = _provider_usage_summary(provider, role_usage)
     vision_store.save(record)
+    return record
+
+
+def run_autonomous_invention(
+    *, provider: ChatProvider, mission_store: MissionStore, context: str
+) -> Dict[str, Any]:
+    from palamedes_invention import ProductInventionStore, run_product_invention
+
+    invention_store = ProductInventionStore(mission_store.root.parent / "inventions")
+    role_usage: List[Dict[str, Any]] = []
+
+    def ask(role: str, prompt: str) -> Dict[str, Any]:
+        try:
+            return _provider_json(
+                provider,
+                system=(
+                    f"ROLE: {role}. Originate or test product mechanics, but never grant "
+                    "mission approval or delivery authority. Return exactly one JSON object."
+                ),
+                prompt=f"ROLE: {role}\n{prompt}",
+            )
+        finally:
+            role_usage.append(_capture_provider_usage(provider, role))
+
+    record = run_product_invention(ask=ask, store=invention_store, context=context)
+    record["provider_usage"] = _provider_usage_summary(provider, role_usage)
+    invention_store.save(record)
+    return record
+
+
+def run_autonomous_pursuit(
+    *, provider: ChatProvider, mission_store: MissionStore, objective: str
+) -> Dict[str, Any]:
+    from palamedes_pursuit import PursuitStore, run_pursuit
+
+    pursuit_store = PursuitStore(mission_store.root.parent / "pursuits")
+    role_usage: List[Dict[str, Any]] = []
+
+    def ask(role: str, prompt: str) -> Dict[str, Any]:
+        try:
+            return _provider_json(
+                provider,
+                system=(
+                    f"ROLE: {role}. Compose rigorous intellectual work without fabricating "
+                    "uncollected evidence or silently taking external action. Return one JSON object."
+                ),
+                prompt=f"ROLE: {role}\n{prompt}",
+            )
+        finally:
+            role_usage.append(_capture_provider_usage(provider, role))
+
+    record = run_pursuit(ask=ask, store=pursuit_store, objective=objective)
+    record["provider_usage"] = _provider_usage_summary(provider, role_usage)
+    pursuit_store.save(record)
     return record
 
 
@@ -2527,6 +2585,49 @@ def render_vision(record: Dict[str, Any]) -> str:
         ]
     )
     return "\n".join(lines)
+
+
+def render_invention(record: Dict[str, Any]) -> str:
+    selected = str(record.get("selected_candidate_id", "")).strip()
+    lines = [
+        f"Product invention: {record.get('product_invention_id', '?')}",
+        f"  decision: {record.get('status', '?')}",
+        f"  candidates: {len(record.get('candidates', []))}",
+    ]
+    if selected:
+        lines.append(f"  selected: {selected}")
+    provenance = record.get("provenance", {})
+    if provenance:
+        lines.append(
+            "  provenance: "
+            f"origin={provenance.get('origin', '?')} "
+            f"contribution={provenance.get('palamedes_contribution', '?')}"
+        )
+    prototype = record.get("selector", {}).get("smallest_prototype", "")
+    if prototype:
+        lines.extend(["", str(prototype)])
+    lines.extend([
+        "",
+        "This is an invention candidate, not an implementation instruction.",
+        "Mission approval and delivery authority remain separate.",
+    ])
+    return "\n".join(lines)
+
+
+def render_pursuit(record: Dict[str, Any]) -> str:
+    routing = record.get("epistemic_routing", {})
+    governor = record.get("governor", {})
+    return "\n".join([
+        f"Pursuit: {record.get('pursuit_id', '?')}",
+        f"  disposition: {record.get('status', '?')}",
+        f"  epistemic work: {', '.join(routing.get('task_types', []))}",
+        f"  first nodes: {', '.join(governor.get('first_executable_nodes', [])) or '-'}",
+        "",
+        str(governor.get("expected_deliverable", "")),
+        "",
+        "This is an execution-ready knowledge-work graph, not evidence that execution occurred.",
+        "External action, publication, and financial action remain ungranted.",
+    ])
 
 
 def render_vision_scout(record: Dict[str, Any]) -> str:
@@ -3546,6 +3647,72 @@ def run_chat(
                 if latest_vision is not None
                 else "No autonomous product vision has been generated.\n"
             )
+            continue
+        if text == "/inventions":
+            from palamedes_invention import ProductInventionStore
+
+            latest_invention = ProductInventionStore(
+                mission_store.root.parent / "inventions"
+            ).latest()
+            output.write(
+                render_invention(latest_invention) + "\n"
+                if latest_invention is not None
+                else "No product invention has been generated.\n"
+            )
+            continue
+        if text == "/pursuits":
+            from palamedes_pursuit import PursuitStore
+
+            latest_pursuit = PursuitStore(mission_store.root.parent / "pursuits").latest()
+            output.write(
+                render_pursuit(latest_pursuit) + "\n"
+                if latest_pursuit is not None
+                else "No pursuit has been composed.\n"
+            )
+            continue
+        if text.startswith("/pursue "):
+            objective = text[len("/pursue ") :].strip()
+            if not objective:
+                output.write("/pursue requires a high-level objective.\n")
+                continue
+            output.write(
+                "Composing pursuit: intent → epistemic routing → unknown map → "
+                "capabilities → adversary → governor\n"
+            )
+            try:
+                pursuit_record = run_autonomous_pursuit(
+                    provider=provider, mission_store=mission_store, objective=objective
+                )
+            except (OSError, RuntimeError, ValueError) as exc:
+                output.write(f"[pursuit error] {exc}\n")
+                continue
+            output.write(render_pursuit(pursuit_record) + "\n")
+            continue
+        if text == "/pursue":
+            output.write("/pursue requires a high-level objective.\n")
+            continue
+        if text.startswith("/invent "):
+            invention_context = text[len("/invent ") :].strip()
+            if not invention_context:
+                output.write("/invent requires product context.\n")
+                continue
+            output.write(
+                "Running product invention: affect → distant rules → playable contracts "
+                "→ adversary → selector\n"
+            )
+            try:
+                invention_record = run_autonomous_invention(
+                    provider=provider,
+                    mission_store=mission_store,
+                    context=invention_context,
+                )
+            except (OSError, RuntimeError, ValueError) as exc:
+                output.write(f"[product invention error] {exc}\n")
+                continue
+            output.write(render_invention(invention_record) + "\n")
+            continue
+        if text == "/invent":
+            output.write("/invent requires product context.\n")
             continue
         if text.startswith("/vision"):
             vision_context = text[len("/vision") :].strip()

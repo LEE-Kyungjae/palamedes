@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import palamedes as palamedes_core
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -17,6 +18,7 @@ from palamedes import (
     doctor_report,
     normalize_fingerprint,
 )
+from palamedes_observatory import build_observatory, render_web_shell
 
 
 class PalamedesHandler(BaseHTTPRequestHandler):
@@ -26,6 +28,11 @@ class PalamedesHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         query = parse_qs(parsed.query)
+        if path == "/favicon.ico":
+            self.send_response(HTTPStatus.NO_CONTENT)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
         if path == "/health":
             result = execute_tool("get_health", {})
             status = HTTPStatus.OK if result.get("status") == "ok" else HTTPStatus.SERVICE_UNAVAILABLE if result.get("status") == "error" else HTTPStatus.OK
@@ -57,6 +64,18 @@ class PalamedesHandler(BaseHTTPRequestHandler):
             return
         if path == "/history":
             self._write_json(HTTPStatus.OK, execute_tool("get_history", {}))
+            return
+        if path == "/observatory":
+            try:
+                limit = int(query.get("limit", ["200"])[0])
+                result = build_observatory(palamedes_core.STATE_DIR, limit=limit)
+            except ValueError as exc:
+                self._write_error(HTTPStatus.BAD_REQUEST, str(exc), operation="observatory", step="query")
+                return
+            self._write_json(HTTPStatus.OK, result, extra_headers={"Cache-Control": "no-store"})
+            return
+        if path == "/observatory/view":
+            self._write_html(HTTPStatus.OK, render_web_shell())
             return
         if path == "/reviews":
             payload: Dict[str, Any] = {}
@@ -426,6 +445,15 @@ class PalamedesHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(encoded)))
         for key, value in (extra_headers or {}).items():
             self.send_header(key, value)
+        self.end_headers()
+        self.wfile.write(encoded)
+
+    def _write_html(self, status: HTTPStatus, document: str) -> None:
+        encoded = document.encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(encoded)))
+        self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(encoded)
 
