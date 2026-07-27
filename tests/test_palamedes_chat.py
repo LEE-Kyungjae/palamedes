@@ -1778,12 +1778,19 @@ class PalamedesChatTests(unittest.TestCase):
                     prompt=f"ROLE: {role}\n{prompt}",
                 )
 
-            with self.assertRaisesRegex(ValueError, "not in product context"):
-                run_vision_genesis(
-                    ask=ask,
-                    store=VisionStore(Path(tempdir) / "visions"),
-                    context="Originate a durable social world.",
-                )
+            record = run_vision_genesis(
+                ask=ask,
+                store=VisionStore(Path(tempdir) / "visions"),
+                context="Originate a durable social world.",
+            )
+
+        requirement = record["desire_interpretation"][
+            "explicit_context_requirements"
+        ][0]
+        self.assertEqual(
+            requirement["source_quote"], "Originate a durable social world."
+        )
+        self.assertNotIn("prior vision", requirement["source_quote"])
 
     def test_vision_genesis_allows_core_constraint_satisfied_with_validation(self):
         from palamedes_vision import VisionStore, run_vision_genesis
@@ -4180,6 +4187,154 @@ class PalamedesChatTests(unittest.TestCase):
 
         self.assertIn("plan-only", prompt)
         self.assertIn("cannot claim", prompt)
+
+    def test_cognition_cycle_resumes_only_missing_role_after_runtime_failure(self):
+        class SelectorFailsOnceProvider(StaticChatProvider):
+            def __init__(self):
+                super().__init__()
+                self.failed = False
+
+            def stream(self, messages):
+                if (
+                    messages[-1]["content"].startswith("ROLE: selector")
+                    and not self.failed
+                ):
+                    self.calls.append(messages)
+                    self.failed = True
+                    raise RuntimeError("transient selector failure")
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = SelectorFailsOnceProvider()
+            store = palamedes_chat.CognitionCycleStore(
+                fake.STATE_DIR / "missions" / "cognition"
+            )
+            with self.assertRaisesRegex(RuntimeError, "transient selector"):
+                palamedes_chat.run_cognition_cycle(
+                    provider=provider,
+                    palamedes_module=fake,
+                    context="Choose one bounded mission.",
+                    cycle_store=store,
+                )
+            result = palamedes_chat.run_cognition_cycle(
+                provider=provider,
+                palamedes_module=fake,
+                context="Choose one bounded mission.",
+                cycle_store=store,
+            )
+
+        self.assertEqual(len(provider.calls), 5)
+        self.assertEqual(result["cycle"]["live_model_call_count"], 1)
+        self.assertEqual(
+            [row["role"] for row in result["cycle"]["artifacts"]],
+            ["interpreter", "inventor", "adversary", "selector"],
+        )
+        self.assertTrue(all(
+            row.get("checkpoint_reused")
+            for row in result["cycle"]["artifacts"][:3]
+        ))
+
+    def test_vision_genesis_resumes_completed_roles_after_runtime_failure(self):
+        class AnalogyFailsOnceProvider(StaticChatProvider):
+            def __init__(self):
+                super().__init__()
+                self.failed = False
+
+            def stream(self, messages):
+                if (
+                    messages[-1]["content"].startswith(
+                        "ROLE: distant_analogy_explorer"
+                    )
+                    and not self.failed
+                ):
+                    self.calls.append(messages)
+                    self.failed = True
+                    raise RuntimeError("transient analogy failure")
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            mission_store = palamedes_chat.MissionStore(
+                fake.STATE_DIR / "missions"
+            )
+            provider = AnalogyFailsOnceProvider()
+            context = "Originate a durable product world."
+            with self.assertRaisesRegex(RuntimeError, "transient analogy"):
+                palamedes_chat.run_autonomous_vision(
+                    provider=provider,
+                    mission_store=mission_store,
+                    context=context,
+                )
+            record = palamedes_chat.run_autonomous_vision(
+                provider=provider,
+                mission_store=mission_store,
+                context=context,
+            )
+
+        self.assertEqual(len(provider.calls), 8)
+        self.assertTrue(record["provider_usage"]["roles"][0]["checkpoint_reused"])
+        self.assertTrue(record["provider_usage"]["roles"][1]["checkpoint_reused"])
+
+    def test_explicit_mission_id_accepts_outcome_from_new_session(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            with PalamedesIsolation(Path(tempdir)) as isolated:
+                provider = StaticChatProvider()
+                first = io.StringIO()
+                palamedes_chat.run_chat(
+                    palamedes_module=isolated,
+                    provider=provider,
+                    session_id="origin",
+                    input_stream=io.StringIO("/mission prove one thing\n/approve\n/quit\n"),
+                    output=first,
+                )
+                mission_id = next(
+                    (isolated.STATE_DIR / "missions").glob("mission-*.json")
+                ).stem
+                second = io.StringIO()
+                palamedes_chat.run_chat(
+                    palamedes_module=isolated,
+                    provider=provider,
+                    session_id="fresh-session",
+                    input_stream=io.StringIO(
+                        f"/outcome {mission_id} success Cross-session evidence arrived\n/quit\n"
+                    ),
+                    output=second,
+                )
+
+        self.assertIn("Outcome recorded:", second.getvalue())
+        self.assertNotIn("No approved mission", second.getvalue())
+
+    def test_external_evidence_gate_stops_cycle_without_provider_calls(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            with PalamedesIsolation(Path(tempdir)) as isolated:
+                provider = StaticChatProvider()
+                palamedes_chat.run_chat(
+                    palamedes_module=isolated,
+                    provider=provider,
+                    session_id="origin",
+                    input_stream=io.StringIO("/mission prove one thing\n/approve\n/quit\n"),
+                    output=io.StringIO(),
+                )
+                mission_id = next(
+                    (isolated.STATE_DIR / "missions").glob("mission-*.json")
+                ).stem
+                calls_before = len(provider.calls)
+                output = io.StringIO()
+                palamedes_chat.run_chat(
+                    palamedes_module=isolated,
+                    provider=provider,
+                    session_id="wait",
+                    input_stream=io.StringIO(
+                        f"/wait-external {mission_id} Three independent human responses\n"
+                        "/cycle invent more local artifacts\n/quit\n"
+                    ),
+                    output=output,
+                )
+
+        self.assertEqual(len(provider.calls), calls_before)
+        self.assertIn("WAITING_FOR_EXTERNAL_EVIDENCE", output.getvalue())
+        self.assertIn("provider_calls: 0", output.getvalue())
 
     def test_cmd_chat_binds_explicit_workspace(self):
         with tempfile.TemporaryDirectory() as tempdir:

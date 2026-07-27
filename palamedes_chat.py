@@ -549,6 +549,15 @@ class MissionStore:
                 latest[gate["gate_id"]] = gate
         return [gate for gate in latest.values() if gate.get("status") == "open"]
 
+    def external_evidence_wait_gate(self) -> Optional[Dict[str, Any]]:
+        gates = [
+            gate
+            for gate in self.open_outcome_gates()
+            if gate.get("gate_kind") == "external_evidence"
+            and gate.get("authorized_local_actions") == []
+        ]
+        return gates[-1] if gates else None
+
 
 class CognitionCycleStore:
     def __init__(self, root: Path) -> None:
@@ -679,23 +688,25 @@ def run_cognition_cycle(
     available_discovery_ids: Optional[set] = None,
 ) -> Dict[str, Any]:
     available_discovery_ids = available_discovery_ids or set()
+    started_at = utc_now()
     seed = {
         "context": context,
         "plan_context": json.loads(_plan_context(palamedes_module)),
-        "started_at": utc_now(),
     }
     cycle_id = f"cycle-{_fingerprint(seed)[:12]}"
+    existing_path = cycle_store.path(cycle_id)
+    existing = cycle_store.load(cycle_id) if existing_path.is_file() else None
     cycle: Dict[str, Any] = {
         "cognition_cycle_version": "palamedes-cognition-cycle/1",
         "cognition_cycle_id": cycle_id,
         "status": "running",
         "context": context,
-        "started_at": seed["started_at"],
+        "started_at": existing.get("started_at", started_at) if existing else started_at,
         "provider": provider.provider_name,
         "model": provider.model,
         "role_order": ["interpreter", "inventor", "adversary", "selector", "outcome_analyst"],
-        "artifacts": [],
-        "outcome_analyses": [],
+        "artifacts": list(existing.get("artifacts", [])) if existing else [],
+        "outcome_analyses": list(existing.get("outcome_analyses", [])) if existing else [],
         "selection_authority_role": "selector",
         "outcome_analyst_runs_before_outcome": False,
     }
@@ -704,6 +715,32 @@ def run_cognition_cycle(
         "You are one bounded cognitive role inside Palamedes. Return exactly one "
         "JSON object. Do not perform another role's job and do not claim external evidence."
     )
+    fresh_call_count = 0
+    active_role = ""
+    active_role_was_fresh = False
+
+    def invoke(role: str, call_index: int, prompt: str) -> Dict[str, Any]:
+        nonlocal fresh_call_count, active_role, active_role_was_fresh
+        active_role = role
+        active_role_was_fresh = False
+        for artifact in cycle["artifacts"]:
+            if artifact.get("role") == role:
+                artifact["checkpoint_reused"] = True
+                return dict(artifact["output"])
+        output = _provider_json(provider, system=system, prompt=prompt)
+        fresh_call_count += 1
+        active_role_was_fresh = True
+        cycle["artifacts"].append(
+            _role_artifact(
+                role=role,
+                call_index=call_index,
+                prompt=prompt,
+                output=output,
+                provider=provider,
+            )
+        )
+        cycle_store.save(cycle)
+        return output
     try:
         interpreter_prompt = f"""ROLE: interpreter
 Separate observation from inference and preserve rival frames.
@@ -720,25 +757,13 @@ Require at least two interpretations.
 
 User context: {context}
 Plan context: {_plan_context(palamedes_module)}"""
-        interpreter = _provider_json(
-            provider, system=system, prompt=interpreter_prompt
-        )
+        interpreter = invoke("interpreter", 1, interpreter_prompt)
         _non_empty_string_array(interpreter, "observations")
         _non_empty_string_array(interpreter, "tensions")
         _non_empty_string_array(interpreter, "missing_evidence")
         interpretations = interpreter.get("interpretations")
         if not isinstance(interpretations, list) or len(interpretations) < 2:
             raise ValueError("interpreter requires at least two interpretations")
-        cycle["artifacts"].append(
-            _role_artifact(
-                role="interpreter",
-                call_index=1,
-                prompt=interpreter_prompt,
-                output=interpreter,
-                provider=provider,
-            )
-        )
-        cycle_store.save(cycle)
 
         inventor_prompt = f"""ROLE: inventor
 Generate at least three competing outcome-level missions from distinct frames.
@@ -761,7 +786,7 @@ Return:
 
 Interpreter artifact:
 {json.dumps(interpreter, ensure_ascii=False)}"""
-        inventor = _provider_json(provider, system=system, prompt=inventor_prompt)
+        inventor = invoke("inventor", 2, inventor_prompt)
         candidates = inventor.get("candidates")
         if not isinstance(candidates, list) or len(candidates) < 3:
             raise ValueError("inventor requires at least three candidates")
@@ -784,16 +809,6 @@ Interpreter artifact:
             candidate_ids.append(candidate_id)
         if len(set(candidate_ids)) != len(candidate_ids) or not all(candidate_ids):
             raise ValueError("candidate IDs must be non-empty and unique")
-        cycle["artifacts"].append(
-            _role_artifact(
-                role="inventor",
-                call_index=2,
-                prompt=inventor_prompt,
-                output=inventor,
-                provider=provider,
-            )
-        )
-        cycle_store.save(cycle)
 
         adversary_prompt = f"""ROLE: adversary
 Attack every candidate, shared assumptions, proxy risks, hidden harms, owner bias,
@@ -813,7 +828,7 @@ Interpreter:
 {json.dumps(interpreter, ensure_ascii=False)}
 Candidates:
 {json.dumps(inventor, ensure_ascii=False)}"""
-        adversary = _provider_json(provider, system=system, prompt=adversary_prompt)
+        adversary = invoke("adversary", 3, adversary_prompt)
         critiques = adversary.get("critiques")
         if not isinstance(critiques, list):
             raise ValueError("adversary critiques must be an array")
@@ -828,16 +843,6 @@ Candidates:
         _non_empty_string_array(adversary, "missing_opposition")
         if not str(adversary.get("minimum_disconfirming_probe", "")).strip():
             raise ValueError("adversary requires minimum_disconfirming_probe")
-        cycle["artifacts"].append(
-            _role_artifact(
-                role="adversary",
-                call_index=3,
-                prompt=adversary_prompt,
-                output=adversary,
-                provider=provider,
-            )
-        )
-        cycle_store.save(cycle)
 
         selector_prompt = f"""ROLE: selector
 Select, defer, or reject from the frozen candidates and critiques. You may not
@@ -869,7 +874,7 @@ Candidates:
 {json.dumps(inventor, ensure_ascii=False)}
 Adversary:
 {json.dumps(adversary, ensure_ascii=False)}"""
-        selector = _provider_json(provider, system=system, prompt=selector_prompt)
+        selector = invoke("selector", 4, selector_prompt)
         decision = selector.get("decision")
         if decision not in {"select", "defer", "reject"}:
             raise ValueError("selector decision must be select, defer, or reject")
@@ -954,15 +959,6 @@ Adversary:
             raise ValueError("selected candidate must have the sole selected fate")
         if decision != "select" and selected_fates:
             raise ValueError("defer or reject cannot contain a selected fate")
-        cycle["artifacts"].append(
-            _role_artifact(
-                role="selector",
-                call_index=4,
-                prompt=selector_prompt,
-                output=selector,
-                provider=provider,
-            )
-        )
         cycle["decision"] = decision
         cycle["selected_candidate_id"] = selected_id
         cycle["causal_role"] = causal_role
@@ -973,7 +969,7 @@ Adversary:
         cycle["candidate_fates"] = candidate_fates
         cycle["status"] = "selected" if decision == "select" else decision
         cycle["completed_at"] = utc_now()
-        cycle["live_model_call_count"] = 4
+        cycle["live_model_call_count"] = fresh_call_count
         cycle["role_output_fingerprints_unique"] = (
             len({item["output_fingerprint"] for item in cycle["artifacts"]}) == 4
         )
@@ -1016,6 +1012,12 @@ Adversary:
         cycle_store.save(cycle)
         return {"cycle": cycle, "contract": contract}
     except Exception as exc:
+        if isinstance(exc, ValueError) and active_role_was_fresh:
+            cycle["artifacts"] = [
+                artifact
+                for artifact in cycle["artifacts"]
+                if artifact.get("role") != active_role
+            ]
         cycle["status"] = "failed"
         cycle["failed_at"] = utc_now()
         cycle["failure"] = str(exc)
@@ -2221,9 +2223,11 @@ def _print_help(output: TextIO) -> None:
                 "  /approve             persist the draft and create planner handoff",
                 "  /reject <reason>     reject the latest draft without rewriting it",
                 "  /handoff             show the latest planner handoff",
-                "  /outcome <status> <observation>",
+                "  /outcome [mission-id] <status> <observation>",
                 "                       record success|failure|mixed|unknown",
                 "  /outcome-json <JSON> record outcome plus measured investment",
+                "  /wait-external <mission-id> <evidence needed>",
+                "  /external-evidence <gate-id> <observation>",
                 "  /status              show provider, model, workspace, and session",
                 "  /history             show persisted turns in this session",
                 "  /sessions            list local session IDs",
@@ -2243,10 +2247,24 @@ def run_autonomous_vision(
 
     vision_store = VisionStore(mission_store.root.parent / "visions")
     role_usage: List[Dict[str, Any]] = []
+    attempt_id = f"vision-attempt-{_fingerprint({'context': context, 'outcome_count': len(mission_store.outcomes())})[:12]}"
+    checkpoint = vision_store.checkpoint(attempt_id)
+    active_role = ""
+    active_role_was_fresh = False
 
     def ask(role: str, prompt: str) -> Dict[str, Any]:
+        nonlocal active_role, active_role_was_fresh
+        active_role = role
+        active_role_was_fresh = False
+        cached = checkpoint.get("roles", {}).get(role)
+        if isinstance(cached, dict) and isinstance(cached.get("output"), dict):
+            usage = dict(cached.get("usage", {}))
+            usage["checkpoint_reused"] = True
+            role_usage.append(usage)
+            return dict(cached["output"])
+        output: Optional[Dict[str, Any]] = None
         try:
-            return _provider_json(
+            output = _provider_json(
                 provider,
                 system=(
                     f"ROLE: {role}. You originate product possibilities but grant no "
@@ -2254,15 +2272,29 @@ def run_autonomous_vision(
                 ),
                 prompt=f"ROLE: {role}\n{prompt}",
             )
+            active_role_was_fresh = True
+            return output
         finally:
-            role_usage.append(_capture_provider_usage(provider, role))
+            usage = _capture_provider_usage(provider, role)
+            role_usage.append(usage)
+            if output is not None:
+                vision_store.save_checkpoint(attempt_id, role, output, usage)
+                checkpoint.setdefault("roles", {})[role] = {
+                    "output": output,
+                    "usage": usage,
+                }
 
-    record = run_vision_genesis(
-        ask=ask,
-        store=vision_store,
-        context=context,
-        outcome_count=len(mission_store.outcomes()),
-    )
+    try:
+        record = run_vision_genesis(
+            ask=ask,
+            store=vision_store,
+            context=context,
+            outcome_count=len(mission_store.outcomes()),
+        )
+    except ValueError:
+        if active_role_was_fresh:
+            vision_store.discard_checkpoint_role(attempt_id, active_role)
+        raise
     record["provider_usage"] = _provider_usage_summary(provider, role_usage)
     vision_store.save(record)
     return record
@@ -2659,6 +2691,59 @@ def run_chat(
                 if record.get("role") in {"user", "assistant"}
             ]
             output.write("\n".join(turns) + ("\n" if turns else "No turns.\n"))
+            continue
+        if text.startswith("/wait-external "):
+            parts = text.split(maxsplit=2)
+            if len(parts) != 3 or not re.fullmatch(r"mission-[a-f0-9]{12}", parts[1]):
+                output.write("/wait-external requires: mission-id <evidence needed>\n")
+                continue
+            try:
+                contract = mission_store.load_contract(parts[1])
+            except ValueError as exc:
+                output.write(f"{exc}\n")
+                continue
+            if contract.get("status") not in {"approved", "outcome_recorded"}:
+                output.write("External evidence waits require an approved mission.\n")
+                continue
+            gate = {
+                "gate_version": "palamedes-external-evidence-gate/1",
+                "gate_id": f"gate-{uuid.uuid4().hex[:12]}",
+                "gate_kind": "external_evidence",
+                "mission_contract_id": parts[1],
+                "required_response": parts[2],
+                "authorized_local_actions": [],
+                "status": "open",
+                "opened_at": utc_now(),
+            }
+            mission_store.append_outcome_gate(gate)
+            output.write(
+                f"Waiting for external evidence: {gate['gate_id']}\n"
+                "Further /cycle calls will use zero provider calls until this gate is resolved.\n"
+            )
+            continue
+        if text.startswith("/external-evidence "):
+            parts = text.split(maxsplit=2)
+            if len(parts) != 3 or not re.fullmatch(r"gate-[a-f0-9]{12}", parts[1]):
+                output.write("/external-evidence requires: gate-id <observation>\n")
+                continue
+            gate = next(
+                (row for row in mission_store.open_outcome_gates() if row.get("gate_id") == parts[1]),
+                None,
+            )
+            if gate is None or gate.get("gate_kind") != "external_evidence":
+                output.write(f"Open external evidence gate not found: {parts[1]}\n")
+                continue
+            resolved = dict(gate)
+            resolved.update(
+                {
+                    "status": "resolved",
+                    "resolved_at": utc_now(),
+                    "external_observation": parts[2],
+                    "evidence_custody": "user_attested_external",
+                }
+            )
+            mission_store.append_outcome_gate(resolved)
+            output.write(f"External evidence gate resolved: {parts[1]}\n")
             continue
         if text.startswith("/vision-holdout-import "):
             from palamedes_vision_benchmark import VisionBenchmarkStore
@@ -3588,6 +3673,16 @@ def run_chat(
             if not context:
                 output.write("/cycle requires context.\n")
                 continue
+            wait_gate = mission_store.external_evidence_wait_gate()
+            if wait_gate is not None:
+                output.write(
+                    "WAITING_FOR_EXTERNAL_EVIDENCE\n"
+                    f"  gate: {wait_gate['gate_id']}\n"
+                    f"  required: {wait_gate['required_response']}\n"
+                    "  provider_calls: 0\n"
+                    "Resolve it with /external-evidence before starting another cycle.\n"
+                )
+                continue
             store.append(
                 active_session,
                 {
@@ -3930,19 +4025,33 @@ def run_chat(
                     continue
             else:
                 raw = text[len("/outcome") :].strip()
-                parts = raw.split(maxsplit=1)
-                if len(parts) != 2:
+                parts = raw.split(maxsplit=2)
+                explicit_mission_id = (
+                    parts[0] if parts and re.fullmatch(r"mission-[a-f0-9]{12}", parts[0]) else ""
+                )
+                if explicit_mission_id and len(parts) == 3:
+                    status, observation = parts[1], parts[2]
+                elif not explicit_mission_id and len(parts) >= 2:
+                    status, observation = parts[0], " ".join(parts[1:])
+                else:
                     output.write(
-                        "/outcome requires: success|failure|mixed|unknown <observation>\n"
+                        "/outcome requires: [mission-id] success|failure|mixed|unknown <observation>\n"
                     )
                     continue
-                status, observation = parts
             records = store.load(active_session)
-            mission_id = latest_mission_id(records, {"approved", "outcome_recorded"})
+            mission_id = (
+                explicit_mission_id
+                if not text.startswith("/outcome-json") and explicit_mission_id
+                else latest_mission_id(records, {"approved", "outcome_recorded"})
+            )
             if not mission_id:
                 output.write("No approved mission can accept an outcome.\n")
                 continue
-            contract = mission_store.load_contract(mission_id)
+            try:
+                contract = mission_store.load_contract(mission_id)
+            except ValueError as exc:
+                output.write(f"{exc}\n")
+                continue
             try:
                 outcome = record_mission_outcome(
                     palamedes_module,

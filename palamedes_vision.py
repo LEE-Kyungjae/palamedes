@@ -26,6 +26,91 @@ def _strings(value: Any, field: str, minimum: int = 1) -> List[str]:
     return [item.strip() for item in value]
 
 
+def source_anchors(context: str, limit: int = 12) -> Dict[str, str]:
+    """Extract immutable source text so models select evidence instead of copying it."""
+    candidates: List[str] = []
+
+    def collect(value: Any) -> None:
+        if isinstance(value, str):
+            normalized = re.sub(r"\s+", " ", value).strip()
+            if 12 <= len(normalized) <= 600:
+                candidates.append(normalized)
+        elif isinstance(value, dict):
+            for item in value.values():
+                collect(item)
+        elif isinstance(value, list):
+            for item in value:
+                collect(item)
+
+    try:
+        parsed = json.loads(context)
+    except json.JSONDecodeError:
+        parsed = None
+    if parsed is not None:
+        collect(parsed)
+    if not candidates:
+        candidates.extend(
+            part.strip()
+            for part in re.split(r"(?<=[.!?])\s+|\n+", context)
+            if 12 <= len(part.strip()) <= 600
+        )
+    unique = list(dict.fromkeys(candidates))[:limit]
+    if not unique:
+        raise ValueError("vision context contains no attributable source anchor")
+    return {f"anchor-{index}": value for index, value in enumerate(unique, 1)}
+
+
+def canonical_context_requirements(
+    context: str, model_requirements: Any
+) -> List[Dict[str, str]]:
+    """Attach exact quotes deterministically and recover from malformed model arrays."""
+    anchors = source_anchors(context)
+    quote_to_id = {quote: anchor_id for anchor_id, quote in anchors.items()}
+    rows = model_requirements if isinstance(model_requirements, list) else []
+    canonical: List[Dict[str, str]] = []
+    for index, row in enumerate(rows[:12], 1):
+        if not isinstance(row, dict):
+            continue
+        anchor_id = str(row.get("source_anchor_id", "")).strip()
+        if not anchor_id:
+            anchor_id = quote_to_id.get(str(row.get("source_quote", "")).strip(), "")
+        if anchor_id not in anchors:
+            continue
+        kind = row.get("kind")
+        criticality = row.get("criticality")
+        canonical.append(
+            {
+                "requirement_id": str(row.get("requirement_id", "")).strip()
+                or f"req-{index}",
+                "requirement": str(row.get("requirement", "")).strip()
+                or anchors[anchor_id],
+                "source_anchor_id": anchor_id,
+                "source_quote": anchors[anchor_id],
+                "kind": kind
+                if kind in {"objective", "constraint", "asset", "non_goal"}
+                else "constraint",
+                "criticality": criticality
+                if criticality in {"core", "supporting"}
+                else ("core" if index == 1 else "supporting"),
+            }
+        )
+    if not canonical:
+        canonical = [
+            {
+                "requirement_id": f"req-{index}",
+                "requirement": quote,
+                "source_anchor_id": anchor_id,
+                "source_quote": quote,
+                "kind": "objective" if index == 1 else "constraint",
+                "criticality": "core" if index == 1 else "supporting",
+            }
+            for index, (anchor_id, quote) in enumerate(list(anchors.items())[:1], 1)
+        ]
+    if not any(row["criticality"] == "core" for row in canonical):
+        canonical[0]["criticality"] = "core"
+    return canonical
+
+
 class VisionStore:
     def __init__(self, root: Path) -> None:
         self.root = root
@@ -59,6 +144,51 @@ class VisionStore:
     def latest(self) -> Optional[Dict[str, Any]]:
         rows = self.records()
         return rows[-1] if rows else None
+
+    def checkpoint(self, attempt_id: str) -> Dict[str, Any]:
+        path = self.root / "checkpoints" / f"{attempt_id}.json"
+        if not path.is_file():
+            return {"attempt_id": attempt_id, "roles": {}}
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("vision checkpoint must be an object")
+        return payload
+
+    def save_checkpoint(
+        self, attempt_id: str, role: str, output: Dict[str, Any], usage: Dict[str, Any]
+    ) -> None:
+        root = self.root / "checkpoints"
+        root.mkdir(parents=True, exist_ok=True)
+        path = root / f"{attempt_id}.json"
+        payload = self.checkpoint(attempt_id)
+        roles = payload.setdefault("roles", {})
+        existing = roles.get(role)
+        row = {"output": output, "usage": usage}
+        if existing is not None and existing != row:
+            raise ValueError("vision checkpoint output is immutable")
+        roles[role] = row
+        payload["updated_at"] = utc_now()
+        temporary = path.with_suffix(".json.tmp")
+        temporary.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(path)
+
+    def discard_checkpoint_role(self, attempt_id: str, role: str) -> None:
+        path = self.root / "checkpoints" / f"{attempt_id}.json"
+        payload = self.checkpoint(attempt_id)
+        roles = payload.get("roles", {})
+        if not isinstance(roles, dict) or role not in roles:
+            return
+        del roles[role]
+        payload["updated_at"] = utc_now()
+        temporary = path.with_suffix(".json.tmp")
+        temporary.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(path)
 
     def needs_wake(
         self,
@@ -124,6 +254,7 @@ def run_vision_genesis(
             "agenda_strategy must be adaptive, frontier, or conventional"
         )
     prior_records = store.records()[-5:]
+    authoritative_anchors = source_anchors(context)
     prior_frontiers = []
     for record in prior_records:
         selected_id = record.get("judgment", {}).get("selected_vision_id")
@@ -262,18 +393,19 @@ negative emotion, social dynamics, habit, identity, and possible harm. Return JS
 "sought_or_charged_state":"...","affect_source":"direct|mediated|social|instrumental",
 "valence":"positive|negative|mixed","behavioral_energy":"...","evidence_or_assumption":"...",
 "harm_boundary":"..."}}],"explicit_context_requirements":[{{"requirement_id":"req-1",
-"requirement":"...","source_quote":"...","kind":"objective|constraint|asset|non_goal",
+"requirement":"...","source_anchor_id":"anchor-1","kind":"objective|constraint|asset|non_goal",
 "criticality":"core|supporting"}}],"unspoken_questions":["..."]}}
 Require 4-8 materially different desires and at least 3 questions.
 Preserve every explicit product objective, constraint, reusable asset, and non-goal from
-the text after `Context:` only. Mark at least one requirement core. Every `source_quote`
-must be a verbatim non-empty substring of that context. Do not include these instructions,
+the text after `Context:` only. Mark at least one requirement core. Select only IDs from
+the authoritative source anchors; Palamedes attaches exact quotes. Do not include these instructions,
 the prior-frontier novelty guard, or an inference as a quoted context requirement.
 Do not repeat a prior vision's central tension merely with new nouns.
 Use the selected self-authored questions to decide what latent motives deserve exploration;
 do not merely echo their wording and do not treat them as product facts or authority.
 Self-authored exploration agenda:\n{json.dumps(agenda, ensure_ascii=False)}
 Prior selected creative frontiers:\n{json.dumps(prior_frontiers, ensure_ascii=False)}
+Authoritative source anchors:\n{json.dumps(authoritative_anchors, ensure_ascii=False)}
 Context:\n{context}""",
     )
     desires = desire.get("latent_desires")
@@ -296,9 +428,10 @@ Context:\n{context}""",
             raise ValueError("invalid affect valence")
         desire_ids.add(row["desire_id"])
     _strings(desire.get("unspoken_questions"), "unspoken_questions", 3)
-    requirements = desire.get("explicit_context_requirements")
-    if not isinstance(requirements, list) or not 1 <= len(requirements) <= 12:
-        raise ValueError("desire interpreter requires 1-12 explicit context requirements")
+    requirements = canonical_context_requirements(
+        context, desire.get("explicit_context_requirements")
+    )
+    desire["explicit_context_requirements"] = requirements
     requirement_ids = set()
     core_requirement_ids = set()
     for row in requirements:
@@ -307,8 +440,8 @@ Context:\n{context}""",
         for field in ("requirement_id", "requirement", "source_quote"):
             if not str(row.get(field, "")).strip():
                 raise ValueError(f"context requirement requires {field}")
-        if row["source_quote"] not in context:
-            raise ValueError("context requirement source_quote is not in product context")
+        if row["source_anchor_id"] not in authoritative_anchors:
+            raise ValueError("context requirement source anchor is invalid")
         if row.get("kind") not in {"objective", "constraint", "asset", "non_goal"}:
             raise ValueError("invalid context requirement kind")
         if row.get("criticality") not in {"core", "supporting"}:

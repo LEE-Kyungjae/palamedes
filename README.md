@@ -269,6 +269,9 @@ stable creative ability. Repeated model judgment is still not human evidence.
 High originality also cannot compensate for omitting the input's core product objective.
 Vision Genesis carries source-bearing context requirements through world construction and
 criticism; selection requires every core item to be satisfied. Benchmark gate v3 separates
+Model roles select deterministic source-anchor IDs rather than reproducing exact source
+quotes. Palamedes attaches immutable source text itself and recovers one attributable core
+anchor from a malformed array without paying for a schema-repair call.
 detailed-vision quality from founder-prompt origination. A second blind judge scores problem
 reframing, an unsupplied mechanism, affective thesis, product-world seed, and whether the
 text could substitute for a human's upstream prompt. If the central solution was already
@@ -874,7 +877,10 @@ palamedes> /preview
 palamedes> /approve
 palamedes> /handoff
 palamedes> /outcome success The probe produced the precommitted result
+palamedes> /outcome mission-012345abcdef success The result arrived in a new chat session
 palamedes> /outcome-json {"status":"mixed","observation":"Probe result","actual_investment":{"engineering_days":0.5,"ai_cost":3,"input_tokens":12000,"output_tokens":1800,"monthly_infrastructure":0,"evidence_source":"measured","notes":"time log + provider export"}}
+palamedes> /wait-external mission-012345abcdef Three independent human responses
+palamedes> /external-evidence gate-012345abcdef Three responses were collected
 ```
 
 Available commands:
@@ -885,14 +891,18 @@ Available commands:
 - `/challenge`: attack assumptions and state falsifiers
 - `/research`: identify the minimum missing external evidence
 - `/mission`: generate and validate a structured draft without changing the plan
-- `/cycle`: run independent interpreter, inventor, adversary, and selector calls
+- `/cycle`: run independent interpreter, inventor, adversary, and selector calls; resume
+  completed immutable roles after a provider-runtime interruption
 - `/preview`: inspect the latest pending mission contract
 - `/approve`: project the draft into plan, evidence, hypotheses, and a probe
 - `/reject`: preserve and reject a draft with an explicit reason
 - `/handoff`: inspect the immutable planner-facing mission handoff
-- `/outcome`: append an observed result and update linked hypothesis/probe state
+- `/outcome`: append an observed result and update linked hypothesis/probe state; an explicit
+  mission ID permits attribution from another chat session
 - `/outcome-json`: record the same result with attributable engineering days, AI cost,
   token usage, monthly infrastructure, and measurement provenance
+- `/wait-external`: open a structured no-local-action evidence gate for an approved mission
+- `/external-evidence`: attach a user-attested observation and resolve that gate
 - `/status`, `/history`, `/sessions`, `/new`, `/help`, `/quit`
 
 The current directory is the default workspace; `--workspace` selects another
@@ -1142,7 +1152,10 @@ outcome analyst
 The four pre-outcome roles are separate provider calls even when one model
 performs every role. Each artifact records its role, call index, provider,
 model, prompt fingerprint, output fingerprint, and completion time. Partial
-artifacts survive a later-role failure, but no mission is issued. The fifth
+validated artifacts survive a later-role runtime failure and are reused on the
+next identical `/cycle`; a contract-invalid role is discarded and never promoted.
+Vision Genesis uses the same immutable per-role checkpoint rule. No mission is
+issued from a partial cycle. The fifth
 role, outcome analyst, cannot run until an observed outcome has been appended.
 Therefore one successful `/cycle` uses four model calls, with one additional
 call for each analyzed `/outcome`.
@@ -1153,6 +1166,11 @@ appended to `.palamedes/missions/outcomes.jsonl`; role artifacts live under
 `.palamedes/missions/cognition/`. Repeating `/approve` cannot approve a contract
 that has already left `draft` status. Outcome attribution is recorded as
 unresolved first and only then examined by the outcome analyst.
+When `/outcome` includes a mission ID, attribution is mission-addressable rather
+than tied to the chat session that approved it. A structured external-evidence
+gate returns `WAITING_FOR_EXTERNAL_EVIDENCE` with `provider_calls: 0`, preventing
+repeated Vision and cognition spending when only outside evidence can change the
+decision.
 
 A cycle cannot claim that it originated work already marked complete: completed
 work must be classified as an `audited` cycle with `audit_only` scope. Selection
