@@ -92,6 +92,31 @@ class PalamedesObserveTests(unittest.TestCase):
         )
         self.assertIn("git_status_changed", second["change"]["reasons"])
 
+    def test_observe_config_adds_bounded_project_specific_documents(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            workspace = Path(tempdir) / "project"
+            workspace.mkdir()
+            (workspace / "README.md").write_text("# Product\n", encoding="utf-8")
+            (workspace / "index.html").write_text(
+                "<main>Interactive portfolio</main>", encoding="utf-8"
+            )
+            outside = Path(tempdir) / "outside.md"
+            outside.write_text("must not be observed", encoding="utf-8")
+            state = workspace / ".palamedes"
+            state.mkdir()
+            (state / "observe.json").write_text(
+                json.dumps({"documents": ["index.html", "../outside.md", "README.md"]}),
+                encoding="utf-8",
+            )
+
+            snapshot = palamedes_observe.collect_observation(workspace, ref_root=None)
+
+        documents = snapshot["signals"]["documents"]["documents"]
+        paths = [item["path"] for item in documents]
+        self.assertIn("index.html", paths)
+        self.assertEqual(paths.count("README.md"), 1)
+        self.assertNotIn("../outside.md", paths)
+
     def test_explicit_test_command_failure_is_observed_without_shell(self):
         with tempfile.TemporaryDirectory() as tempdir:
             workspace = Path(tempdir)

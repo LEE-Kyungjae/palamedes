@@ -3668,6 +3668,16 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertIn("[mission validation error]", output.getvalue())
         self.assertIn("No pending mission draft to approve.", output.getvalue())
 
+    def test_mission_prompt_omits_placeholder_prompt_agenda_response(self):
+        prompt = palamedes_chat.mission_prompt("advisory question-1")
+
+        self.assertNotIn(
+            '"prompt_agenda_ids": ["required fresh-eyes agenda IDs, when present"]',
+            prompt,
+        )
+        self.assertIn("Omit it entirely", prompt)
+        self.assertIn("advisory vision agenda", prompt)
+
     def test_independent_cognition_cycle_and_post_outcome_analysis(self):
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)

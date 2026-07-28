@@ -1630,11 +1630,6 @@ Required shape:
   "uncertainty": 50,
   "work_scale": "micro|component|product|service|portfolio",
   "surface_key": "stable product or code surface label",
-  "prompt_agenda_response": {{
-    "prompt_agenda_ids": ["required fresh-eyes agenda IDs, when present"],
-    "action": "address",
-    "rationale": "how this non-micro mission answers the required zoom shift"
-  }},
   "product_alignment_response": {{
     "purposes": [{{"purpose_id":"...", "effect":"advances|neutral|conflicts|unknown", "rationale":"..."}}],
     "capability_reuse": {{
@@ -1653,6 +1648,20 @@ Required shape:
     "rationale": "why the next mission resolves, is independent from, or consciously carries the evidence debt; independent and accept_debt do not close required follow-up"
   }}
 }}
+
+The prompt_agenda_response field is optional. Omit it entirely unless the user
+context supplies one or more concrete IDs beginning with "prompt-agenda-" from
+a required fresh-eyes agenda. Question IDs from an advisory vision agenda are
+not prompt agenda IDs. When concrete required IDs are present, include:
+{{
+  "prompt_agenda_response": {{
+    "prompt_agenda_ids": ["prompt-agenda-..."],
+    "action": "address",
+    "rationale": "how this non-micro mission answers the required zoom shift"
+  }}
+}}
+Never emit prompt_agenda_response with an empty array, placeholder IDs, or
+advisory question IDs.
 
 Do not invent external evidence. Use source "user" or "plan" for claims from the
 provided context. If evidence is weak, preserve that weakness with low
