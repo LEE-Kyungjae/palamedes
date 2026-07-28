@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "palamedes"
-version = "0.5.0"
+version = "0.6.0"
 description = "A local, agent-friendly planning kernel with a thin Python SDK surface."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -26,6 +26,7 @@ classifiers = [
 
 [project.scripts]
 palamedes = "palamedes:main"
+palamedes-server = "palamedes_server:main"
 
 [tool.setuptools]
 py-modules = [
@@ -33,12 +34,29 @@ py-modules = [
   "palamedes_agent",
   "palamedes_chat",
   "palamedes_client",
+  "palamedes_conformance",
+  "palamedes_epistemics",
+  "palamedes_host_contract",
+  "palamedes_knowledge",
   "palamedes_mission",
   "palamedes_observe",
+  "palamedes_observatory",
+  "palamedes_invention",
+  "palamedes_pursuit",
+  "palamedes_workspace",
   "palamedes_proof",
   "palamedes_watch",
   "palamedes_server",
   "palamedes_store",
+  "palamedes_product_alignment",
+  "palamedes_prompt",
+  "palamedes_reference_intelligence",
+  "palamedes_reference_adapter",
+  "palamedes_reference_host",
+  "palamedes_thought",
+  "palamedes_vision",
+  "palamedes_vision_scout",
+  "palamedes_vision_benchmark",
 ]
 
 [tool.setuptools.packages.find]

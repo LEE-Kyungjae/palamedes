@@ -572,6 +572,27 @@ Palamedes는 claim이 왜 보였는지도 observation surface로 기록한다. �
 python3 -m pip install -e .
 ```
 
+Palamedes 본체는 프로젝트마다 복제하지 않고 한 번만 설치할 수 있습니다.
+기존 프로젝트의 `.palamedes` 기록은 그대로 둔 채 이름만 전역 Registry에
+등록합니다.
+
+```bash
+pipx install --force git+https://github.com/LEE-Kyungjae/Palamedes.git
+
+palamedes workspace init /work/greedy --name greedy
+palamedes workspace init /work/zaeze --name zaeze
+palamedes workspace list
+
+palamedes -w greedy chat --provider codex
+palamedes -w zaeze observatory --limit 100
+palamedes-server -w greedy --port 8787
+```
+
+Registry는 기본적으로 `~/.local/share/palamedes/workspaces.json`에 저장되며
+`PALAMEDES_HOME`으로 위치를 바꿀 수 있습니다. `workspace remove <name>`은
+전역 이름 연결만 지우고 프로젝트나 `.palamedes` 기록은 삭제하지 않습니다.
+`-w`를 생략하면 현재 디렉터리를 작업공간으로 사용합니다.
+
 ### Codex 구독 인증 사용
 
 이미 인증된 Codex CLI를 Palamedes의 추론 엔진으로 사용할 수 있습니다.
