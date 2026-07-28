@@ -31,6 +31,7 @@ DEFAULT_DOCUMENT_NAMES = (
     "go.mod",
     "Makefile",
 )
+OBSERVE_CONFIG_PATH = Path(".palamedes/observe.json")
 SENSITIVE_NAME_PATTERNS = (
     ".env",
     "credentials",
@@ -69,8 +70,12 @@ def redact(text: str) -> str:
 
 
 def safe_document(path: Path) -> bool:
-    lowered = path.name.lower()
-    return not any(pattern in lowered for pattern in SENSITIVE_NAME_PATTERNS)
+    lowered_parts = [part.lower() for part in path.parts]
+    return not any(
+        pattern in part
+        for part in lowered_parts
+        for pattern in SENSITIVE_NAME_PATTERNS
+    )
 
 
 def run_command(
@@ -127,7 +132,34 @@ def discover_documents(workspace: Path) -> List[Path]:
                 found.append(candidate)
             if len(found) >= MAX_DOCUMENTS:
                 break
-    return found[:MAX_DOCUMENTS]
+    config_path = workspace / OBSERVE_CONFIG_PATH
+    if config_path.is_file():
+        try:
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            config = {}
+        configured = config.get("documents", []) if isinstance(config, dict) else []
+        if isinstance(configured, list):
+            workspace_root = workspace.resolve()
+            for raw_path in configured:
+                if not isinstance(raw_path, str) or not raw_path.strip():
+                    continue
+                candidate = (workspace / raw_path).resolve()
+                try:
+                    candidate.relative_to(workspace_root)
+                except ValueError:
+                    continue
+                if candidate.is_file() and safe_document(candidate):
+                    found.append(candidate)
+    unique: List[Path] = []
+    seen = set()
+    for candidate in found:
+        resolved = candidate.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        unique.append(candidate)
+    return unique[:MAX_DOCUMENTS]
 
 
 def observe_documents(workspace: Path) -> Dict[str, Any]:
