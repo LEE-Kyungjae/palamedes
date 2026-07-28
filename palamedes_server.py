@@ -462,11 +462,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Palamedes minimal HTTP service")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8787)
+    parser.add_argument("-w", "--workspace", default="", help="Registered workspace name or project path.")
     return parser
 
 
 def main() -> None:
     args = build_parser().parse_args()
+    if args.workspace:
+        from palamedes_observe import bind_workspace
+        from palamedes_workspace import WorkspaceRegistry
+
+        bind_workspace(palamedes_core, WorkspaceRegistry().resolve(args.workspace))
+        palamedes_core.ensure_state()
     server = ThreadingHTTPServer((args.host, args.port), PalamedesHandler)
     print(f"Palamedes service listening on http://{args.host}:{args.port}")
     try:

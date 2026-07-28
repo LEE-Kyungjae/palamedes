@@ -26,7 +26,7 @@ REVISIONS_PATH = STATE_DIR / "revisions.jsonl"
 EVENT_RETENTION_LIMIT = 1000
 REVISION_RETENTION_LIMIT = 100
 STATE_LOCK = None
-IMPLEMENTATION_VERSION = "0.5.0"
+IMPLEMENTATION_VERSION = "0.6.0"
 CONTRACT_VERSION = "0.5.0"
 SPEC_DIR = CODE_ROOT / "spec"
 CONTRACTS_TEST_DIR = CODE_ROOT / "tests" / "contracts"
@@ -3715,7 +3715,18 @@ def cmd_team(args: argparse.Namespace) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Palamedes local planning and mission intelligence")
+    p.add_argument(
+        "-w", "--workspace", dest="workspace_selector", default="",
+        help="Registered workspace name or project path (may be used before the command).",
+    )
     sub = p.add_subparsers(dest="command", required=True)
+
+    s = sub.add_parser("workspace", help="Register and inspect project workspaces.")
+    s.add_argument("workspace_action", choices=["init", "list", "show", "remove"])
+    s.add_argument("target", nargs="?", default="")
+    s.add_argument("--name", type=str, default="")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(func=cmd_workspace)
 
     s = sub.add_parser("chat", help="Start an interactive AI-backed Palamedes session.")
     s.add_argument(
@@ -4034,6 +4045,38 @@ def cmd_chat(args: argparse.Namespace) -> None:
     run_chat_command(args, sys.modules[__name__])
 
 
+def cmd_workspace(args: argparse.Namespace) -> None:
+    from palamedes_workspace import WorkspaceRegistry
+
+    registry = WorkspaceRegistry()
+    if args.workspace_action == "init":
+        path = Path(args.target or ".").expanduser().resolve()
+        name = args.name or path.name
+        result: Any = registry.register(name, path)
+    elif args.workspace_action == "list":
+        result = registry.list()
+    elif args.workspace_action == "show":
+        selector = args.target or args.workspace_selector
+        path = registry.resolve(selector)
+        result = next(
+            (row for row in registry.list() if Path(str(row.get("path", ""))) == path),
+            {"name": selector, "path": str(path), "state_dir": str(path / ".palamedes")},
+        )
+    else:
+        if not args.target:
+            raise ValueError("workspace remove requires a registered name")
+        result = registry.remove(args.target)
+    if args.json:
+        print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+    elif isinstance(result, list):
+        if not result:
+            print("No registered workspaces.")
+        for row in result:
+            print(f"{row.get('name', '?'):<20} {row.get('path', '')}")
+    else:
+        print(f"{result.get('name', '?')}: {result.get('path', '')}")
+
+
 def cmd_observe(args: argparse.Namespace) -> None:
     from palamedes_observe import cmd_observe as run_observe_command
 
@@ -4060,6 +4103,15 @@ def main() -> None:
     parser = build_parser()
     try:
         args = parser.parse_args()
+        if args.command != "workspace":
+            from palamedes_observe import bind_workspace
+            from palamedes_workspace import WorkspaceRegistry
+
+            legacy_selector = str(getattr(args, "workspace", "") or "").strip()
+            selector = str(args.workspace_selector or legacy_selector).strip()
+            workspace = WorkspaceRegistry().resolve(selector) if selector else Path.cwd().resolve()
+            bind_workspace(sys.modules[__name__], workspace)
+            args.workspace = str(workspace)
         args.func(args)
     except ValueError as exc:
         raise SystemExit(str(exc))

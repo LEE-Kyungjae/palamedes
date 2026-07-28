@@ -1353,6 +1353,41 @@ make compile
 make schema-check
 ```
 
+## One installation, multiple workspaces
+
+Install or upgrade Palamedes once instead of cloning it into every project:
+
+```bash
+pipx install --force git+https://github.com/LEE-Kyungjae/Palamedes.git
+# or, while developing Palamedes itself:
+pipx install --force -e /path/to/Palamedes
+```
+
+Register each existing project. Registration preserves its current `.palamedes`
+history in place and writes only `.palamedes/workspace.json` plus a global name
+mapping under `${PALAMEDES_HOME:-~/.local/share/palamedes}/workspaces.json`:
+
+```bash
+palamedes workspace init /work/greedy --name greedy
+palamedes workspace init /work/zaeze --name zaeze
+palamedes workspace list
+```
+
+The single installed CLI can then operate on any isolated project from anywhere:
+
+```bash
+palamedes -w greedy show
+palamedes -w greedy chat --provider codex
+palamedes -w zaeze observatory --limit 100
+palamedes-server -w greedy --port 8787
+```
+
+A literal directory is also accepted in place of a registered name. Running
+without `-w` binds to the current directory. `workspace remove <name>` removes
+only the global mapping; it never deletes the project or its `.palamedes` state.
+After verifying all five registrations, old per-project `ref/palamedes` clones
+may be removed separately; do not remove any project `.palamedes` directory.
+
 ## HTTP API
 
 Start the local service:
