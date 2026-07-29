@@ -11,11 +11,11 @@
 > **Palamedes decides what mission is worth planning before execution agents
 > decide how to implement it.**
 
-Palamedes is a research-beta autonomous pre-planner and plan-state kernel. It
-works before the familiar `planner -> task -> implementation` pipeline:
-noticing what matters, forming competing interpretations, originating a
-justified mission, attempting to falsify it, and handing only the surviving
-mission to downstream agents.
+# Palamedes
+
+Palamedes is an open-source Goal Discovery and Goal Synthesis Engine that generates novel, detailed, and actionable missions before planning begins.
+It operates before the traditional `planner → task → implementation` pipeline by discovering opportunities, generating competing goal hypotheses, refining them into justified missions, attempting to falsify them, and passing only the surviving mission to downstream planners and agents.
+Palamedes is currently a research-beta project exploring autonomous goal generation, mission synthesis, and pre-planning reasoning.
 
 It treats a plan as revisionable state rather than disposable text. Alongside
 goals, evidence, hypotheses, and restore points, Palamedes can preserve
