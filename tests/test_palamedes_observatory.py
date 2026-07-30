@@ -75,7 +75,15 @@ class PalamedesObservatoryTests(unittest.TestCase):
         self.assertFalse(pursuit["details"]["authority"]["publication"])
         self.assertEqual(snapshot["summary"]["open_gates"], 0)
         self.assertEqual(snapshot["events"][0]["id"], "gate-cccccccccccc")
+        self.assertIn("operations_board", snapshot)
+        self.assertEqual(snapshot["operations_board"]["missions"]["draft_candidates"], 0)
+        self.assertEqual(snapshot["operations_board"]["missions"]["total"], 1)
+        self.assertEqual(
+            snapshot["operations_board"]["missions"]["status_counts"],
+            {"approved": 1},
+        )
         self.assertIn("Palamedes Observatory", render_cli(snapshot))
+        self.assertIn("latest_cycle=", render_cli(snapshot))
 
     def test_web_shell_is_read_only_and_fetches_projection(self):
         document = render_web_shell()

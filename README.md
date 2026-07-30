@@ -168,8 +168,9 @@ is repaired only for known typed fields; ambiguous content remains invalid.
 
 Product alignment now precedes local quality optimization. Source-bearing
 product invariants, reusable capabilities, temporary constraints, open
-integration gaps, and required product-stage journeys live in
-`.palamedes/product-alignment/state.json` and are injected into `/cycle`.
+integration gaps, and required product-stage journeys live in the append-only
+`.palamedes/product-alignment/events.jsonl` ledger and are injected into `/cycle`.
+`state.json` is only a regenerable projection.
 Mission approval blocks conflict with an active product invariant, greenfield
 construction without evaluating an existing capability, silent reuse of an
 expired constraint, and stage advancement without configured journey evidence.
@@ -887,12 +888,53 @@ Available commands:
 
 - `/observe`: snapshot bounded project, Git, TODO, plan-state, and central-ref signals
 - `/reference-intelligence [path]`: build a local-first self-model and bounded research agenda; references are optional
+- `/reconcile` audits immutable handoffs, outcomes, gates, and lifecycle events and
+  prints a dry-run projection report. Applying requires `/reconcile --apply
+  <proposal-fingerprint>` with the exact fingerprint emitted by a fresh dry-run. It
+  appends only deterministic, idempotent lifecycle repair events, never rewrites source
+  handoffs or outcomes, and leaves conflicts or missing references unresolved.
+- `python3 palamedes.py lifecycle-audit` independently replays lifecycle event meaning
+  from immutable sources. `lifecycle-reconcile` is dry-run by default and accepts only
+  the exact fresh proposal fingerprint for `--apply`.
+- `python3 palamedes.py gate-resolution --request request.json` verifies evidence hashes
+  and creates a read-only closure proposal. Only its exact fresh fingerprint may append
+  a resolution event and gate revision. Approving a successor alone never closes a gate.
+- `python3 palamedes.py storage` reports retention classes, unique content, and duplicate
+  bytes without deleting or rewriting artifacts.
+- `/satisfaction-json <JSON>` host-verifies a requirement against the current Git and
+  worktree fingerprint, bounded source/call-path artifacts, claim-specific evidence,
+  purpose alignment, and freshness. `/satisfactions` shows the latest assessment for
+  each requirement. A current aligned `already_satisfied` assessment blocks another
+  implementation mission with the same `requirement_id`.
+- `/alignment-candidate-json <JSON>` appends a proposed purpose, capability,
+  constraint, integration gap, or surface stage without changing active product truth.
+  `/alignment-approve <candidate-id>` records human approval and merges sources and
+  statement variants without erasing history; `/alignment` shows the surface projection.
+  Approval events are authoritative and the projection can be rebuilt from them.
+- Outcomes preserve an honest `outcome_type`: `validated_improvement`, `null_finding`,
+  `already_satisfied`, `adverse_result`, `insufficient_evidence`,
+  `blocked_by_environment`, `misaligned_mission`, or `prototype_only`.
 - `/think`: choose and perform the missing mode of thought
 - `/challenge`: attack assumptions and state falsifiers
 - `/research`: identify the minimum missing external evidence
 - `/mission`: generate and validate a structured draft without changing the plan
 - `/cycle`: run independent interpreter, inventor, adversary, and selector calls; resume
   completed immutable roles after a provider-runtime interruption
+- `/cycle --mode audit <context>` (alias: `--skip-vision`): run only those four
+  cognition roles for a bounded audit. It suppresses automatic Vision Genesis and
+  meta-learning provider calls, omits selected-vision influence, and emits run-scoped
+  role progress, elapsed time, and token custody without changing ordinary `/cycle`.
+- `/cycle --resume <cycle-id>`: resume one failed or interrupted cognition run
+  from its preserved context and verified role checkpoints. The provider and model
+  must match; completed roles are not called again, and tampered checkpoints fail closed.
+- Plain `/cycle <context>` now runs a deterministic cost preflight before any provider
+  call. Lookup uses 0 calls for a host-verified `already_satisfied` requirement; Micro
+  uses one mission-compiler call with at most one schema repair; Component uses the four
+  independent roles without Vision/meta-learning; Product may use the full research
+  path. `/cycle --mode lookup|micro|component|product <context>` is an explicit override.
+  Ambiguous natural-language scope defaults to Component, while security, privacy,
+  payment, deletion, migration, public API, deployment, storage binding, irreversibility,
+  cross-surface work, and product-invariant conflicts escalate rather than down-route.
 - `/preview`: inspect the latest pending mission contract
 - `/approve`: project the draft into plan, evidence, hypotheses, and a probe
 - `/reject`: preserve and reject a draft with an explicit reason

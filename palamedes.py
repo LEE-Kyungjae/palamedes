@@ -3191,6 +3191,56 @@ def cmd_observatory(args: argparse.Namespace) -> None:
     print(render_cli(snapshot))
 
 
+def cmd_storage(args: argparse.Namespace) -> None:
+    """Inventory state storage without deleting or rewriting any artifact."""
+    from palamedes_storage import inventory_storage
+
+    inventory = inventory_storage(STATE_DIR)
+    if args.json:
+        print(json.dumps(inventory, indent=2, ensure_ascii=False))
+        return
+    summary = inventory["summary"]
+    print("Palamedes Storage Inventory (read-only)")
+    print(
+        f"  files={summary['files']} logical={summary['logical_bytes']} "
+        f"unique={summary['unique_content_bytes']} "
+        f"reclaimable={summary['duplicate_reclaimable_bytes']} "
+        f"duplicate_groups={summary['duplicate_groups']}"
+    )
+    for classification, count in inventory["classification_counts"].items():
+        print(
+            f"  {classification}: files={count} "
+            f"bytes={inventory['classification_bytes'].get(classification, 0)}"
+        )
+    print(f"  fingerprint={inventory['inventory_fingerprint']}")
+    print("  mutation_performed=no")
+
+
+def cmd_lifecycle_audit(args: argparse.Namespace) -> None:
+    from palamedes_lifecycle import audit_lifecycle_events
+    report = audit_lifecycle_events(STATE_DIR / "missions")
+    if args.json:
+        print(json.dumps(report, indent=2, ensure_ascii=False)); return
+    summary = report["summary"]
+    print("Palamedes Lifecycle Semantic Audit (read-only)")
+    print(f"  events={summary['events']} supported={summary['supported']} unsupported={summary['unsupported']} corrections={summary['correction_proposals']} malformed={summary['malformed_records']}")
+    print(f"  fingerprint={report['audit_fingerprint']}")
+
+
+def cmd_lifecycle_reconcile(args: argparse.Namespace) -> None:
+    from palamedes_lifecycle import reconcile_lifecycle
+    report = reconcile_lifecycle(STATE_DIR / "missions", apply=bool(args.apply), expected_proposal_fingerprint=str(args.apply or ""))
+    print(json.dumps(report, indent=2, ensure_ascii=False))
+
+
+def cmd_gate_resolution(args: argparse.Namespace) -> None:
+    from palamedes_gate_resolution import apply_gate_resolution, propose_gate_resolution
+    request = json.loads(Path(args.request).read_text(encoding="utf-8"))
+    kwargs = {"gate_id": request["gate_id"], "evidence": request["evidence"], "coverage_assertions": request["coverage_assertions"], "reviewer": request["reviewer"]}
+    result = apply_gate_resolution(STATE_DIR / "missions", **kwargs, expected_proposal_fingerprint=args.apply) if args.apply else propose_gate_resolution(STATE_DIR / "missions", **kwargs)
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+
+
 def cmd_restore(args: argparse.Namespace) -> None:
     if getattr(args, "preview", False):
         preview = restore_preview(getattr(args, "revision_id", ""), previous=getattr(args, "previous", False))
@@ -3991,6 +4041,23 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--limit", type=int, default=50)
     s.add_argument("--json", action="store_true")
     s.set_defaults(func=cmd_observatory)
+
+    s = sub.add_parser("storage")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(func=cmd_storage)
+
+    s = sub.add_parser("lifecycle-audit")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(func=cmd_lifecycle_audit)
+
+    s = sub.add_parser("lifecycle-reconcile")
+    s.add_argument("--apply", type=str, default="")
+    s.set_defaults(func=cmd_lifecycle_reconcile)
+
+    s = sub.add_parser("gate-resolution")
+    s.add_argument("--request", required=True)
+    s.add_argument("--apply", type=str, default="")
+    s.set_defaults(func=cmd_gate_resolution)
 
     s = sub.add_parser("restore")
     s.add_argument("--revision-id", type=str, default="")
