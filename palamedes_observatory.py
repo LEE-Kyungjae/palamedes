@@ -8,6 +8,11 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
+from palamedes_lifecycle import reconcile_lifecycle
+from palamedes_product_alignment import ProductAlignmentStore
+from palamedes_satisfaction import SatisfactionStore, assessment_is_current
+from palamedes_storage import inventory_storage
+
 
 def _json(path: Path) -> Dict[str, Any]:
     try:
@@ -65,6 +70,172 @@ def _event(
             )
             if row.get(key)
         },
+    }
+
+
+def _tree_size(root: Path) -> int:
+    total = 0
+    if not root.is_dir():
+        return 0
+    for path in root.rglob("*"):
+        try:
+            if path.is_file():
+                total += path.stat().st_size
+        except OSError:
+            continue
+    return total
+
+
+def build_operations_board(state_dir: Path) -> Dict[str, Any]:
+    mission_root = state_dir / "missions"
+    lifecycle = reconcile_lifecycle(mission_root)
+    alignment = ProductAlignmentStore(state_dir / "product-alignment").active_context()
+    satisfaction = SatisfactionStore(state_dir / "satisfaction").latest()
+    missions = [_json(path) for path in sorted(mission_root.glob("mission-*.json"))]
+    cycles = [_json(path) for path in sorted((mission_root / "cognition").glob("cycle-*.json"))]
+    latest_cycle = max(
+        cycles,
+        key=lambda row: _first(row, ("completed_at", "updated_at", "failed_at", "started_at", "created_at")),
+        default={},
+    )
+    latest_usage = latest_cycle.get("provider_usage", {})
+    totals = latest_usage.get("totals", {}) if isinstance(latest_usage, dict) else {}
+    state_counts: Dict[str, int] = {}
+    for item in lifecycle["items"]:
+        state = str(item.get("projected_state", "unknown"))
+        state_counts[state] = state_counts.get(state, 0) + 1
+    mission_status_counts: Dict[str, int] = {}
+    for mission in missions:
+        status = str(mission.get("status", "unknown"))
+        mission_status_counts[status] = mission_status_counts.get(status, 0) + 1
+    workspace_root = state_dir.parent
+    stale_assessments = [
+        row
+        for row in satisfaction
+        if row.get("evidence_state") == "verified_stale"
+        or not assessment_is_current(workspace_root, row)
+    ]
+    misaligned_assessments = [
+        row for row in satisfaction
+        if row.get("evidence_state") == "misaligned_implementation"
+    ]
+    next_decisions = []
+    for gate in lifecycle["items"]:
+        if gate.get("projected_state") == "follow_up_required":
+            next_decisions.append({
+                "kind": "follow_up_required",
+                "id": gate.get("handoff_id"),
+                "summary": "Resolve or explicitly carry the open successor obligation.",
+            })
+        elif gate.get("projected_state") in {
+            "handed_off", "acknowledged_by_implementer", "executing", "evidence_submitted"
+        }:
+            next_decisions.append({
+                "kind": "active_mission",
+                "id": gate.get("mission_contract_id"),
+                "summary": "Execute the active mission, submit evidence, or record an honest blocked outcome.",
+            })
+    for conflict in lifecycle["conflicts"]:
+        next_decisions.append({
+            "kind": "lifecycle_conflict",
+            "id": conflict.get("handoff_id"),
+            "summary": ", ".join(conflict.get("reasons", [])),
+        })
+    for assessment in stale_assessments:
+        next_decisions.append({
+            "kind": "refresh_evidence",
+            "id": assessment.get("requirement_id"),
+            "summary": "Refresh evidence against the current workspace snapshot.",
+        })
+    for assessment in misaligned_assessments:
+        next_decisions.append({
+            "kind": "misaligned_implementation",
+            "id": assessment.get("requirement_id"),
+            "summary": "Stop implementation expansion and resolve product-purpose conflict.",
+        })
+    for gap in alignment.get("integration_gaps", []):
+        next_decisions.append({
+            "kind": "integration_gap",
+            "id": gap.get("gap_id"),
+            "summary": str(gap.get("observed_path", "")),
+        })
+    terminal_mission_ids = {
+        str(item.get("mission_contract_id", ""))
+        for item in lifecycle["items"]
+        if item.get("projected_state") in {"outcome_recorded", "closed"}
+    }
+    active_mission_ids = {
+        str(item.get("mission_contract_id", ""))
+        for item in lifecycle["items"]
+        if item.get("projected_state") in {
+            "handed_off", "acknowledged_by_implementer", "executing", "evidence_submitted"
+        }
+    }
+    active_missions = [mission for mission in missions if mission.get("mission_id") in active_mission_ids]
+    storage = inventory_storage(state_dir)
+    gate_resolutions = _jsonl(mission_root / "gate-resolution-events.jsonl")
+    return {
+        "operations_board_version": "palamedes-operations-board/1",
+        "read_only": True,
+        "product": {
+            "surface_count": len(alignment.get("surfaces", {})),
+            "surfaces": alignment.get("surfaces", {}),
+            "global_purpose_count": len([
+                row for row in alignment.get("purposes", []) if not row.get("surface_key")
+            ]),
+            "open_integration_gaps": len(alignment.get("integration_gaps", [])),
+        },
+        "missions": {
+            "total": len(missions),
+            "status_counts": dict(sorted(mission_status_counts.items())),
+            "draft_candidates": sum(1 for row in missions if row.get("status") == "draft"),
+            "active": [
+                {
+                    "mission_id": row.get("mission_id"),
+                    "mission": row.get("mission"),
+                    "surface_key": row.get("surface_key"),
+                    "status": row.get("status"),
+                }
+                for row in active_missions[-10:]
+            ],
+        },
+        "lifecycle": {
+            "state_counts": dict(sorted(state_counts.items())),
+            "conflicts": lifecycle["summary"]["conflicts"],
+            "orphans": lifecycle["summary"]["orphan_outcomes"],
+            "pending_reconcile_proposals": lifecycle["summary"]["proposals"],
+            "proposal_fingerprint": lifecycle["proposal_fingerprint"],
+        },
+        "evidence": {
+            "assessment_count": len(satisfaction),
+            "already_satisfied": len([
+                row for row in satisfaction
+                if row.get("disposition") == "already_satisfied"
+                and assessment_is_current(workspace_root, row)
+            ]),
+            "stale": len(stale_assessments),
+            "misaligned": len(misaligned_assessments),
+            "gate_resolutions": len(gate_resolutions),
+            "latest_gate_resolution": (
+                gate_resolutions[-1].get("resolution_id") if gate_resolutions else ""
+            ),
+        },
+        "latest_cycle": {
+            "cycle_id": latest_cycle.get("cognition_cycle_id", ""),
+            "mode": latest_cycle.get("cycle_mode", "legacy-or-component"),
+            "status": latest_cycle.get("status", ""),
+            "provider_calls": latest_usage.get("attempted_calls", 0) if isinstance(latest_usage, dict) else 0,
+            "tokens": totals.get("total_tokens", 0) if isinstance(totals, dict) else 0,
+        },
+        "storage": {
+            "state_bytes": _tree_size(state_dir),
+            "mission_bytes": _tree_size(mission_root),
+            **storage["summary"],
+            "classification_counts": storage["classification_counts"],
+            "inventory_fingerprint": storage["inventory_fingerprint"],
+            "read_only": True,
+        },
+        "next_decisions": next_decisions[:20],
     }
 
 
@@ -243,14 +414,32 @@ def build_observatory(state_dir: Path, *, limit: int = 200) -> Dict[str, Any]:
         },
         "events": events,
         "event_limit": limit,
+        "operations_board": build_operations_board(state_dir),
     }
 
 
 def render_cli(snapshot: Dict[str, Any]) -> str:
     summary = snapshot["summary"]
+    board = snapshot.get("operations_board", {})
+    lifecycle = board.get("lifecycle", {})
+    evidence = board.get("evidence", {})
+    latest_cycle = board.get("latest_cycle", {})
+    storage = board.get("storage", {})
     lines = [
         "Palamedes Observatory (read-only)",
         "  " + "  ".join(f"{key}={value}" for key, value in summary.items()),
+        "  lifecycle=" + json.dumps(lifecycle.get("state_counts", {}), sort_keys=True)
+        + f" conflicts={lifecycle.get('conflicts', 0)} orphans={lifecycle.get('orphans', 0)}",
+        f"  evidence=current:{evidence.get('already_satisfied', 0)} "
+        f"stale:{evidence.get('stale', 0)} misaligned:{evidence.get('misaligned', 0)}",
+        f"  latest_cycle={latest_cycle.get('cycle_id') or '-'} "
+        f"mode={latest_cycle.get('mode') or '-'} calls={latest_cycle.get('provider_calls', 0)} "
+        f"tokens={latest_cycle.get('tokens', 0)}",
+        f"  next_decisions={len(board.get('next_decisions', []))}",
+        f"  storage=logical:{storage.get('logical_bytes', 0)} "
+        f"unique:{storage.get('unique_content_bytes', 0)} "
+        f"reclaimable:{storage.get('duplicate_reclaimable_bytes', 0)} "
+        f"duplicates:{storage.get('duplicate_groups', 0)} (read-only)",
     ]
     for event in snapshot["events"]:
         lines.append(
@@ -269,15 +458,18 @@ def render_web_shell() -> str:
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:#edf2ff;font:14px/1.5 system-ui,sans-serif}
 main{max-width:1180px;margin:auto;padding:32px 20px}header{display:flex;justify-content:space-between;gap:20px;align-items:end}
 h1{margin:0;font-size:30px}.muted{color:var(--muted)}#cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin:24px 0}
-.card,.event{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}.card b{display:block;font-size:24px;color:var(--accent)}
+.card,.event,.decision{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}.card b{display:block;font-size:24px;color:var(--accent)}
+#board{margin:20px 0}.board-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}.decision{margin:8px 0}.decision b{color:#ffd37a}.section-title{margin:22px 0 8px}
 #filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}button{background:#202a45;color:#dce6ff;border:1px solid #34415f;border-radius:20px;padding:7px 12px;cursor:pointer}button.on{border-color:var(--accent);color:var(--accent)}
 .event{display:grid;grid-template-columns:160px 90px 140px 1fr;gap:12px;margin:8px 0}.kind{text-transform:uppercase;color:var(--accent);font-weight:700}.title{font-weight:700}.id,.summary{color:var(--muted);font-size:12px;word-break:break-all}details{margin-top:8px}pre{white-space:pre-wrap;max-height:360px;overflow:auto;background:#0d1427;padding:10px;border-radius:8px}
 @media(max-width:720px){.event{grid-template-columns:1fr}.event>*{margin:0}}
-</style></head><body><main><header><div><h1>Palamedes Observatory</h1><div class="muted">관측 → 기획 → 선택 → 미션 → 결과의 read-only 이력</div></div><div id="updated" class="muted"></div></header><section id="cards"></section><nav id="filters"></nav><section id="events"></section></main>
+</style></head><body><main><header><div><h1>Palamedes Observatory</h1><div class="muted">Current purpose, active work, evidence, and next decisions</div></div><div id="updated" class="muted"></div></header><section id="board"></section><h2 class="section-title">History</h2><section id="cards"></section><nav id="filters"></nav><section id="events"></section></main>
 <script>
 let data={events:[],summary:{}}, active='all', signature='';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function draw(){cards.innerHTML=Object.entries(data.summary).map(([k,v])=>`<div class=card><span class=muted>${esc(k)}</span><b>${v}</b></div>`).join('');
+function draw(){const b=data.operations_board||{}, lifecycle=b.lifecycle||{}, evidence=b.evidence||{}, cycle=b.latest_cycle||{}, storage=b.storage||{}, decisions=b.next_decisions||[];
+board.innerHTML=`<div class=board-grid><div class=card><span class=muted>Active missions</span><b>${(b.missions?.active||[]).length}</b></div><div class=card><span class=muted>Lifecycle conflicts</span><b>${lifecycle.conflicts||0}</b></div><div class=card><span class=muted>Evidence stale / misaligned</span><b>${evidence.stale||0} / ${evidence.misaligned||0}</b></div><div class=card><span class=muted>Latest cycle calls / tokens</span><b>${cycle.provider_calls||0} / ${cycle.tokens||0}</b></div><div class=card><span class=muted>Duplicate reclaimable bytes</span><b>${storage.duplicate_reclaimable_bytes||0}</b></div></div><h2 class=section-title>Next decisions</h2>${decisions.map(d=>`<div class=decision><b>${esc(d.kind)}</b> · ${esc(d.id||'-')}<div class=muted>${esc(d.summary)}</div></div>`).join('')||'<p class=muted>No pending decisions.</p>'}`;
+cards.innerHTML=Object.entries(data.summary).map(([k,v])=>`<div class=card><span class=muted>${esc(k)}</span><b>${v}</b></div>`).join('');
 const kinds=['all',...new Set(data.events.map(e=>e.kind))];filters.innerHTML=kinds.map(k=>`<button class="${k===active?'on':''}" data-k="${k}">${k}</button>`).join('');
 filters.querySelectorAll('button').forEach(b=>b.onclick=()=>{active=b.dataset.k;draw()});
 events.innerHTML=data.events.filter(e=>active==='all'||e.kind===active).map(e=>`<article class=event><time>${esc(e.ts||'-')}</time><div class=kind>${esc(e.kind)}</div><div>${esc(e.status)}</div><div><div class=title>${esc(e.title)}</div><div class=id>${esc(e.id)}</div><div class=summary>${esc(e.summary)}</div><details><summary>기획 내용 펼치기</summary><pre>${esc(JSON.stringify(e.details,null,2))}</pre></details></div></article>`).join('')||'<p class=muted>기록이 없습니다.</p>';updated.textContent='updated '+new Date().toLocaleTimeString();}

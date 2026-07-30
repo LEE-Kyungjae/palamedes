@@ -3690,7 +3690,7 @@ class PalamedesChatTests(unittest.TestCase):
                         provider=provider,
                         session_id="cognition",
                         input_stream=io.StringIO(
-                            "/cycle find a mission worth planning\n"
+                            "/cycle --mode product find a mission worth planning\n"
                             "/approve\n"
                             "/outcome success The selected probe matched its forecast\n"
                             "/quit\n"
@@ -3752,6 +3752,175 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertEqual(experience["finding"], "expected_result")
         self.assertFalse(experience["followup_required"])
         self.assertEqual(experience["followup_kind"], "none")
+
+    def test_audit_cycle_skips_vision_and_emits_run_scoped_progress(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                provider = StaticChatProvider()
+                output = io.StringIO()
+                with patch.dict(os.environ, {"PALAMEDES_REF_ROOT": ""}):
+                    palamedes_chat.run_chat(
+                        palamedes_module=isolated,
+                        provider=provider,
+                        session_id="audit-cycle",
+                        input_stream=io.StringIO(
+                            "/cycle --mode audit challenge the current direction\n"
+                            "/quit\n"
+                        ),
+                        output=output,
+                    )
+                cycle_path = next(
+                    (isolated.STATE_DIR / "missions" / "cognition").glob(
+                        "cycle-*.json"
+                    )
+                )
+                cycle = json.loads(cycle_path.read_text(encoding="utf-8"))
+
+        role_prompts = [call[-1]["content"].splitlines()[0] for call in provider.calls]
+        self.assertEqual(
+            role_prompts,
+            [
+                "ROLE: interpreter",
+                "ROLE: inventor",
+                "ROLE: adversary",
+                "ROLE: selector",
+            ],
+        )
+        self.assertNotIn("Vision wake:", output.getvalue())
+        self.assertIn("Audit mode:", output.getvalue())
+        self.assertIn("interpreter 1/4 started", output.getvalue())
+        self.assertIn("selector 4/4 completed", output.getvalue())
+        self.assertEqual(cycle["run_id"], cycle["cognition_cycle_id"])
+        self.assertEqual(cycle["provider_usage"]["attempted_calls"], 4)
+        self.assertEqual(cycle["provider_usage"]["unmetered_calls"], 4)
+        for artifact in cycle["artifacts"]:
+            self.assertEqual(artifact["run_id"], cycle["run_id"])
+            self.assertIn("started_at", artifact)
+            self.assertIsInstance(artifact["duration_ms"], int)
+
+    def test_micro_cycle_uses_one_provider_call_and_emits_valid_contract(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = StaticChatProvider()
+            result = palamedes_chat.run_micro_cycle(
+                provider=provider,
+                palamedes_module=fake,
+                context="Fix one bounded parser rule.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+            )
+        self.assertEqual(len(provider.calls), 1)
+        self.assertEqual(result["cycle"]["cycle_mode"], "micro")
+        self.assertEqual(result["cycle"]["live_model_call_count"], 1)
+        self.assertEqual(result["cycle"]["provider_usage"]["attempted_calls"], 1)
+        self.assertEqual(result["contract"]["causal_role"], "constrained")
+
+    def test_micro_cycle_repairs_only_its_invalid_contract_once(self):
+        class InvalidOnceProvider(StaticChatProvider):
+            def __init__(self):
+                super().__init__()
+                self.invalid = True
+
+            def stream(self, messages):
+                if "Required shape:" in messages[-1]["content"] and self.invalid:
+                    self.invalid = False
+                    payload = self._mission_payload()
+                    payload["evidence"][0]["confidence"] = "bad"
+                    self.calls.append(messages)
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = InvalidOnceProvider()
+            result = palamedes_chat.run_micro_cycle(
+                provider=provider,
+                palamedes_module=fake,
+                context="Fix one bounded parser rule.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+            )
+        self.assertEqual(len(provider.calls), 2)
+        self.assertEqual(result["cycle"]["live_model_call_count"], 2)
+        self.assertEqual(len(result["cycle"]["rejected_artifacts"]), 1)
+
+    def test_chat_lookup_cycle_uses_zero_provider_calls_for_satisfied_requirement(self):
+        from palamedes_satisfaction import SatisfactionStore, workspace_snapshot
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                SatisfactionStore(isolated.STATE_DIR / "satisfaction").save({
+                    "assessment_id": "satisfaction-bbbbbbbbbbbbbbbb",
+                    "requirement_id": "req-existing",
+                    "disposition": "already_satisfied",
+                    "current_snapshot": workspace_snapshot(root),
+                    "observed_at": palamedes_chat.utc_now(),
+                    "ttl_days": 30,
+                })
+                provider = StaticChatProvider()
+                output = io.StringIO()
+                palamedes_chat.run_chat(
+                    palamedes_module=isolated,
+                    provider=provider,
+                    session_id="lookup-zero",
+                    input_stream=io.StringIO("/cycle verify req-existing again\n/quit\n"),
+                    output=output,
+                )
+        self.assertEqual(provider.calls, [])
+        self.assertIn("mode=lookup", output.getvalue())
+        self.assertIn("provider_calls=0", output.getvalue())
+
+    def test_chat_explicit_micro_cycle_uses_one_provider_call(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                provider = StaticChatProvider()
+                output = io.StringIO()
+                with patch.dict(os.environ, {"PALAMEDES_REF_ROOT": ""}):
+                    palamedes_chat.run_chat(
+                        palamedes_module=isolated,
+                        provider=provider,
+                        session_id="micro-one-call",
+                        input_stream=io.StringIO(
+                            "/cycle --mode micro Fix one bounded parser rule\n/quit\n"
+                        ),
+                        output=output,
+                    )
+        self.assertEqual(len(provider.calls), 1)
+        self.assertIn("mode=micro", output.getvalue())
+        self.assertIn("mission_compiler", output.getvalue())
+
+    def test_chat_stale_satisfaction_does_not_force_zero_call_lookup(self):
+        from palamedes_satisfaction import SatisfactionStore, workspace_snapshot
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                SatisfactionStore(isolated.STATE_DIR / "satisfaction").save({
+                    "assessment_id": "satisfaction-cccccccccccccccc",
+                    "requirement_id": "req-stale",
+                    "disposition": "already_satisfied",
+                    "current_snapshot": workspace_snapshot(root),
+                    "observed_at": palamedes_chat.utc_now(),
+                    "ttl_days": 30,
+                })
+                (root / "drift.txt").write_text("new worktree state")
+                provider = StaticChatProvider()
+                output = io.StringIO()
+                palamedes_chat.run_chat(
+                    palamedes_module=isolated,
+                    provider=provider,
+                    session_id="lookup-stale",
+                    input_stream=io.StringIO("/cycle verify req-stale again\n/quit\n"),
+                    output=output,
+                )
+        self.assertNotEqual(provider.calls, [])
+        self.assertNotIn("mode=lookup", output.getvalue())
 
     def test_completed_work_is_classified_as_audit_not_origination(self):
         class RetrospectiveOriginClaimProvider(StaticChatProvider):
@@ -3899,10 +4068,31 @@ class PalamedesChatTests(unittest.TestCase):
                     "rationale": "The next probe directly adds the missing comparison.",
                 }
                 response = palamedes_chat.validate_mission_draft(response_payload)
-                palamedes_chat.approve_mission(
+                successor = palamedes_chat.approve_mission(
                     isolated, mission_store, response, "gate-test"
+                )["contract"]
+
+                open_after_approval = mission_store.open_outcome_gates()
+                successor_outcome = palamedes_chat.record_mission_outcome(
+                    isolated,
+                    mission_store,
+                    successor,
+                    "success",
+                    "The missing comparison was produced and verified.",
+                )
+                palamedes_chat.run_outcome_analyst(
+                    provider=provider,
+                    cycle_store=cycle_store,
+                    mission_store=mission_store,
+                    contract=successor,
+                    outcome=successor_outcome,
                 )
 
+        self.assertEqual(len(open_after_approval), 1)
+        self.assertEqual(
+            open_after_approval[0]["successor_state"],
+            "approved_awaiting_outcome",
+        )
         self.assertEqual(mission_store.open_outcome_gates(), [])
 
     def test_successful_probe_can_stop_with_defect_and_keep_followup_gate_open(self):
@@ -3993,23 +4183,28 @@ class PalamedesChatTests(unittest.TestCase):
 
                 independent_payload = StaticChatProvider._mission_payload()
                 independent_payload["mission"] = "Audit an unrelated rule surface"
-                independent_payload["outcome_response"] = {
-                    "related_outcome_ids": [outcome["outcome_id"]],
-                    "action": "independent",
-                    "rationale": "This does not claim to resolve the guidance defect.",
-                }
+                independent_payload["surface_key"] = "unrelated-rule-surface"
                 independent = palamedes_chat.validate_mission_draft(
                     independent_payload
                 )
-                palamedes_chat.approve_mission(
+                independent.pop("scope_keys")
+                independent_approved = palamedes_chat.approve_mission(
                     isolated, mission_store, independent, "semantic-test"
-                )
+                )["contract"]
                 still_open = mission_store.open_outcome_gates()
+                palamedes_chat.record_mission_outcome(
+                    isolated,
+                    mission_store,
+                    independent_approved,
+                    "success",
+                    "The unrelated bounded audit completed.",
+                )
 
                 resolving_payload = StaticChatProvider._mission_payload()
                 resolving_payload["mission"] = (
                     "Correct guidance precedence for the reproduced trace"
                 )
+                resolving_payload["surface_key"] = "presentation-guidance"
                 resolving_payload["outcome_response"] = {
                     "related_outcome_ids": [outcome["outcome_id"]],
                     "action": "resolve",
@@ -4021,12 +4216,15 @@ class PalamedesChatTests(unittest.TestCase):
                 palamedes_chat.approve_mission(
                     isolated, mission_store, resolving, "semantic-test"
                 )
+                open_after_resolving_approval = mission_store.open_outcome_gates()
 
         self.assertEqual(gate["probe_status"], "completed")
         self.assertEqual(gate["finding"], "qualifying_defect")
         self.assertEqual(gate["mission_disposition"], "stop")
         self.assertTrue(gate["followup_required"])
         self.assertEqual(gate["followup_kind"], "production_correction")
+        self.assertEqual(gate["surface_key"], "presentation-guidance")
+        self.assertEqual(gate["scope_keys"], ["surface:presentation-guidance"])
         self.assertEqual(stored_contract["latest_finding"], "qualifying_defect")
         self.assertTrue(stored_contract["latest_followup_required"])
         self.assertEqual(interpretations[0]["finding"], "qualifying_defect")
@@ -4042,8 +4240,33 @@ class PalamedesChatTests(unittest.TestCase):
             "Correct guidance precedence for the reproduced trace",
         )
         self.assertEqual(len(still_open), 1)
-        self.assertTrue(still_open[0]["followup_still_required"])
-        self.assertEqual(mission_store.open_outcome_gates(), [])
+        self.assertEqual(still_open[0]["status"], "open")
+        self.assertNotIn("response_mission_contract_id", still_open[0])
+        self.assertEqual(len(open_after_resolving_approval), 1)
+        self.assertEqual(
+            open_after_resolving_approval[0]["successor_state"],
+            "approved_awaiting_outcome",
+        )
+
+    def test_outcome_records_honest_type_and_blocks_invalid_environment_success(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                mission_store = palamedes_chat.MissionStore(isolated.STATE_DIR / "missions")
+                contract = palamedes_chat.validate_mission_draft(StaticChatProvider._mission_payload())
+                contract["status"] = "approved"
+                mission_store.save_contract(contract)
+                with self.assertRaisesRegex(ValueError, "requires unknown"):
+                    palamedes_chat.record_mission_outcome(
+                        isolated, mission_store, contract, "success", "No runtime", None,
+                        "blocked_by_environment",
+                    )
+                outcome = palamedes_chat.record_mission_outcome(
+                    isolated, mission_store, contract, "unknown",
+                    "Independent users are unavailable in this environment.", None,
+                    "blocked_by_environment",
+                )
+        self.assertEqual(outcome["outcome_type"], "blocked_by_environment")
 
     def test_cycle_failure_preserves_partial_artifacts_without_mission(self):
         class FailingAdversaryProvider(StaticChatProvider):
@@ -4245,6 +4468,148 @@ class PalamedesChatTests(unittest.TestCase):
             for row in result["cycle"]["artifacts"][:3]
         ))
 
+    def test_cognition_cycle_retries_only_schema_invalid_role_once(self):
+        class SelectorReturnsInvalidConfidenceOnce(StaticChatProvider):
+            def __init__(self):
+                super().__init__()
+                self.invalid_returned = False
+
+            def stream(self, messages):
+                if (
+                    messages[-1]["content"].startswith("ROLE: selector")
+                    and not self.invalid_returned
+                ):
+                    payload = json.loads("".join(super().stream(messages)))
+                    payload["mission_contract"]["evidence"][0]["confidence"] = "35%"
+                    self.invalid_returned = True
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = SelectorReturnsInvalidConfidenceOnce()
+            progress = []
+            result = palamedes_chat.run_cognition_cycle(
+                provider=provider,
+                palamedes_module=fake,
+                context="Choose one bounded mission.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+                progress=progress.append,
+            )
+
+        role_prompts = [call[-1]["content"].splitlines()[0] for call in provider.calls]
+        self.assertEqual(
+            role_prompts,
+            [
+                "ROLE: interpreter",
+                "ROLE: inventor",
+                "ROLE: adversary",
+                "ROLE: selector",
+                "ROLE: selector",
+            ],
+        )
+        self.assertEqual(result["cycle"]["live_model_call_count"], 1)
+        self.assertEqual(result["cycle"]["provider_usage"]["attempted_calls"], 5)
+        self.assertEqual(len(result["cycle"]["rejected_artifacts"]), 1)
+        self.assertEqual(
+            result["cycle"]["rejected_artifacts"][0]["role"], "selector"
+        )
+        self.assertIn(
+            "confidence must be an integer",
+            result["cycle"]["rejected_artifacts"][0]["rejection_reason"],
+        )
+        self.assertEqual(
+            [row["role"] for row in result["cycle"]["artifacts"]],
+            ["interpreter", "inventor", "adversary", "selector"],
+        )
+        self.assertTrue(all(
+            row.get("checkpoint_reused")
+            for row in result["cycle"]["artifacts"][:3]
+        ))
+        self.assertTrue(any("retrying only that role once" in row for row in progress))
+
+    def test_explicit_resume_reuses_legacy_checkpoints_after_plan_drift(self):
+        class InvalidSelectorProvider(StaticChatProvider):
+            def stream(self, messages):
+                if messages[-1]["content"].startswith("ROLE: selector"):
+                    payload = json.loads("".join(super().stream(messages)))
+                    payload["mission_contract"]["evidence"][0]["confidence"] = "35%"
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        class MutablePlanPalamedes(FakePalamedes):
+            def __init__(self, root):
+                super().__init__(root)
+                self.goal = "initial goal"
+
+            def load_plan(self):
+                plan = super().load_plan()
+                plan["goal"] = self.goal
+                return plan
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = MutablePlanPalamedes(Path(tempdir))
+            store = palamedes_chat.CognitionCycleStore(
+                fake.STATE_DIR / "missions" / "cognition"
+            )
+            with self.assertRaisesRegex(ValueError, "confidence must be an integer"):
+                palamedes_chat.run_cognition_cycle(
+                    provider=InvalidSelectorProvider(),
+                    palamedes_module=fake,
+                    context="Choose one bounded mission.",
+                    cycle_store=store,
+                    schema_retry_limit=0,
+                )
+            failed = json.loads(next(store.root.glob("cycle-*.json")).read_text())
+            fake.goal = "changed after the failed run"
+            provider = StaticChatProvider()
+            result = palamedes_chat.run_cognition_cycle(
+                provider=provider,
+                palamedes_module=fake,
+                context="ignored during explicit resume",
+                cycle_store=store,
+                resume_cycle_id=failed["cognition_cycle_id"],
+            )
+
+        self.assertEqual(result["cycle"]["cognition_cycle_id"], failed["cognition_cycle_id"])
+        self.assertEqual(len(provider.calls), 1)
+        self.assertEqual(provider.calls[0][-1]["content"].splitlines()[0], "ROLE: selector")
+        self.assertTrue(all(
+            artifact.get("checkpoint_reused")
+            for artifact in result["cycle"]["artifacts"][:3]
+        ))
+        self.assertEqual(result["cycle"]["plan_context"]["goal"], "initial goal")
+
+    def test_explicit_resume_rejects_tampered_checkpoint(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            store = palamedes_chat.CognitionCycleStore(
+                fake.STATE_DIR / "missions" / "cognition"
+            )
+            result = palamedes_chat.run_cognition_cycle(
+                provider=StaticChatProvider(),
+                palamedes_module=fake,
+                context="Choose one bounded mission.",
+                cycle_store=store,
+            )
+            cycle = result["cycle"]
+            cycle["status"] = "failed"
+            cycle["artifacts"][0]["output"]["observations"] = ["tampered"]
+            store.save(cycle)
+
+            with self.assertRaisesRegex(ValueError, "checkpoint fingerprint mismatch"):
+                palamedes_chat.run_cognition_cycle(
+                    provider=StaticChatProvider(),
+                    palamedes_module=fake,
+                    context="ignored",
+                    cycle_store=store,
+                    resume_cycle_id=cycle["cognition_cycle_id"],
+                )
+
     def test_vision_genesis_resumes_completed_roles_after_runtime_failure(self):
         class AnalogyFailsOnceProvider(StaticChatProvider):
             def __init__(self):
@@ -4314,6 +4679,35 @@ class PalamedesChatTests(unittest.TestCase):
 
         self.assertIn("Outcome recorded:", second.getvalue())
         self.assertNotIn("No approved mission", second.getvalue())
+
+    def test_current_already_satisfied_requirement_blocks_duplicate_mission(self):
+        from palamedes_satisfaction import SatisfactionStore, workspace_snapshot
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                SatisfactionStore(
+                    isolated.STATE_DIR / "satisfaction"
+                ).save({
+                    "assessment_id": "satisfaction-aaaaaaaaaaaaaaaa",
+                    "requirement_id": "req-already-done",
+                    "disposition": "already_satisfied",
+                    "current_snapshot": workspace_snapshot(root),
+                    "observed_at": palamedes_chat.utc_now(),
+                    "ttl_days": 30,
+                })
+                payload = StaticChatProvider._mission_payload()
+                payload["requirement_id"] = "req-already-done"
+                contract = palamedes_chat.validate_mission_draft(payload)
+                with self.assertRaisesRegex(ValueError, "already satisfied"):
+                    palamedes_chat.approve_mission(
+                        isolated,
+                        palamedes_chat.MissionStore(
+                            isolated.STATE_DIR / "missions"
+                        ),
+                        contract,
+                        "satisfaction-gate",
+                    )
 
     def test_external_evidence_gate_stops_cycle_without_provider_calls(self):
         with tempfile.TemporaryDirectory() as tempdir:

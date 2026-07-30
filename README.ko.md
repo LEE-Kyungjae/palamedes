@@ -132,8 +132,9 @@ fresh-eyes 의제로 바꿉니다. 선택된 줌 의제는 참고 문구가 아�
 
 제품 정렬은 이제 국소 품질 최적화보다 먼저 적용됩니다. 출처가 있는 제품
 불변 목적, 재사용 가능한 기존 역량, 임시 제약, 열린 통합 우회, 제품 단계별
-필수 여정은 `.palamedes/product-alignment/state.json`에 보존되어 `/cycle`에
-주입됩니다. 미션 승인은 제품 목적 충돌, 기존 역량을 검토하지 않은 신규 구축,
+필수 여정은 append-only `.palamedes/product-alignment/events.jsonl` 원장에
+보존되어 `/cycle`에 주입됩니다. `state.json`은 재생성 가능한 projection일
+뿐입니다. 미션 승인은 제품 목적 충돌, 기존 역량을 검토하지 않은 신규 구축,
 만료 제약의 무언 재사용, 필수 여정 증거 없는 단계 승격을 각각 차단합니다.
 의미 해석은 모델이 출처 ID와 함께 제출하고, 결정론적 gate는 키워드로 제품
 의도를 추측하지 않고 ID와 선언된 효과만 검증합니다.
@@ -661,11 +662,50 @@ palamedes> /outcome-json {"status":"mixed","observation":"probe 결과","actual_
 
 - `/observe`: 프로젝트, Git, TODO, 계획 상태, 중앙 ref 신호 관찰
 - `/reference-intelligence [path]`: ref 없이도 시작하는 자기 모델·연구 의제 생성
+- `/reconcile`: 불변 handoff, outcome, gate와 lifecycle event를 읽어 dry-run
+  projection 보고서와 proposal fingerprint를 만듭니다. 적용은 직전 검토 결과의
+  fingerprint를 `/reconcile --apply <proposal-fingerprint>`로 정확히 제시해야 합니다.
+  결정론적·멱등적 보정 event만 append하며 원본은 수정하지 않고 충돌은 unresolved로
+  유지합니다.
+- `python3 palamedes.py lifecycle-audit`는 불변 원천에서 lifecycle event 의미를
+  독립 재생합니다. `lifecycle-reconcile`은 기본이 dry-run이며 정확한 fresh
+  fingerprint에만 `--apply`를 허용합니다.
+- `python3 palamedes.py gate-resolution --request request.json`은 증거 hash를 검증해
+  읽기 전용 종료 제안을 만들며, 정확한 fingerprint만 resolution event와 gate
+  revision을 append할 수 있습니다. 후속 미션 승인만으로는 gate가 닫히지 않습니다.
+- `python3 palamedes.py storage`는 삭제나 재작성 없이 보존 등급, 고유 콘텐츠,
+  중복 byte를 보여줍니다.
+- `/satisfaction-json <JSON>`: 현재 Git/worktree fingerprint, 제한된 심볼·호출경로
+  artifact, 주장별 필수 증거, 제품 목적 정렬과 신선도를 host가 검증합니다.
+  `/satisfactions`는 요구사항별 최신 판정을 보여주며, 현재 snapshot에서 정렬된
+  `already_satisfied` 요구사항은 같은 `requirement_id`의 구현 미션 승인을 차단합니다.
+- `/alignment-candidate-json <JSON>`: 목적·역량·제약·통합 간극·surface stage 후보를
+  append하되 활성 제품 기준은 바꾸지 않습니다. `/alignment-approve <candidate-id>`가
+  인간 승인을 기록한 뒤 출처와 문구 variant를 역사 삭제 없이 병합하며,
+  `/alignment`에서 surface별 projection을 확인합니다.
+  승인 event가 권위 원장이며 projection은 이 event에서 재생성할 수 있습니다.
+- outcome은 `validated_improvement`, `null_finding`, `already_satisfied`,
+  `adverse_result`, `insufficient_evidence`, `blocked_by_environment`,
+  `misaligned_mission`, `prototype_only` 중 정직한 `outcome_type`을 보존합니다.
 - `/think`: 지금 빠진 사고 방식을 선택해 수행
 - `/challenge`: 가정과 반증 조건 공격
 - `/research`: 커밋 전에 필요한 최소 외부 근거 식별
 - `/mission`: 계획을 변경하지 않고 구조화된 미션 초안 생성
 - `/cycle`: interpreter, inventor, adversary, selector 독립 호출
+- `/cycle --mode audit <context>` (`--skip-vision` 별칭): 제한된 감사를 위해 네
+  cognition 역할만 호출합니다. 자동 Vision Genesis와 메타학습 provider 호출 및
+  선택된 vision의 영향을 제외하고, 일반 `/cycle` 의미를 바꾸지 않은 채 동일 run
+  ID의 역할별 진행 상태·소요 시간·토큰 custody를 출력합니다.
+- `/cycle --resume <cycle-id>`: 실패했거나 중단된 cognition 실행을 보존된 문맥과
+  검증된 역할 checkpoint에서 재개합니다. provider와 모델이 같아야 하며 완료된
+  역할은 다시 호출하지 않고, 변조된 checkpoint는 차단합니다.
+- 일반 `/cycle <context>`는 provider 호출 전에 결정론적 비용 preflight를 수행합니다.
+  Lookup은 host가 확인한 `already_satisfied` 요구사항에 0회, Micro는 schema 수리
+  최대 1회를 포함한 mission compiler 1회, Component는 Vision/meta-learning 없이
+  독립 4역할, Product만 전체 연구 경로를 사용합니다. `/cycle --mode
+  lookup|micro|component|product <context>`로 명시할 수 있습니다. 범위가 모호하면
+  Component로, 보안·개인정보·결제·삭제·migration·공개 API·배포·저장소 체결·
+  비가역성·교차 surface·제품 불변조건 충돌은 더 깊은 모드로 승격합니다.
 - `/preview`: 최신 미션 초안 검토
 - `/approve`: 승인된 초안을 계획, 근거, 가설, probe로 투영
 - `/reject`: 이유와 함께 초안 거부

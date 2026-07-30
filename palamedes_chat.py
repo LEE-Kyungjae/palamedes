@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.request
 import uuid
@@ -549,6 +550,32 @@ class MissionStore:
                 latest[gate["gate_id"]] = gate
         return [gate for gate in latest.values() if gate.get("status") == "open"]
 
+    def outcome_gate_scope_keys(self, gate: Dict[str, Any]) -> set[str]:
+        explicit = gate.get("scope_keys")
+        if isinstance(explicit, list):
+            keys = {
+                str(item).strip()
+                for item in explicit
+                if isinstance(item, str) and item.strip()
+            }
+            if keys:
+                return keys
+        surface = str(gate.get("surface_key", "")).strip()
+        if not surface:
+            outcome_id = str(gate.get("outcome_id", "")).strip()
+            for interpretation in reversed(self.outcome_interpretations()):
+                if interpretation.get("outcome_id") == outcome_id:
+                    surface = str(interpretation.get("surface_key", "")).strip()
+                    if surface:
+                        break
+        if not surface:
+            mission_id = str(gate.get("mission_contract_id", "")).strip()
+            try:
+                surface = str(self.load_contract(mission_id).get("surface_key", "")).strip()
+            except (OSError, ValueError, json.JSONDecodeError):
+                surface = ""
+        return {f"surface:{surface}"} if surface else set()
+
     def external_evidence_wait_gate(self) -> Optional[Dict[str, Any]]:
         gates = [
             gate
@@ -659,6 +686,9 @@ def _role_artifact(
     prompt: str,
     output: Dict[str, Any],
     provider: ChatProvider,
+    run_id: str = "",
+    started_at: str = "",
+    duration_ms: Optional[int] = None,
 ) -> Dict[str, Any]:
     artifact = {
         "role": role,
@@ -670,6 +700,12 @@ def _role_artifact(
         "output_fingerprint": _fingerprint(output),
         "output": output,
     }
+    if run_id:
+        artifact["run_id"] = run_id
+    if started_at:
+        artifact["started_at"] = started_at
+    if duration_ms is not None:
+        artifact["duration_ms"] = duration_ms
     usage = getattr(provider, "last_usage", None)
     if isinstance(usage, dict) and usage:
         artifact["provider_usage"] = _normalize_token_usage(usage)
@@ -679,6 +715,25 @@ def _role_artifact(
     return artifact
 
 
+def _cognition_usage_summary(
+    provider: ChatProvider, artifacts: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    roles = []
+    for artifact in artifacts:
+        usage = artifact.get("provider_usage")
+        custody = str(artifact.get("usage_custody", "unmetered"))
+        roles.append(
+            {
+                "role": artifact.get("role", ""),
+                "custody": custody,
+                "usage": dict(usage) if isinstance(usage, dict) else {},
+                "duration_ms": artifact.get("duration_ms"),
+                "checkpoint_reused": bool(artifact.get("checkpoint_reused", False)),
+            }
+        )
+    return _provider_usage_summary(provider, roles)
+
+
 def run_cognition_cycle(
     *,
     provider: ChatProvider,
@@ -686,26 +741,63 @@ def run_cognition_cycle(
     context: str,
     cycle_store: CognitionCycleStore,
     available_discovery_ids: Optional[set] = None,
+    progress: Optional[Callable[[str], None]] = None,
+    schema_retry_limit: int = 1,
+    resume_cycle_id: str = "",
 ) -> Dict[str, Any]:
+    if not isinstance(schema_retry_limit, int) or isinstance(schema_retry_limit, bool):
+        raise ValueError("schema_retry_limit must be an integer")
+    if not 0 <= schema_retry_limit <= 1:
+        raise ValueError("schema_retry_limit must be 0 or 1")
     available_discovery_ids = available_discovery_ids or set()
     started_at = utc_now()
-    seed = {
-        "context": context,
-        "plan_context": json.loads(_plan_context(palamedes_module)),
-    }
-    cycle_id = f"cycle-{_fingerprint(seed)[:12]}"
-    existing_path = cycle_store.path(cycle_id)
-    existing = cycle_store.load(cycle_id) if existing_path.is_file() else None
+    current_plan_context = json.loads(_plan_context(palamedes_module))
+    if resume_cycle_id:
+        if not re.fullmatch(r"cycle-[0-9a-f]{12}", resume_cycle_id):
+            raise ValueError("resume_cycle_id must be a canonical cycle ID")
+        existing_path = cycle_store.path(resume_cycle_id)
+        if not existing_path.is_file():
+            raise ValueError(f"cognition cycle not found: {resume_cycle_id}")
+        existing = cycle_store.load(resume_cycle_id)
+        if existing.get("status") not in {"failed", "running"}:
+            raise ValueError(
+                "only failed or interrupted cognition cycles can be resumed"
+            )
+        if existing.get("provider") != provider.provider_name or existing.get("model") != provider.model:
+            raise ValueError("resume provider and model must match the original cycle")
+        cycle_id = resume_cycle_id
+        context = str(existing.get("context", ""))
+        if not context:
+            raise ValueError("resumed cognition cycle has no preserved context")
+        plan_context = existing.get("plan_context")
+        if not isinstance(plan_context, dict):
+            if not any(
+                artifact.get("role") == "interpreter"
+                for artifact in existing.get("artifacts", [])
+            ):
+                raise ValueError(
+                    "legacy cycle cannot resume before interpreter without a plan snapshot"
+                )
+            plan_context = current_plan_context
+    else:
+        plan_context = current_plan_context
+        seed = {"context": context, "plan_context": plan_context}
+        cycle_id = f"cycle-{_fingerprint(seed)[:12]}"
+        existing_path = cycle_store.path(cycle_id)
+        existing = cycle_store.load(cycle_id) if existing_path.is_file() else None
     cycle: Dict[str, Any] = {
         "cognition_cycle_version": "palamedes-cognition-cycle/1",
         "cognition_cycle_id": cycle_id,
+        "run_id": cycle_id,
         "status": "running",
         "context": context,
+        "plan_context": plan_context,
         "started_at": existing.get("started_at", started_at) if existing else started_at,
         "provider": provider.provider_name,
         "model": provider.model,
         "role_order": ["interpreter", "inventor", "adversary", "selector", "outcome_analyst"],
         "artifacts": list(existing.get("artifacts", [])) if existing else [],
+        "rejected_artifacts": list(existing.get("rejected_artifacts", [])) if existing else [],
         "outcome_analyses": list(existing.get("outcome_analyses", [])) if existing else [],
         "selection_authority_role": "selector",
         "outcome_analyst_runs_before_outcome": False,
@@ -725,9 +817,26 @@ def run_cognition_cycle(
         active_role_was_fresh = False
         for artifact in cycle["artifacts"]:
             if artifact.get("role") == role:
+                output = artifact.get("output")
+                if not isinstance(output, dict) or artifact.get("output_fingerprint") != _fingerprint(output):
+                    raise ValueError(f"{role} checkpoint fingerprint mismatch")
                 artifact["checkpoint_reused"] = True
-                return dict(artifact["output"])
-        output = _provider_json(provider, system=system, prompt=prompt)
+                if progress:
+                    progress(
+                        f"[{cycle_id}] {role} {call_index}/4 checkpoint reused"
+                    )
+                return dict(output)
+        role_started_at = utc_now()
+        role_started_monotonic = time.monotonic()
+        if progress:
+            progress(f"[{cycle_id}] {role} {call_index}/4 started")
+        try:
+            output = _provider_json(provider, system=system, prompt=prompt)
+        except Exception:
+            if progress:
+                progress(f"[{cycle_id}] {role} {call_index}/4 failed")
+            raise
+        duration_ms = round((time.monotonic() - role_started_monotonic) * 1000)
         fresh_call_count += 1
         active_role_was_fresh = True
         cycle["artifacts"].append(
@@ -737,9 +846,22 @@ def run_cognition_cycle(
                 prompt=prompt,
                 output=output,
                 provider=provider,
+                run_id=cycle_id,
+                started_at=role_started_at,
+                duration_ms=duration_ms,
             )
         )
+        cycle["provider_usage"] = _cognition_usage_summary(
+            provider, cycle["artifacts"] + cycle["rejected_artifacts"]
+        )
         cycle_store.save(cycle)
+        if progress:
+            usage = cycle["artifacts"][-1].get("provider_usage", {})
+            tokens = usage.get("total_tokens", "unmetered")
+            progress(
+                f"[{cycle_id}] {role} {call_index}/4 completed "
+                f"in {duration_ms}ms · tokens={tokens}"
+            )
         return output
     try:
         interpreter_prompt = f"""ROLE: interpreter
@@ -756,7 +878,7 @@ Return:
 Require at least two interpretations.
 
 User context: {context}
-Plan context: {_plan_context(palamedes_module)}"""
+Plan context: {json.dumps(plan_context, ensure_ascii=False)}"""
         interpreter = invoke("interpreter", 1, interpreter_prompt)
         _non_empty_string_array(interpreter, "observations")
         _non_empty_string_array(interpreter, "tensions")
@@ -970,6 +1092,9 @@ Adversary:
         cycle["status"] = "selected" if decision == "select" else decision
         cycle["completed_at"] = utc_now()
         cycle["live_model_call_count"] = fresh_call_count
+        cycle["provider_usage"] = _cognition_usage_summary(
+            provider, cycle["artifacts"] + cycle["rejected_artifacts"]
+        )
         cycle["role_output_fingerprints_unique"] = (
             len({item["output_fingerprint"] for item in cycle["artifacts"]}) == 4
         )
@@ -1012,7 +1137,25 @@ Adversary:
         cycle_store.save(cycle)
         return {"cycle": cycle, "contract": contract}
     except Exception as exc:
+        retryable_schema_failure = (
+            isinstance(exc, ValueError)
+            and active_role_was_fresh
+            and schema_retry_limit > 0
+        )
         if isinstance(exc, ValueError) and active_role_was_fresh:
+            rejected = next(
+                (
+                    artifact
+                    for artifact in reversed(cycle["artifacts"])
+                    if artifact.get("role") == active_role
+                ),
+                None,
+            )
+            if rejected is not None:
+                rejected = dict(rejected)
+                rejected["rejection_reason"] = str(exc)
+                rejected["rejected_at"] = utc_now()
+                cycle["rejected_artifacts"].append(rejected)
             cycle["artifacts"] = [
                 artifact
                 for artifact in cycle["artifacts"]
@@ -1022,8 +1165,179 @@ Adversary:
         cycle["failed_at"] = utc_now()
         cycle["failure"] = str(exc)
         cycle["live_model_call_count"] = len(cycle["artifacts"])
+        cycle["provider_usage"] = _cognition_usage_summary(
+            provider, cycle["artifacts"] + cycle["rejected_artifacts"]
+        )
         cycle_store.save(cycle)
+        if retryable_schema_failure:
+            if progress:
+                progress(
+                    f"[{cycle_id}] {active_role} schema validation failed; "
+                    "retrying only that role once with prior checkpoints preserved"
+                )
+            return run_cognition_cycle(
+                provider=provider,
+                palamedes_module=palamedes_module,
+                context=context,
+                cycle_store=cycle_store,
+                available_discovery_ids=available_discovery_ids,
+                progress=progress,
+                schema_retry_limit=schema_retry_limit - 1,
+                resume_cycle_id=cycle_id,
+            )
         raise
+
+
+def run_micro_cycle(
+    *,
+    provider: ChatProvider,
+    palamedes_module: Any,
+    context: str,
+    cycle_store: CognitionCycleStore,
+    progress: Optional[Callable[[str], None]] = None,
+) -> Dict[str, Any]:
+    """Compile one bounded mission with at most one schema-repair call."""
+    plan_context = json.loads(_plan_context(palamedes_module))
+    seed = {"mode": "micro", "context": context, "plan_context": plan_context}
+    cycle_id = f"cycle-{_fingerprint(seed)[:12]}"
+    existing_path = cycle_store.path(cycle_id)
+    existing = cycle_store.load(cycle_id) if existing_path.is_file() else None
+    cycle = {
+        "cognition_cycle_version": "palamedes-cognition-cycle/1",
+        "cognition_cycle_id": cycle_id,
+        "run_id": cycle_id,
+        "cycle_mode": "micro",
+        "status": "running",
+        "context": context,
+        "plan_context": plan_context,
+        "started_at": existing.get("started_at", utc_now()) if existing else utc_now(),
+        "provider": provider.provider_name,
+        "model": provider.model,
+        "role_order": ["mission_compiler"],
+        "artifacts": list(existing.get("artifacts", [])) if existing else [],
+        "rejected_artifacts": list(existing.get("rejected_artifacts", [])) if existing else [],
+        "outcome_analyses": list(existing.get("outcome_analyses", [])) if existing else [],
+        "selection_authority_role": "mission_compiler",
+        "outcome_analyst_runs_before_outcome": False,
+    }
+    cycle_store.save(cycle)
+    system = (
+        "You are the bounded micro-mission compiler inside Palamedes. Return exactly "
+        "one JSON mission contract. Do not expand scope or claim external evidence."
+    )
+    fresh_calls = 0
+    validation_error = ""
+    for attempt in range(2):
+        cached = next(
+            (row for row in cycle["artifacts"] if row.get("role") == "mission_compiler"),
+            None,
+        )
+        if cached is not None:
+            output_value = cached.get("output")
+            if not isinstance(output_value, dict) or cached.get("output_fingerprint") != _fingerprint(output_value):
+                raise ValueError("mission_compiler checkpoint fingerprint mismatch")
+            cached["checkpoint_reused"] = True
+            raw_contract = dict(output_value)
+            if progress:
+                progress(f"[{cycle_id}] mission_compiler checkpoint reused")
+        else:
+            prompt = mission_prompt(
+                context
+                + "\n\nPlan context:\n"
+                + json.dumps(plan_context, ensure_ascii=False)
+                + (f"\n\nPrevious schema error to repair without changing scope:\n{validation_error}" if validation_error else "")
+            )
+            started_at = utc_now()
+            started = time.monotonic()
+            if progress:
+                progress(
+                    f"[{cycle_id}] mission_compiler call {attempt + 1}/2 started"
+                )
+            raw_contract = _provider_json(provider, system=system, prompt=prompt)
+            duration_ms = round((time.monotonic() - started) * 1000)
+            fresh_calls += 1
+            artifact = _role_artifact(
+                role="mission_compiler",
+                call_index=attempt + 1,
+                prompt=prompt,
+                output=raw_contract,
+                provider=provider,
+                run_id=cycle_id,
+                started_at=started_at,
+                duration_ms=duration_ms,
+            )
+            cycle["artifacts"].append(artifact)
+            cycle["provider_usage"] = _cognition_usage_summary(
+                provider, cycle["artifacts"] + cycle["rejected_artifacts"]
+            )
+            cycle_store.save(cycle)
+            if progress:
+                progress(
+                    f"[{cycle_id}] mission_compiler call {attempt + 1}/2 completed "
+                    f"in {duration_ms}ms · tokens="
+                    f"{artifact.get('provider_usage', {}).get('total_tokens', 'unmetered')}"
+                )
+        try:
+            contract = validate_mission_draft(raw_contract)
+            break
+        except ValueError as exc:
+            validation_error = str(exc)
+            rejected = dict(cycle["artifacts"].pop())
+            rejected["rejection_reason"] = validation_error
+            rejected["rejected_at"] = utc_now()
+            cycle["rejected_artifacts"].append(rejected)
+            cycle["provider_usage"] = _cognition_usage_summary(
+                provider, cycle["artifacts"] + cycle["rejected_artifacts"]
+            )
+            cycle_store.save(cycle)
+            if attempt == 1:
+                cycle["status"] = "failed"
+                cycle["failure"] = validation_error
+                cycle["failed_at"] = utc_now()
+                cycle["live_model_call_count"] = fresh_calls
+                cycle_store.save(cycle)
+                raise
+            if progress:
+                progress(
+                    f"[{cycle_id}] mission_compiler schema validation failed; "
+                    "retrying once"
+                )
+    contract["cognition_cycle_id"] = cycle_id
+    contract["causal_role"] = "constrained"
+    contract["decision_scope"] = "tactical_bounded"
+    contract["implementation_state_at_start"] = "unknown"
+    contract["selection_type"] = "probe"
+    contract["candidate_fates"] = []
+    contract["role_lineage"] = [{
+        "role": "mission_compiler",
+        "output_fingerprint": cycle["artifacts"][0]["output_fingerprint"],
+    }]
+    governance_fingerprint = _fingerprint({
+        "draft_fingerprint": contract["contract_fingerprint"],
+        "cognition_cycle_id": cycle_id,
+        "cycle_mode": "micro",
+    })
+    contract["mission_id"] = f"mission-{governance_fingerprint[:12]}"
+    contract["contract_fingerprint"] = governance_fingerprint
+    cycle.update({
+        "decision": "select",
+        "selected_candidate_id": "",
+        "causal_role": "constrained",
+        "decision_scope": "tactical_bounded",
+        "implementation_state_at_start": "unknown",
+        "selection_type": "probe",
+        "source_discovery_ids": [],
+        "candidate_fates": [],
+        "status": "selected",
+        "completed_at": utc_now(),
+        "live_model_call_count": fresh_calls,
+        "provider_usage": _cognition_usage_summary(
+            provider, cycle["artifacts"] + cycle["rejected_artifacts"]
+        ),
+        "role_output_fingerprints_unique": True,
+    })
+    cycle_store.save(cycle)
+    return {"cycle": cycle, "contract": contract}
 
 
 def run_outcome_analyst(
@@ -1287,10 +1601,40 @@ Known causal clusters:
         }
     )
     mission_store.save_contract(stored_contract)
+    response = contract.get("outcome_response")
+    related_outcome_ids = (
+        response.get("related_outcome_ids", []) if isinstance(response, dict) else []
+    )
+    successor_proved = (
+        isinstance(response, dict)
+        and response.get("action") == "resolve"
+        and output["probe_status"] == "completed"
+        and output["finding"] == "expected_result"
+        and output["mission_disposition"] in {"continue", "stop"}
+        and not output["followup_required"]
+    )
+    if related_outcome_ids and successor_proved:
+        for gate in mission_store.open_outcome_gates():
+            if gate.get("outcome_id") not in related_outcome_ids:
+                continue
+            if gate.get("response_mission_contract_id") != contract["mission_id"]:
+                continue
+            closed_gate = dict(gate)
+            closed_gate.update(
+                {
+                    "status": "responded",
+                    "closed_at": utc_now(),
+                    "followup_still_required": False,
+                    "successor_state": "outcome_verified",
+                    "successor_outcome_id": outcome["outcome_id"],
+                    "successor_analysis_fingerprint": analysis["output_fingerprint"],
+                }
+            )
+            mission_store.append_outcome_gate(closed_gate)
     if output["mission_disposition"] != "continue" or output["followup_required"]:
         mission_store.append_outcome_gate(
             {
-                "gate_version": "palamedes-outcome-gate/2",
+                "gate_version": "palamedes-outcome-gate/3",
                 "gate_id": f"gate-{outcome['outcome_id'][8:]}",
                 "outcome_id": outcome["outcome_id"],
                 "mission_contract_id": contract["mission_id"],
@@ -1300,6 +1644,8 @@ Known causal clusters:
                 "followup_required": output["followup_required"],
                 "followup_kind": output["followup_kind"],
                 "successor_scope": output["successor_scope"],
+                "surface_key": output["surface_key"],
+                "scope_keys": [f"surface:{output['surface_key']}"],
                 "required_response": (
                     output["successor_scope"]
                     if output["followup_required"]
@@ -1520,6 +1866,18 @@ def validate_mission_draft(payload: Dict[str, Any]) -> Dict[str, Any]:
     }:
         errors.append("work_scale must be a supported planning scale")
     surface_key = str(payload.get("surface_key", "")).strip()
+    requirement_id = str(payload.get("requirement_id", "")).strip()
+    scope_keys = payload.get("scope_keys", [])
+    if not isinstance(scope_keys, list) or not all(
+        isinstance(item, str) and item.strip() for item in scope_keys
+    ):
+        errors.append("scope_keys must be a string array")
+        scope_keys = []
+    normalized_scope_keys = sorted({item.strip() for item in scope_keys})
+    if surface_key:
+        normalized_scope_keys = sorted(
+            {*normalized_scope_keys, f"surface:{surface_key}"}
+        )
     prompt_agenda_response = payload.get("prompt_agenda_response")
     normalized_prompt_agenda_response = None
     if prompt_agenda_response is not None:
@@ -1588,6 +1946,8 @@ def validate_mission_draft(payload: Dict[str, Any]) -> Dict[str, Any]:
         "uncertainty": uncertainty,
         "work_scale": work_scale,
         "surface_key": surface_key,
+        "requirement_id": requirement_id,
+        "scope_keys": normalized_scope_keys,
     }
     if normalized_outcome_response is not None:
         normalized["outcome_response"] = normalized_outcome_response
@@ -1630,6 +1990,8 @@ Required shape:
   "uncertainty": 50,
   "work_scale": "micro|component|product|service|portfolio",
   "surface_key": "stable product or code surface label",
+  "requirement_id": "stable requirement ID when this mission implements or audits one requirement",
+  "scope_keys": ["optional stable resource or subsystem scope keys"],
   "product_alignment_response": {{
     "purposes": [{{"purpose_id":"...", "effect":"advances|neutral|conflicts|unknown", "rationale":"..."}}],
     "capability_reuse": {{
@@ -1828,6 +2190,41 @@ def approve_mission(
         alignment_store,
         outcome_count=len(mission_store.outcomes()),
     )
+    from palamedes_lifecycle import reconcile_lifecycle
+    lifecycle = reconcile_lifecycle(mission_store.root)
+    active_handoffs = [
+        item for item in lifecycle["items"]
+        if item.get("projected_state") in {
+            "handed_off", "acknowledged_by_implementer", "executing", "evidence_submitted"
+        }
+        and item.get("mission_contract_id") != contract.get("mission_id")
+    ]
+    if active_handoffs:
+        active_id = active_handoffs[0].get("mission_contract_id")
+        raise ValueError(
+            "mission approval blocked: only one active mission is allowed; "
+            f"close or record an outcome for {active_id} first"
+        )
+    requirement_id = str(contract.get("requirement_id", "")).strip()
+    if requirement_id:
+        from palamedes_satisfaction import SatisfactionStore, assessment_is_current
+
+        assessments = {
+            row.get("requirement_id"): row
+            for row in SatisfactionStore(
+                mission_store.root.parent / "satisfaction"
+            ).latest()
+        }
+        assessment = assessments.get(requirement_id)
+        if (
+            assessment
+            and assessment.get("disposition") == "already_satisfied"
+            and assessment_is_current(mission_store.root.parent.parent, assessment)
+        ):
+            raise ValueError(
+                "mission approval blocked: requirement is already satisfied on the "
+                f"verified current snapshot ({assessment.get('assessment_id')})"
+            )
     blocking_zoom = prompt_store.blocking_zoom_agendas()
     if blocking_zoom:
         response = contract.get("prompt_agenda_response")
@@ -1857,13 +2254,22 @@ def approve_mission(
         if response.get("action") != "address":
             raise ValueError("fresh-eyes prompt_agenda_response must address the agenda")
     open_gates = mission_store.open_outcome_gates()
-    if open_gates:
-        response = contract.get("outcome_response")
-        related_ids = (
-            response.get("related_outcome_ids", []) if isinstance(response, dict) else []
-        )
+    response = contract.get("outcome_response")
+    related_ids = (
+        response.get("related_outcome_ids", []) if isinstance(response, dict) else []
+    )
+    contract_scope_keys = set(contract.get("scope_keys", []))
+    contract_surface = str(contract.get("surface_key", "")).strip()
+    if contract_surface:
+        contract_scope_keys.add(f"surface:{contract_surface}")
+    relevant_gates = []
+    for gate in open_gates:
+        gate_scope_keys = mission_store.outcome_gate_scope_keys(gate)
+        if not gate_scope_keys or not contract_scope_keys or gate_scope_keys & contract_scope_keys:
+            relevant_gates.append(gate)
+    if relevant_gates:
         unresolved = [
-            gate for gate in open_gates if gate.get("outcome_id") not in related_ids
+            gate for gate in relevant_gates if gate.get("outcome_id") not in related_ids
         ]
         if unresolved:
             ids = ", ".join(gate["outcome_id"] for gate in unresolved)
@@ -1951,18 +2357,22 @@ def approve_mission(
     if blocking_zoom:
         for agenda in blocking_zoom:
             prompt_store.address_agenda(agenda["prompt_agenda_id"], mission_id)
-    if open_gates:
-        for gate in open_gates:
+    responded_gates = [
+        gate for gate in open_gates if gate.get("outcome_id") in related_ids
+    ]
+    if responded_gates:
+        for gate in responded_gates:
             resolved = dict(gate)
-            response_action = contract["outcome_response"]["action"]
-            closes_gate = not gate.get("followup_required", False) or response_action == "resolve"
+            response_action = response["action"]
             resolved.update(
                 {
-                    "status": "responded" if closes_gate else "open",
+                    # Selecting a successor is not proof that it worked.
+                    "status": "open",
                     "responded_at": ts,
                     "response_mission_contract_id": mission_id,
                     "response_action": response_action,
-                    "followup_still_required": not closes_gate,
+                    "followup_still_required": bool(gate.get("followup_required", False)),
+                    "successor_state": "approved_awaiting_outcome",
                 }
             )
             mission_store.append_outcome_gate(resolved)
@@ -2034,11 +2444,28 @@ def record_mission_outcome(
     status: str,
     observation: str,
     actual_investment: Optional[Dict[str, Any]] = None,
+    outcome_type: str = "",
 ) -> Dict[str, Any]:
     if contract.get("status") not in {"approved", "outcome_recorded"}:
         raise ValueError("outcomes require an approved mission")
     if status not in {"success", "failure", "mixed", "unknown"}:
         raise ValueError("outcome status must be success, failure, mixed, or unknown")
+    allowed_types = {
+        "validated_improvement", "null_finding", "already_satisfied",
+        "adverse_result", "insufficient_evidence", "blocked_by_environment",
+        "misaligned_mission", "prototype_only",
+    }
+    if not outcome_type:
+        outcome_type = {
+            "success": "validated_improvement",
+            "failure": "adverse_result",
+            "mixed": "insufficient_evidence",
+            "unknown": "insufficient_evidence",
+        }[status]
+    if outcome_type not in allowed_types:
+        raise ValueError("unsupported honest outcome_type")
+    if outcome_type == "blocked_by_environment" and status != "unknown":
+        raise ValueError("blocked_by_environment requires unknown status")
     ts = utc_now()
     mission_id = contract["mission_id"]
     normalized_investment = _normalize_actual_investment(actual_investment)
@@ -2049,6 +2476,7 @@ def record_mission_outcome(
         "mission_contract_fingerprint": contract["contract_fingerprint"],
         "recorded_at": ts,
         "status": status,
+        "outcome_type": outcome_type,
         "observation": observation,
         "attribution": "unresolved",
         "evidence_source_type": "implementer_claim",
@@ -2068,6 +2496,7 @@ def record_mission_outcome(
                 "mission_contract_id": mission_id,
                 "outcome_id": outcome["outcome_id"],
                 "outcome_status": status,
+                "outcome_type": outcome_type,
             },
         )
         for probe in reversed(plan.get("development_probes", [])):
@@ -2096,6 +2525,7 @@ def record_mission_outcome(
                 "mission_contract_id": mission_id,
                 "outcome_id": outcome["outcome_id"],
                 "status": status,
+                "outcome_type": outcome_type,
             }
         ],
         revision_source="palamedes_chat_outcome",
@@ -2188,6 +2618,12 @@ def _print_help(output: TextIO) -> None:
                 "  /research <question> identify the minimum missing evidence",
                 "  /mission <context>   draft a mission contract",
                 "  /cycle <context>     run interpreter→inventor→adversary→selector",
+                "  /cycle --mode audit <context>",
+                "                       run the four roles without automatic Vision or meta-learning calls",
+                "  /cycle --mode lookup|micro|component|product <context>",
+                "                       override the deterministic cost-adaptive preflight",
+                "  /cycle --resume <cycle-id>",
+                "                       resume a failed/interrupted run from verified checkpoints",
                 "  /invent <context>    originate distant playable systems from human emotion",
                 "  /inventions          show the latest product invention",
                 "  /pursue <objective>  compose a domain-general evidence-producing pursuit",
@@ -2231,6 +2667,15 @@ def _print_help(output: TextIO) -> None:
                 "  /observe             collect project, Git, state, TODO, and ref signals",
                 "  /reference-intelligence [path]",
                 "                       build a source-bounded self-model and research agenda",
+                "  /satisfaction-json <JSON> host-verify one requirement evidence bundle",
+                "  /satisfactions      show latest host-verified requirement assessments",
+                "  /alignment-candidate-json <JSON> propose surface product ground truth",
+                "  /alignment-approve <candidate-id> approve and merge one candidate",
+                "  /alignment          show active surface product ground truth",
+                "  /storage            inspect retention classes and duplicate bytes without mutation",
+                "  /reconcile           audit lifecycle projection without writes",
+                "  /reconcile --apply <proposal-fingerprint>",
+                "                       append only the exact freshly reviewed proposal set",
                 "  /backfill-outcomes N map up to 24 legacy outcomes into meta-learning fields",
                 "  /preview             inspect the latest mission draft",
                 "  /approve             persist the draft and create planner handoff",
@@ -3844,13 +4289,255 @@ def run_chat(
                 f"{len(backfill['records'])} records; source outcomes unchanged.\n"
             )
             continue
+        if text.startswith("/satisfaction-json "):
+            from palamedes_satisfaction import SatisfactionStore, assess_satisfaction
+
+            raw = text[len("/satisfaction-json ") :].strip()
+            try:
+                request = json.loads(raw)
+                assessment = assess_satisfaction(workspace, request)
+            except (json.JSONDecodeError, OSError, RuntimeError, ValueError) as exc:
+                output.write(f"Satisfaction assessment rejected: {exc}\n")
+                continue
+            path = SatisfactionStore(
+                mission_store.root.parent / "satisfaction"
+            ).save(assessment)
+            output.write(
+                f"Satisfaction {assessment['requirement_id']}: "
+                f"state={assessment['evidence_state']} "
+                f"disposition={assessment['disposition']} "
+                f"missing={len(assessment['missing_evidence_kinds'])}\n"
+                f"Assessment: {path}\n"
+            )
+            continue
+        if text == "/satisfactions":
+            from palamedes_satisfaction import SatisfactionStore
+
+            assessments = SatisfactionStore(
+                mission_store.root.parent / "satisfaction"
+            ).latest()
+            if not assessments:
+                output.write("No host-verified satisfaction assessments.\n")
+                continue
+            for assessment in assessments:
+                output.write(
+                    f"{assessment['requirement_id']}: "
+                    f"{assessment['evidence_state']} / {assessment['disposition']} "
+                    f"({assessment['assessment_id']})\n"
+                )
+            continue
+        if text.startswith("/alignment-candidate-json "):
+            from palamedes_product_alignment import ProductAlignmentStore
+
+            raw = text[len("/alignment-candidate-json ") :].strip()
+            try:
+                request = json.loads(raw)
+                candidate = ProductAlignmentStore(
+                    mission_store.root.parent / "product-alignment"
+                ).propose_candidate(
+                    candidate_type=request["candidate_type"],
+                    payload=request["payload"],
+                    source_ids=request["source_ids"],
+                    surface_key=str(request.get("surface_key", "")),
+                )
+            except (KeyError, json.JSONDecodeError, OSError, ValueError) as exc:
+                output.write(f"Alignment candidate rejected: {exc}\n")
+                continue
+            output.write(
+                f"Alignment candidate proposed: {candidate['candidate_id']} "
+                f"type={candidate['candidate_type']} surface="
+                f"{candidate.get('surface_key') or 'global'}\n"
+                "No active product ground truth changed. Approve explicitly to merge it.\n"
+            )
+            continue
+        if text.startswith("/alignment-approve "):
+            from palamedes_product_alignment import ProductAlignmentStore
+
+            candidate_id = text[len("/alignment-approve ") :].strip()
+            try:
+                approved_candidate = ProductAlignmentStore(
+                    mission_store.root.parent / "product-alignment"
+                ).approve_candidate(candidate_id, approver="chat-user")
+            except (OSError, ValueError) as exc:
+                output.write(f"Alignment approval rejected: {exc}\n")
+                continue
+            output.write(
+                f"Alignment candidate approved: {candidate_id} "
+                f"idempotent={approved_candidate['idempotent']}\n"
+            )
+            continue
+        if text == "/alignment":
+            from palamedes_product_alignment import ProductAlignmentStore
+
+            context = ProductAlignmentStore(
+                mission_store.root.parent / "product-alignment"
+            ).active_context()
+            output.write(json.dumps(context, ensure_ascii=False, indent=2) + "\n")
+            continue
+        if text == "/storage":
+            from palamedes_storage import inventory_storage
+
+            inventory = inventory_storage(mission_store.root.parent)
+            summary = inventory["summary"]
+            output.write(
+                "Storage inventory (read-only): "
+                f"files={summary['files']} logical={summary['logical_bytes']} "
+                f"unique={summary['unique_content_bytes']} "
+                f"reclaimable={summary['duplicate_reclaimable_bytes']} "
+                f"duplicate_groups={summary['duplicate_groups']}\n"
+                f"Fingerprint: {inventory['inventory_fingerprint']}\n"
+            )
+            continue
+        if text.startswith("/reconcile"):
+            parts = text.split()
+            apply_reconcile = len(parts) == 3 and parts[1] == "--apply"
+            if parts != ["/reconcile"] and not apply_reconcile:
+                output.write(
+                    "/reconcile accepts no arguments, or --apply <proposal-fingerprint>.\n"
+                )
+                continue
+            from palamedes_lifecycle import reconcile_lifecycle
+
+            try:
+                report = reconcile_lifecycle(
+                    mission_store.root,
+                    apply=apply_reconcile,
+                    expected_proposal_fingerprint=parts[2] if apply_reconcile else "",
+                )
+            except ValueError as exc:
+                output.write(f"Lifecycle reconcile blocked: {exc}\n")
+                continue
+            summary = report["summary"]
+            output.write(
+                f"Lifecycle reconcile ({report['mode']}): "
+                f"handoffs={summary['handoffs']} outcomes={summary['outcomes']} "
+                f"proposals={summary['proposals']} applied={summary['applied']} "
+                f"conflicts={summary['conflicts']} orphans={summary['orphan_outcomes']} "
+                f"malformed={summary['malformed_records']}\n"
+            )
+            output.write(
+                "Projected states: "
+                + json.dumps(summary["by_projected_state"], ensure_ascii=False, sort_keys=True)
+                + "\nClassifications: "
+                + json.dumps(summary["by_classification"], ensure_ascii=False, sort_keys=True)
+                + "\n"
+            )
+            output.write(f"Report fingerprint: {report['report_fingerprint']}\n")
+            output.write(f"Proposal fingerprint: {report['proposal_fingerprint']}\n")
+            if report["conflicts"]:
+                output.write("Conflicts remain fail-closed:\n")
+                for conflict in report["conflicts"][:10]:
+                    output.write(
+                        f"  {conflict['handoff_id']}: "
+                        + ", ".join(conflict["reasons"])
+                        + "\n"
+                    )
+            if report["mode"] == "dry_run" and summary["proposals"]:
+                output.write(
+                    "No files changed. Apply only this reviewed set with "
+                    f"/reconcile --apply {report['proposal_fingerprint']}\n"
+                )
+            continue
         if text.startswith("/cycle"):
             context = text[len("/cycle") :].strip()
+            audit_mode = False
+            resume_cycle_id = ""
+            cycle_mode = "auto"
+            route = None
+            if context.startswith("--mode audit"):
+                remainder = context[len("--mode audit") :]
+                if remainder and not remainder[0].isspace():
+                    output.write("/cycle --mode audit requires context.\n")
+                    continue
+                audit_mode = True
+                cycle_mode = "component"
+                context = remainder.strip()
+            elif context.startswith("--skip-vision"):
+                remainder = context[len("--skip-vision") :]
+                if remainder and not remainder[0].isspace():
+                    output.write("/cycle --skip-vision requires context.\n")
+                    continue
+                audit_mode = True
+                cycle_mode = "component"
+                context = remainder.strip()
+            else:
+                for explicit_mode in ("auto", "lookup", "micro", "component", "product"):
+                    prefix = f"--mode {explicit_mode}"
+                    if context.startswith(prefix):
+                        remainder = context[len(prefix) :]
+                        if remainder and not remainder[0].isspace():
+                            output.write(f"/cycle {prefix} requires context.\n")
+                            cycle_mode = "invalid"
+                            break
+                        cycle_mode = explicit_mode
+                        context = remainder.strip()
+                        break
+                if cycle_mode == "invalid":
+                    continue
+            if context.startswith("--resume"):
+                parts = context.split()
+                if len(parts) != 2:
+                    output.write("/cycle --resume requires exactly one cycle ID.\n")
+                    continue
+                resume_cycle_id = parts[1]
+                audit_mode = True
+                cycle_mode = "resume"
+                context = f"resume {resume_cycle_id}"
             if not context:
                 output.write("/cycle requires context.\n")
                 continue
+            if cycle_mode != "resume":
+                from palamedes_cost_router import (
+                    MODE_BUDGETS,
+                    infer_route_request,
+                    route_cycle,
+                )
+                from palamedes_satisfaction import (
+                    SatisfactionStore,
+                    assessment_is_current,
+                )
+
+                stored_assessments = SatisfactionStore(
+                    mission_store.root.parent / "satisfaction"
+                ).latest()
+                assessments = [
+                    row
+                    for row in stored_assessments
+                    if assessment_is_current(mission_store.root.parent.parent, row)
+                ]
+                if cycle_mode == "auto":
+                    try:
+                        route_request = (
+                            json.loads(context)
+                            if context.startswith("{")
+                            else infer_route_request(context, assessments)
+                        )
+                        route = route_cycle(route_request)
+                    except (json.JSONDecodeError, ValueError) as exc:
+                        output.write(f"Cycle preflight rejected: {exc}\n")
+                        continue
+                    cycle_mode = route["mode"]
+                    context = route["objective"]
+                else:
+                    route = {
+                        "route_id": "manual-override",
+                        "mode": cycle_mode,
+                        "budget": dict(MODE_BUDGETS[cycle_mode]),
+                        "reasons": ["explicit user mode override"],
+                        "manual_override_allowed": True,
+                    }
+                budget = route["budget"]
+                output.write(
+                    f"Cycle preflight: mode={cycle_mode} "
+                    f"calls={budget['provider_calls_min']}-{budget['provider_calls_max']} "
+                    f"tokens≤{budget['token_budget_high']} "
+                    f"time≤{budget['time_minutes_high']}m · "
+                    + "; ".join(route["reasons"])
+                    + "\n"
+                )
+                audit_mode = cycle_mode != "product"
             wait_gate = mission_store.external_evidence_wait_gate()
-            if wait_gate is not None:
+            if wait_gate is not None and cycle_mode != "lookup":
                 output.write(
                     "WAITING_FOR_EXTERNAL_EVIDENCE\n"
                     f"  gate: {wait_gate['gate_id']}\n"
@@ -3867,11 +4554,31 @@ def run_chat(
                     "content": text,
                     "provider": provider.provider_name,
                     "model": provider.model,
+                    "cycle_mode": cycle_mode,
+                    "human_input_event": {
+                        "observed_at": utc_now(),
+                        "active_duration_ms": None,
+                        "custody": "submission_observed_duration_unobservable",
+                    },
                 },
             )
-            output.write(
-                "Running independent roles: interpreter → inventor → adversary → selector\n"
-            )
+            if cycle_mode == "lookup":
+                output.write(
+                    "Lookup completed with provider_calls=0. The current host-verified "
+                    "evidence does not justify another implementation mission.\n"
+                )
+                continue
+            if cycle_mode == "micro":
+                output.write("Running bounded micro mission compiler.\n")
+            else:
+                output.write(
+                    "Running independent roles: interpreter → inventor → adversary → selector\n"
+                )
+            if audit_mode and cycle_mode != "micro":
+                output.write(
+                    "Audit mode: bounded execution disables automatic Vision Genesis "
+                    "and meta-learning calls.\n"
+                )
             try:
                 from palamedes_observe import (
                     collect_observation,
@@ -3904,7 +4611,7 @@ def run_chat(
                     if latest_vision_id
                     else None
                 )
-                if vision_store.needs_wake(
+                if not audit_mode and vision_store.needs_wake(
                     len(mission_store.outcomes()),
                     _fingerprint(current_product_ground_truth),
                     actual_investment,
@@ -3924,31 +4631,32 @@ def run_chat(
                         ),
                     )
                     output.write(render_vision(vision_record) + "\n")
-                try:
-                    meta_learning = run_automatic_meta_learning(
-                        provider=provider,
-                        mission_store=mission_store,
-                        snapshot=latest_observation,
-                    )
-                    if meta_learning["status"] == "completed":
-                        output.write(
-                            "Automatic meta-learning refreshed bounded outcome and "
-                            "reference intelligence.\n"
+                if not audit_mode:
+                    try:
+                        meta_learning = run_automatic_meta_learning(
+                            provider=provider,
+                            mission_store=mission_store,
+                            snapshot=latest_observation,
                         )
-                except (OSError, RuntimeError, ValueError) as exc:
-                    store.append(
-                        active_session,
-                        {
-                            "ts": utc_now(),
-                            "type": "automatic_meta_learning_failed",
-                            "error": str(exc),
-                            "observation_id": latest_observation["observation_id"],
-                        },
-                    )
-                    output.write(
-                        f"[automatic meta-learning degraded] {exc}; "
-                        "continuing with the existing evidence state.\n"
-                    )
+                        if meta_learning["status"] == "completed":
+                            output.write(
+                                "Automatic meta-learning refreshed bounded outcome and "
+                                "reference intelligence.\n"
+                            )
+                    except (OSError, RuntimeError, ValueError) as exc:
+                        store.append(
+                            active_session,
+                            {
+                                "ts": utc_now(),
+                                "type": "automatic_meta_learning_failed",
+                                "error": str(exc),
+                                "observation_id": latest_observation["observation_id"],
+                            },
+                        )
+                        output.write(
+                            f"[automatic meta-learning degraded] {exc}; "
+                            "continuing with the existing evidence state.\n"
+                        )
                 grounded_context = (
                     f"User request:\n{context}\n\n"
                     "Bounded workspace observation:\n"
@@ -3962,7 +4670,11 @@ def run_chat(
                         ensure_ascii=False,
                     )
                 )
-                active_vision = selected_vision_context(vision_store.latest())
+                active_vision = (
+                    None
+                    if audit_mode
+                    else selected_vision_context(vision_store.latest())
+                )
                 if active_vision:
                     grounded_context += (
                         "\n\nAutonomously originated product vision "
@@ -4001,18 +4713,57 @@ def run_chat(
                         "(research only; no delivery authority):\n"
                         + json.dumps(reference_agendas, ensure_ascii=False)
                     )
+                from palamedes_satisfaction import (
+                    SatisfactionStore,
+                    assessment_is_current,
+                )
+
+                satisfaction_assessments = SatisfactionStore(
+                    mission_store.root.parent / "satisfaction"
+                ).latest()
+                satisfaction_assessments = [
+                    {
+                        **row,
+                        "live_current": assessment_is_current(
+                            mission_store.root.parent.parent, row
+                        ),
+                    }
+                    for row in satisfaction_assessments
+                ]
+                if satisfaction_assessments:
+                    grounded_context += (
+                        "\n\nHost-verified requirement satisfaction assessments "
+                        "(current-snapshot already_satisfied requirements must not become "
+                        "implementation missions):\n"
+                        + json.dumps(satisfaction_assessments, ensure_ascii=False)
+                    )
                 team_context = current_team_context()
                 if team_context is not None:
                     grounded_context += (
                         "\n\nShared team cognition:\n"
                         + json.dumps(team_context, ensure_ascii=False)
                     )
-                result = run_cognition_cycle(
-                    provider=provider,
-                    palamedes_module=palamedes_module,
-                    context=grounded_context,
-                    cycle_store=cognition_store,
-                )
+                if cycle_mode == "micro":
+                    result = run_micro_cycle(
+                        provider=provider,
+                        palamedes_module=palamedes_module,
+                        context=grounded_context,
+                        cycle_store=cognition_store,
+                        progress=lambda message: (
+                            output.write(message + "\n"), output.flush()
+                        ),
+                    )
+                else:
+                    result = run_cognition_cycle(
+                        provider=provider,
+                        palamedes_module=palamedes_module,
+                        context=grounded_context,
+                        cycle_store=cognition_store,
+                        progress=lambda message: (
+                            output.write(message + "\n"), output.flush()
+                        ),
+                        resume_cycle_id=resume_cycle_id,
+                    )
             except (OSError, RuntimeError, ValueError) as exc:
                 output.write(f"[cognition cycle error] {exc}\n")
                 output.write("Partial role artifacts were preserved; no mission draft was issued.\n")
@@ -4028,6 +4779,9 @@ def run_chat(
                     "decision": cycle["decision"],
                     "role_count": len(cycle["artifacts"]),
                     "observation_id": latest_observation["observation_id"],
+                    "cycle_mode": cycle_mode,
+                    "run_id": cycle["run_id"],
+                    "provider_usage": cycle.get("provider_usage", {}),
                 },
             )
             contract = result["contract"]
@@ -4194,6 +4948,7 @@ def run_chat(
                 status = str(payload.get("status", "")).strip()
                 observation = str(payload.get("observation", "")).strip()
                 actual_investment = payload.get("actual_investment")
+                outcome_type = str(payload.get("outcome_type", "")).strip()
                 if not status or not observation:
                     output.write(
                         "/outcome-json requires status and observation.\n"
@@ -4236,6 +4991,7 @@ def run_chat(
                     status,
                     observation,
                     actual_investment,
+                    outcome_type if text.startswith("/outcome-json") else "",
                 )
             except ValueError as exc:
                 output.write(f"{exc}\n")
@@ -4260,11 +5016,12 @@ def run_chat(
                     "status": "outcome_recorded",
                     "outcome_id": outcome["outcome_id"],
                     "outcome_status": status,
+                    "outcome_type": outcome["outcome_type"],
                     "outcome_analysis_status": analysis_result["status"],
                 },
             )
             output.write(
-                f"Outcome recorded: {outcome['outcome_id']} ({status})\n"
+                f"Outcome recorded: {outcome['outcome_id']} ({status} / {outcome['outcome_type']})\n"
             )
             if analysis_result["status"] == "completed":
                 analysis_output = analysis_result["analysis"]["output"]
