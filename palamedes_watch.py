@@ -68,8 +68,14 @@ def select_wake_policy(
     if len(significant) >= 3:
         return _policy(
             "full_cycle",
-            ["interpreter", "inventor", "adversary", "selector"],
-            4,
+            [
+                "context_governor",
+                "interpreter",
+                "inventor",
+                "adversary",
+                "selector",
+            ],
+            5,
             "multiple independent signal classes changed",
         )
     if "reference_repository_set_or_head_changed" in reasons:

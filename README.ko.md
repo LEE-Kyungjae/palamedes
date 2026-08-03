@@ -691,18 +691,26 @@ palamedes> /outcome-json {"status":"mixed","observation":"probe 결과","actual_
 - `/challenge`: 가정과 반증 조건 공격
 - `/research`: 커밋 전에 필요한 최소 외부 근거 식별
 - `/mission`: 계획을 변경하지 않고 구조화된 미션 초안 생성
-- `/cycle`: interpreter, inventor, adversary, selector 독립 호출
-- `/cycle --mode audit <context>` (`--skip-vision` 별칭): 제한된 감사를 위해 네
+- `/cycle`: context governor, interpreter, inventor, adversary, selector 독립 호출
+  - context governor는 필수 조건·자율 영역·선호·참고 예시를 분리합니다. 참고
+    예시와 현재 구현 경로는 clean-room interpreter와 inventor에게 노출되지 않고,
+    후보 동결 후 adversary의 비교·드리프트 검사에만 제공됩니다.
+- `/cycle --mode audit <context>` (`--skip-vision` 별칭): 제한된 감사를 위해 다섯
   cognition 역할만 호출합니다. 자동 Vision Genesis와 메타학습 provider 호출 및
   선택된 vision의 영향을 제외하고, 일반 `/cycle` 의미를 바꾸지 않은 채 동일 run
   ID의 역할별 진행 상태·소요 시간·토큰 custody를 출력합니다.
 - `/cycle --resume <cycle-id>`: 실패했거나 중단된 cognition 실행을 보존된 문맥과
   검증된 역할 checkpoint에서 재개합니다. provider와 모델이 같아야 하며 완료된
   역할은 다시 호출하지 않고, 변조된 checkpoint는 차단합니다.
+- `/context-ablation <cycle-id>`: 완료된 cycle의 상위 문맥을 고정하고 현재 구현
+  경로를 숨긴 arm과 공개한 arm을 각각 새로 실행한 뒤, 출처를 가린 심판으로 문제
+  프레임·인과 메커니즘·미션 계열의 이동을 비교합니다. 단일 shared-model 쌍은
+  인과 증명이 아닙니다. 같은 명령을 반복하면 시도별 원본과 누적 방향 이동률·
+  추상도 붕괴 신호율이 함께 보존됩니다.
 - 일반 `/cycle <context>`는 provider 호출 전에 결정론적 비용 preflight를 수행합니다.
   Lookup은 host가 확인한 `already_satisfied` 요구사항에 0회, Micro는 schema 수리
   최대 1회를 포함한 mission compiler 1회, Component는 Vision/meta-learning 없이
-  독립 4역할, Product만 전체 연구 경로를 사용합니다. `/cycle --mode
+  독립 5역할, Product만 전체 연구 경로를 사용합니다. `/cycle --mode
   lookup|micro|component|product <context>`로 명시할 수 있습니다. 범위가 모호하면
   Component로, 보안·개인정보·결제·삭제·migration·공개 API·배포·저장소 체결·
   비가역성·교차 surface·제품 불변조건 충돌은 더 깊은 모드로 승격합니다.
@@ -781,8 +789,8 @@ palamedes watch \
 | 독립 신호 세 종류 이상 변경 | 전체 4역할 사이클 |
 
 기본값은 5분 간격, wake당 2회, UTC 기준 하루 10회, 누적 20회입니다.
-전체 사이클에는 4회 호출이 필요하므로 기본 설정에서는 자동 차단됩니다.
-명시적으로 허용하려면 `--max-calls-per-wake 4`를 사용합니다.
+전체 사이클에는 문맥 권한 분류를 포함해 5회 호출이 필요하므로 기본 설정에서는
+자동 차단됩니다. 명시적으로 허용하려면 `--max-calls-per-wake 5`를 사용합니다.
 
 동일한 신호는 반복 호출하지 않습니다. 시도된 호출은 실패하더라도 예산에
 반영됩니다. Codex JSONL이 보고한 입력, 캐시 입력, 출력, 추론 토큰도

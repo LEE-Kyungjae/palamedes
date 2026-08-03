@@ -492,6 +492,65 @@ class StaticChatProvider:
                 }
             )
             return
+        if "ROLE: context_governor" in prompt:
+            yield json.dumps(
+                {
+                    "hard_requirements": ["Originate a worthwhile mission"],
+                    "success_criteria": ["Produce a falsifiable outcome test"],
+                    "constraints": ["Remain plan-only"],
+                    "autonomous_decisions": ["Mission mechanism"],
+                    "observations": ["The current product claim needs proof"],
+                    "preferences": [],
+                    "reference_examples": [],
+                    "ambiguous_authority": [],
+                }
+            )
+            return
+        if prompt.startswith("ROLE: clean_room_ablation_arm"):
+            yield json.dumps(
+                {
+                    "problem_frame": "The product needs a new strategic mechanism",
+                    "causal_mechanism": "Independent exploration changes user behavior",
+                    "mission_family": "strategic discovery probe",
+                    "decision_level": "strategic",
+                    "next_discriminating_probe": "Run a clean-room user test",
+                    "path_assumptions": [],
+                    "confidence": 60,
+                }
+            )
+            return
+        if prompt.startswith("ROLE: continuity_ablation_arm"):
+            yield json.dumps(
+                {
+                    "problem_frame": "The selected implementation needs completion",
+                    "causal_mechanism": "Closing task gaps improves delivery",
+                    "mission_family": "implementation completion",
+                    "decision_level": "implementation",
+                    "next_discriminating_probe": "Complete the next local task",
+                    "path_assumptions": ["The selected option remains correct"],
+                    "confidence": 70,
+                }
+            )
+            return
+        if prompt.startswith("ROLE: blinded_ablation_judge"):
+            yield json.dumps(
+                {
+                    "same_problem_frame": False,
+                    "same_causal_mechanism": False,
+                    "same_mission_family": False,
+                    "material_direction_shift": True,
+                    "shift_dimensions": [
+                        "problem_frame",
+                        "causal_mechanism",
+                        "mission_family",
+                        "decision_level",
+                        "probe",
+                    ],
+                    "lower_abstraction_arm": "arm-b",
+                    "rationale": "One arm preserves strategy while the other follows implementation state.",
+                }
+            )
+            return
         if "ROLE: inventor" in prompt:
             yield json.dumps(
                 {
@@ -526,6 +585,14 @@ class StaticChatProvider:
                     "shared_assumptions": ["The chosen metric reflects decision quality"],
                     "missing_opposition": ["A strong one-shot agent baseline"],
                     "minimum_disconfirming_probe": "Run one blinded equal-budget pair",
+                    "abstraction_audit": {
+                        "reasoning_level": "strategic",
+                        "path_assumptions_detected": [],
+                        "suspected_abstraction_drift": False,
+                        "discriminating_context_ablation": (
+                            "Remove the selected option and development probes"
+                        ),
+                    },
                 }
             )
             return
@@ -3715,13 +3782,19 @@ class PalamedesChatTests(unittest.TestCase):
 
         self.assertEqual(
             [item["role"] for item in cycle["artifacts"]],
-            ["interpreter", "inventor", "adversary", "selector"],
+            [
+                "context_governor",
+                "interpreter",
+                "inventor",
+                "adversary",
+                "selector",
+            ],
         )
         self.assertEqual(len(cycle["outcome_analyses"]), 1)
         self.assertEqual(
             cycle["outcome_analyses"][0]["role"], "outcome_analyst"
         )
-        self.assertEqual(cycle["live_model_call_count"], 5)
+        self.assertEqual(cycle["live_model_call_count"], 6)
         self.assertFalse(cycle["outcome_analyst_runs_before_outcome"])
         self.assertEqual(
             [call[-1]["content"].splitlines()[0] for call in provider.calls],
@@ -3733,6 +3806,7 @@ class PalamedesChatTests(unittest.TestCase):
                 "ROLE: product_world_builder",
                 "ROLE: maniac_critic_and_vision_author",
                 "ROLE: vision_reality_governor",
+                "ROLE: context_governor",
                 "ROLE: interpreter",
                 "ROLE: inventor",
                 "ROLE: adversary",
@@ -3781,6 +3855,7 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertEqual(
             role_prompts,
             [
+                "ROLE: context_governor",
                 "ROLE: interpreter",
                 "ROLE: inventor",
                 "ROLE: adversary",
@@ -3789,11 +3864,11 @@ class PalamedesChatTests(unittest.TestCase):
         )
         self.assertNotIn("Vision wake:", output.getvalue())
         self.assertIn("Audit mode:", output.getvalue())
-        self.assertIn("interpreter 1/4 started", output.getvalue())
-        self.assertIn("selector 4/4 completed", output.getvalue())
+        self.assertIn("context_governor 1/5 started", output.getvalue())
+        self.assertIn("selector 5/5 completed", output.getvalue())
         self.assertEqual(cycle["run_id"], cycle["cognition_cycle_id"])
-        self.assertEqual(cycle["provider_usage"]["attempted_calls"], 4)
-        self.assertEqual(cycle["provider_usage"]["unmetered_calls"], 4)
+        self.assertEqual(cycle["provider_usage"]["attempted_calls"], 5)
+        self.assertEqual(cycle["provider_usage"]["unmetered_calls"], 5)
         for artifact in cycle["artifacts"]:
             self.assertEqual(artifact["run_id"], cycle["run_id"])
             self.assertIn("started_at", artifact)
@@ -3953,7 +4028,7 @@ class PalamedesChatTests(unittest.TestCase):
             cycle = json.loads(next(store.root.glob("*.json")).read_text())
 
         self.assertEqual(cycle["status"], "failed")
-        self.assertEqual(cycle["live_model_call_count"], 3)
+        self.assertEqual(cycle["live_model_call_count"], 4)
 
     def test_selector_cannot_claim_an_unavailable_discovery(self):
         class FalseLineageProvider(StaticChatProvider):
@@ -4302,7 +4377,7 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertEqual(cycle["status"], "failed")
         self.assertEqual(
             [item["role"] for item in cycle["artifacts"]],
-            ["interpreter", "inventor"],
+            ["context_governor", "interpreter", "inventor"],
         )
         self.assertEqual(mission_files, [])
         self.assertIn("no mission draft was issued", output.getvalue())
@@ -4457,11 +4532,17 @@ class PalamedesChatTests(unittest.TestCase):
                 cycle_store=store,
             )
 
-        self.assertEqual(len(provider.calls), 5)
+        self.assertEqual(len(provider.calls), 6)
         self.assertEqual(result["cycle"]["live_model_call_count"], 1)
         self.assertEqual(
             [row["role"] for row in result["cycle"]["artifacts"]],
-            ["interpreter", "inventor", "adversary", "selector"],
+            [
+                "context_governor",
+                "interpreter",
+                "inventor",
+                "adversary",
+                "selector",
+            ],
         )
         self.assertTrue(all(
             row.get("checkpoint_reused")
@@ -4504,6 +4585,7 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertEqual(
             role_prompts,
             [
+                "ROLE: context_governor",
                 "ROLE: interpreter",
                 "ROLE: inventor",
                 "ROLE: adversary",
@@ -4512,7 +4594,7 @@ class PalamedesChatTests(unittest.TestCase):
             ],
         )
         self.assertEqual(result["cycle"]["live_model_call_count"], 1)
-        self.assertEqual(result["cycle"]["provider_usage"]["attempted_calls"], 5)
+        self.assertEqual(result["cycle"]["provider_usage"]["attempted_calls"], 6)
         self.assertEqual(len(result["cycle"]["rejected_artifacts"]), 1)
         self.assertEqual(
             result["cycle"]["rejected_artifacts"][0]["role"], "selector"
@@ -4523,7 +4605,13 @@ class PalamedesChatTests(unittest.TestCase):
         )
         self.assertEqual(
             [row["role"] for row in result["cycle"]["artifacts"]],
-            ["interpreter", "inventor", "adversary", "selector"],
+            [
+                "context_governor",
+                "interpreter",
+                "inventor",
+                "adversary",
+                "selector",
+            ],
         )
         self.assertTrue(all(
             row.get("checkpoint_reused")
@@ -4760,6 +4848,236 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertEqual(fake.ROOT, workspace.resolve())
         self.assertEqual(fake.STATE_DIR, workspace.resolve() / ".palamedes")
         self.assertEqual(run.call_args.kwargs["session_id"], "trial")
+
+    def test_cognition_cycle_isolates_path_dependent_context_until_adversary(self):
+        class ExampleClassifyingProvider(StaticChatProvider):
+            def stream(self, messages):
+                if messages[-1]["content"].startswith("ROLE: context_governor"):
+                    self.calls.append(messages)
+                    yield json.dumps(
+                        {
+                            "hard_requirements": ["Originate a mini-game"],
+                            "success_criteria": ["Produce a playable core loop"],
+                            "constraints": [],
+                            "autonomous_decisions": ["Genre", "core mechanic"],
+                            "observations": [],
+                            "preferences": [],
+                            "reference_examples": [
+                                {
+                                    "example": "MAFIA42-REFERENCE-ONLY",
+                                    "authorized_use": "comparison_only",
+                                }
+                            ],
+                            "ambiguous_authority": [],
+                        }
+                    )
+                    return
+                yield from super().stream(messages)
+
+        class PathDependentPalamedes(FakePalamedes):
+            def load_plan(self):
+                plan = super().load_plan()
+                plan.update(
+                    {
+                        "selected_option": "LOCKED-IN-DETECTIVE-GAME",
+                        "view_transitions": [
+                            {"to": "BOTTOM-UP-ROLE-TREE", "reason": "implementation"}
+                        ],
+                        "development_probes": [
+                            {"probe": "BOTTOM-UP-VOTING-API", "status": "open"}
+                        ],
+                        "plan_tasks": ["BOTTOM-UP-ROLE-PLAN"],
+                        "execution_tasks": ["BOTTOM-UP-VOTE-COMPONENT"],
+                        "phase_plan": ["BOTTOM-UP-IMPLEMENTATION-PHASE"],
+                    }
+                )
+                return plan
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = PathDependentPalamedes(Path(tempdir))
+            provider = ExampleClassifyingProvider()
+            result = palamedes_chat.run_cognition_cycle(
+                provider=provider,
+                palamedes_module=fake,
+                context=(
+                    "Originate a mini-game autonomously; "
+                    "MAFIA42-REFERENCE-ONLY may be worth benchmarking"
+                ),
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+            )
+
+        prompts = {
+            call[-1]["content"].splitlines()[0]: call[-1]["content"]
+            for call in provider.calls
+        }
+        self.assertNotIn("LOCKED-IN-DETECTIVE-GAME", prompts["ROLE: interpreter"])
+        self.assertNotIn("LOCKED-IN-DETECTIVE-GAME", prompts["ROLE: inventor"])
+        self.assertIn("LOCKED-IN-DETECTIVE-GAME", prompts["ROLE: adversary"])
+        self.assertNotIn("BOTTOM-UP-ROLE-PLAN", prompts["ROLE: interpreter"])
+        self.assertNotIn("BOTTOM-UP-VOTE-COMPONENT", prompts["ROLE: inventor"])
+        self.assertIn("BOTTOM-UP-IMPLEMENTATION-PHASE", prompts["ROLE: adversary"])
+        self.assertNotIn("MAFIA42-REFERENCE-ONLY", prompts["ROLE: interpreter"])
+        self.assertNotIn("MAFIA42-REFERENCE-ONLY", prompts["ROLE: inventor"])
+        self.assertIn("MAFIA42-REFERENCE-ONLY", prompts["ROLE: adversary"])
+        cycle = result["cycle"]
+        self.assertEqual(
+            cycle["context_isolation_version"], "palamedes-context-isolation/1"
+        )
+        self.assertNotIn("selected_option", cycle["plan_context"])
+        self.assertEqual(
+            cycle["path_dependent_context"]["selected_option"],
+            "LOCKED-IN-DETECTIVE-GAME",
+        )
+
+    def test_context_governor_cannot_leak_optional_example_into_clean_room(self):
+        class LeakingGovernorProvider(StaticChatProvider):
+            def stream(self, messages):
+                if messages[-1]["content"].startswith("ROLE: context_governor"):
+                    self.calls.append(messages)
+                    yield json.dumps(
+                        {
+                            "hard_requirements": ["Originate a mini-game"],
+                            "success_criteria": [],
+                            "constraints": [],
+                            "autonomous_decisions": ["Genre"],
+                            "observations": ["Build around MAFIA42-OPTIONAL-EXAMPLE"],
+                            "preferences": [],
+                            "reference_examples": [
+                                {
+                                    "example": "MAFIA42-OPTIONAL-EXAMPLE",
+                                    "authorized_use": "comparison_only",
+                                }
+                            ],
+                            "ambiguous_authority": [],
+                        }
+                    )
+                    return
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            with self.assertRaisesRegex(ValueError, "leaked non-required reference"):
+                palamedes_chat.run_cognition_cycle(
+                    provider=LeakingGovernorProvider(),
+                    palamedes_module=fake,
+                    context="Use MAFIA42-OPTIONAL-EXAMPLE only as a possible reference",
+                    cycle_store=palamedes_chat.CognitionCycleStore(
+                        fake.STATE_DIR / "missions" / "cognition"
+                    ),
+                    schema_retry_limit=0,
+                )
+
+    def test_context_ablation_runs_independent_arms_and_blinded_judgment(self):
+        class PathPalamedes(FakePalamedes):
+            def load_plan(self):
+                plan = super().load_plan()
+                plan["selected_option"] = "existing implementation path"
+                plan["development_probes"] = [
+                    {"probe": "finish current component", "status": "open"}
+                ]
+                return plan
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = PathPalamedes(Path(tempdir))
+            provider = StaticChatProvider()
+            store = palamedes_chat.CognitionCycleStore(
+                fake.STATE_DIR / "missions" / "cognition"
+            )
+            cycle_result = palamedes_chat.run_cognition_cycle(
+                provider=provider,
+                palamedes_module=fake,
+                context="Find a mission worth planning",
+                cycle_store=store,
+            )
+            calls_before = len(provider.calls)
+            record = palamedes_chat.run_context_ablation(
+                provider=provider,
+                cycle_store=store,
+                cycle_id=cycle_result["cycle"]["cognition_cycle_id"],
+                record_root=fake.STATE_DIR / "missions" / "context-ablations",
+            )
+            saved = json.loads(
+                next(
+                    (fake.STATE_DIR / "missions" / "context-ablations").glob(
+                        "ablation-*.json"
+                    )
+                ).read_text(encoding="utf-8")
+            )
+            second_record = palamedes_chat.run_context_ablation(
+                provider=provider,
+                cycle_store=store,
+                cycle_id=cycle_result["cycle"]["cognition_cycle_id"],
+                record_root=fake.STATE_DIR / "missions" / "context-ablations",
+            )
+            summary = json.loads(
+                (
+                    fake.STATE_DIR
+                    / "missions"
+                    / "context-ablations"
+                    / f"summary-{cycle_result['cycle']['cognition_cycle_id']}.json"
+                ).read_text(encoding="utf-8")
+            )
+
+        ablation_prompts = [
+            call[-1]["content"].splitlines()[0]
+            for call in provider.calls[calls_before:]
+        ]
+        self.assertEqual(
+            ablation_prompts,
+            [
+                "ROLE: clean_room_ablation_arm",
+                "ROLE: continuity_ablation_arm",
+                "ROLE: blinded_ablation_judge",
+                "ROLE: clean_room_ablation_arm",
+                "ROLE: continuity_ablation_arm",
+                "ROLE: blinded_ablation_judge",
+            ],
+        )
+        self.assertTrue(record["material_direction_shift"])
+        self.assertTrue(record["suspected_path_dependence"])
+        self.assertEqual(
+            record["continuity_lower_abstraction"],
+            record["blinded_judgment"]["lower_abstraction_arm"]
+            == record["blinded_labels"]["continuity"],
+        )
+        self.assertEqual(
+            record["abstraction_collapse_signal"],
+            record["continuity_lower_abstraction"],
+        )
+        self.assertFalse(record["single_pair_is_causal_proof"])
+        self.assertTrue(record["replication_required"])
+        self.assertEqual(saved["context_ablation_id"], record["context_ablation_id"])
+        self.assertNotEqual(
+            second_record["context_ablation_id"], record["context_ablation_id"]
+        )
+        self.assertNotEqual(
+            second_record["blinded_labels"], record["blinded_labels"]
+        )
+        self.assertEqual(second_record["replication_number"], 2)
+        self.assertEqual(summary["attempt_count"], 2)
+        self.assertEqual(summary["material_direction_shift_rate"], 1.0)
+        self.assertEqual(summary["minimum_interpretation"], "distributional_signal_only")
+
+    def test_context_ablation_failure_is_preserved(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            provider = StaticChatProvider()
+            root = Path(tempdir) / "ablations"
+            record = palamedes_chat.record_context_ablation_failure(
+                provider=provider,
+                cycle_id="cycle-123456789abc",
+                record_root=root,
+                error=ValueError("invalid confidence"),
+            )
+            saved = json.loads(
+                (root / f"{record['failure_id']}.json").read_text(encoding="utf-8")
+            )
+
+        self.assertEqual(saved["status"], "failed")
+        self.assertEqual(saved["error_type"], "ValueError")
+        self.assertTrue(saved["counted_in_total_attempts"])
+        self.assertFalse(saved["counted_as_successful_pair"])
 
 
 if __name__ == "__main__":
