@@ -918,18 +918,27 @@ Available commands:
 - `/challenge`: attack assumptions and state falsifiers
 - `/research`: identify the minimum missing external evidence
 - `/mission`: generate and validate a structured draft without changing the plan
-- `/cycle`: run independent interpreter, inventor, adversary, and selector calls; resume
-  completed immutable roles after a provider-runtime interruption
-- `/cycle --mode audit <context>` (alias: `--skip-vision`): run only those four
+- `/cycle`: run independent context-governor, interpreter, inventor, adversary, and selector calls; resume
+  - The context governor separates requirements, autonomous fields, preferences, and
+    examples. Non-required examples and the current implementation path are withheld
+    from the clean-room interpreter and inventor, then revealed only to the adversary
+    after the candidate frontier is frozen. Failed runs can resume completed immutable
+    roles after a provider-runtime interruption.
+- `/cycle --mode audit <context>` (alias: `--skip-vision`): run only those five
   cognition roles for a bounded audit. It suppresses automatic Vision Genesis and
   meta-learning provider calls, omits selected-vision influence, and emits run-scoped
   role progress, elapsed time, and token custody without changing ordinary `/cycle`.
 - `/cycle --resume <cycle-id>`: resume one failed or interrupted cognition run
   from its preserved context and verified role checkpoints. The provider and model
   must match; completed roles are not called again, and tampered checkpoints fail closed.
+- `/context-ablation <cycle-id>`: hold the completed cycle's strategic context fixed,
+  rerun fresh clean-room and continuity arms, and compare their problem frame, causal
+  mechanism, and mission family with a source-blinded judge. A single shared-model pair
+  is recorded as a path-dependence signal, never causal proof. Repeated invocations keep
+  every attempt and project aggregate direction-shift and abstraction-collapse rates.
 - Plain `/cycle <context>` now runs a deterministic cost preflight before any provider
   call. Lookup uses 0 calls for a host-verified `already_satisfied` requirement; Micro
-  uses one mission-compiler call with at most one schema repair; Component uses the four
+  uses one mission-compiler call with at most one schema repair; Component uses the five
   independent roles without Vision/meta-learning; Product may use the full research
   path. `/cycle --mode lookup|micro|component|product <context>` is an explicit override.
   Ambiguous natural-language scope defaults to Component, while security, privacy,
@@ -1025,7 +1034,7 @@ palamedes watch \
   --auto-cognition \
   --provider openrouter \
   --model <provider/model> \
-  --max-calls-per-wake 4 \
+  --max-calls-per-wake 5 \
   --max-calls-total 20
 ```
 
@@ -1073,8 +1082,8 @@ are enforced before provider access, with an additional daily budget; attempted
 calls are charged even if the provider fails. Repeated identical signal states
 are suppressed. The defaults are a five-minute interval, two calls per wake,
 ten calls per UTC day, and twenty calls over the stored watch lifetime. Because
-a full cognition cycle needs four independent calls, it remains blocked at the
-default per-wake budget; opt into it with `--max-calls-per-wake 4`.
+a full cognition cycle needs five independent calls, it remains blocked at the
+default per-wake budget; opt into it with `--max-calls-per-wake 5`.
 
 Watch state is local and inspectable under `.palamedes/watch/`: `state.json`
 holds the current cursor and budget total, `events.jsonl` is append-only, and

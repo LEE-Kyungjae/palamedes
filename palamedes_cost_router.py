@@ -23,13 +23,13 @@ MODE_BUDGETS = {
         "time_minutes_high": 5,
     },
     "component": {
-        "provider_calls_min": 2,
-        "provider_calls_max": 4,
+        "provider_calls_min": 5,
+        "provider_calls_max": 5,
         "token_budget_high": 140000,
         "time_minutes_high": 15,
     },
     "product": {
-        "provider_calls_min": 4,
+        "provider_calls_min": 5,
         "provider_calls_max": 12,
         "token_budget_high": 400000,
         "time_minutes_high": 45,

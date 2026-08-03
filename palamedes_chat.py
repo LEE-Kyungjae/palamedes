@@ -751,7 +751,9 @@ def run_cognition_cycle(
         raise ValueError("schema_retry_limit must be 0 or 1")
     available_discovery_ids = available_discovery_ids or set()
     started_at = utc_now()
-    current_plan_context = json.loads(_plan_context(palamedes_module))
+    current_context_views = _plan_context_views(palamedes_module)
+    current_plan_context = current_context_views["strategic"]
+    current_path_context = current_context_views["path_dependent"]
     if resume_cycle_id:
         if not re.fullmatch(r"cycle-[0-9a-f]{12}", resume_cycle_id):
             raise ValueError("resume_cycle_id must be a canonical cycle ID")
@@ -779,23 +781,39 @@ def run_cognition_cycle(
                     "legacy cycle cannot resume before interpreter without a plan snapshot"
                 )
             plan_context = current_plan_context
+        path_context = existing.get("path_dependent_context")
+        if not isinstance(path_context, dict):
+            path_context = current_path_context
+        exposure_policy = existing.get("context_exposure_policy")
+        if not isinstance(exposure_policy, dict):
+            exposure_policy = current_context_views["exposure_policy"]
     else:
         plan_context = current_plan_context
-        seed = {"context": context, "plan_context": plan_context}
+        path_context = current_path_context
+        exposure_policy = current_context_views["exposure_policy"]
+        seed = {
+            "context": context,
+            "plan_context": plan_context,
+            "path_dependent_context_fingerprint": _fingerprint(path_context),
+            "context_exposure_policy": exposure_policy,
+        }
         cycle_id = f"cycle-{_fingerprint(seed)[:12]}"
         existing_path = cycle_store.path(cycle_id)
         existing = cycle_store.load(cycle_id) if existing_path.is_file() else None
     cycle: Dict[str, Any] = {
-        "cognition_cycle_version": "palamedes-cognition-cycle/1",
+        "cognition_cycle_version": "palamedes-cognition-cycle/2",
         "cognition_cycle_id": cycle_id,
         "run_id": cycle_id,
         "status": "running",
         "context": context,
         "plan_context": plan_context,
+        "path_dependent_context": path_context,
+        "context_exposure_policy": exposure_policy,
+        "context_isolation_version": "palamedes-context-isolation/1",
         "started_at": existing.get("started_at", started_at) if existing else started_at,
         "provider": provider.provider_name,
         "model": provider.model,
-        "role_order": ["interpreter", "inventor", "adversary", "selector", "outcome_analyst"],
+        "role_order": ["context_governor", "interpreter", "inventor", "adversary", "selector", "outcome_analyst"],
         "artifacts": list(existing.get("artifacts", [])) if existing else [],
         "rejected_artifacts": list(existing.get("rejected_artifacts", [])) if existing else [],
         "outcome_analyses": list(existing.get("outcome_analyses", [])) if existing else [],
@@ -822,19 +840,17 @@ def run_cognition_cycle(
                     raise ValueError(f"{role} checkpoint fingerprint mismatch")
                 artifact["checkpoint_reused"] = True
                 if progress:
-                    progress(
-                        f"[{cycle_id}] {role} {call_index}/4 checkpoint reused"
-                    )
+                    progress(f"[{cycle_id}] {role} {call_index}/5 checkpoint reused")
                 return dict(output)
         role_started_at = utc_now()
         role_started_monotonic = time.monotonic()
         if progress:
-            progress(f"[{cycle_id}] {role} {call_index}/4 started")
+            progress(f"[{cycle_id}] {role} {call_index}/5 started")
         try:
             output = _provider_json(provider, system=system, prompt=prompt)
         except Exception:
             if progress:
-                progress(f"[{cycle_id}] {role} {call_index}/4 failed")
+                progress(f"[{cycle_id}] {role} {call_index}/5 failed")
             raise
         duration_ms = round((time.monotonic() - role_started_monotonic) * 1000)
         fresh_call_count += 1
@@ -859,11 +875,100 @@ def run_cognition_cycle(
             usage = cycle["artifacts"][-1].get("provider_usage", {})
             tokens = usage.get("total_tokens", "unmetered")
             progress(
-                f"[{cycle_id}] {role} {call_index}/4 completed "
+                f"[{cycle_id}] {role} {call_index}/5 completed "
                 f"in {duration_ms}ms · tokens={tokens}"
             )
         return output
     try:
+        governor_prompt = f"""ROLE: context_governor
+Classify the authority of the supplied context before mission origination. Preserve
+explicit requirements exactly, but do not infer that examples, comparisons, tentative
+ideas, prior selections, or implementation artifacts are requirements. Return:
+{{
+  "hard_requirements":["explicitly mandatory statements only"],
+  "success_criteria":["explicit outcome tests"],
+  "constraints":["explicit technical, legal, ethical, or resource boundaries"],
+  "autonomous_decisions":["fields Palamedes remains free to originate"],
+  "observations":["source-grounded facts safe for clean-room interpretation"],
+  "preferences":[{{"statement":"...","strength":"weak|medium|strong"}}],
+  "reference_examples":[{{"example":"...","authorized_use":"comparison_only|feature_extraction|required_basis"}}],
+  "ambiguous_authority":["statements whose force cannot be safely inferred"]
+}}
+The clean-room brief consists only of hard_requirements, success_criteria,
+constraints, autonomous_decisions, and observations. Do not copy names or mechanics
+from reference_examples into those fields unless the user explicitly made them a
+mandatory basis. Classification grants no mission or delivery authority.
+
+User context: {context}
+Strategic plan context: {json.dumps(plan_context, ensure_ascii=False)}"""
+        context_governor = invoke("context_governor", 1, governor_prompt)
+        for field in (
+            "hard_requirements",
+            "success_criteria",
+            "constraints",
+            "autonomous_decisions",
+            "observations",
+            "ambiguous_authority",
+        ):
+            values = context_governor.get(field)
+            if not isinstance(values, list) or not all(
+                isinstance(item, str) and item.strip() for item in values
+            ):
+                raise ValueError(f"context_governor {field} must be a string array")
+        for field in ("preferences", "reference_examples"):
+            if not isinstance(context_governor.get(field), list):
+                raise ValueError(f"context_governor {field} must be an array")
+        for index, preference in enumerate(context_governor["preferences"]):
+            if not isinstance(preference, dict) or not str(
+                preference.get("statement", "")
+            ).strip():
+                raise ValueError(
+                    f"context_governor preferences[{index}] requires statement"
+                )
+            if preference.get("strength") not in {"weak", "medium", "strong"}:
+                raise ValueError(
+                    f"context_governor preferences[{index}] has invalid strength"
+                )
+        for index, example in enumerate(context_governor["reference_examples"]):
+            if not isinstance(example, dict) or not str(
+                example.get("example", "")
+            ).strip():
+                raise ValueError(
+                    f"context_governor reference_examples[{index}] requires example"
+                )
+            if example.get("authorized_use") not in {
+                "comparison_only",
+                "feature_extraction",
+                "required_basis",
+            }:
+                raise ValueError(
+                    f"context_governor reference_examples[{index}] has invalid authorized_use"
+                )
+        clean_room_brief = {
+            field: context_governor[field]
+            for field in (
+                "hard_requirements",
+                "success_criteria",
+                "constraints",
+                "autonomous_decisions",
+                "observations",
+            )
+        }
+        serialized_clean_brief = json.dumps(
+            clean_room_brief, ensure_ascii=False, sort_keys=True
+        ).casefold()
+        leaked_examples = [
+            str(example["example"])
+            for example in context_governor["reference_examples"]
+            if example["authorized_use"] != "required_basis"
+            and str(example["example"]).strip().casefold() in serialized_clean_brief
+        ]
+        if leaked_examples:
+            raise ValueError(
+                "context_governor leaked non-required reference examples into the "
+                "clean-room brief"
+            )
+
         interpreter_prompt = f"""ROLE: interpreter
 Separate observation from inference and preserve rival frames.
 Return:
@@ -877,9 +982,10 @@ Return:
 }}
 Require at least two interpretations.
 
-User context: {context}
-Plan context: {json.dumps(plan_context, ensure_ascii=False)}"""
-        interpreter = invoke("interpreter", 1, interpreter_prompt)
+Clean-room brief (reference examples, preferences, prior selections, and local
+implementation artifacts are intentionally unavailable):
+{json.dumps(clean_room_brief, ensure_ascii=False)}"""
+        interpreter = invoke("interpreter", 2, interpreter_prompt)
         _non_empty_string_array(interpreter, "observations")
         _non_empty_string_array(interpreter, "tensions")
         _non_empty_string_array(interpreter, "missing_evidence")
@@ -908,7 +1014,7 @@ Return:
 
 Interpreter artifact:
 {json.dumps(interpreter, ensure_ascii=False)}"""
-        inventor = invoke("inventor", 2, inventor_prompt)
+        inventor = invoke("inventor", 3, inventor_prompt)
         candidates = inventor.get("candidates")
         if not isinstance(candidates, list) or len(candidates) < 3:
             raise ValueError("inventor requires at least three candidates")
@@ -942,15 +1048,30 @@ Return:
   ],
   "shared_assumptions": ["..."],
   "missing_opposition": ["..."],
-  "minimum_disconfirming_probe": "..."
+  "minimum_disconfirming_probe": "...",
+  "abstraction_audit": {{
+    "reasoning_level":"strategic|tactical|implementation",
+    "path_assumptions_detected":["..."],
+    "suspected_abstraction_drift":false,
+    "discriminating_context_ablation":"which context bundle to remove or replace"
+  }}
 }}
 Every candidate ID must have exactly one critique.
 
 Interpreter:
 {json.dumps(interpreter, ensure_ascii=False)}
 Candidates:
-{json.dumps(inventor, ensure_ascii=False)}"""
-        adversary = invoke("adversary", 3, adversary_prompt)
+{json.dumps(inventor, ensure_ascii=False)}
+
+Path-dependent implementation context (use only to test feasibility, sunk-cost
+reasoning, current-path lock-in, and abstraction drift; it is not evidence that
+the frozen direction is strategically correct):
+{json.dumps(path_context, ensure_ascii=False)}
+
+Authority-classified preferences and examples (comparison and compliance checks
+only; do not rewrite the frozen candidates around them):
+{json.dumps({"preferences": context_governor["preferences"], "reference_examples": context_governor["reference_examples"], "ambiguous_authority": context_governor["ambiguous_authority"]}, ensure_ascii=False)}"""
+        adversary = invoke("adversary", 4, adversary_prompt)
         critiques = adversary.get("critiques")
         if not isinstance(critiques, list):
             raise ValueError("adversary critiques must be an array")
@@ -965,6 +1086,29 @@ Candidates:
         _non_empty_string_array(adversary, "missing_opposition")
         if not str(adversary.get("minimum_disconfirming_probe", "")).strip():
             raise ValueError("adversary requires minimum_disconfirming_probe")
+        abstraction_audit = adversary.get("abstraction_audit")
+        if not isinstance(abstraction_audit, dict):
+            raise ValueError("adversary requires abstraction_audit")
+        if abstraction_audit.get("reasoning_level") not in {
+            "strategic",
+            "tactical",
+            "implementation",
+        }:
+            raise ValueError("abstraction_audit requires a valid reasoning_level")
+        assumptions = abstraction_audit.get("path_assumptions_detected")
+        if not isinstance(assumptions, list) or not all(
+            isinstance(item, str) and item.strip() for item in assumptions
+        ):
+            raise ValueError("abstraction_audit path assumptions must be a string array")
+        if not isinstance(
+            abstraction_audit.get("suspected_abstraction_drift"), bool
+        ):
+            raise ValueError("abstraction_audit drift flag must be boolean")
+        if not str(
+            abstraction_audit.get("discriminating_context_ablation", "")
+        ).strip():
+            raise ValueError("abstraction_audit requires a discriminating ablation")
+        cycle["abstraction_audit"] = dict(abstraction_audit)
 
         selector_prompt = f"""ROLE: selector
 Select, defer, or reject from the frozen candidates and critiques. You may not
@@ -996,7 +1140,7 @@ Candidates:
 {json.dumps(inventor, ensure_ascii=False)}
 Adversary:
 {json.dumps(adversary, ensure_ascii=False)}"""
-        selector = invoke("selector", 4, selector_prompt)
+        selector = invoke("selector", 5, selector_prompt)
         decision = selector.get("decision")
         if decision not in {"select", "defer", "reject"}:
             raise ValueError("selector decision must be select, defer, or reject")
@@ -1096,7 +1240,7 @@ Adversary:
             provider, cycle["artifacts"] + cycle["rejected_artifacts"]
         )
         cycle["role_output_fingerprints_unique"] = (
-            len({item["output_fingerprint"] for item in cycle["artifacts"]}) == 4
+            len({item["output_fingerprint"] for item in cycle["artifacts"]}) == 5
         )
         contract = None
         if decision == "select":
@@ -1186,6 +1330,299 @@ Adversary:
                 resume_cycle_id=cycle_id,
             )
         raise
+
+
+def run_context_ablation(
+    *,
+    provider: ChatProvider,
+    cycle_store: CognitionCycleStore,
+    cycle_id: str,
+    record_root: Path,
+) -> Dict[str, Any]:
+    """Compare fresh strategic reasoning with and without path-dependent context."""
+    cycle = cycle_store.load(cycle_id)
+    if cycle.get("status") not in {"selected", "defer", "reject"}:
+        raise ValueError("context ablation requires a completed cognition cycle")
+    plan_context = cycle.get("plan_context")
+    path_context = cycle.get("path_dependent_context")
+    if not isinstance(plan_context, dict) or not isinstance(path_context, dict):
+        raise ValueError("cycle predates split strategic and path-dependent context")
+    governor = next(
+        (
+            row.get("output")
+            for row in cycle.get("artifacts", [])
+            if row.get("role") == "context_governor"
+        ),
+        None,
+    )
+    if not isinstance(governor, dict):
+        raise ValueError("cycle has no context_governor artifact")
+    clean_room_brief = {
+        field: governor.get(field, [])
+        for field in (
+            "hard_requirements",
+            "success_criteria",
+            "constraints",
+            "autonomous_decisions",
+            "observations",
+        )
+    }
+    system = (
+        "You are one isolated Palamedes ablation role. Return exactly one JSON "
+        "object, preserve uncertainty, and grant no mission or delivery authority."
+    )
+
+    def generate_arm(role: str, visible_path: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        path_section = (
+            "Path-dependent context is intentionally unavailable."
+            if visible_path is None
+            else "Path-dependent context:\n"
+            + json.dumps(visible_path, ensure_ascii=False, sort_keys=True)
+        )
+        output = _provider_json(
+            provider,
+            system=system,
+            prompt=f"""ROLE: {role}
+Produce one fresh strategic diagnosis. Do not continue or polish the prior mission.
+Return:
+{{
+  "problem_frame":"...",
+  "causal_mechanism":"...",
+  "mission_family":"...",
+  "decision_level":"strategic|tactical|implementation",
+  "next_discriminating_probe":"...",
+  "path_assumptions":["..."],
+  "confidence":0
+}}
+confidence must be an integer from 0 to 100, not a fraction or percentage string.
+
+Clean-room brief:
+{json.dumps(clean_room_brief, ensure_ascii=False, sort_keys=True)}
+Strategic plan context:
+{json.dumps(plan_context, ensure_ascii=False, sort_keys=True)}
+{path_section}""",
+        )
+        for field in (
+            "problem_frame",
+            "causal_mechanism",
+            "mission_family",
+            "next_discriminating_probe",
+        ):
+            if not str(output.get(field, "")).strip():
+                raise ValueError(f"{role} requires {field}")
+        if output.get("decision_level") not in {
+            "strategic",
+            "tactical",
+            "implementation",
+        }:
+            raise ValueError(f"{role} has invalid decision_level")
+        assumptions = output.get("path_assumptions")
+        if not isinstance(assumptions, list) or not all(
+            isinstance(item, str) and item.strip() for item in assumptions
+        ):
+            raise ValueError(f"{role} path_assumptions must be a string array")
+        confidence = output.get("confidence")
+        if (
+            not isinstance(confidence, int)
+            or isinstance(confidence, bool)
+            or not 0 <= confidence <= 100
+        ):
+            raise ValueError(f"{role} confidence must be an integer from 0 to 100")
+        return output
+
+    prior_records = []
+    prior_failures = []
+    if record_root.is_dir():
+        for prior_path in sorted(record_root.glob("ablation-*.json")):
+            try:
+                prior = json.loads(prior_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if (
+                isinstance(prior, dict)
+                and prior.get("source_cognition_cycle_id") == cycle_id
+            ):
+                prior_records.append(prior)
+        for failure_path in sorted(record_root.glob("failed-ablation-*.json")):
+            try:
+                failure = json.loads(failure_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if (
+                isinstance(failure, dict)
+                and failure.get("source_cognition_cycle_id") == cycle_id
+            ):
+                prior_failures.append(failure)
+    attempt_id = f"ablation-{uuid.uuid4().hex[:12]}"
+    clean_output = generate_arm("clean_room_ablation_arm", None)
+    continuity_output = generate_arm("continuity_ablation_arm", path_context)
+    arm_order = (
+        [("arm-a", clean_output), ("arm-b", continuity_output)]
+        if len(prior_records) % 2 == 0
+        else [("arm-a", continuity_output), ("arm-b", clean_output)]
+    )
+    judge = _provider_json(
+        provider,
+        system=system,
+        prompt=f"""ROLE: blinded_ablation_judge
+Compare the two frozen strategic diagnoses without guessing their source. Judge
+structural meaning, not wording. Return:
+{{
+  "same_problem_frame":false,
+  "same_causal_mechanism":false,
+  "same_mission_family":false,
+  "material_direction_shift":true,
+  "shift_dimensions":["problem_frame|causal_mechanism|mission_family|decision_level|probe"],
+  "lower_abstraction_arm":"arm-a|arm-b|neither",
+  "rationale":"..."
+}}
+
+arm-a:
+{json.dumps(arm_order[0][1], ensure_ascii=False, sort_keys=True)}
+arm-b:
+{json.dumps(arm_order[1][1], ensure_ascii=False, sort_keys=True)}""",
+    )
+    for field in (
+        "same_problem_frame",
+        "same_causal_mechanism",
+        "same_mission_family",
+        "material_direction_shift",
+    ):
+        if not isinstance(judge.get(field), bool):
+            raise ValueError(f"blinded_ablation_judge {field} must be boolean")
+    dimensions = judge.get("shift_dimensions")
+    allowed_dimensions = {
+        "problem_frame",
+        "causal_mechanism",
+        "mission_family",
+        "decision_level",
+        "probe",
+    }
+    if not isinstance(dimensions, list) or not set(dimensions).issubset(
+        allowed_dimensions
+    ):
+        raise ValueError("blinded_ablation_judge has invalid shift_dimensions")
+    if judge["material_direction_shift"] != bool(dimensions):
+        raise ValueError(
+            "blinded_ablation_judge shift flag must match shift_dimensions"
+        )
+    if judge.get("lower_abstraction_arm") not in {"arm-a", "arm-b", "neither"}:
+        raise ValueError("blinded_ablation_judge has invalid lower_abstraction_arm")
+    if not str(judge.get("rationale", "")).strip():
+        raise ValueError("blinded_ablation_judge requires rationale")
+    clean_label = next(label for label, value in arm_order if value is clean_output)
+    continuity_label = next(
+        label for label, value in arm_order if value is continuity_output
+    )
+    continuity_lower_abstraction = (
+        judge["lower_abstraction_arm"] == continuity_label
+    )
+    record = {
+        "context_ablation_version": "palamedes-context-ablation/1",
+        "context_ablation_id": attempt_id,
+        "replication_number": len(prior_records) + 1,
+        "created_at": utc_now(),
+        "source_cognition_cycle_id": cycle_id,
+        "tested_context_bundle": "path_dependent_context",
+        "clean_room_output": clean_output,
+        "continuity_output": continuity_output,
+        "blinded_labels": {
+            "clean_room": clean_label,
+            "continuity": continuity_label,
+        },
+        "blinded_judgment": judge,
+        "material_direction_shift": judge["material_direction_shift"],
+        "suspected_path_dependence": judge["material_direction_shift"],
+        "continuity_lower_abstraction": continuity_lower_abstraction,
+        "abstraction_collapse_signal": continuity_lower_abstraction,
+        "shared_model_dependence": True,
+        "single_pair_is_causal_proof": False,
+        "replication_required": True,
+        "mission_authority_granted": False,
+        "delivery_authority_granted": False,
+    }
+    record_root.mkdir(parents=True, exist_ok=True)
+    path = record_root / f"{record['context_ablation_id']}.json"
+    temporary = path.with_suffix(".json.tmp")
+    temporary.write_text(
+        json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(path)
+    aggregate_records = prior_records + [record]
+    shift_count = sum(
+        row.get("material_direction_shift") is True for row in aggregate_records
+    )
+    collapse_count = sum(
+        row.get("continuity_lower_abstraction") is True for row in aggregate_records
+    )
+    summary = {
+        "context_ablation_summary_version": "palamedes-context-ablation-summary/1",
+        "source_cognition_cycle_id": cycle_id,
+        "attempt_count": len(aggregate_records),
+        "completed_pair_count": len(aggregate_records),
+        "failed_attempt_count": len(prior_failures),
+        "total_attempt_count": len(aggregate_records) + len(prior_failures),
+        "completion_rate": len(aggregate_records)
+        / (len(aggregate_records) + len(prior_failures)),
+        "material_direction_shift_count": shift_count,
+        "material_direction_shift_rate": shift_count / len(aggregate_records),
+        "abstraction_collapse_signal_count": collapse_count,
+        "abstraction_collapse_signal_rate": collapse_count
+        / len(aggregate_records),
+        "attempt_ids": [row["context_ablation_id"] for row in aggregate_records],
+        "minimum_interpretation": (
+            "distributional_signal_only"
+            if len(aggregate_records) < 3
+            else "replicated_shared_model_signal"
+        ),
+        "causal_proof_claimed": False,
+    }
+    summary_path = record_root / f"summary-{cycle_id}.json"
+    summary_temporary = summary_path.with_suffix(".json.tmp")
+    summary_temporary.write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    summary_temporary.replace(summary_path)
+    record["aggregate_summary"] = summary
+    return record
+
+
+def record_context_ablation_failure(
+    *,
+    provider: ChatProvider,
+    cycle_id: str,
+    record_root: Path,
+    error: Exception,
+) -> Dict[str, Any]:
+    """Preserve a failed ablation attempt without inventing a successful result."""
+    record = {
+        "context_ablation_failure_version": "palamedes-context-ablation-failure/1",
+        "failure_id": f"failed-ablation-{uuid.uuid4().hex[:12]}",
+        "created_at": utc_now(),
+        "source_cognition_cycle_id": cycle_id,
+        "status": "failed",
+        "error_type": type(error).__name__,
+        "error": str(error),
+        "provider": provider.provider_name,
+        "model": provider.model,
+        "provider_json_custody": getattr(provider, "last_json_custody", None),
+        "counted_as_successful_pair": False,
+        "counted_in_total_attempts": True,
+        "excluded_from_completed_pair_rates": True,
+        "mission_authority_granted": False,
+        "delivery_authority_granted": False,
+    }
+    record_root.mkdir(parents=True, exist_ok=True)
+    path = record_root / f"{record['failure_id']}.json"
+    temporary = path.with_suffix(".json.tmp")
+    temporary.write_text(
+        json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(path)
+    return record
 
 
 def run_micro_cycle(
@@ -1513,7 +1950,9 @@ Known causal clusters:
     cycle["latest_probe_status"] = output["probe_status"]
     cycle["latest_finding"] = output["finding"]
     cycle["latest_followup_required"] = output["followup_required"]
-    cycle["live_model_call_count"] = 4 + len(cycle["outcome_analyses"])
+    cycle["live_model_call_count"] = len(cycle.get("artifacts", [])) + len(
+        cycle["outcome_analyses"]
+    )
     cycle_store.save(cycle)
     from palamedes_thought import ThoughtStore, persist_mission_experience
 
@@ -2551,24 +2990,59 @@ def record_mission_outcome(
     return outcome
 
 
-def _plan_context(palamedes_module: Any) -> str:
+def _plan_context_views(palamedes_module: Any) -> Dict[str, Dict[str, Any]]:
+    """Split purpose evidence from path-dependent execution context.
+
+    Mission origination must not silently inherit the currently selected option or
+    the local development frontier.  Those facts remain useful, but only after a
+    candidate frontier exists and can be attacked for feasibility and drift.
+    """
     palamedes_module.ensure_state()
     plan = palamedes_module.load_plan()
-    fields = {
+    strategic = {
         "goal": plan.get("goal", ""),
         "success_metric": plan.get("success_metric", ""),
-        "selected_option": plan.get("selected_option", ""),
         "constraints": plan.get("constraints", []),
         "open_hypotheses": [
             item
             for item in plan.get("hypothesis_log", [])
             if item.get("status") == "open"
         ][-5:],
-        "recent_view_transitions": plan.get("view_transitions", [])[-3:],
         "open_questions": plan.get("open_questions", [])[-5:],
-        "development_probes": plan.get("development_probes", [])[-5:],
     }
-    return json.dumps(fields, ensure_ascii=False, sort_keys=True)
+    path_dependent = {
+        "selected_option": plan.get("selected_option", ""),
+        "recent_view_transitions": plan.get("view_transitions", [])[-3:],
+        "development_probes": plan.get("development_probes", [])[-5:],
+        "plan_tasks": plan.get("plan_tasks", [])[-20:],
+        "execution_tasks": plan.get("execution_tasks", [])[-20:],
+        "phase_plan": plan.get("phase_plan", [])[-10:],
+    }
+    return {
+        "strategic": strategic,
+        "path_dependent": path_dependent,
+        "exposure_policy": {
+            "context_governor": ["user_context", "strategic"],
+            "interpreter": ["clean_room_brief"],
+            "inventor": ["interpreter_artifact"],
+            "adversary": [
+                "interpreter_artifact",
+                "inventor_artifact",
+                "path_dependent",
+                "classified_preferences_and_examples",
+            ],
+            "selector": ["frozen_candidates", "adversary_artifact"],
+        },
+    }
+
+
+def _plan_context(palamedes_module: Any) -> str:
+    """Return the bounded strategic view used by the conversational pre-planner."""
+    return json.dumps(
+        _plan_context_views(palamedes_module)["strategic"],
+        ensure_ascii=False,
+        sort_keys=True,
+    )
 
 
 def system_prompt(
@@ -2623,6 +3097,7 @@ def _print_help(output: TextIO) -> None:
                 "  /cycle --mode lookup|micro|component|product <context>",
                 "                       override the deterministic cost-adaptive preflight",
                 "  /cycle --resume <cycle-id>",
+                "  /context-ablation <cycle-id>  compare clean-room vs continuity reasoning",
                 "                       resume a failed/interrupted run from verified checkpoints",
                 "  /invent <context>    originate distant playable systems from human emotion",
                 "  /inventions          show the latest product invention",
@@ -4436,6 +4911,65 @@ def run_chat(
                 output.write(
                     "No files changed. Apply only this reviewed set with "
                     f"/reconcile --apply {report['proposal_fingerprint']}\n"
+                )
+            continue
+        if text.startswith("/context-ablation"):
+            parts = text.split()
+            if len(parts) not in {2, 3}:
+                output.write(
+                    "/context-ablation requires a cycle ID and optional repeat count.\n"
+                )
+                continue
+            try:
+                repeat_count = int(parts[2]) if len(parts) == 3 else 1
+            except ValueError:
+                output.write("/context-ablation repeat count must be an integer.\n")
+                continue
+            if not 1 <= repeat_count <= 20:
+                output.write("/context-ablation repeat count must be from 1 to 20.\n")
+                continue
+            record_root = (
+                palamedes_module.STATE_DIR / "missions" / "context-ablations"
+            )
+            for repeat_index in range(repeat_count):
+                try:
+                    record = run_context_ablation(
+                        provider=provider,
+                        cycle_store=cognition_store,
+                        cycle_id=parts[1],
+                        record_root=record_root,
+                    )
+                except (OSError, RuntimeError, ValueError) as exc:
+                    failure = record_context_ablation_failure(
+                        provider=provider,
+                        cycle_id=parts[1],
+                        record_root=record_root,
+                        error=exc,
+                    )
+                    output.write(
+                        f"[context ablation error {repeat_index + 1}/{repeat_count}] "
+                        f"{exc} · preserved={failure['failure_id']}\n"
+                    )
+                    continue
+                judgment = record["blinded_judgment"]
+                aggregate = record["aggregate_summary"]
+                output.write(
+                    f"Context ablation: {record['context_ablation_id']} "
+                    f"({repeat_index + 1}/{repeat_count})\n"
+                    f"  source cycle: {record['source_cognition_cycle_id']}\n"
+                    f"  material direction shift: "
+                    f"{record['material_direction_shift']}\n"
+                    f"  shift dimensions: "
+                    f"{', '.join(judgment['shift_dimensions']) or 'none'}\n"
+                    f"  suspected path dependence: "
+                    f"{record['suspected_path_dependence']}\n"
+                    f"  abstraction collapse signal: "
+                    f"{record['abstraction_collapse_signal']}\n"
+                    f"  completed pairs: {aggregate['completed_pair_count']} · "
+                    f"failed attempts: {aggregate['failed_attempt_count']} · "
+                    f"shift rate: {aggregate['material_direction_shift_rate']:.2f} · "
+                    f"collapse rate: {aggregate['abstraction_collapse_signal_rate']:.2f}\n"
+                    "  evidence limit: shared-model pairs; no causal proof\n"
                 )
             continue
         if text.startswith("/cycle"):
