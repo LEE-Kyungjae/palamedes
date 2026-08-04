@@ -11,6 +11,7 @@ from pathlib import Path
 
 import palamedes_chat
 import palamedes
+from palamedes_invention import ProductInventionStore
 
 
 class FakePalamedes:
@@ -5078,6 +5079,50 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertEqual(saved["error_type"], "ValueError")
         self.assertTrue(saved["counted_in_total_attempts"])
         self.assertFalse(saved["counted_as_successful_pair"])
+
+    def test_autonomous_invention_reopens_observation_requirements_in_next_context(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            mission_store = palamedes_chat.MissionStore(Path(tempdir) / "missions")
+            invention_store = ProductInventionStore(Path(tempdir) / "inventions")
+            requirement = invention_store.record_observation_requirement(
+                source_type="candidate_disconfirmation_gap",
+                observation_needed="Compare whether a new candidate family appears.",
+                reason="The prior frontier could only restate its unknowns.",
+            )
+            returned = {
+                "product_invention_id": "invention-aaaaaaaaaaaa",
+                "status": "no_discovery",
+            }
+            with patch("palamedes_invention.run_product_invention", return_value=returned) as run:
+                palamedes_chat.run_autonomous_invention(
+                    provider=StaticChatProvider(),
+                    mission_store=mission_store,
+                    context="Improve Palamedes.",
+                )
+            supplied_context = run.call_args.kwargs["context"]
+            self.assertIn("OPEN OBSERVATION REQUIREMENTS", supplied_context)
+            self.assertIn(requirement["observation_requirement_id"], supplied_context)
+            self.assertIn(requirement["observation_needed"], supplied_context)
+
+    def test_autonomous_invention_failure_becomes_observation_requirement(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            mission_store = palamedes_chat.MissionStore(Path(tempdir) / "missions")
+            with patch(
+                "palamedes_invention.run_product_invention",
+                side_effect=ValueError("nested schema drift"),
+            ):
+                with self.assertRaisesRegex(ValueError, "nested schema drift"):
+                    palamedes_chat.run_autonomous_invention(
+                        provider=StaticChatProvider(),
+                        mission_store=mission_store,
+                        context="Improve Palamedes.",
+                    )
+            requirements = ProductInventionStore(
+                Path(tempdir) / "inventions"
+            ).open_observation_requirements()
+            self.assertEqual(len(requirements), 1)
+            self.assertEqual(requirements[0]["source_type"], "runtime_contract_failure")
+            self.assertIn("nested schema drift", requirements[0]["observation_needed"])
 
 
 if __name__ == "__main__":

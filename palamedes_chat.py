@@ -3099,8 +3099,11 @@ def _print_help(output: TextIO) -> None:
                 "  /cycle --resume <cycle-id>",
                 "  /context-ablation <cycle-id>  compare clean-room vs continuity reasoning",
                 "                       resume a failed/interrupted run from verified checkpoints",
-                "  /invent <context>    originate distant playable systems from human emotion",
+                "  /invent <context>    discover structurally new product possibilities without committing",
                 "  /inventions          show the latest product invention",
+                "  /invent-commit <candidate-id> <reason>  human-select a frontier candidate",
+                "  /invent-observations  list open observation requirements from failed tests",
+                "  /invent-observe <observation-id> <evidence>  resolve one requirement",
                 "  /pursue <objective>  compose a domain-general evidence-producing pursuit",
                 "  /pursuits            show the latest pursuit",
                 "  /vision <context>    force a desire→analogy→fusion→world vision cycle",
@@ -3236,7 +3239,7 @@ def run_autonomous_vision(
 def run_autonomous_invention(
     *, provider: ChatProvider, mission_store: MissionStore, context: str
 ) -> Dict[str, Any]:
-    from palamedes_invention import ProductInventionStore, run_product_invention
+    from palamedes_invention import ProductInventionStore, fingerprint, run_product_invention
 
     invention_store = ProductInventionStore(mission_store.root.parent / "inventions")
     role_usage: List[Dict[str, Any]] = []
@@ -3246,15 +3249,47 @@ def run_autonomous_invention(
             return _provider_json(
                 provider,
                 system=(
-                    f"ROLE: {role}. Originate or test product mechanics, but never grant "
-                    "mission approval or delivery authority. Return exactly one JSON object."
+                    f"ROLE: {role}. Discover or test product possibilities without confusing "
+                    "novel wording with structural invention. Never select delivery work or grant "
+                    "design, mission, or delivery authority. Return exactly one JSON object."
                 ),
                 prompt=f"ROLE: {role}\n{prompt}",
             )
         finally:
             role_usage.append(_capture_provider_usage(provider, role))
 
-    record = run_product_invention(ask=ask, store=invention_store, context=context)
+    open_requirements = invention_store.open_observation_requirements()
+    enriched_context = context
+    if open_requirements:
+        bounded_requirements = [
+            {
+                "observation_requirement_id": row.get("observation_requirement_id"),
+                "source_type": row.get("source_type"),
+                "observation_needed": row.get("observation_needed"),
+                "reason": row.get("reason"),
+            }
+            for row in open_requirements[-12:]
+        ]
+        enriched_context += (
+            "\n\nOPEN OBSERVATION REQUIREMENTS FROM PRIOR FAILED OR INCONCLUSIVE "
+            "EXPLORATION:\n" + json.dumps(bounded_requirements, ensure_ascii=False)
+        )
+    try:
+        record = run_product_invention(
+            ask=ask, store=invention_store, context=enriched_context
+        )
+    except ValueError as exc:
+        invention_store.record_observation_requirement(
+            source_type="runtime_contract_failure",
+            observation_needed=(
+                "Determine whether this repeated provider-contract failure reveals a "
+                "prompt ambiguity, over-strict validator, or missing normalization: "
+                f"{exc}"
+            ),
+            reason="The invention cycle stopped before preserving a usable frontier.",
+            context_fingerprint=fingerprint(context),
+        )
+        raise
     record["provider_usage"] = _provider_usage_summary(provider, role_usage)
     invention_store.save(record)
     return record
@@ -3517,28 +3552,39 @@ def render_vision(record: Dict[str, Any]) -> str:
 
 
 def render_invention(record: Dict[str, Any]) -> str:
-    selected = str(record.get("selected_candidate_id", "")).strip()
+    scale = record.get("observation", {}).get("scale", "?")
+    if isinstance(scale, dict):
+        scale = " / ".join(str(value).strip() for value in scale.values() if str(value).strip())
     lines = [
         f"Product invention: {record.get('product_invention_id', '?')}",
-        f"  decision: {record.get('status', '?')}",
+        f"  discovery: {record.get('status', '?')}",
+        f"  input mode: {record.get('observation', {}).get('input_mode', '?')}",
+        f"  scale: {scale}",
         f"  candidates: {len(record.get('candidates', []))}",
+        f"  new observation requirements: {len(record.get('observation_requirements', []))}",
     ]
-    if selected:
-        lines.append(f"  selected: {selected}")
-    provenance = record.get("provenance", {})
-    if provenance:
+    synthesis_value = record.get("curator", {}).get("synthesis", "")
+    if isinstance(synthesis_value, dict):
+        synthesis_lines = [
+            f"{str(key).replace('_', ' ')}: {value}"
+            for key, value in synthesis_value.items()
+            if str(value).strip()
+        ]
+        if synthesis_lines:
+            lines.extend([""] + synthesis_lines)
+    else:
+        synthesis = str(synthesis_value).strip()
+        if synthesis:
+            lines.extend(["", synthesis])
+    for row in record.get("frontier", []):
         lines.append(
-            "  provenance: "
-            f"origin={provenance.get('origin', '?')} "
-            f"contribution={provenance.get('palamedes_contribution', '?')}"
+            f"  - {row.get('candidate_id', '?')}: {row.get('disposition', '?')} — "
+            f"{row.get('reason', '')}"
         )
-    prototype = record.get("selector", {}).get("smallest_prototype", "")
-    if prototype:
-        lines.extend(["", str(prototype)])
     lines.extend([
         "",
-        "This is an invention candidate, not an implementation instruction.",
-        "Mission approval and delivery authority remain separate.",
+        "This is an exploration frontier, not a selected plan or implementation instruction.",
+        "Human commitment, design, mission approval, and delivery authority remain separate.",
     ])
     return "\n".join(lines)
 
@@ -4589,6 +4635,46 @@ def run_chat(
                 else "No product invention has been generated.\n"
             )
             continue
+        if text == "/invent-observations":
+            from palamedes_invention import ProductInventionStore
+
+            requirements = ProductInventionStore(
+                mission_store.root.parent / "inventions"
+            ).open_observation_requirements()
+            if not requirements:
+                output.write("No open invention observation requirements.\n")
+                continue
+            output.write(f"Open invention observation requirements: {len(requirements)}\n")
+            for row in requirements:
+                output.write(
+                    f"  {row.get('observation_requirement_id')}: "
+                    f"{row.get('observation_needed')}\n"
+                    f"    reason: {row.get('reason')}\n"
+                )
+            continue
+        if text.startswith("/invent-observe "):
+            parts = text[len("/invent-observe ") :].strip().split(maxsplit=1)
+            if len(parts) != 2:
+                output.write("/invent-observe requires an observation id and evidence.\n")
+                continue
+            from palamedes_invention import ProductInventionStore
+
+            try:
+                resolved = ProductInventionStore(
+                    mission_store.root.parent / "inventions"
+                ).resolve_observation_requirement(parts[0], parts[1])
+            except (OSError, ValueError) as exc:
+                output.write(f"[invention observation error] {exc}\n")
+                continue
+            output.write(
+                f"Observation resolved: {resolved['observation_requirement_id']}\n"
+                "The evidence will remain in the append-only history; unresolved "
+                "requirements continue into later invention context.\n"
+            )
+            continue
+        if text == "/invent-observe":
+            output.write("/invent-observe requires an observation id and evidence.\n")
+            continue
         if text == "/pursuits":
             from palamedes_pursuit import PursuitStore
 
@@ -4626,8 +4712,8 @@ def run_chat(
                 output.write("/invent requires product context.\n")
                 continue
             output.write(
-                "Running product invention: affect → distant rules → playable contracts "
-                "→ adversary → selector\n"
+                "Running product invention: observation → conventional baseline → "
+                "counterweighted exploration → structural novelty attack → frontier\n"
             )
             try:
                 invention_record = run_autonomous_invention(
@@ -4639,6 +4725,31 @@ def run_chat(
                 output.write(f"[product invention error] {exc}\n")
                 continue
             output.write(render_invention(invention_record) + "\n")
+            continue
+        if text.startswith("/invent-commit "):
+            parts = text[len("/invent-commit ") :].strip().split(maxsplit=1)
+            if len(parts) != 2:
+                output.write("/invent-commit requires a candidate id and human rationale.\n")
+                continue
+            from palamedes_invention import ProductInventionStore
+
+            try:
+                commitment = ProductInventionStore(
+                    mission_store.root.parent / "inventions"
+                ).commit(parts[0], parts[1])
+            except (OSError, ValueError) as exc:
+                output.write(f"[invention commitment error] {exc}\n")
+                continue
+            output.write(
+                f"Invention commitment: {commitment['invention_commitment_id']}\n"
+                f"  invention: {commitment['product_invention_id']}\n"
+                f"  candidate: {commitment['candidate_id']}\n\n"
+                "Human direction is recorded. Design, mission approval, and delivery "
+                "authority remain ungranted.\n"
+            )
+            continue
+        if text == "/invent-commit":
+            output.write("/invent-commit requires a candidate id and human rationale.\n")
             continue
         if text == "/invent":
             output.write("/invent requires product context.\n")
