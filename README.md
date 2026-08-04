@@ -1462,22 +1462,46 @@ python3 palamedes.py observatory --limit 200 --json
 ## Product Invention
 
 `/cycle` remains the bounded product-audit and mission-selection path. Use
-`/invent <context>` when Palamedes must originate the product mechanic itself:
+`/invent <context>` when Palamedes must discover product possibilities or pressure
+an idea before any commitment, design, or delivery planning:
 
 ```text
-/invent 온라인 윷놀이의 반복 플레이와 팀 몰입도를 높여라. 현재 규칙과 구현을 유지할 필요는 없다.
+/invent 프로필 테두리 아이디어에서 내가 보지 못한 서비스 가능성을 찾아라.
 /inventions
+/invent-commit idea-1 맥락별 정체성 체계 가능성을 기획 단계에서 더 검토한다.
 ```
 
-The invention pipeline maps direct and socially mediated emotion, originates at
-least five structurally distant worlds, compiles every world into a playable
-contract, attacks fun/harm/balance/content/infrastructure risk, and selects only
-an already-originated candidate for a small probe. Candidate distance is explicit
-across player relationship, victory, information, resources, time, risk ownership,
-emotion source, and repeat motive. Provenance records whether the decisive seed
-was human-, reference-, Palamedes-, or jointly originated. An invention never
-grants mission approval or delivery authority; implementation still requires the
-normal mission gate.
+The v2 invention pipeline distinguishes open discovery, goal-seeded exploration,
+human idea seeds, and already-committed directions. It records the conventional
+high-probability answers first, then suppresses those mechanisms while exploring
+assumption removal, center-object shifts, authority reversal, information and
+value-flow changes, temporal reversal, failure-as-resource, and cross-domain causal
+transfer. Candidate count is not a target; an honest `no_discovery` result is valid.
+
+Every surviving candidate must state the observed basis, baseline structure,
+proposed structure, changed structural dimensions, causal chain, newly possible
+outcome, origin, and falsification condition. Familiar features are valid invention
+material: each candidate explicitly records known components, the new relationship or
+activation condition between them, the emergent outcome, and a test for whether that
+outcome collapses when the relationship is removed. The adversary removes names and
+metaphors, rejects merely additive conventional bundles, checks service specificity and
+causal coherence, and rejects restatements of the human seed.
+The result is a preserved exploration frontier, not a winner, prototype, schema,
+roadmap, or implementation task. Human commitment, design authority, mission
+approval, and delivery authority all remain separate. Presentation outlines scale
+with the idea: a supporting feature is not forced through a standalone-business
+template, while a service strategy is not collapsed into a feature specification.
+`/invent-commit` records an explicit human choice against the latest preserved
+frontier in an append-only commitment log. It does not itself grant design, mission,
+or delivery authority.
+
+Candidate disconfirmation gaps and runtime contract failures become independent,
+append-only observation requirements rather than disappearing into scores or error
+messages. `/invent-observations` lists the open requirements and
+`/invent-observe <observation-id> <evidence>` records a human observation. Up to twelve
+still-open requirements are supplied to the next `/invent` run, allowing failed or
+inconclusive exploration to reopen observation without automatically selecting,
+designing, or implementing a candidate.
 
 ## Domain-general pursuits
 
