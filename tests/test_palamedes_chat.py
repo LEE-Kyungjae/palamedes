@@ -5437,7 +5437,7 @@ class PalamedesChatTests(unittest.TestCase):
 
             def fake_provider_json(*_args, **_kwargs):
                 return {
-                    "solution_was_present_in_input": False,
+                    "covered_by_conventional_baseline": False,
                     "generic_request": True,
                     "rationale": "fixture rationale",
                 }
@@ -5456,10 +5456,13 @@ class PalamedesChatTests(unittest.TestCase):
                     self.assertIsNotNone(captured["judge_ask"])
                     judge_ask = captured["judge_ask"]
                     result = judge_ask(
-                        "invention_blind_origin_judge",
-                        "Context:\nimprove context\nCandidate payload:\n"
+                        "invention_baseline_coverage_judge",
+                        "Candidate payload:\n"
                         + json.dumps(
                             {
+                                "conventional_baseline": {
+                                    "expected_solutions": ["sell cosmetic borders"]
+                                },
                                 "candidates": [
                                     {
                                         "candidate_id": "idea-1",
@@ -5473,15 +5476,18 @@ class PalamedesChatTests(unittest.TestCase):
                     self.assertEqual(
                         result,
                         {
-                            "blind_assessments": [
+                            "coverage_assessments": [
                                 {
                                     "candidate_id": "idea-1",
-                                    "solution_was_present_in_input": False,
+                                    "covered_by_conventional_baseline": False,
                                     "generic_solution_pack": True,
                                     "reason": "fixture rationale",
                                 }
                             ],
-                            "empty_frontier_reason": "blind judge evaluated all candidates against hidden reference",
+                            "empty_frontier_reason": (
+                                "baseline coverage judge evaluated all candidates against the "
+                                "conventional baseline"
+                            ),
                         },
                     )
                     self.assertEqual(provider_json.call_count, 1)
@@ -5503,7 +5509,7 @@ class PalamedesChatTests(unittest.TestCase):
             def fake_provider_json(*_args, **kwargs):
                 prompts.append(kwargs.get("prompt", ""))
                 return {
-                    "solution_was_present_in_input": False,
+                    "covered_by_conventional_baseline": False,
                     "generic_request": True,
                     "rationale": "fixture rationale",
                 }
@@ -5521,10 +5527,13 @@ class PalamedesChatTests(unittest.TestCase):
                         context="Improve Palamedes.",
                     )
                     captured["judge_ask"](
-                        "invention_blind_origin_judge",
-                        "Context:\nimprove context\nCandidate payload:\n"
+                        "invention_baseline_coverage_judge",
+                        "Candidate payload:\n"
                         + json.dumps(
                             {
+                                "conventional_baseline": {
+                                    "expected_solutions": ["sell cosmetic borders"]
+                                },
                                 "candidates": [
                                     {"candidate_id": "idea-1", "thesis": "구조 제안"}
                                 ]
@@ -5537,7 +5546,7 @@ class PalamedesChatTests(unittest.TestCase):
         # never names them asks the model to guess its own contract.
         judge_prompt = prompts[-1]
         for field in (
-            "solution_was_present_in_input",
+            "covered_by_conventional_baseline",
             "generic_request",
             "rationale",
         ):
