@@ -5468,6 +5468,7 @@ def run_chat(
             if cycle_mode != "resume":
                 from palamedes_cost_router import (
                     MODE_BUDGETS,
+                    enforced_budget,
                     infer_route_request,
                     route_cycle,
                 )
@@ -5506,19 +5507,15 @@ def run_chat(
                         "manual_override_allowed": True,
                     }
                 budget = route["budget"]
-                # One schema retry is permitted per cycle, so the enforced call
-                # ceiling is the declared role budget plus that allowance.
-                cycle_budget = dict(budget)
-                declared_calls_max = budget.get("provider_calls_max")
-                if isinstance(declared_calls_max, int) and not isinstance(
-                    declared_calls_max, bool
-                ):
-                    cycle_budget["provider_calls_max"] = declared_calls_max + 1
+                cycle_budget = enforced_budget(budget)
                 output.write(
                     f"Cycle preflight: mode={cycle_mode} "
                     f"calls={budget['provider_calls_min']}-{budget['provider_calls_max']} "
                     f"tokens≤{budget['token_budget_high']} "
-                    f"time≤{budget['time_minutes_high']}m · "
+                    f"time≤{budget['time_minutes_high']}m "
+                    f"(enforced with one schema retry: "
+                    f"calls≤{cycle_budget['provider_calls_max']}, "
+                    f"tokens≤{cycle_budget['token_budget_high']}) · "
                     + "; ".join(route["reasons"])
                     + "\n"
                 )
