@@ -5487,6 +5487,62 @@ class PalamedesChatTests(unittest.TestCase):
                     self.assertEqual(provider_json.call_count, 1)
                     self.assertEqual(captured["context"], "Improve Palamedes.")
 
+    def test_blind_judge_prompt_declares_every_field_it_is_validated_on(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            mission_store = palamedes_chat.MissionStore(Path(tempdir) / "missions")
+            captured: dict = {}
+            prompts: list = []
+
+            def fake_run_product_invention(*, judge_ask, ask, store, context):
+                captured["judge_ask"] = judge_ask
+                return {
+                    "product_invention_id": "invention-aaaaaaaaaaaa",
+                    "status": "no_discovery",
+                }
+
+            def fake_provider_json(*_args, **kwargs):
+                prompts.append(kwargs.get("prompt", ""))
+                return {
+                    "solution_was_present_in_input": False,
+                    "generic_request": True,
+                    "rationale": "fixture rationale",
+                }
+
+            with patch(
+                "palamedes_invention.run_product_invention",
+                side_effect=fake_run_product_invention,
+            ):
+                with patch(
+                    "palamedes_chat._provider_json", side_effect=fake_provider_json
+                ):
+                    palamedes_chat.run_autonomous_invention(
+                        provider=StaticChatProvider(),
+                        mission_store=mission_store,
+                        context="Improve Palamedes.",
+                    )
+                    captured["judge_ask"](
+                        "invention_blind_origin_judge",
+                        "Context:\nimprove context\nCandidate payload:\n"
+                        + json.dumps(
+                            {
+                                "candidates": [
+                                    {"candidate_id": "idea-1", "thesis": "구조 제안"}
+                                ]
+                            },
+                            ensure_ascii=False,
+                        ),
+                    )
+
+        # The validator rejects a judgment missing any of these, so a prompt that
+        # never names them asks the model to guess its own contract.
+        judge_prompt = prompts[-1]
+        for field in (
+            "solution_was_present_in_input",
+            "generic_request",
+            "rationale",
+        ):
+            self.assertIn(field, judge_prompt)
+
     def test_autonomous_invention_failure_becomes_observation_requirement(self):
         with tempfile.TemporaryDirectory() as tempdir:
             mission_store = palamedes_chat.MissionStore(Path(tempdir) / "missions")
