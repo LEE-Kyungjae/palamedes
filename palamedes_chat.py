@@ -3530,7 +3530,14 @@ def run_autonomous_invention(
                     f"ROLE: blind_founder_prompt_judge\n"
                     f"Evaluate only whether the generated founder prompt could replace the "
                     "upstream product-direction text a thoughtful human would otherwise "
-                    "need to supply.\n\n"
+                    "need to supply. Return:\n"
+                    "{\n"
+                    '  "solution_was_present_in_input":false,\n'
+                    '  "generic_request":false,\n'
+                    '  "rationale":"..."\n'
+                    "}\n"
+                    "solution_was_present_in_input and generic_request must be JSON "
+                    "booleans, never strings, numbers, or scores.\n\n"
                     f"Generator input:\n{gate_context}\n\n"
                     f"Generated founder prompt:\n{thesis}\n\n"
                     f"Hidden human founder text revealed only to the judge:\n{gate_context}"
