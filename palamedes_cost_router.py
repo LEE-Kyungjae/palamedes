@@ -9,32 +9,51 @@ from typing import Any, Dict, Iterable, List
 
 
 ROUTER_VERSION = "palamedes-cost-router/1"
+# provider_calls_* and token_budget_high describe the declared roles only.
+# One schema retry is permitted per cycle, so the ceiling a cycle is actually
+# held to adds the schema_retry_* allowance. Both are reported at preflight so
+# the displayed budget matches the enforced one.
+#
+# component token figures come from measured audit cycles on this repository:
+# five roles cost 120,685 / 125,161 / 135,130 tokens and a selector retry cost
+# 22,830 / 24,604 / 25,212. A retry of the largest role (context_governor, up to
+# ~46,500) is what the allowance has to cover.
 MODE_BUDGETS = {
     "lookup": {
         "provider_calls_min": 0,
         "provider_calls_max": 1,
         "token_budget_high": 25000,
         "time_minutes_high": 2,
+        "schema_retry_calls_allowance": 1,
+        "schema_retry_token_allowance": 25000,
     },
     "micro": {
         "provider_calls_min": 1,
         "provider_calls_max": 2,
         "token_budget_high": 50000,
         "time_minutes_high": 5,
+        "schema_retry_calls_allowance": 1,
+        "schema_retry_token_allowance": 25000,
     },
     "component": {
         "provider_calls_min": 5,
         "provider_calls_max": 5,
-        "token_budget_high": 140000,
+        "token_budget_high": 160000,
         "time_minutes_high": 15,
+        "schema_retry_calls_allowance": 1,
+        "schema_retry_token_allowance": 50000,
     },
     "product": {
         "provider_calls_min": 5,
         "provider_calls_max": 12,
         "token_budget_high": 400000,
         "time_minutes_high": 45,
+        "schema_retry_calls_allowance": 1,
+        "schema_retry_token_allowance": 50000,
     },
 }
+
+
 HIGH_RISK_FLAGS = {
     "security",
     "privacy",
@@ -47,6 +66,33 @@ HIGH_RISK_FLAGS = {
     "irreversible",
 }
 PRODUCT_ESCALATION_FLAGS = {"cross_surface", "product_invariant_conflict"}
+
+
+def enforced_budget(budget: Dict[str, Any]) -> Dict[str, int]:
+    """Return the ceilings a cycle is held to, including the retry allowance.
+
+    A cycle may spend its declared role budget and still need the one permitted
+    schema retry, so enforcing the declared figure alone would cancel a recovery
+    the cycle is entitled to.
+    """
+
+    def _total(declared: str, allowance: str) -> int:
+        base = budget.get(declared)
+        extra = budget.get(allowance, 0)
+        if not isinstance(base, int) or isinstance(base, bool):
+            raise ValueError(f"budget.{declared} must be an integer")
+        if not isinstance(extra, int) or isinstance(extra, bool) or extra < 0:
+            raise ValueError(f"budget.{allowance} must be a non-negative integer")
+        return base + extra
+
+    return {
+        "provider_calls_max": _total(
+            "provider_calls_max", "schema_retry_calls_allowance"
+        ),
+        "token_budget_high": _total(
+            "token_budget_high", "schema_retry_token_allowance"
+        ),
+    }
 
 
 def infer_route_request(

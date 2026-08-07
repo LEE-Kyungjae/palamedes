@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 import unittest
 
-from palamedes_cost_router import infer_route_request, route_cycle
+from palamedes_cost_router import (
+    MODE_BUDGETS,
+    enforced_budget,
+    infer_route_request,
+    route_cycle,
+)
 
 
 class CostRouterTests(unittest.TestCase):
@@ -76,6 +81,41 @@ class CostRouterTests(unittest.TestCase):
         self.assertEqual(existing["mode"], "lookup")
         self.assertEqual(ambiguous["mode"], "component")
         self.assertIn(risky["mode"], {"component", "product"})
+
+    def test_every_mode_declares_a_schema_retry_allowance(self):
+        for mode, budget in MODE_BUDGETS.items():
+            with self.subTest(mode=mode):
+                ceilings = enforced_budget(budget)
+                self.assertEqual(
+                    ceilings["provider_calls_max"],
+                    budget["provider_calls_max"]
+                    + budget["schema_retry_calls_allowance"],
+                )
+                self.assertEqual(
+                    ceilings["token_budget_high"],
+                    budget["token_budget_high"]
+                    + budget["schema_retry_token_allowance"],
+                )
+                self.assertGreater(budget["schema_retry_calls_allowance"], 0)
+                self.assertGreater(budget["schema_retry_token_allowance"], 0)
+
+    def test_component_budget_covers_measured_audit_cycles(self):
+        budget = MODE_BUDGETS["component"]
+        # Five-role and retry-inclusive totals measured on this repository.
+        measured_roles = (120685, 125161, 135130)
+        measured_totals = (145289, 147991, 160342)
+        self.assertGreater(budget["token_budget_high"], max(measured_roles))
+        self.assertGreater(
+            enforced_budget(budget)["token_budget_high"], max(measured_totals)
+        )
+
+    def test_enforced_budget_rejects_a_malformed_allowance(self):
+        with self.assertRaises(ValueError):
+            enforced_budget(
+                {"provider_calls_max": 5, "schema_retry_calls_allowance": -1}
+            )
+        with self.assertRaises(ValueError):
+            enforced_budget({"provider_calls_max": "5"})
 
 
 if __name__ == "__main__":
