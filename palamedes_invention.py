@@ -41,8 +41,8 @@ NOVELTY_TESTS = (
     "causal_coherence",
     "independent_contribution",
 )
-BLIND_ORIGIN_TESTS = (
-    "solution_was_present_in_input",
+BASELINE_COVERAGE_TESTS = (
+    "covered_by_conventional_baseline",
     "generic_solution_pack",
 )
 
@@ -76,7 +76,7 @@ def _candidate_signature(row: Dict[str, Any]) -> set[str]:
     return {token for token in re.findall(r"[0-9a-zA-Z가-힣]+", text) if len(token) > 1}
 
 
-def _blind_payload(candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _coverage_payload(candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     payload = []
     for candidate in candidates:
         payload.append({
@@ -175,82 +175,105 @@ def _prune_redundant_candidates(
     return kept, logs
 
 
-def _blind_assessment(
+def _baseline_assessment(
     value: Any, candidate_ids: set[str], index: int
 ) -> Dict[str, Any]:
-    row = _object(value, f"blind_assessments[{index}]")
+    row = _object(value, f"coverage_assessments[{index}]")
     candidate_id = str(row.get("candidate_id", "")).strip()
     if not candidate_id:
-        raise ValueError("blind assessment requires a candidate_id")
+        raise ValueError("coverage assessment requires a candidate_id")
     if candidate_id not in candidate_ids:
-        raise ValueError("blind assessment references unknown candidate")
-    solution_present = row.get("solution_was_present_in_input")
+        raise ValueError("coverage assessment references unknown candidate")
+    covered = row.get("covered_by_conventional_baseline")
     generic_solution = row.get("generic_solution_pack")
-    if not isinstance(solution_present, bool) or not isinstance(generic_solution, bool):
-        raise ValueError("blind assessment requires booleans for solution coverage and genericity")
+    if not isinstance(covered, bool) or not isinstance(generic_solution, bool):
+        raise ValueError(
+            "coverage assessment requires booleans for baseline coverage and genericity"
+        )
     reason = str(row.get("reason", "")).strip()
     if not reason:
-        raise ValueError("blind assessment requires a reason")
+        raise ValueError("coverage assessment requires a reason")
     row["candidate_id"] = candidate_id
-    row["solution_was_present_in_input"] = solution_present
+    row["covered_by_conventional_baseline"] = covered
     row["generic_solution_pack"] = generic_solution
     row["reason"] = reason
     return row
 
 
-def _run_blind_invention_gate(
+def _run_baseline_coverage_gate(
     *, judge_ask: Callable[[str, str], Dict[str, Any]],
-    context: str, candidates: List[Dict[str, Any]]
-) -> tuple[List[Dict[str, Any]], List[Dict[str, str]]]:
+    context: str, baseline: Dict[str, Any], candidates: List[Dict[str, Any]]
+) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Drop candidates the conventional baseline already covers.
+
+    A live project has no hidden human reference to judge origination against,
+    so the comparator is the conventional baseline this run already mapped:
+    what a competent planner would have produced anyway. Judging against the
+    supplied context instead would reject every candidate, because candidates
+    are derived from that context by construction.
+    """
     if not candidates:
         return candidates, []
 
     candidate_ids = [str(row["candidate_id"]) for row in candidates]
     payload = json.dumps({
-        "context": context,
+        "conventional_baseline": baseline,
         "candidate_count": len(candidates),
-        "candidates": _blind_payload(candidates),
+        "candidates": _coverage_payload(candidates),
     }, ensure_ascii=False, sort_keys=True)
     gate = _ask_object_contract(
         judge_ask,
-        "invention_blind_origin_judge",
+        "invention_baseline_coverage_judge",
         f"""
-Judge candidate novelty against a hidden reference while ignoring any rhetoric and
-candidate ids. Return one blind_assessment per candidate. If candidate is the same
-as the supplied input or a generic feature pack, mark the corresponding field true.
-Your response must include blind_assessments and empty_frontier_reason.
+Judge each candidate against the conventional baseline while ignoring rhetoric and
+candidate ids. Do not judge against the project context: candidates are derived from
+it and relatedness to it is expected, not a defect. Return one entry per candidate:
 
-PAY ATTENTION: do not reveal hidden reference terms.
-Context:\n{context}
+  covered_by_conventional_baseline: true when the baseline's expected solutions,
+    shared mechanisms, or dominant assumptions already produce this candidate's
+    mechanism, so a competent planner would have reached it anyway.
+  generic_solution_pack: true when the candidate would transfer unchanged to an
+    unrelated service.
+  reason: one concise sentence.
+
+Mark false when the candidate changes a mechanism the baseline holds fixed, even if
+its components are familiar. Your response must include coverage_assessments and
+empty_frontier_reason.
+
 Candidate payload:\n{payload}
 """,
-        required_fields=("blind_assessments", "empty_frontier_reason"),
-        list_fields=("blind_assessments",),
+        required_fields=("coverage_assessments", "empty_frontier_reason"),
+        list_fields=("coverage_assessments",),
     )
-    raw_assessments = gate.get("blind_assessments")
-    assessments = [_blind_assessment(row, set(candidate_ids), index) for index, row in enumerate(raw_assessments)]
+    raw_assessments = gate.get("coverage_assessments")
+    assessments = [_baseline_assessment(row, set(candidate_ids), index) for index, row in enumerate(raw_assessments)]
     if len(assessments) != len(candidate_ids) or {row["candidate_id"] for row in assessments} != set(candidate_ids):
-        raise ValueError("blind gate must assess every candidate exactly once")
+        raise ValueError("coverage gate must assess every candidate exactly once")
 
+    by_id = {str(row["candidate_id"]): row for row in candidates}
     rejected: set[str] = set()
-    logs: List[Dict[str, str]] = []
+    logs: List[Dict[str, Any]] = []
     for assessment in assessments:
         if (
-            assessment["solution_was_present_in_input"]
+            assessment["covered_by_conventional_baseline"]
             or assessment["generic_solution_pack"]
         ):
             cid = assessment["candidate_id"]
             rejected.add(cid)
-            reason = "blind_origin_gate"
-            if assessment["solution_was_present_in_input"]:
-                reason += ";founder_prompt_solution_already_supplied"
+            reason = "baseline_coverage_gate"
+            if assessment["covered_by_conventional_baseline"]:
+                reason += ";covered_by_conventional_baseline"
             if assessment["generic_solution_pack"]:
                 reason += ";generic_solution_pack"
             logs.append(
                 {
                     "dropped_candidate_id": cid,
-                    "dominant_candidate_id": "blind_gate_reject",
+                    "dominant_candidate_id": "baseline_coverage_reject",
                     "reason": reason,
+                    "judge_reason": assessment["reason"],
+                    # Preserve what was rejected: a gate that deletes its own
+                    # evidence cannot be calibrated or appealed later.
+                    "dropped_candidate": by_id[cid],
                 }
             )
 
@@ -657,7 +680,7 @@ PREVIOUS OBJECT:\n{json.dumps(invention, ensure_ascii=False)}
     if not candidates and not str(invention.get("no_discovery_reason", "")).strip():
         raise ValueError("an empty invention frontier requires no_discovery_reason")
 
-    blind_gate_reduction_log: List[Dict[str, str]] = []
+    baseline_gate_reduction_log: List[Dict[str, str]] = []
     candidates, candidate_reduction_log = _prune_redundant_candidates(candidates)
     if candidate_reduction_log:
         existing_notes = invention.get("search_notes")
@@ -673,25 +696,28 @@ PREVIOUS OBJECT:\n{json.dumps(invention, ensure_ascii=False)}
             )
 
     if judge_ask is not None and candidates:
-        candidates, blind_gate_reduction_log = _run_blind_invention_gate(
-            judge_ask=judge_ask, context=context, candidates=candidates
+        candidates, baseline_gate_reduction_log = _run_baseline_coverage_gate(
+            judge_ask=judge_ask,
+            context=context,
+            baseline=baseline,
+            candidates=candidates,
         )
-        candidate_reduction_log.extend(blind_gate_reduction_log)
-        if blind_gate_reduction_log:
+        candidate_reduction_log.extend(baseline_gate_reduction_log)
+        if baseline_gate_reduction_log:
             invention_search_notes = invention.get("search_notes")
             if not isinstance(invention_search_notes, list):
                 invention_search_notes = []
             invention_search_notes.append(
-                "blind origin gate rejected candidates matching provided context or generic solution packs"
+                "baseline coverage gate rejected candidates the conventional baseline already produces or generic solution packs"
             )
             invention["search_notes"] = invention_search_notes
             if not str(invention.get("no_discovery_reason", "")).strip():
                 invention["no_discovery_reason"] = (
-                    "all remaining candidates were rejected by blind origin gate"
+                    "all remaining candidates were rejected by the baseline coverage gate"
                 )
     if not candidates and judge_ask is not None and not str(invention.get("no_discovery_reason", "")).strip():
         invention["no_discovery_reason"] = (
-            "all candidates were rejected by blind origin gate"
+            "all candidates were rejected by the baseline coverage gate"
         )
 
     candidate_ids = {str(row["candidate_id"]) for row in candidates}
@@ -812,7 +838,7 @@ ASSESSMENTS:\n{json.dumps(assessments, ensure_ascii=False)}
         "observation": observation,
         "conventional_baseline": baseline,
         "transformation_lenses": list(TRANSFORMATION_LENSES),
-        "blind_gate_reduction_log": blind_gate_reduction_log,
+        "baseline_gate_reduction_log": baseline_gate_reduction_log,
         "candidate_reduction_log": candidate_reduction_log,
         "candidates": candidates,
         "adversary": {**adversary, "candidate_assessments": assessments},

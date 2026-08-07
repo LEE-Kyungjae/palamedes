@@ -179,20 +179,20 @@ class InventionFixture:
     }
 
 
-class InventionBlindGateFixture(InventionFixture):
+class InventionCoverageGateFixture(InventionFixture):
     def __call__(self, role, prompt):
-        if role == "invention_blind_origin_judge":
+        if role == "invention_baseline_coverage_judge":
             self.calls.append(role)
             return {
-                "blind_assessments": [
+                "coverage_assessments": [
                     {
                         "candidate_id": "idea-1",
-                        "solution_was_present_in_input": True,
+                        "covered_by_conventional_baseline": True,
                         "generic_solution_pack": False,
-                        "reason": "The proposal is already represented in the input and cannot be treated as blind discovery.",
+                        "reason": "The conventional baseline already sells cosmetic borders through one equipped decoration.",
                     }
                 ],
-                "empty_frontier_reason": "blind gate rejected all candidates",
+                "empty_frontier_reason": "the baseline already covers every candidate",
             }
         return super().__call__(role, prompt)
 
@@ -356,9 +356,9 @@ class ProductInventionTests(unittest.TestCase):
             self.assertEqual(record["candidate_reduction_log"][0]["dominant_candidate_id"], "idea-1")
             self.assertEqual(record["candidate_reduction_log"][0]["reason"], "candidate_to_candidate_reduction")
 
-    def test_blind_gate_can_reject_seeded_or_generic_candidate(self):
+    def test_coverage_gate_rejects_a_candidate_the_baseline_already_covers(self):
         with tempfile.TemporaryDirectory() as temporary:
-            fixture = InventionBlindGateFixture()
+            fixture = InventionCoverageGateFixture()
             record = run_product_invention(
                 ask=fixture,
                 judge_ask=fixture,
@@ -368,10 +368,46 @@ class ProductInventionTests(unittest.TestCase):
             self.assertEqual(record["candidates"], [])
             self.assertEqual(record["frontier"], [])
             self.assertEqual(record["status"], "no_discovery")
-            self.assertEqual(len(record["blind_gate_reduction_log"]), 1)
-            self.assertTrue(record["candidate_reduction_log"][0]["reason"].startswith("blind_origin_gate"))
-            self.assertIn("invention_blind_origin_judge", fixture.calls)
+            self.assertEqual(len(record["baseline_gate_reduction_log"]), 1)
+            self.assertTrue(record["candidate_reduction_log"][0]["reason"].startswith("baseline_coverage_gate"))
+            self.assertIn("invention_baseline_coverage_judge", fixture.calls)
             self.assertNotIn("structural_novelty_adversary", fixture.calls)
+
+    def test_coverage_gate_judges_against_the_baseline_and_keeps_what_it_drops(self):
+        seen = {}
+
+        class PromptCapturingFixture(InventionCoverageGateFixture):
+            def __call__(self, role, prompt):
+                if role == "invention_baseline_coverage_judge":
+                    seen["prompt"] = prompt
+                return super().__call__(role, prompt)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture = PromptCapturingFixture()
+            record = run_product_invention(
+                ask=fixture,
+                judge_ask=fixture,
+                store=ProductInventionStore(Path(temporary) / "inventions"),
+                context="프로필 테두리를 서비스에 구축하고 싶다.",
+            )
+
+        # The comparator is the conventional baseline, not the supplied context.
+        # Judging against the context rejects everything, because candidates are
+        # derived from it by construction.
+        payload = json.loads(seen["prompt"].split("Candidate payload:\n", 1)[1])
+        self.assertIn("conventional_baseline", payload)
+        self.assertEqual(
+            payload["conventional_baseline"]["expected_solutions"],
+            ["sell cosmetic borders"],
+        )
+        self.assertNotIn("context", payload)
+
+        # A gate that deletes what it rejected cannot be calibrated afterwards.
+        dropped = record["baseline_gate_reduction_log"][0]
+        self.assertEqual(dropped["dropped_candidate_id"], "idea-1")
+        self.assertEqual(dropped["dropped_candidate"]["candidate_id"], "idea-1")
+        self.assertTrue(dropped["dropped_candidate"]["thesis"])
+        self.assertTrue(dropped["judge_reason"])
 
 
 if __name__ == "__main__":

@@ -3478,42 +3478,50 @@ def run_autonomous_invention(
         finally:
             role_usage.append(_capture_provider_usage(provider, role))
 
-    def _parse_blind_gate_payload(prompt: str) -> tuple[str, List[Dict[str, Any]]]:
-        marker_context = "Context:\n"
+    def _parse_coverage_gate_payload(
+        prompt: str,
+    ) -> tuple[Dict[str, Any], List[Dict[str, Any]]]:
         marker_candidates = "Candidate payload:\n"
-        context_split = prompt.split(marker_context, 1)
-        if len(context_split) != 2:
-            raise ValueError("blind origin judge prompt missing context")
-        candidates_split = context_split[1].split(marker_candidates, 1)
+        candidates_split = prompt.split(marker_candidates, 1)
         if len(candidates_split) != 2:
-            raise ValueError("blind origin judge prompt missing candidate payload")
-        prompt_context = candidates_split[0].strip()
-        payload_text = candidates_split[1].strip()
+            raise ValueError("baseline coverage judge prompt missing candidate payload")
         try:
-            payload = json.loads(payload_text)
+            payload = json.loads(candidates_split[1].strip())
         except json.JSONDecodeError as exc:
-            raise ValueError("blind origin judge candidate payload is invalid JSON") from exc
+            raise ValueError(
+                "baseline coverage judge candidate payload is invalid JSON"
+            ) from exc
+        baseline = payload.get("conventional_baseline")
+        if not isinstance(baseline, dict):
+            raise ValueError(
+                "baseline coverage judge payload must carry a conventional_baseline"
+            )
         candidates = payload.get("candidates")
         if not isinstance(candidates, list):
-            raise ValueError("blind origin judge candidate payload must be an object with candidates")
-        return prompt_context, candidates
+            raise ValueError(
+                "baseline coverage judge payload must be an object with candidates"
+            )
+        return baseline, candidates
 
     def judge_ask(role: str, prompt: str) -> Dict[str, Any]:
-        if role != "invention_blind_origin_judge":
-            raise ValueError(f"unsupported blind judge role: {role}")
-        gate_context, candidates = _parse_blind_gate_payload(prompt)
+        if role != "invention_baseline_coverage_judge":
+            raise ValueError(f"unsupported coverage judge role: {role}")
+        baseline, candidates = _parse_coverage_gate_payload(prompt)
+        baseline_text = json.dumps(baseline, ensure_ascii=False, sort_keys=True)
 
         assessments: List[Dict[str, Any]] = []
         for candidate in candidates:
             candidate_id = str(candidate.get("candidate_id", "")).strip()
             thesis = str(candidate.get("thesis", "")).strip()
             if not candidate_id:
-                raise ValueError("blind origin judge candidate payload missing candidate_id")
+                raise ValueError(
+                    "baseline coverage judge candidate payload missing candidate_id"
+                )
             if not thesis:
                 assessments.append(
                     {
                         "candidate_id": candidate_id,
-                        "solution_was_present_in_input": False,
+                        "covered_by_conventional_baseline": False,
                         "generic_solution_pack": True,
                         "reason": "candidate has no thesis text",
                     }
@@ -3523,45 +3531,57 @@ def run_autonomous_invention(
             judgment = _provider_json(
                 provider,
                 system=(
-                    "ROLE: blind_founder_prompt_judge. Evaluate the proposed founder prompt "
-                    "against a hidden reference and return exactly one JSON object."
+                    "ROLE: baseline_coverage_judge. Decide whether a candidate is "
+                    "already produced by the conventional baseline and return exactly "
+                    "one JSON object."
                 ),
                 prompt=(
-                    f"ROLE: blind_founder_prompt_judge\n"
-                    f"Evaluate only whether the generated founder prompt could replace the "
-                    "upstream product-direction text a thoughtful human would otherwise "
-                    "need to supply. Return:\n"
+                    "ROLE: baseline_coverage_judge\n"
+                    "Decide whether this candidate is already covered by the "
+                    "conventional baseline, meaning a competent planner working from "
+                    "the same input would have reached its mechanism anyway. Familiar "
+                    "components are not coverage; changing a mechanism the baseline "
+                    "holds fixed is not coverage. Return:\n"
                     "{\n"
-                    '  "solution_was_present_in_input":false,\n'
+                    '  "covered_by_conventional_baseline":false,\n'
                     '  "generic_request":false,\n'
                     '  "rationale":"..."\n'
                     "}\n"
-                    "solution_was_present_in_input and generic_request must be JSON "
-                    "booleans, never strings, numbers, or scores.\n\n"
-                    f"Generator input:\n{gate_context}\n\n"
-                    f"Generated founder prompt:\n{thesis}\n\n"
-                    f"Hidden human founder text revealed only to the judge:\n{gate_context}"
+                    "covered_by_conventional_baseline and generic_request must be JSON "
+                    "booleans, never strings, numbers, or scores. generic_request is "
+                    "true only when the candidate would transfer unchanged to an "
+                    "unrelated service.\n\n"
+                    f"Conventional baseline:\n{baseline_text}\n\n"
+                    f"Candidate:\n{thesis}"
                 ),
             )
-            role_usage.append(_capture_provider_usage(provider, "blind_founder_prompt_judge"))
+            role_usage.append(
+                _capture_provider_usage(provider, "baseline_coverage_judge")
+            )
 
-            solution_present = judgment.get("solution_was_present_in_input")
+            covered = judgment.get("covered_by_conventional_baseline")
             generic_pack = judgment.get("generic_request")
-            if not isinstance(solution_present, bool) or not isinstance(generic_pack, bool):
-                raise ValueError("blind founder judge returned malformed boolean fields")
+            if not isinstance(covered, bool) or not isinstance(generic_pack, bool):
+                raise ValueError(
+                    "baseline coverage judge returned malformed boolean fields"
+                )
             reason = str(judgment.get("rationale", "")).strip()
             assessments.append(
                 {
                     "candidate_id": candidate_id,
-                    "solution_was_present_in_input": solution_present,
+                    "covered_by_conventional_baseline": covered,
                     "generic_solution_pack": generic_pack,
-                    "reason": reason or "blind founder judge did not provide rationale",
+                    "reason": reason
+                    or "baseline coverage judge did not provide rationale",
                 }
             )
 
         return {
-            "blind_assessments": assessments,
-            "empty_frontier_reason": "blind judge evaluated all candidates against hidden reference",
+            "coverage_assessments": assessments,
+            "empty_frontier_reason": (
+                "baseline coverage judge evaluated all candidates against the "
+                "conventional baseline"
+            ),
         }
 
     open_requirements = invention_store.open_observation_requirements()
