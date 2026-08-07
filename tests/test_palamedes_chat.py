@@ -4171,6 +4171,43 @@ class PalamedesChatTests(unittest.TestCase):
         )
         self.assertEqual(mission_store.open_outcome_gates(), [])
 
+    def test_unrelated_open_gate_does_not_block_surface_scoped_approval(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                mission_store = palamedes_chat.MissionStore(
+                    isolated.STATE_DIR / "missions"
+                )
+                mission_store.append_outcome_gate(
+                    {
+                        "gate_version": "palamedes-outcome-gate/2",
+                        "gate_id": "gate-unrelatedscope",
+                        "outcome_id": "outcome-unrelated",
+                        "mission_contract_id": "mission-unrelated",
+                        "status": "open",
+                        "finding": "qualifying_defect",
+                        "followup_kind": "production_correction",
+                        "followup_required": True,
+                        "probe_status": "completed",
+                        "mission_disposition": "revise",
+                    }
+                )
+
+                contract = palamedes_chat.validate_mission_draft(
+                    {
+                        **StaticChatProvider._mission_payload(),
+                        "surface_key": "new-feature-surface",
+                    }
+                )
+                approved = palamedes_chat.approve_mission(
+                    isolated,
+                    mission_store,
+                    contract,
+                    "scope-test",
+                )
+
+        self.assertEqual(approved["contract"]["status"], "approved")
+
     def test_successful_probe_can_stop_with_defect_and_keep_followup_gate_open(self):
         class DefectProvider(StaticChatProvider):
             def stream(self, messages):
@@ -4619,6 +4656,287 @@ class PalamedesChatTests(unittest.TestCase):
             for row in result["cycle"]["artifacts"][:3]
         ))
         self.assertTrue(any("retrying only that role once" in row for row in progress))
+
+    def test_open_gate_on_another_surface_does_not_block_a_scoped_mission(self):
+        class ReviseProvider(StaticChatProvider):
+            def stream(self, messages):
+                if "ROLE: outcome_analyst" in messages[-1]["content"]:
+                    yield json.dumps(
+                        {
+                            "observed_vs_expected": "The result exposed a missing check.",
+                            "attribution_hypotheses": [
+                                {
+                                    "layer": "mission",
+                                    "claim": "The acceptance contract was incomplete",
+                                    "confidence": 70,
+                                }
+                            ],
+                            "belief_updates": ["Repair the contract before expansion"],
+                            "causal_signature": "missing-comparison-evidence",
+                            "mechanism_summary": "The probe lacked the comparison.",
+                            "work_scale": "component",
+                            "surface_key": "mission-comparison-evidence",
+                            "finding_lane": "inconclusive",
+                            "exploration_value": 70,
+                            "hypothesis_scope": "",
+                            "probe_status": "incomplete",
+                            "finding": "inconclusive",
+                            "mission_disposition": "revise",
+                            "followup_required": True,
+                            "followup_kind": "new_probe",
+                            "successor_scope": "Add the missing comparison",
+                            "next_probe": "Add the missing comparison",
+                            "confidence": 70,
+                        }
+                    )
+                    return
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            with PalamedesIsolation(Path(tempdir)) as isolated:
+                provider = ReviseProvider()
+                mission_store = palamedes_chat.MissionStore(
+                    isolated.STATE_DIR / "missions"
+                )
+                cycle_store = palamedes_chat.CognitionCycleStore(
+                    isolated.STATE_DIR / "missions" / "cognition"
+                )
+                result = palamedes_chat.run_cognition_cycle(
+                    provider=provider,
+                    palamedes_module=isolated,
+                    context="Choose a bounded proof",
+                    cycle_store=cycle_store,
+                )
+                approved = palamedes_chat.approve_mission(
+                    isolated, mission_store, result["contract"], "gate-test"
+                )["contract"]
+                outcome = palamedes_chat.record_mission_outcome(
+                    isolated,
+                    mission_store,
+                    approved,
+                    "mixed",
+                    "The implementation passed but the comparison is missing",
+                )
+                palamedes_chat.run_outcome_analyst(
+                    provider=provider,
+                    cycle_store=cycle_store,
+                    mission_store=mission_store,
+                    contract=approved,
+                    outcome=outcome,
+                )
+                self.assertTrue(mission_store.open_outcome_gates())
+
+                payload = StaticChatProvider._mission_payload()
+                payload["surface_key"] = "billing-refunds"
+                payload["mission"] = "Unrelated billing refund probe"
+                elsewhere = palamedes_chat.validate_mission_draft(payload)
+                self.assertIn("surface:billing-refunds", elsewhere["scope_keys"])
+
+                # The gate belongs to another surface, and this contract proves
+                # where it lives, so approval proceeds without answering it.
+                palamedes_chat.approve_mission(
+                    isolated, mission_store, elsewhere, "gate-test"
+                )
+
+    def test_selector_prompt_states_which_discovery_ids_may_be_cited(self):
+        class PromptCapturingProvider(StaticChatProvider):
+            def __init__(self):
+                super().__init__()
+                self.prompts = []
+
+            def stream(self, messages):
+                self.prompts.append(messages[-1].get("content", ""))
+                yield from super().stream(messages)
+
+        def selector_prompt(provider):
+            return next(
+                prompt
+                for prompt in provider.prompts
+                if prompt.startswith("ROLE: selector")
+            )
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            empty_provider = PromptCapturingProvider()
+            palamedes_chat.run_cognition_cycle(
+                provider=empty_provider,
+                palamedes_module=fake,
+                context="Choose one bounded mission.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+            )
+            self.assertIn(
+                "source_discovery_ids must be an empty array",
+                selector_prompt(empty_provider),
+            )
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            listing_provider = PromptCapturingProvider()
+            palamedes_chat.run_cognition_cycle(
+                provider=listing_provider,
+                palamedes_module=fake,
+                context="Choose one bounded mission.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+                available_discovery_ids={"discovery-b", "discovery-a"},
+            )
+            self.assertIn(
+                '["discovery-a", "discovery-b"]',
+                selector_prompt(listing_provider),
+            )
+
+    def test_cycle_budget_stops_a_role_before_an_unaffordable_call(self):
+        class MeteredProvider(StaticChatProvider):
+            def stream(self, messages):
+                self.last_usage = None
+                yield from super().stream(messages)
+                self.last_usage = {
+                    "input_tokens": 1000,
+                    "output_tokens": 200,
+                    "total_tokens": 1200,
+                }
+
+        def run(tempdir, budget):
+            fake = FakePalamedes(Path(tempdir))
+            return palamedes_chat.run_cognition_cycle(
+                provider=MeteredProvider(),
+                palamedes_module=fake,
+                context="Choose one bounded mission.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+                budget=budget,
+            )
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            with self.assertRaisesRegex(ValueError, "token budget exhausted"):
+                run(tempdir, {"provider_calls_max": 99, "token_budget_high": 2500})
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            with self.assertRaisesRegex(ValueError, "provider-call budget exhausted"):
+                run(tempdir, {"provider_calls_max": 2, "token_budget_high": 10 ** 9})
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            result = run(
+                tempdir, {"provider_calls_max": 99, "token_budget_high": 10 ** 9}
+            )
+            self.assertEqual(len(result["cycle"]["artifacts"]), 5)
+
+    def test_schema_retry_tells_the_role_what_the_contract_rejected(self):
+        class SelectorRecoversAfterFeedback(StaticChatProvider):
+            def __init__(self):
+                super().__init__()
+                self.selector_prompts = []
+
+            def stream(self, messages):
+                content = messages[-1]["content"]
+                if "ROLE: selector" in content:
+                    self.selector_prompts.append(content)
+                    if len(self.selector_prompts) == 1:
+                        yield json.dumps({"decision": "not-a-decision"})
+                        return
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = SelectorRecoversAfterFeedback()
+            result = palamedes_chat.run_cognition_cycle(
+                provider=provider,
+                palamedes_module=fake,
+                context="Choose one bounded mission.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+            )
+
+        self.assertEqual(len(provider.selector_prompts), 2)
+        first, retry = provider.selector_prompts
+        self.assertNotIn("rejected by the machine contract", first)
+        self.assertIn("rejected by the machine contract", retry)
+        self.assertIn("selector decision must be select, defer, or reject", retry)
+        self.assertIn("Do not weaken or change your conclusion", retry)
+        self.assertEqual(result["cycle"]["status"], "selected")
+
+    def test_budget_overrun_is_disclosed_on_both_success_and_failure(self):
+        class MeteredProvider(StaticChatProvider):
+            def stream(self, messages):
+                self.last_usage = None
+                yield from super().stream(messages)
+                self.last_usage = {
+                    "input_tokens": 1000,
+                    "output_tokens": 200,
+                    "total_tokens": 1200,
+                }
+
+        class InvalidSelectorProvider(MeteredProvider):
+            def stream(self, messages):
+                if "ROLE: selector" in messages[-1]["content"]:
+                    self.last_usage = None
+                    yield json.dumps({"decision": "not-a-decision"})
+                    self.last_usage = {
+                        "input_tokens": 1000,
+                        "output_tokens": 200,
+                        "total_tokens": 1200,
+                    }
+                    return
+                yield from super().stream(messages)
+
+        # A ceiling above the first role but below the finished cycle is spent
+        # mid-run, so the gate permits the role that crosses it and the overrun
+        # must still be reported.
+        budget = {"provider_calls_max": 99, "token_budget_high": 5000}
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            progress = []
+            palamedes_chat.run_cognition_cycle(
+                provider=MeteredProvider(),
+                palamedes_module=fake,
+                context="Choose one bounded mission.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+                budget=budget,
+                progress=progress.append,
+            )
+            self.assertTrue(
+                any("BUDGET OVERRUN" in row for row in progress),
+                progress,
+            )
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            progress = []
+            with self.assertRaises(ValueError):
+                palamedes_chat.run_cognition_cycle(
+                    provider=InvalidSelectorProvider(),
+                    palamedes_module=fake,
+                    context="Choose one bounded mission.",
+                    cycle_store=palamedes_chat.CognitionCycleStore(
+                        fake.STATE_DIR / "missions" / "cognition"
+                    ),
+                    budget=budget,
+                    progress=progress.append,
+                    schema_retry_limit=0,
+                )
+            self.assertTrue(
+                any("BUDGET OVERRUN" in row for row in progress),
+                progress,
+            )
+
+    def test_cycle_budget_spent_counts_rejected_artifacts(self):
+        self.assertEqual(
+            palamedes_chat._cycle_budget_spent(
+                {
+                    "artifacts": [{"provider_usage": {"total_tokens": 10}}],
+                    "rejected_artifacts": [{"provider_usage": {"total_tokens": 5}}],
+                }
+            ),
+            (2, 15),
+        )
 
     def test_explicit_resume_reuses_legacy_checkpoints_after_plan_drift(self):
         class InvalidSelectorProvider(StaticChatProvider):
@@ -5103,6 +5421,71 @@ class PalamedesChatTests(unittest.TestCase):
             self.assertIn("OPEN OBSERVATION REQUIREMENTS", supplied_context)
             self.assertIn(requirement["observation_requirement_id"], supplied_context)
             self.assertIn(requirement["observation_needed"], supplied_context)
+
+    def test_autonomous_invention_passes_blind_judge_to_invention_engine(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            mission_store = palamedes_chat.MissionStore(Path(tempdir) / "missions")
+            captured: dict[str, object] = {}
+
+            def fake_run_product_invention(*, judge_ask, ask, store, context):
+                captured["judge_ask"] = judge_ask
+                captured["context"] = context
+                return {
+                    "product_invention_id": "invention-aaaaaaaaaaaa",
+                    "status": "no_discovery",
+                }
+
+            def fake_provider_json(*_args, **_kwargs):
+                return {
+                    "solution_was_present_in_input": False,
+                    "generic_request": True,
+                    "rationale": "fixture rationale",
+                }
+
+            with patch("palamedes_invention.run_product_invention", side_effect=fake_run_product_invention):
+                with patch("palamedes_chat._provider_json", side_effect=fake_provider_json) as provider_json:
+                    palamedes_chat.run_autonomous_invention(
+                        provider=StaticChatProvider(),
+                        mission_store=mission_store,
+                        context="Improve Palamedes.",
+                    )
+
+                    # judge_ask must be exercised while _provider_json is still
+                    # patched; otherwise it reaches the real provider.
+                    self.assertIn("judge_ask", captured)
+                    self.assertIsNotNone(captured["judge_ask"])
+                    judge_ask = captured["judge_ask"]
+                    result = judge_ask(
+                        "invention_blind_origin_judge",
+                        "Context:\nimprove context\nCandidate payload:\n"
+                        + json.dumps(
+                            {
+                                "candidates": [
+                                    {
+                                        "candidate_id": "idea-1",
+                                        "thesis": "새로운 연결 구조 제안",
+                                    }
+                                ]
+                            },
+                            ensure_ascii=False,
+                        ),
+                    )
+                    self.assertEqual(
+                        result,
+                        {
+                            "blind_assessments": [
+                                {
+                                    "candidate_id": "idea-1",
+                                    "solution_was_present_in_input": False,
+                                    "generic_solution_pack": True,
+                                    "reason": "fixture rationale",
+                                }
+                            ],
+                            "empty_frontier_reason": "blind judge evaluated all candidates against hidden reference",
+                        },
+                    )
+                    self.assertEqual(provider_json.call_count, 1)
+                    self.assertEqual(captured["context"], "Improve Palamedes.")
 
     def test_autonomous_invention_failure_becomes_observation_requirement(self):
         with tempfile.TemporaryDirectory() as tempdir:

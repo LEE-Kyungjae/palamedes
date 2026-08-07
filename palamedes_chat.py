@@ -18,7 +18,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Protocol, TextIO
+from typing import Any, Callable, Dict, Iterable, List, Optional, Protocol, TextIO, Tuple
 
 
 DEFAULT_OPENAI_MODEL = "gpt-5.6"
@@ -458,6 +458,22 @@ class MissionStore:
         )
         return path
 
+    def load_handoff(self, handoff_id: str) -> Dict[str, Any]:
+        if not re.fullmatch(r"handoff-[a-f0-9]{12}", handoff_id):
+            raise ValueError("invalid handoff ID")
+        path = self.handoff_root / f"{handoff_id}.json"
+        if not path.is_file():
+            raise ValueError(f"handoff not found: {handoff_id}")
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("handoff payload must be an object")
+        return payload
+
+    def load_handoff_for_mission(self, mission_id: str) -> Dict[str, Any]:
+        if not re.fullmatch(r"mission-[a-f0-9]{12}", mission_id):
+            raise ValueError("invalid mission ID")
+        return self.load_handoff(f"handoff-{mission_id[8:]}")
+
     def append_outcome(self, outcome: Dict[str, Any]) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
         with self.outcomes_path.open("a", encoding="utf-8") as handle:
@@ -574,6 +590,8 @@ class MissionStore:
                 surface = str(self.load_contract(mission_id).get("surface_key", "")).strip()
             except (OSError, ValueError, json.JSONDecodeError):
                 surface = ""
+            if not surface and mission_id:
+                return {f"mission:{mission_id}"}
         return {f"surface:{surface}"} if surface else set()
 
     def external_evidence_wait_gate(self) -> Optional[Dict[str, Any]]:
@@ -734,6 +752,62 @@ def _cognition_usage_summary(
     return _provider_usage_summary(provider, roles)
 
 
+def _cycle_budget_spent(cycle: Dict[str, Any]) -> Tuple[int, int]:
+    """Return provider calls and tokens already paid for by this cycle.
+
+    Every entry in artifacts and rejected_artifacts was produced by exactly one
+    paid provider call, possibly during an earlier attempt of the same cycle, so
+    both survive checkpoint reuse and schema retries.
+    """
+    spent_calls = 0
+    spent_tokens = 0
+    for artifact in list(cycle.get("artifacts", [])) + list(
+        cycle.get("rejected_artifacts", [])
+    ):
+        spent_calls += 1
+        usage = artifact.get("provider_usage")
+        if isinstance(usage, dict):
+            total = usage.get("total_tokens")
+            if isinstance(total, int) and not isinstance(total, bool):
+                spent_tokens += total
+    return spent_calls, spent_tokens
+
+
+def _budget_overrun_message(
+    cycle: Dict[str, Any], budget: Dict[str, Any]
+) -> Optional[str]:
+    """Describe how far a finished cycle passed its declared preflight ceiling.
+
+    The pre-call gate can refuse to start a role once the ceiling is spent, but
+    it cannot know what a permitted role will cost, so the final total may still
+    exceed the declared budget and must be disclosed rather than hidden.
+    """
+    spent_calls, spent_tokens = _cycle_budget_spent(cycle)
+    overruns = []
+    declared_calls = budget.get("provider_calls_max")
+    if (
+        isinstance(declared_calls, int)
+        and not isinstance(declared_calls, bool)
+        and spent_calls > declared_calls
+    ):
+        overruns.append(f"calls {spent_calls}>{declared_calls}")
+    declared_tokens = budget.get("token_budget_high")
+    if (
+        isinstance(declared_tokens, int)
+        and not isinstance(declared_tokens, bool)
+        and spent_tokens > declared_tokens
+    ):
+        overruns.append(f"tokens {spent_tokens}>{declared_tokens}")
+    if not overruns:
+        return None
+    return (
+        "BUDGET OVERRUN: "
+        + "; ".join(overruns)
+        + " · the preflight ceiling gates starting a role and cannot cap the "
+        "cost of a role already started"
+    )
+
+
 def run_cognition_cycle(
     *,
     provider: ChatProvider,
@@ -741,6 +815,8 @@ def run_cognition_cycle(
     context: str,
     cycle_store: CognitionCycleStore,
     available_discovery_ids: Optional[set] = None,
+    budget: Optional[Dict[str, Any]] = None,
+    retry_feedback: Optional[Dict[str, str]] = None,
     progress: Optional[Callable[[str], None]] = None,
     schema_retry_limit: int = 1,
     resume_cycle_id: str = "",
@@ -842,6 +918,38 @@ def run_cognition_cycle(
                 if progress:
                     progress(f"[{cycle_id}] {role} {call_index}/5 checkpoint reused")
                 return dict(output)
+        if budget:
+            spent_calls, spent_tokens = _cycle_budget_spent(cycle)
+            call_ceiling = budget.get("provider_calls_max")
+            if (
+                isinstance(call_ceiling, int)
+                and not isinstance(call_ceiling, bool)
+                and spent_calls >= call_ceiling
+            ):
+                raise ValueError(
+                    f"cycle provider-call budget exhausted before {role}: "
+                    f"{spent_calls}/{call_ceiling} calls already paid"
+                )
+            token_ceiling = budget.get("token_budget_high")
+            if (
+                isinstance(token_ceiling, int)
+                and not isinstance(token_ceiling, bool)
+                and spent_tokens >= token_ceiling
+            ):
+                raise ValueError(
+                    f"cycle token budget exhausted before {role}: "
+                    f"{spent_tokens}/{token_ceiling} tokens already paid"
+                )
+        # A blind retry re-samples the same contract violation. Carry the prior
+        # machine-contract error so the role can correct its own output instead.
+        prior_error = (retry_feedback or {}).get(role, "")
+        if prior_error:
+            prompt = (
+                f"{prompt}\n\nThe previous attempt at this role was rejected by the "
+                f"machine contract: {prior_error}\nReturn the same reasoning with "
+                "that violation corrected. Do not weaken or change your conclusion "
+                "to satisfy the schema."
+            )
         role_started_at = utc_now()
         role_started_monotonic = time.monotonic()
         if progress:
@@ -1110,6 +1218,17 @@ only; do not rewrite the frozen candidates around them):
             raise ValueError("abstraction_audit requires a discriminating ablation")
         cycle["abstraction_audit"] = dict(abstraction_audit)
 
+        if available_discovery_ids:
+            discovery_clause = (
+                "source_discovery_ids may cite only these available discovery IDs: "
+                + json.dumps(sorted(available_discovery_ids), ensure_ascii=False)
+                + ". Cite no other ID."
+            )
+        else:
+            discovery_clause = (
+                "No discovery IDs are available to this cycle. "
+                "source_discovery_ids must be an empty array."
+            )
         selector_prompt = f"""ROLE: selector
 Select, defer, or reject from the frozen candidates and critiques. You may not
 invent a new candidate. Then compile the selected candidate into the exact
@@ -1135,6 +1254,7 @@ Return:
   "mission_contract": {mission_prompt("Use the frozen artifacts").split("Required shape:", 1)[1].split("Do not invent", 1)[0].strip()}
 }}
 Only decision=select may contain a mission_contract.
+{discovery_clause}
 
 Candidates:
 {json.dumps(inventor, ensure_ascii=False)}
@@ -1192,8 +1312,16 @@ Adversary:
             isinstance(item, str) and item.strip() for item in source_discovery_ids
         ):
             raise ValueError("selector source_discovery_ids must be a string array")
-        if not set(source_discovery_ids).issubset(available_discovery_ids):
-            raise ValueError("selector cited an unavailable discovery ID")
+        unavailable_discovery_ids = sorted(
+            set(source_discovery_ids) - set(available_discovery_ids)
+        )
+        if unavailable_discovery_ids:
+            raise ValueError(
+                "selector cited an unavailable discovery ID: "
+                f"{json.dumps(unavailable_discovery_ids, ensure_ascii=False)}; "
+                "available: "
+                f"{json.dumps(sorted(available_discovery_ids), ensure_ascii=False)}"
+            )
         candidate_fates = selector.get("candidate_fates")
         if not isinstance(candidate_fates, list):
             raise ValueError("selector candidate_fates must be an array")
@@ -1279,6 +1407,10 @@ Adversary:
             contract["mission_id"] = f"mission-{governance_fingerprint[:12]}"
             contract["contract_fingerprint"] = governance_fingerprint
         cycle_store.save(cycle)
+        if budget and progress:
+            overrun = _budget_overrun_message(cycle, budget)
+            if overrun:
+                progress(f"[{cycle_id}] {overrun}")
         return {"cycle": cycle, "contract": contract}
     except Exception as exc:
         retryable_schema_failure = (
@@ -1325,10 +1457,16 @@ Adversary:
                 context=context,
                 cycle_store=cycle_store,
                 available_discovery_ids=available_discovery_ids,
+                budget=budget,
+                retry_feedback={**(retry_feedback or {}), active_role: str(exc)},
                 progress=progress,
                 schema_retry_limit=schema_retry_limit - 1,
                 resume_cycle_id=cycle_id,
             )
+        if budget and progress:
+            overrun = _budget_overrun_message(cycle, budget)
+            if overrun:
+                progress(f"[{cycle_id}] {overrun}")
         raise
 
 
@@ -2701,10 +2839,16 @@ def approve_mission(
     contract_surface = str(contract.get("surface_key", "")).strip()
     if contract_surface:
         contract_scope_keys.add(f"surface:{contract_surface}")
+    own_mission_key = f"mission:{contract['mission_id']}"
+    contract_scope_keys.add(own_mission_key)
+    # A contract that declares no scope of its own has produced no evidence that
+    # it is unrelated to an open gate, so it cannot narrow the gates that apply.
+    # Contracts that do declare a scope are only blocked by intersecting gates.
+    contract_declares_scope = bool(contract_scope_keys - {own_mission_key})
     relevant_gates = []
     for gate in open_gates:
         gate_scope_keys = mission_store.outcome_gate_scope_keys(gate)
-        if not gate_scope_keys or not contract_scope_keys or gate_scope_keys & contract_scope_keys:
+        if not contract_declares_scope or gate_scope_keys & contract_scope_keys:
             relevant_gates.append(gate)
     if relevant_gates:
         unresolved = [
@@ -2840,6 +2984,75 @@ def approve_mission(
     handoff["handoff_fingerprint"] = _fingerprint(handoff)
     handoff_path = mission_store.save_handoff(handoff)
     return {"contract": approved, "handoff": handoff, "handoff_path": handoff_path}
+
+
+def acknowledge_planner_handoff(
+    mission_store: MissionStore,
+    mission_id: str,
+    planner_id: str,
+    acknowledgment: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    handoff = mission_store.load_handoff_for_mission(mission_id)
+    ts = utc_now()
+    handoff_id = handoff["handoff_id"]
+    if not isinstance(acknowledgment, dict):
+        acknowledgment = {}
+
+    acknowledged_state = "acknowledged_by_implementer"
+    handoff_status = str(handoff.get("status", "")).strip()
+    if handoff_status not in {"awaiting_planner", "acknowledged_by_implementer"}:
+        raise ValueError(
+            f"handoff is not in a planner-awaitable state: {handoff_status}"
+        )
+
+    handoff.update(
+        {
+            "status": acknowledged_state,
+            "planner_id": planner_id,
+            "planner_acknowledged_at": ts,
+            "planner_acknowledgment": acknowledgment,
+        }
+    )
+    handoff["handoff_fingerprint"] = _fingerprint(handoff)
+    mission_store.save_handoff(handoff)
+
+    from palamedes_lifecycle import LifecycleStore
+
+    acknowledgment_fingerprint = _fingerprint(
+        {"mission_id": mission_id, "planner_id": planner_id, "ts": ts}
+    )
+    acknowledgment_id = f"planner-ack-{acknowledgment_fingerprint[:12]}"
+    lifecycle_event_fingerprint = _fingerprint(
+        {
+            "handoff_id": handoff_id,
+            "planner_id": planner_id,
+            "acknowledgment_id": acknowledgment_id,
+        }
+    )
+    event = {
+        "event_version": "palamedes-lifecycle-event/1",
+        "event_id": f"lifecycle-{lifecycle_event_fingerprint[:16]}",
+        "handoff_id": handoff_id,
+        "mission_contract_id": mission_id,
+        "state": acknowledged_state,
+        "source_artifact_ids": sorted({handoff_id, acknowledgment_id}),
+        "reason": f"planner {planner_id} acknowledged mission handoff",
+        "actor": f"planner:{planner_id}",
+        "recorded_at": ts,
+    }
+    persisted = LifecycleStore(mission_store.root).append(event)
+    if not persisted:
+        handoff["lifecycle_state_event_ignored"] = True
+    return {
+        "handoff": handoff,
+        "handoff_id": handoff_id,
+        "planner_id": planner_id,
+        "acknowledgment_id": acknowledgment_id,
+        "acknowledged_at": ts,
+        "acknowledged_state": acknowledged_state,
+        "lifecycle_event_appended": persisted,
+        "planner_acknowledgment": acknowledgment,
+    }
 
 
 def _normalize_actual_investment(value: Any) -> Optional[Dict[str, Any]]:
@@ -3159,6 +3372,8 @@ def _print_help(output: TextIO) -> None:
                 "  /approve             persist the draft and create planner handoff",
                 "  /reject <reason>     reject the latest draft without rewriting it",
                 "  /handoff             show the latest planner handoff",
+                "  /planner-ack <planner-id> <JSON>",
+                "                       acknowledge a planner handoff to advance the handoff state",
                 "  /outcome [mission-id] <status> <observation>",
                 "                       record success|failure|mixed|unknown",
                 "  /outcome-json <JSON> record outcome plus measured investment",
@@ -3258,6 +3473,85 @@ def run_autonomous_invention(
         finally:
             role_usage.append(_capture_provider_usage(provider, role))
 
+    def _parse_blind_gate_payload(prompt: str) -> tuple[str, List[Dict[str, Any]]]:
+        marker_context = "Context:\n"
+        marker_candidates = "Candidate payload:\n"
+        context_split = prompt.split(marker_context, 1)
+        if len(context_split) != 2:
+            raise ValueError("blind origin judge prompt missing context")
+        candidates_split = context_split[1].split(marker_candidates, 1)
+        if len(candidates_split) != 2:
+            raise ValueError("blind origin judge prompt missing candidate payload")
+        prompt_context = candidates_split[0].strip()
+        payload_text = candidates_split[1].strip()
+        try:
+            payload = json.loads(payload_text)
+        except json.JSONDecodeError as exc:
+            raise ValueError("blind origin judge candidate payload is invalid JSON") from exc
+        candidates = payload.get("candidates")
+        if not isinstance(candidates, list):
+            raise ValueError("blind origin judge candidate payload must be an object with candidates")
+        return prompt_context, candidates
+
+    def judge_ask(role: str, prompt: str) -> Dict[str, Any]:
+        if role != "invention_blind_origin_judge":
+            raise ValueError(f"unsupported blind judge role: {role}")
+        gate_context, candidates = _parse_blind_gate_payload(prompt)
+
+        assessments: List[Dict[str, Any]] = []
+        for candidate in candidates:
+            candidate_id = str(candidate.get("candidate_id", "")).strip()
+            thesis = str(candidate.get("thesis", "")).strip()
+            if not candidate_id:
+                raise ValueError("blind origin judge candidate payload missing candidate_id")
+            if not thesis:
+                assessments.append(
+                    {
+                        "candidate_id": candidate_id,
+                        "solution_was_present_in_input": False,
+                        "generic_solution_pack": True,
+                        "reason": "candidate has no thesis text",
+                    }
+                )
+                continue
+
+            judgment = _provider_json(
+                provider,
+                system=(
+                    "ROLE: blind_founder_prompt_judge. Evaluate the proposed founder prompt "
+                    "against a hidden reference and return exactly one JSON object."
+                ),
+                prompt=(
+                    f"ROLE: blind_founder_prompt_judge\n"
+                    f"Evaluate only whether the generated founder prompt could replace the "
+                    "upstream product-direction text a thoughtful human would otherwise "
+                    "need to supply.\n\n"
+                    f"Generator input:\n{gate_context}\n\n"
+                    f"Generated founder prompt:\n{thesis}\n\n"
+                    f"Hidden human founder text revealed only to the judge:\n{gate_context}"
+                ),
+            )
+            role_usage.append(_capture_provider_usage(provider, "blind_founder_prompt_judge"))
+
+            solution_present = judgment.get("solution_was_present_in_input")
+            generic_pack = judgment.get("generic_request")
+            if not isinstance(solution_present, bool) or not isinstance(generic_pack, bool):
+                raise ValueError("blind founder judge returned malformed boolean fields")
+            reason = str(judgment.get("rationale", "")).strip()
+            assessments.append(
+                {
+                    "candidate_id": candidate_id,
+                    "solution_was_present_in_input": solution_present,
+                    "generic_solution_pack": generic_pack,
+                    "reason": reason or "blind founder judge did not provide rationale",
+                }
+            )
+
+        return {
+            "blind_assessments": assessments,
+            "empty_frontier_reason": "blind judge evaluated all candidates against hidden reference",
+        }
+
     open_requirements = invention_store.open_observation_requirements()
     enriched_context = context
     if open_requirements:
@@ -3276,7 +3570,10 @@ def run_autonomous_invention(
         )
     try:
         record = run_product_invention(
-            ask=ask, store=invention_store, context=enriched_context
+            ask=ask,
+            judge_ask=judge_ask,
+            store=invention_store,
+            context=enriched_context,
         )
     except ValueError as exc:
         invention_store.record_observation_requirement(
@@ -3293,6 +3590,32 @@ def run_autonomous_invention(
     record["provider_usage"] = _provider_usage_summary(provider, role_usage)
     invention_store.save(record)
     return record
+
+
+def build_autonomous_invention_context(
+    *, user_context: str, workspace_context: Dict[str, Any]
+) -> str:
+    """Ground invention in bounded product reality without granting delivery authority."""
+    contract = {
+        "invention_context_version": "palamedes-invention-context/1",
+        "user_context": user_context,
+        "bounded_workspace_context": workspace_context,
+        "discovery_focus": [
+            "capabilities implemented but absent from user or operator surfaces",
+            "user value delivered without retention, progression, or value-capture loops",
+            "content and production assets without distribution or replenishment loops",
+            "paid promises without fulfillment, recovery, measurement, or administration",
+            "non-obvious combinations that create more than additive value",
+        ],
+        "guardrails": [
+            "Do not equate code presence with validated user value.",
+            "Do not force monetization onto safety, privacy, or essential account controls.",
+            "Do not use fake scarcity, dark patterns, or pay-to-win pressure.",
+            "Separate confirmed repository facts, inference, and unverified market hypotheses.",
+            "Do not turn the exploration frontier into implementation tasks.",
+        ],
+    }
+    return json.dumps(contract, ensure_ascii=False, indent=2, sort_keys=True)
 
 
 def run_autonomous_pursuit(
@@ -4712,14 +5035,24 @@ def run_chat(
                 output.write("/invent requires product context.\n")
                 continue
             output.write(
-                "Running product invention: observation → conventional baseline → "
-                "counterweighted exploration → structural novelty attack → frontier\n"
+                "Running product invention: workspace observation → conventional baseline → "
+                "latent value map → counterweighted exploration → structural novelty attack → frontier\n"
             )
             try:
+                from palamedes_observe import collect_observation, observation_context
+
+                ref_value = os.environ.get("PALAMEDES_REF_ROOT", "").strip()
+                invention_observation = collect_observation(
+                    workspace,
+                    ref_root=Path(ref_value).expanduser() if ref_value else None,
+                )
                 invention_record = run_autonomous_invention(
                     provider=provider,
                     mission_store=mission_store,
-                    context=invention_context,
+                    context=build_autonomous_invention_context(
+                        user_context=invention_context,
+                        workspace_context=observation_context(invention_observation),
+                    ),
                 )
             except (OSError, RuntimeError, ValueError) as exc:
                 output.write(f"[product invention error] {exc}\n")
@@ -5131,6 +5464,7 @@ def run_chat(
             if not context:
                 output.write("/cycle requires context.\n")
                 continue
+            cycle_budget: Optional[Dict[str, Any]] = None
             if cycle_mode != "resume":
                 from palamedes_cost_router import (
                     MODE_BUDGETS,
@@ -5172,6 +5506,14 @@ def run_chat(
                         "manual_override_allowed": True,
                     }
                 budget = route["budget"]
+                # One schema retry is permitted per cycle, so the enforced call
+                # ceiling is the declared role budget plus that allowance.
+                cycle_budget = dict(budget)
+                declared_calls_max = budget.get("provider_calls_max")
+                if isinstance(declared_calls_max, int) and not isinstance(
+                    declared_calls_max, bool
+                ):
+                    cycle_budget["provider_calls_max"] = declared_calls_max + 1
                 output.write(
                     f"Cycle preflight: mode={cycle_mode} "
                     f"calls={budget['provider_calls_min']}-{budget['provider_calls_max']} "
@@ -5404,6 +5746,7 @@ def run_chat(
                         palamedes_module=palamedes_module,
                         context=grounded_context,
                         cycle_store=cognition_store,
+                        budget=cycle_budget,
                         progress=lambda message: (
                             output.write(message + "\n"), output.flush()
                         ),
@@ -5577,6 +5920,62 @@ def run_chat(
                 output.write(f"Handoff is missing for {mission_id}.\n")
                 continue
             output.write(path.read_text(encoding="utf-8"))
+            continue
+        if text.startswith("/planner-ack"):
+            raw = text[len("/planner-ack") :].strip()
+            if not raw:
+                output.write("/planner-ack requires planner-id and optional acknowledgment JSON.\n")
+                continue
+            parts = raw.split(maxsplit=1)
+            planner_id = parts[0].strip()
+            if not planner_id:
+                output.write("/planner-ack requires a planner-id.\n")
+                continue
+            payload: Dict[str, Any] = {}
+            if len(parts) == 2:
+                ack_payload = parts[1].strip()
+                try:
+                    payload = json.loads(ack_payload)
+                except json.JSONDecodeError as exc:
+                    output.write(f"/planner-ack JSON payload parse error: {exc}\n")
+                    continue
+                if not isinstance(payload, dict):
+                    output.write("/planner-ack payload must be a JSON object.\n")
+                    continue
+            records = store.load(active_session)
+            mission_id = latest_mission_id(records, {"approved", "outcome_recorded"})
+            if not mission_id:
+                output.write("No approved mission to acknowledge in this session.\n")
+                continue
+            try:
+                result = acknowledge_planner_handoff(
+                    mission_store=mission_store,
+                    mission_id=mission_id,
+                    planner_id=planner_id,
+                    acknowledgment=payload,
+                )
+            except ValueError as exc:
+                output.write(f"Planner handoff acknowledgment failed: {exc}\n")
+                continue
+            store.append(
+                active_session,
+                {
+                    "ts": utc_now(),
+                    "type": "mission_state",
+                    "mission_id": mission_id,
+                    "status": "approved",
+                    "handoff_id": result["handoff_id"],
+                    "handoff_state": result["acknowledged_state"],
+                    "planner_id": planner_id,
+                    "planner_acknowledgment_id": result["acknowledgment_id"],
+                },
+            )
+            output.write(
+                f"Planner acknowledged: {planner_id} -> {mission_id}\n"
+                f"Handoff state: {result['acknowledged_state']}\n"
+                f"Lifecycle event appended: {str(result['lifecycle_event_appended']).lower()}\n"
+                f"Acknowledgment ID: {result['acknowledgment_id']}\n"
+            )
             continue
         if text.startswith("/outcome-json") or text.startswith("/outcome"):
             actual_investment = None
