@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import fcntl
+import re
 from pathlib import Path
 from typing import Any, Callable, Dict, List
 
@@ -40,6 +41,10 @@ NOVELTY_TESTS = (
     "causal_coherence",
     "independent_contribution",
 )
+BLIND_ORIGIN_TESTS = (
+    "solution_was_present_in_input",
+    "generic_solution_pack",
+)
 
 # Kept as import-compatible aliases for v1 consumers. V2 does not require them.
 STRUCTURAL_AXES = STRUCTURAL_DIMENSIONS
@@ -49,6 +54,71 @@ PLAYABLE_FIELDS: tuple[str, ...] = ()
 def fingerprint(value: Any) -> str:
     payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _candidate_signature(row: Dict[str, Any]) -> set[str]:
+    """Build a compact lexical signature for duplicate/reduction heuristics."""
+    basis = [
+        str(row.get("thesis", "")),
+        str(row.get("hidden_opportunity", "")),
+        str(row.get("observed_basis", [])),
+        str(row.get("falsification_condition", "")),
+        str(row.get("structural_delta", {}).get("baseline_structure", "")),
+        str(row.get("structural_delta", {}).get("proposed_structure", "")),
+        str(row.get("structural_delta", {}).get("newly_possible_outcome", "")),
+        " ".join(row.get("transformation_lenses", [])),
+        " ".join(row.get("structural_delta", {}).get("changed_dimensions", [])),
+        str(row.get("composition", {}).get("novel_relation_or_condition", "")),
+        str(row.get("composition", {}).get("emergent_outcome", "")),
+        str(row.get("composition", {}).get("irreducibility_test", "")),
+    ]
+    text = "\n".join(basis).lower()
+    return {token for token in re.findall(r"[0-9a-zA-Z가-힣]+", text) if len(token) > 1}
+
+
+def _blind_payload(candidates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    payload = []
+    for candidate in candidates:
+        payload.append({
+            "candidate_id": candidate["candidate_id"],
+            "thesis": str(candidate.get("thesis", "")).strip(),
+            "hidden_opportunity": str(candidate.get("hidden_opportunity", "")).strip(),
+            "novel_relation_or_condition": str(
+                candidate.get("composition", {}).get("novel_relation_or_condition", "")
+            ).strip(),
+            "irreducibility_test": str(
+                candidate.get("composition", {}).get("irreducibility_test", "")
+            ).strip(),
+        })
+    return payload
+
+
+def _redundant_candidate(
+    candidate: Dict[str, Any], dominant: Dict[str, Any]
+) -> bool:
+    """Return True if `candidate` is likely a terminology variant or strict subset of `dominant`."""
+    signature = _candidate_signature(candidate)
+    dominant_signature = _candidate_signature(dominant)
+    if not signature or not dominant_signature:
+        return False
+    if not signature.issubset(dominant_signature):
+        return False
+
+    candidate_dims = set(candidate["structural_delta"]["changed_dimensions"])
+    dominant_dims = set(dominant["structural_delta"]["changed_dimensions"])
+    if not candidate_dims.issubset(dominant_dims):
+        return False
+
+    candidate_lenses = set(candidate["transformation_lenses"])
+    dominant_lenses = set(dominant["transformation_lenses"])
+    if not candidate_lenses.issubset(dominant_lenses):
+        return False
+
+    return (
+        signature != dominant_signature
+        or candidate_dims != dominant_dims
+        or candidate_lenses != dominant_lenses
+    )
 
 
 def _object(value: Any, field: str) -> Dict[str, Any]:
@@ -63,6 +133,129 @@ def _strings(value: Any, field: str, minimum: int = 1) -> List[str]:
     ):
         raise ValueError(f"{field} requires at least {minimum} strings")
     return [item.strip() for item in value]
+
+
+def _prune_redundant_candidates(
+    candidates: List[Dict[str, Any]]
+) -> tuple[List[Dict[str, Any]], List[Dict[str, str]]]:
+    """Collapse obvious terminology variants before adversarial judging."""
+    if len(candidates) <= 1:
+        return candidates, []
+
+    dropped: dict[int, int] = {}
+    logs: List[Dict[str, str]] = []
+    for i, candidate in enumerate(candidates):
+        if i in dropped:
+            continue
+        for j, other in enumerate(candidates):
+            if i == j or j in dropped:
+                continue
+            cid = str(candidate.get("candidate_id", f"candidate-{i}"))
+            oid = str(other.get("candidate_id", f"candidate-{j}"))
+            if _redundant_candidate(candidate, other):
+                dropped[i] = j
+                logs.append(
+                    {
+                        "dropped_candidate_id": cid,
+                        "dominant_candidate_id": oid,
+                        "reason": "candidate_to_candidate_reduction",
+                    }
+                )
+                break
+            if _redundant_candidate(other, candidate):
+                dropped[j] = i
+                logs.append(
+                    {
+                        "dropped_candidate_id": oid,
+                        "dominant_candidate_id": cid,
+                        "reason": "candidate_to_candidate_reduction",
+                    }
+                )
+    kept = [row for index, row in enumerate(candidates) if index not in dropped]
+    return kept, logs
+
+
+def _blind_assessment(
+    value: Any, candidate_ids: set[str], index: int
+) -> Dict[str, Any]:
+    row = _object(value, f"blind_assessments[{index}]")
+    candidate_id = str(row.get("candidate_id", "")).strip()
+    if not candidate_id:
+        raise ValueError("blind assessment requires a candidate_id")
+    if candidate_id not in candidate_ids:
+        raise ValueError("blind assessment references unknown candidate")
+    solution_present = row.get("solution_was_present_in_input")
+    generic_solution = row.get("generic_solution_pack")
+    if not isinstance(solution_present, bool) or not isinstance(generic_solution, bool):
+        raise ValueError("blind assessment requires booleans for solution coverage and genericity")
+    reason = str(row.get("reason", "")).strip()
+    if not reason:
+        raise ValueError("blind assessment requires a reason")
+    row["candidate_id"] = candidate_id
+    row["solution_was_present_in_input"] = solution_present
+    row["generic_solution_pack"] = generic_solution
+    row["reason"] = reason
+    return row
+
+
+def _run_blind_invention_gate(
+    *, judge_ask: Callable[[str, str], Dict[str, Any]],
+    context: str, candidates: List[Dict[str, Any]]
+) -> tuple[List[Dict[str, Any]], List[Dict[str, str]]]:
+    if not candidates:
+        return candidates, []
+
+    candidate_ids = [str(row["candidate_id"]) for row in candidates]
+    payload = json.dumps({
+        "context": context,
+        "candidate_count": len(candidates),
+        "candidates": _blind_payload(candidates),
+    }, ensure_ascii=False, sort_keys=True)
+    gate = _ask_object_contract(
+        judge_ask,
+        "invention_blind_origin_judge",
+        f"""
+Judge candidate novelty against a hidden reference while ignoring any rhetoric and
+candidate ids. Return one blind_assessment per candidate. If candidate is the same
+as the supplied input or a generic feature pack, mark the corresponding field true.
+Your response must include blind_assessments and empty_frontier_reason.
+
+PAY ATTENTION: do not reveal hidden reference terms.
+Context:\n{context}
+Candidate payload:\n{payload}
+""",
+        required_fields=("blind_assessments", "empty_frontier_reason"),
+        list_fields=("blind_assessments",),
+    )
+    raw_assessments = gate.get("blind_assessments")
+    assessments = [_blind_assessment(row, set(candidate_ids), index) for index, row in enumerate(raw_assessments)]
+    if len(assessments) != len(candidate_ids) or {row["candidate_id"] for row in assessments} != set(candidate_ids):
+        raise ValueError("blind gate must assess every candidate exactly once")
+
+    rejected: set[str] = set()
+    logs: List[Dict[str, str]] = []
+    for assessment in assessments:
+        if (
+            assessment["solution_was_present_in_input"]
+            or assessment["generic_solution_pack"]
+        ):
+            cid = assessment["candidate_id"]
+            rejected.add(cid)
+            reason = "blind_origin_gate"
+            if assessment["solution_was_present_in_input"]:
+                reason += ";founder_prompt_solution_already_supplied"
+            if assessment["generic_solution_pack"]:
+                reason += ";generic_solution_pack"
+            logs.append(
+                {
+                    "dropped_candidate_id": cid,
+                    "dominant_candidate_id": "blind_gate_reject",
+                    "reason": reason,
+                }
+            )
+
+    kept = [row for row in candidates if row["candidate_id"] not in rejected]
+    return kept, logs
 
 
 def _ask_object_contract(
@@ -149,6 +342,8 @@ def _candidate(value: Any, index: int) -> Dict[str, Any]:
         "reference_derived": "reference",
     }
     canonical_origin = origin_aliases.get(raw_origin_type, raw_origin_type)
+    if raw_origin_type.startswith("goal_seeded_"):
+        canonical_origin = "observation"
     if canonical_origin not in {"palamedes", "human", "observation", "mixed", "reference"}:
         keyword_origins = (
             ("palamedes", "palamedes"), ("model", "palamedes"), ("system", "palamedes"),
@@ -163,7 +358,8 @@ def _candidate(value: Any, index: int) -> Dict[str, Any]:
         )
     origin["raw_type"] = raw_origin_type
     origin["type"] = canonical_origin
-    if not str(origin.get("palamedes_contribution", "")).strip():
+    contribution = str(origin.get("palamedes_contribution", "")).strip()
+    if not contribution or contribution.lower().startswith("not separately stated"):
         origin["palamedes_contribution"] = "not separately stated; independent contribution remains unverified"
         origin["contribution_verified"] = False
     else:
@@ -364,7 +560,7 @@ class ProductInventionStore:
 
 def run_product_invention(
     *, ask: Callable[[str, str], Dict[str, Any]], store: ProductInventionStore,
-    context: str,
+    context: str, judge_ask: Callable[[str, str], Dict[str, Any]] | None = None,
 ) -> Dict[str, Any]:
     """Explore a product possibility frontier without selecting or implementing it."""
     observation = _ask_object_contract(ask, "invention_context_observer", f"""
@@ -377,10 +573,29 @@ observed_facts, inferences, unknowns, constraints, and scale.
 
 CONTEXT:\n{context}
 """, required_fields=("input_mode", "stated_intent", "supplied_ideas", "observed_facts", "inferences", "unknowns", "constraints", "scale"), list_fields=("supplied_ideas", "observed_facts", "inferences", "unknowns", "constraints"))
+    observation_required_fields = (
+        "input_mode", "stated_intent", "supplied_ideas", "observed_facts",
+        "inferences", "unknowns", "constraints", "scale",
+    )
+    observation_list_fields = (
+        "supplied_ideas", "observed_facts", "inferences", "unknowns", "constraints",
+    )
+    try:
+        for field in observation_list_fields:
+            _strings(observation.get(field, []), f"observation.{field}", 0)
+    except ValueError as exc:
+        observation = _ask_object_contract(ask, "invention_context_observer", f"""
+Repair the observation object without changing its meaning. The nested machine-contract
+error was: {exc}. Every supplied_ideas, observed_facts, inferences, unknowns, and
+constraints entry must be a concise JSON string, never an object. Return the complete
+corrected observation object.
+
+PREVIOUS OBJECT:\n{json.dumps(observation, ensure_ascii=False)}
+""", required_fields=observation_required_fields, list_fields=observation_list_fields)
+        for field in observation_list_fields:
+            _strings(observation.get(field, []), f"observation.{field}", 0)
     if observation.get("input_mode") not in INPUT_MODES:
         raise ValueError("observation.input_mode is invalid")
-    for field in ("supplied_ideas", "observed_facts", "inferences", "unknowns", "constraints"):
-        _strings(observation.get(field, []), f"observation.{field}", 0)
     if not str(observation.get("stated_intent", "")).strip() or not str(observation.get("scale", "")).strip():
         raise ValueError("observation requires stated_intent and scale")
 
@@ -418,7 +633,6 @@ search_notes and no_discovery_reason (required when candidates is empty). Do not
 implementation tasks, schemas, APIs, prototypes, roadmaps, or selection.
 
 OBSERVATION:\n{json.dumps(observation, ensure_ascii=False)}
-BASELINE TO SUPPRESS:\n{json.dumps(baseline, ensure_ascii=False)}
 """, required_fields=("candidates", "search_notes", "no_discovery_reason"), list_fields=("candidates", "search_notes"))
     raw_candidates = invention.get("candidates", [])
     if not isinstance(raw_candidates, list):
@@ -438,21 +652,64 @@ PREVIOUS OBJECT:\n{json.dumps(invention, ensure_ascii=False)}
 """, required_fields=("candidates", "search_notes", "no_discovery_reason"), list_fields=("candidates", "search_notes"))
         raw_candidates = invention.get("candidates", [])
         candidates = [_candidate(row, index) for index, row in enumerate(raw_candidates)]
-    candidate_ids = {str(row["candidate_id"]) for row in candidates}
-    if len(candidate_ids) != len(candidates):
+    if len({str(row["candidate_id"]) for row in candidates}) != len(candidates):
         raise ValueError("candidate IDs must be unique")
     if not candidates and not str(invention.get("no_discovery_reason", "")).strip():
         raise ValueError("an empty invention frontier requires no_discovery_reason")
 
-    adversary = _ask_object_contract(ask, "structural_novelty_adversary", f"""
+    blind_gate_reduction_log: List[Dict[str, str]] = []
+    candidates, candidate_reduction_log = _prune_redundant_candidates(candidates)
+    if candidate_reduction_log:
+        existing_notes = invention.get("search_notes")
+        if not isinstance(existing_notes, list):
+            existing_notes = []
+        existing_notes.append(
+            "candidate-to-candidate reduction pruning removed duplicates/variants"
+        )
+        invention["search_notes"] = existing_notes
+        if not candidates and not str(invention.get("no_discovery_reason", "")).strip():
+            invention["no_discovery_reason"] = (
+                "all candidates were reduced as terminology or structure variants"
+            )
+
+    if judge_ask is not None and candidates:
+        candidates, blind_gate_reduction_log = _run_blind_invention_gate(
+            judge_ask=judge_ask, context=context, candidates=candidates
+        )
+        candidate_reduction_log.extend(blind_gate_reduction_log)
+        if blind_gate_reduction_log:
+            invention_search_notes = invention.get("search_notes")
+            if not isinstance(invention_search_notes, list):
+                invention_search_notes = []
+            invention_search_notes.append(
+                "blind origin gate rejected candidates matching provided context or generic solution packs"
+            )
+            invention["search_notes"] = invention_search_notes
+            if not str(invention.get("no_discovery_reason", "")).strip():
+                invention["no_discovery_reason"] = (
+                    "all remaining candidates were rejected by blind origin gate"
+                )
+    if not candidates and judge_ask is not None and not str(invention.get("no_discovery_reason", "")).strip():
+        invention["no_discovery_reason"] = (
+            "all candidates were rejected by blind origin gate"
+        )
+
+    candidate_ids = {str(row["candidate_id"]) for row in candidates}
+
+    if candidates:
+        adversary = _ask_object_contract(ask, "structural_novelty_adversary", f"""
 Evaluate every candidate after removing its label and rhetoric. Apply all tests:
 {', '.join(NOVELTY_TESTS)}. Do not reject a candidate merely because its components are
 known. Test whether their relation, sequence, activation condition, context, authority,
 feedback, or value capture produces an outcome unavailable from the parts independently.
 Reject renamed features, conventional bundles with only additive value, UI-only changes,
 generic ideas transferable unchanged to any service, unsupported causal leaps, and
-restatements of the human seed. Consequence and causal coherence precede novelty. Return exactly one
-candidate_assessment per candidate with candidate_id, verdict, tests, strongest_attack,
+restatements of the human seed. Consequence and causal coherence precede novelty.
+
+Before verdicts, compare every candidate pair for reduction: if candidate B is only a renamed,
+reparameterized, or structurally narrower version of candidate A, reject B unless A is also
+rejected. Return exactly one candidate_assessment per remaining candidate with candidate_id,
+verdict, tests, strongest_attack,
 surviving_delta, evidence_gap, and minimum_disconfirming_observation. If the frontier is
 empty, return an empty candidate_assessments list and explain why no forced candidate
 should be manufactured.
@@ -461,14 +718,21 @@ OBSERVATION:\n{json.dumps(observation, ensure_ascii=False)}
 BASELINE:\n{json.dumps(baseline, ensure_ascii=False)}
 CANDIDATES:\n{json.dumps(candidates, ensure_ascii=False)}
 """, required_fields=("candidate_assessments", "empty_frontier_reason"), list_fields=("candidate_assessments",))
-    raw_assessments = adversary.get("candidate_assessments")
+        raw_assessments = adversary.get("candidate_assessments")
+    else:
+        adversary = {
+            "candidate_assessments": [],
+            "empty_frontier_reason": invention.get("no_discovery_reason", ""),
+        }
+        raw_assessments = adversary.get("candidate_assessments")
     if not isinstance(raw_assessments, list):
         raise ValueError("adversary.candidate_assessments must be a list")
-    assessments = [_assessment(row, candidate_ids, index) for index, row in enumerate(raw_assessments)]
+    assessments = [_assessment(row, candidate_ids, index) for index, row in enumerate(raw_assessments)] if candidates else []
     if len(assessments) != len(candidate_ids) or {row["candidate_id"] for row in assessments} != candidate_ids:
         raise ValueError("adversary must assess every candidate exactly once")
 
-    curator = _ask_object_contract(ask, "invention_frontier_curator", f"""
+    if candidates:
+        curator = _ask_object_contract(ask, "invention_frontier_curator", f"""
 Preserve an exploration frontier; do not pick a winner and do not convert discoveries into
 delivery work. Assign every candidate one disposition: preserve, deepen, needs_evidence,
 merge, or reject. Return discovery_status (discovered, partial, or no_discovery),
@@ -481,6 +745,16 @@ OBSERVATION:\n{json.dumps(observation, ensure_ascii=False)}
 CANDIDATES:\n{json.dumps(candidates, ensure_ascii=False)}
 ASSESSMENTS:\n{json.dumps(assessments, ensure_ascii=False)}
 """, required_fields=("discovery_status", "frontier", "synthesis", "human_decision_required", "presentation_outline"), list_fields=("frontier", "presentation_outline"))
+    else:
+        curator = {
+            "discovery_status": "no_discovery",
+            "frontier": [],
+            "synthesis": "No candidates survived the invention filters.",
+            "human_decision_required": "Run a tighter observation framing or loosen the frontier guardrails.",
+            "presentation_outline": [
+                "why", "non-obvious discovery", "value", "uncertainty", "decision",
+            ],
+        }
     raw_discovery_status = str(curator.get("discovery_status", "")).strip().lower().replace("-", "_").replace(" ", "_")
     discovery_aliases = {
         "discovery": "discovered", "success": "discovered", "viable": "discovered",
@@ -538,6 +812,8 @@ ASSESSMENTS:\n{json.dumps(assessments, ensure_ascii=False)}
         "observation": observation,
         "conventional_baseline": baseline,
         "transformation_lenses": list(TRANSFORMATION_LENSES),
+        "blind_gate_reduction_log": blind_gate_reduction_log,
+        "candidate_reduction_log": candidate_reduction_log,
         "candidates": candidates,
         "adversary": {**adversary, "candidate_assessments": assessments},
         "frontier": frontier,
