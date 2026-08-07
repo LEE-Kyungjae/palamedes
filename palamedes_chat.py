@@ -752,18 +752,22 @@ def _cognition_usage_summary(
     return _provider_usage_summary(provider, roles)
 
 
-def _cycle_budget_spent(cycle: Dict[str, Any]) -> Tuple[int, int]:
-    """Return provider calls and tokens already paid for by this cycle.
+def _cycle_paid_artifacts(cycle: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Return every artifact this cycle paid a provider call for.
 
-    Every entry in artifacts and rejected_artifacts was produced by exactly one
-    paid provider call, possibly during an earlier attempt of the same cycle, so
-    both survive checkpoint reuse and schema retries.
+    Kept and rejected artifacts each cost exactly one call, possibly during an
+    earlier attempt of the same cycle, so both survive checkpoint reuse and
+    schema retries. Usage reporting and budget accounting must agree on this
+    set or the enforced ceiling drifts from the reported cost.
     """
+    return list(cycle.get("artifacts", [])) + list(cycle.get("rejected_artifacts", []))
+
+
+def _cycle_budget_spent(cycle: Dict[str, Any]) -> Tuple[int, int]:
+    """Return provider calls and tokens already paid for by this cycle."""
     spent_calls = 0
     spent_tokens = 0
-    for artifact in list(cycle.get("artifacts", [])) + list(
-        cycle.get("rejected_artifacts", [])
-    ):
+    for artifact in _cycle_paid_artifacts(cycle):
         spent_calls += 1
         usage = artifact.get("provider_usage")
         if isinstance(usage, dict):
@@ -905,6 +909,13 @@ def run_cognition_cycle(
     active_role = ""
     active_role_was_fresh = False
 
+    def report_budget_overrun() -> None:
+        if not budget or not progress:
+            return
+        overrun = _budget_overrun_message(cycle, budget)
+        if overrun:
+            progress(f"[{cycle_id}] {overrun}")
+
     def invoke(role: str, call_index: int, prompt: str) -> Dict[str, Any]:
         nonlocal fresh_call_count, active_role, active_role_was_fresh
         active_role = role
@@ -976,7 +987,7 @@ def run_cognition_cycle(
             )
         )
         cycle["provider_usage"] = _cognition_usage_summary(
-            provider, cycle["artifacts"] + cycle["rejected_artifacts"]
+            provider, _cycle_paid_artifacts(cycle)
         )
         cycle_store.save(cycle)
         if progress:
@@ -1365,7 +1376,7 @@ Adversary:
         cycle["completed_at"] = utc_now()
         cycle["live_model_call_count"] = fresh_call_count
         cycle["provider_usage"] = _cognition_usage_summary(
-            provider, cycle["artifacts"] + cycle["rejected_artifacts"]
+            provider, _cycle_paid_artifacts(cycle)
         )
         cycle["role_output_fingerprints_unique"] = (
             len({item["output_fingerprint"] for item in cycle["artifacts"]}) == 5
@@ -1407,10 +1418,7 @@ Adversary:
             contract["mission_id"] = f"mission-{governance_fingerprint[:12]}"
             contract["contract_fingerprint"] = governance_fingerprint
         cycle_store.save(cycle)
-        if budget and progress:
-            overrun = _budget_overrun_message(cycle, budget)
-            if overrun:
-                progress(f"[{cycle_id}] {overrun}")
+        report_budget_overrun()
         return {"cycle": cycle, "contract": contract}
     except Exception as exc:
         retryable_schema_failure = (
@@ -1442,7 +1450,7 @@ Adversary:
         cycle["failure"] = str(exc)
         cycle["live_model_call_count"] = len(cycle["artifacts"])
         cycle["provider_usage"] = _cognition_usage_summary(
-            provider, cycle["artifacts"] + cycle["rejected_artifacts"]
+            provider, _cycle_paid_artifacts(cycle)
         )
         cycle_store.save(cycle)
         if retryable_schema_failure:
@@ -1463,10 +1471,7 @@ Adversary:
                 schema_retry_limit=schema_retry_limit - 1,
                 resume_cycle_id=cycle_id,
             )
-        if budget and progress:
-            overrun = _budget_overrun_message(cycle, budget)
-            if overrun:
-                progress(f"[{cycle_id}] {overrun}")
+        report_budget_overrun()
         raise
 
 
@@ -1843,7 +1848,7 @@ def run_micro_cycle(
             )
             cycle["artifacts"].append(artifact)
             cycle["provider_usage"] = _cognition_usage_summary(
-                provider, cycle["artifacts"] + cycle["rejected_artifacts"]
+                provider, _cycle_paid_artifacts(cycle)
             )
             cycle_store.save(cycle)
             if progress:
@@ -1862,7 +1867,7 @@ def run_micro_cycle(
             rejected["rejected_at"] = utc_now()
             cycle["rejected_artifacts"].append(rejected)
             cycle["provider_usage"] = _cognition_usage_summary(
-                provider, cycle["artifacts"] + cycle["rejected_artifacts"]
+                provider, _cycle_paid_artifacts(cycle)
             )
             cycle_store.save(cycle)
             if attempt == 1:
@@ -1907,7 +1912,7 @@ def run_micro_cycle(
         "completed_at": utc_now(),
         "live_model_call_count": fresh_calls,
         "provider_usage": _cognition_usage_summary(
-            provider, cycle["artifacts"] + cycle["rejected_artifacts"]
+            provider, _cycle_paid_artifacts(cycle)
         ),
         "role_output_fingerprints_unique": True,
     })
