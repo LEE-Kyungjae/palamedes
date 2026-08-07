@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import copy
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,14 +9,35 @@ from palamedes_invention import ProductInventionStore, run_product_invention
 
 
 class InventionFixture:
-    def __init__(self, *, empty=False, bad_assessment_id=""):
+    def __init__(
+        self,
+        *,
+        empty=False,
+        bad_assessment_id="",
+        malformed_observation=False,
+        custom_candidates=None,
+    ):
         self.calls = []
         self.empty = empty
         self.bad_assessment_id = bad_assessment_id
+        self.malformed_observation = malformed_observation
+        self.custom_candidates = custom_candidates
+        self.generated_candidates = []
 
     def __call__(self, role, prompt):
         self.calls.append(role)
         if role == "invention_context_observer":
+            if self.malformed_observation and self.calls.count(role) == 1:
+                return {
+                    "input_mode": "idea_seeded",
+                    "stated_intent": "make identity meaningful across the service",
+                    "supplied_ideas": [{"idea": "profile borders"}],
+                    "observed_facts": ["avatars appear in several contexts"],
+                    "inferences": [],
+                    "unknowns": [],
+                    "constraints": [],
+                    "scale": "supporting_system",
+                }
             return {
                 "input_mode": "idea_seeded",
                 "stated_intent": "make identity meaningful across the service",
@@ -32,15 +55,59 @@ class InventionFixture:
                 "dominant_assumptions": ["identity is context independent"],
                 "forbidden_cosmetic_variations": ["renaming borders as auras"],
             }
+        if role == "latent_value_mapper":
+            return {
+                "capabilities": ["avatars are rendered across service surfaces"],
+                "user_value_surfaces": ["identity expression"],
+                "value_capture_surfaces": ["cosmetic ownership"],
+                "orphaned_capabilities": ["surface context is available but does not influence identity presentation"],
+                "missing_bridges": ["contextual identity policy"],
+                "evidence_gaps": ["whether contextual identity improves recognition"],
+            }
         if role == "counterweighted_inventor":
             if self.empty:
-                return {"candidates": [], "search_notes": ["no grounded delta"], "no_discovery_reason": "Only renamed cosmetics survived."}
-            return {"candidates": [self.candidate()], "search_notes": ["shifted from decoration to contextual identity"], "no_discovery_reason": ""}
-        if role == "structural_novelty_adversary":
-            candidate_id = self.bad_assessment_id or "idea-1"
+                return {
+                    "candidates": [],
+                    "search_notes": ["no grounded delta"],
+                    "no_discovery_reason": "Only renamed cosmetics survived.",
+                }
+            candidates = (
+                copy.deepcopy(self.custom_candidates)
+                if self.custom_candidates is not None
+                else [self.candidate()]
+            )
+            self.generated_candidates = candidates
             return {
-                "candidate_assessments": [] if self.empty else [{
-                    "candidate_id": candidate_id,
+                "candidates": candidates,
+                "search_notes": ["shifted from decoration to contextual identity"],
+                "no_discovery_reason": "",
+            }
+        if role == "structural_novelty_adversary":
+            if self.empty:
+                return {
+                    "candidate_assessments": [],
+                    "empty_frontier_reason": "Do not manufacture novelty.",
+                }
+            candidate_ids = []
+            marker = "CANDIDATES:\n"
+            if marker in prompt:
+                candidate_blob = prompt.split(marker, 1)[1]
+                try:
+                    parsed_candidates = json.loads(candidate_blob)
+                    candidate_ids = [
+                        str(candidate.get("candidate_id"))
+                        for candidate in parsed_candidates
+                        if isinstance(candidate, dict) and "candidate_id" in candidate
+                    ]
+                except Exception:
+                    candidate_ids = []
+            if not candidate_ids:
+                candidate_ids = [str(candidate.get("candidate_id")) for candidate in self.generated_candidates if isinstance(candidate, dict)]
+            assessments = []
+            for index, candidate_id in enumerate(candidate_ids):
+                assess_id = self.bad_assessment_id if self.bad_assessment_id and index == 0 else candidate_id
+                assessments.append({
+                    "candidate_id": assess_id,
                     "verdict": "survives",
                     "tests": {
                         "name_removal": "mechanism remains",
@@ -53,13 +120,23 @@ class InventionFixture:
                     "surviving_delta": "identity becomes contextual",
                     "evidence_gap": "role recognition accuracy",
                     "minimum_disconfirming_observation": "people misread roles more often",
-                }],
-                "empty_frontier_reason": "Do not manufacture novelty." if self.empty else "",
+                })
+            return {
+                "candidate_assessments": assessments,
+                "empty_frontier_reason": "",
             }
         if role == "invention_frontier_curator":
+            frontier = [] if self.empty else [
+                {
+                    "candidate_id": "idea-1",
+                    "disposition": "deepen",
+                    "reason": "structural delta survived",
+                    "next_question": "Which surface needs which signal?",
+                },
+            ]
             return {
                 "discovery_status": "no_discovery" if self.empty else "discovered",
-                "frontier": [] if self.empty else [{"candidate_id": "idea-1", "disposition": "deepen", "reason": "structural delta survived", "next_question": "Which surface needs which signal?"}],
+                "frontier": frontier,
                 "synthesis": "No grounded invention." if self.empty else "Treat identity presentation as contextual policy.",
                 "human_decision_required": "Choose whether to deepen the discovery.",
                 "presentation_outline": ["why", "non-obvious discovery", "uncertainty"],
@@ -77,8 +154,15 @@ class InventionFixture:
             "structural_delta": {
                 "baseline_structure": "one user equips one global cosmetic border",
                 "proposed_structure": "the surface resolves an eligible identity signal for its context",
-                "changed_dimensions": ["actors_and_authority", "information_creation_and_ownership"],
-                "causal_chain": ["surface declares its identity need", "policy resolves the relevant signal", "viewer receives less ambiguous context"],
+                "changed_dimensions": [
+                    "actors_and_authority",
+                    "information_creation_and_ownership",
+                ],
+                "causal_chain": [
+                    "surface declares its identity need",
+                    "policy resolves the relevant signal",
+                    "viewer receives less ambiguous context",
+                ],
                 "newly_possible_outcome": "the same person can express personality in chat and responsibility in approval without conflation",
             },
             "composition": {
@@ -87,17 +171,65 @@ class InventionFixture:
                 "emergent_outcome": "one identity can communicate different truthful meanings without forcing one global decoration to carry all semantics",
                 "irreducibility_test": "remove contextual resolution and the result collapses back to a global cosmetic plus separate role labels",
             },
-            "origin": {"type": "mixed", "palamedes_contribution": "separated contextual identity from the supplied border object"},
+            "origin": {
+                "type": "mixed",
+                "palamedes_contribution": "separated contextual identity from the supplied border object",
+            },
             "falsification_condition": "contextual signals do not improve role recognition or increase confusion",
-        }
+    }
+
+
+class InventionBlindGateFixture(InventionFixture):
+    def __call__(self, role, prompt):
+        if role == "invention_blind_origin_judge":
+            self.calls.append(role)
+            return {
+                "blind_assessments": [
+                    {
+                        "candidate_id": "idea-1",
+                        "solution_was_present_in_input": True,
+                        "generic_solution_pack": False,
+                        "reason": "The proposal is already represented in the input and cannot be treated as blind discovery.",
+                    }
+                ],
+                "empty_frontier_reason": "blind gate rejected all candidates",
+            }
+        return super().__call__(role, prompt)
 
 
 class ProductInventionTests(unittest.TestCase):
+    def test_repairs_structured_observation_entries_to_string_lists(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture = InventionFixture(malformed_observation=True)
+            record = run_product_invention(
+                ask=fixture,
+                store=ProductInventionStore(Path(temporary) / "inventions"),
+                context="프로필 테두리에서 기회를 찾아라.",
+            )
+            self.assertEqual(fixture.calls.count("invention_context_observer"), 2)
+            self.assertEqual(record["observation"]["supplied_ideas"], ["profile borders"])
+
+    def test_goal_seeded_origin_is_grounded_and_unverified_default_is_not_claimed(self):
+        candidate = InventionFixture.candidate()
+        candidate["origin"] = {
+            "type": "goal_seeded_larger_opportunity",
+            "palamedes_contribution": "not separately stated; independent contribution remains unverified",
+        }
+        from palamedes_invention import _candidate
+
+        normalized = _candidate(candidate, 0)
+        self.assertEqual(normalized["origin"]["type"], "observation")
+        self.assertFalse(normalized["origin"]["contribution_verified"])
+
     def test_preserves_domain_general_discovery_without_selecting_or_compiling(self):
         with tempfile.TemporaryDirectory() as temporary:
             fixture = InventionFixture()
             store = ProductInventionStore(Path(temporary) / "inventions")
-            record = run_product_invention(ask=fixture, store=store, context="프로필 테두리를 서비스에 구축하고 싶다.")
+            record = run_product_invention(
+                ask=fixture,
+                store=store,
+                context="프로필 테두리를 서비스에 구축하고 싶다.",
+            )
             self.assertEqual(fixture.calls, [
                 "invention_context_observer",
                 "conventional_baseline_mapper",
@@ -148,7 +280,9 @@ class ProductInventionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             store = ProductInventionStore(Path(temporary) / "inventions")
             record = run_product_invention(
-                ask=InventionFixture(), store=store, context="프로필 테두리를 확장하자."
+                ask=InventionFixture(),
+                store=store,
+                context="프로필 테두리를 확장하자.",
             )
             commitment = store.commit("idea-1", "맥락별 정체성 방향을 더 검토한다.")
             self.assertEqual(commitment["product_invention_id"], record["product_invention_id"])
@@ -163,10 +297,14 @@ class ProductInventionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             store = ProductInventionStore(Path(temporary) / "inventions")
             first = run_product_invention(
-                ask=InventionFixture(), store=store, context="같은 탐색 문맥"
+                ask=InventionFixture(),
+                store=store,
+                context="같은 탐색 문맥",
             )
             second = run_product_invention(
-                ask=InventionFixture(), store=store, context="같은 탐색 문맥"
+                ask=InventionFixture(),
+                store=store,
+                context="같은 탐색 문맥",
             )
             self.assertEqual(
                 first["observation_requirements"][0]["observation_requirement_id"],
@@ -183,6 +321,57 @@ class ProductInventionTests(unittest.TestCase):
             self.assertEqual(store.open_observation_requirements(), [])
             rows = (store.root / "observation-requirements.jsonl").read_text().splitlines()
             self.assertEqual(len(rows), 2)
+
+    def test_redundant_candidate_variants_are_pruned_before_adversary(self):
+        from palamedes_invention import _prune_redundant_candidates
+
+        dominant = InventionFixture.candidate()
+        variant = copy.deepcopy(dominant)
+        variant["candidate_id"] = "idea-2"
+        variant["structural_delta"]["changed_dimensions"] = ["actors_and_authority"]
+
+        kept, reduction_logs = _prune_redundant_candidates([dominant, variant])
+        self.assertEqual(len(kept), 1)
+        self.assertEqual(kept[0]["candidate_id"], "idea-1")
+        self.assertEqual(len(reduction_logs), 1)
+        self.assertEqual(reduction_logs[0]["dropped_candidate_id"], "idea-2")
+        self.assertEqual(reduction_logs[0]["dominant_candidate_id"], "idea-1")
+        self.assertEqual(reduction_logs[0]["reason"], "candidate_to_candidate_reduction")
+
+    def test_reduction_log_is_recorded_when_variants_collide(self):
+        dominant = InventionFixture.candidate()
+        variant = copy.deepcopy(dominant)
+        variant["candidate_id"] = "idea-2"
+        variant["structural_delta"]["changed_dimensions"] = ["actors_and_authority"]
+
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture = InventionFixture(custom_candidates=[dominant, variant])
+            record = run_product_invention(
+                ask=fixture,
+                store=ProductInventionStore(Path(temporary) / "inventions"),
+                context="프로필 테두리를 서비스에 구축하고 싶다.",
+            )
+            self.assertEqual(len(record["candidates"]), 1)
+            self.assertEqual(record["candidate_reduction_log"][0]["dropped_candidate_id"], "idea-2")
+            self.assertEqual(record["candidate_reduction_log"][0]["dominant_candidate_id"], "idea-1")
+            self.assertEqual(record["candidate_reduction_log"][0]["reason"], "candidate_to_candidate_reduction")
+
+    def test_blind_gate_can_reject_seeded_or_generic_candidate(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            fixture = InventionBlindGateFixture()
+            record = run_product_invention(
+                ask=fixture,
+                judge_ask=fixture,
+                store=ProductInventionStore(Path(temporary) / "inventions"),
+                context="프로필 테두리를 서비스에 구축하고 싶다.",
+            )
+            self.assertEqual(record["candidates"], [])
+            self.assertEqual(record["frontier"], [])
+            self.assertEqual(record["status"], "no_discovery")
+            self.assertEqual(len(record["blind_gate_reduction_log"]), 1)
+            self.assertTrue(record["candidate_reduction_log"][0]["reason"].startswith("blind_origin_gate"))
+            self.assertIn("invention_blind_origin_judge", fixture.calls)
+            self.assertNotIn("structural_novelty_adversary", fixture.calls)
 
 
 if __name__ == "__main__":
