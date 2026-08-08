@@ -230,7 +230,7 @@ def run_case(transport: Transport, case: Dict[str, Any]) -> Dict[str, Any]:
         )
     elif case_id == "restore-roundtrip":
         record("seed_first", "seed_first", "POST", "/plan", body=case["seed_plan_first"], headers={"Content-Type": "application/json"})
-        first = record("seed_second", "seed_second", "POST", "/plan", body=case["seed_plan_second"], headers={"Content-Type": "application/json"})
+        record("seed_second", "seed_second", "POST", "/plan", body=case["seed_plan_second"], headers={"Content-Type": "application/json"})
         current = record("read_plan", "current", "GET", "/plan")
         record("preview_restore", "preview", "POST", "/restore/preview", body={"previous": True}, headers={"Content-Type": "application/json"})
         record(

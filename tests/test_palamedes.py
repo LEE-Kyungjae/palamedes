@@ -407,7 +407,7 @@ class PalamedesRegressionTests(unittest.TestCase):
                     "expected_fingerprint": base["fingerprint"],
                 },
             )
-            second = palamedes_agent.execute_tool(
+            palamedes_agent.execute_tool(
                 "request_review",
                 {
                     "scope": "plan",
@@ -463,7 +463,7 @@ class PalamedesRegressionTests(unittest.TestCase):
                     "expected_fingerprint": first["fingerprint"],
                 },
             )
-            third = palamedes_agent.execute_tool(
+            palamedes_agent.execute_tool(
                 "request_review",
                 {
                     "scope": "plan",

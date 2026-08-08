@@ -274,7 +274,6 @@ from palamedes_mission import (
     apply_semantic_command,
     run_semantic_command_sequence,
     validate_semantic_command_freeze_lineage,
-    StaticMissionFixtureProvider,
     MissionCycle,
     run_static_fixture_mission_cycle,
     validate_provider_neutral_fixture_first_mission_cycle,

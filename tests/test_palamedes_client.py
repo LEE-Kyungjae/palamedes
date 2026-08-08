@@ -10,7 +10,7 @@ from pathlib import Path
 import palamedes
 from palamedes_host_contract import host_action_contract, required_capabilities_for_action, role_has_action_capabilities
 from palamedes_sdk import PalamedesClient as PackagedPalamedesClient
-from palamedes_client import PalamedesClient, PalamedesClientError, PalamedesClientOperationError, PalamedesConflictError, PalamedesHealthGateError
+from palamedes_client import PalamedesClient, PalamedesClientOperationError, PalamedesConflictError, PalamedesHealthGateError
 from palamedes_server import PalamedesHandler
 
 
