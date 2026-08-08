@@ -128,7 +128,7 @@ INTENT:\n{json.dumps(intent, ensure_ascii=False)}
 ROUTING:\n{json.dumps(routing, ensure_ascii=False)}
 UNKNOWN MAP:\n{json.dumps(unknown_map, ensure_ascii=False)}
 """), "composition")
-    capabilities = _strings(composition.get("capabilities"), "capabilities", 2)
+    _strings(composition.get("capabilities"), "capabilities", 2)
     graph = composition.get("execution_graph")
     if not isinstance(graph, list) or len(graph) < 3:
         raise ValueError("execution graph requires at least three nodes")

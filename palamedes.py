@@ -12,7 +12,9 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from palamedes_store import FilePlanStore, PlanConflictError
+# PlanConflictError is re-exported: palamedes_server and the conformance tests
+# import it from this module, not from palamedes_store.
+from palamedes_store import FilePlanStore, PlanConflictError  # noqa: F401
 
 
 CODE_ROOT = Path(__file__).resolve().parent
@@ -3301,7 +3303,7 @@ def cmd_insight(args: argparse.Namespace) -> None:
     ]
     viewpoints = [
         f"Market view: Which user segment has painful, frequent demand around '{topic}'?",
-        f"Timing view: What changes in the next 3-6 months make this more or less valuable?",
+        "Timing view: What changes in the next 3-6 months make this more or less valuable?",
         "Monetization view: Which willingness-to-pay signal appears earliest?",
         "Constraint view: Which hard limit (time, capital, distribution) will block momentum first?",
         "Risk view: What early signal would prove the direction is wrong?",

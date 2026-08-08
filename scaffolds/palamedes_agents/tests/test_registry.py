@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import importlib.util
 import sys
 import unittest
 from pathlib import Path

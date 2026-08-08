@@ -66,3 +66,19 @@ py-modules = [
 
 [tool.setuptools.packages.find]
 include = ["palamedes_sdk*"]
+
+[tool.ruff]
+target-version = "py39"
+extend-exclude = ["external_repos", "docs"]
+
+[tool.ruff.lint]
+# Start with the rules that catch defects rather than style: E9 is syntax and
+# runtime breakage, F is pyflakes. Formatting rules are deliberately excluded
+# because this codebase predates any formatter and reflowing it would bury real
+# findings in diff noise.
+select = ["E9", "F"]
+
+[tool.ruff.lint.per-file-ignores]
+# The examples exist to show which names a host imports, so their imports are
+# the point even when the snippet does not call them.
+"examples/*" = ["F401"]

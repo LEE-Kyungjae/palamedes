@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import html
 import json
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
@@ -159,11 +158,6 @@ def build_operations_board(state_dir: Path) -> Dict[str, Any]:
             "id": gap.get("gap_id"),
             "summary": str(gap.get("observed_path", "")),
         })
-    terminal_mission_ids = {
-        str(item.get("mission_contract_id", ""))
-        for item in lifecycle["items"]
-        if item.get("projected_state") in {"outcome_recorded", "closed"}
-    }
     active_mission_ids = {
         str(item.get("mission_contract_id", ""))
         for item in lifecycle["items"]

@@ -5,7 +5,7 @@ import palamedes as palamedes_core
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from palamedes_agent import execute_tool, list_tools, natural_language_to_tool
 from palamedes_host_contract import host_action_contract

@@ -6,12 +6,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import subprocess
 import sys
 import uuid
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 
 from palamedes_chat import CodexCliChatProvider, _provider_json
 from palamedes_observe import redact, utc_now
