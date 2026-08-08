@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # pyproject declares requires-python >=3.9, so the oldest supported
+  # interpreter has to parse every module. A 3.12-only syntax feature merged
+  # here would otherwise break `palamedes chat` for anyone on 3.9.
+  compile:
+    name: compile (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Compile every module
+        run: python -m compileall -q . -x '(\.git|__pycache__|external_repos)'
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: make check
+      - run: make schema-check
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pipx install ruff==0.16.2
+      - run: ruff check --output-format github .
+
+  # The py-modules manifest is hand-maintained, so a module can be imported at
+  # runtime and still be missing from the wheel. Installing into a clean
+  # environment and importing from outside the source tree is what catches it.
+  package:
+    name: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install .
+      - name: Import every declared module from outside the source tree
+        working-directory: /tmp
+        run: |
+          python - <<'PY'
+          import importlib
+          import tomllib
+          from pathlib import Path
+
+          manifest = tomllib.loads(
+              Path("${{ github.workspace }}/pyproject.toml").read_text()
+          )
+          modules = manifest["tool"]["setuptools"]["py-modules"]
+          for name in modules:
+              importlib.import_module(name)
+          print(f"imported {len(modules)} declared modules")
+          PY
+      - name: Console scripts start
+        working-directory: /tmp
+        run: |
+          palamedes --help > /dev/null
+          palamedes-server --help > /dev/null
