@@ -78,6 +78,11 @@ jobs:
           for name in modules:
               importlib.import_module(name)
           print(f"imported {len(modules)} declared modules")
+
+          packages = ["palamedes_sdk", "palamedes_mission"]
+          for name in packages:
+              importlib.import_module(name)
+          print(f"imported {len(packages)} declared packages")
           PY
       - name: Console scripts start
         working-directory: /tmp

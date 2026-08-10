@@ -27,7 +27,6 @@ setup(
         "palamedes_host_contract",
         "palamedes_knowledge",
         "palamedes_lifecycle",
-        "palamedes_mission",
         "palamedes_observe",
         "palamedes_observatory",
         "palamedes_invention",
@@ -49,7 +48,7 @@ setup(
         "palamedes_vision_scout",
         "palamedes_vision_benchmark",
     ],
-    packages=["palamedes_sdk", *find_packages(where=AGENTS_SRC)],
+    packages=["palamedes_sdk", "palamedes_mission", *find_packages(where=AGENTS_SRC)],
     package_dir={"palamedes_agents": f"{AGENTS_SRC}/palamedes_agents"},
     package_data={
         "palamedes_agents": [
