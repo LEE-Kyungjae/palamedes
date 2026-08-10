@@ -3102,11 +3102,16 @@ def record_mission_outcome(
     observation: str,
     actual_investment: Optional[Dict[str, Any]] = None,
     outcome_type: str = "",
+    execution_status: str = "completed",
 ) -> Dict[str, Any]:
     if contract.get("status") not in {"approved", "outcome_recorded"}:
         raise ValueError("outcomes require an approved mission")
     if status not in {"success", "failure", "mixed", "unknown"}:
         raise ValueError("outcome status must be success, failure, mixed, or unknown")
+    if execution_status not in {"completed", "failed", "blocked", "skipped"}:
+        raise ValueError(
+            "execution_status must be completed, failed, blocked, or skipped"
+        )
     allowed_types = {
         "validated_improvement", "null_finding", "already_satisfied",
         "adverse_result", "insufficient_evidence", "blocked_by_environment",
@@ -3127,11 +3132,14 @@ def record_mission_outcome(
     mission_id = contract["mission_id"]
     normalized_investment = _normalize_actual_investment(actual_investment)
     outcome = {
-        "outcome_version": "palamedes-mission-outcome/1",
+        "outcome_version": "palamedes-mission-outcome/2",
         "outcome_id": f"outcome-{uuid.uuid4().hex[:12]}",
         "mission_contract_id": mission_id,
         "mission_contract_fingerprint": contract["contract_fingerprint"],
         "recorded_at": ts,
+        "execution_status": execution_status,
+        "evaluation_status": "not_evaluated",
+        "reported_outcome_status": status,
         "status": status,
         "outcome_type": outcome_type,
         "observation": observation,
@@ -3153,6 +3161,8 @@ def record_mission_outcome(
                 "mission_contract_id": mission_id,
                 "outcome_id": outcome["outcome_id"],
                 "outcome_status": status,
+                "execution_status": execution_status,
+                "evaluation_status": "not_evaluated",
                 "outcome_type": outcome_type,
             },
         )
@@ -3164,13 +3174,10 @@ def record_mission_outcome(
         for hypothesis in plan.get("hypothesis_log", []):
             if hypothesis.get("mission_contract_id") == mission_id:
                 hypothesis["outcome"] = observation
-                hypothesis["status"] = (
-                    "validated"
-                    if status == "success"
-                    else "invalidated"
-                    if status == "failure"
-                    else hypothesis.get("status", "open")
-                )
+                # An implementer-reported outcome is evidence for later
+                # evaluation, not an evaluator verdict. Preserve the current
+                # hypothesis state until an explicit evaluation resolves it.
+                hypothesis["status"] = hypothesis.get("status", "open")
 
     palamedes_module.mutate_plan_state(
         apply,
@@ -3182,6 +3189,8 @@ def record_mission_outcome(
                 "mission_contract_id": mission_id,
                 "outcome_id": outcome["outcome_id"],
                 "status": status,
+                "execution_status": execution_status,
+                "evaluation_status": "not_evaluated",
                 "outcome_type": outcome_type,
             }
         ],
@@ -3202,6 +3211,8 @@ def record_mission_outcome(
             "status": "outcome_recorded",
             "latest_outcome_id": outcome["outcome_id"],
             "latest_outcome_status": status,
+            "latest_execution_status": execution_status,
+            "latest_evaluation_status": "not_evaluated",
         }
     )
     mission_store.save_contract(updated)
@@ -6022,6 +6033,9 @@ def run_chat(
                 observation = str(payload.get("observation", "")).strip()
                 actual_investment = payload.get("actual_investment")
                 outcome_type = str(payload.get("outcome_type", "")).strip()
+                execution_status = str(
+                    payload.get("execution_status", "completed")
+                ).strip()
                 if not status or not observation:
                     output.write(
                         "/outcome-json requires status and observation.\n"
@@ -6065,6 +6079,7 @@ def run_chat(
                     observation,
                     actual_investment,
                     outcome_type if text.startswith("/outcome-json") else "",
+                    execution_status if text.startswith("/outcome-json") else "completed",
                 )
             except ValueError as exc:
                 output.write(f"{exc}\n")
@@ -6089,6 +6104,8 @@ def run_chat(
                     "status": "outcome_recorded",
                     "outcome_id": outcome["outcome_id"],
                     "outcome_status": status,
+                    "execution_status": outcome["execution_status"],
+                    "evaluation_status": outcome["evaluation_status"],
                     "outcome_type": outcome["outcome_type"],
                     "outcome_analysis_status": analysis_result["status"],
                 },

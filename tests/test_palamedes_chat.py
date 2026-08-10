@@ -3705,7 +3705,7 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertEqual(
             plan["goal"], "Prove that one mission improves the next action"
         )
-        self.assertEqual(plan["hypothesis_log"][-1]["status"], "validated")
+        self.assertEqual(plan["hypothesis_log"][-1]["status"], "open")
         self.assertEqual(len(plan["hypothesis_log"]), 1)
         self.assertEqual(plan["development_probes"][-1]["status"], "completed")
         self.assertEqual(len(mission_files), 1)
@@ -4380,6 +4380,68 @@ class PalamedesChatTests(unittest.TestCase):
                     "blocked_by_environment",
                 )
         self.assertEqual(outcome["outcome_type"], "blocked_by_environment")
+
+    def test_completed_execution_without_evaluator_remains_not_evaluated(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                mission_store = palamedes_chat.MissionStore(
+                    isolated.STATE_DIR / "missions"
+                )
+                contract = palamedes_chat.validate_mission_draft(
+                    StaticChatProvider._mission_payload()
+                )
+                contract["status"] = "approved"
+                mission_store.save_contract(contract)
+
+                outcome = palamedes_chat.record_mission_outcome(
+                    isolated,
+                    mission_store,
+                    contract,
+                    "success",
+                    "The implementer reports that delivery completed.",
+                    execution_status="completed",
+                )
+
+                stored_contract = mission_store.load_contract(contract["mission_id"])
+                plan = isolated.load_plan()
+
+        self.assertEqual(outcome["execution_status"], "completed")
+        self.assertEqual(outcome["reported_outcome_status"], "success")
+        self.assertEqual(outcome["evaluation_status"], "not_evaluated")
+        self.assertNotIn(
+            "validated",
+            [
+                item.get("status")
+                for item in plan.get("hypothesis_log", [])
+                if item.get("mission_contract_id") == contract["mission_id"]
+            ],
+        )
+        self.assertEqual(
+            stored_contract["latest_evaluation_status"], "not_evaluated"
+        )
+
+    def test_outcome_rejects_invalid_execution_status(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                mission_store = palamedes_chat.MissionStore(
+                    isolated.STATE_DIR / "missions"
+                )
+                contract = palamedes_chat.validate_mission_draft(
+                    StaticChatProvider._mission_payload()
+                )
+                contract["status"] = "approved"
+
+                with self.assertRaisesRegex(ValueError, "execution_status"):
+                    palamedes_chat.record_mission_outcome(
+                        isolated,
+                        mission_store,
+                        contract,
+                        "unknown",
+                        "The host returned an unsupported execution state.",
+                        execution_status="approved",
+                    )
 
     def test_cycle_failure_preserves_partial_artifacts_without_mission(self):
         class FailingAdversaryProvider(StaticChatProvider):
