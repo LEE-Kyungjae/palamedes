@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import copy
 import json
 import sys
 import tempfile
@@ -19,7 +20,23 @@ class StrategyBenchmarkTests(unittest.TestCase):
         self.dataset = json.loads((SCAFFOLD_ROOT / "evals" / "agent-cycle-cases.json").read_text(encoding="utf-8"))
 
     def test_dataset_is_valid(self):
-        self.assertEqual(validate_dataset(self.dataset), [])
+        with tempfile.TemporaryDirectory() as tempdir:
+            dataset = copy.deepcopy(self.dataset)
+            for index, case in enumerate(dataset["cases"]):
+                repository = Path(tempdir) / f"repository-{index}"
+                repository.mkdir()
+                case["repository"] = str(repository)
+
+            self.assertEqual(validate_dataset(dataset), [])
+
+    def test_dataset_rejects_missing_case_repository(self):
+        dataset = copy.deepcopy(self.dataset)
+        dataset["cases"][0]["repository"] = "/definitely/missing/palamedes-benchmark-case"
+
+        self.assertIn(
+            "case repository does not exist: /definitely/missing/palamedes-benchmark-case",
+            validate_dataset(dataset),
+        )
 
     def test_prepare_packet_hides_system_identity_and_key_reveals_it(self):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -28,12 +45,16 @@ class StrategyBenchmarkTests(unittest.TestCase):
             candidate_dir = root / "candidate"
             baseline_dir.mkdir()
             candidate_dir.mkdir()
-            for case in self.dataset["cases"]:
+            dataset = copy.deepcopy(self.dataset)
+            for index, case in enumerate(dataset["cases"]):
+                repository = root / f"repository-{index}"
+                repository.mkdir()
+                case["repository"] = str(repository)
                 (baseline_dir / f"{case['id']}.json").write_text('{"answer":"baseline"}', encoding="utf-8")
                 (candidate_dir / f"{case['id']}.json").write_text('{"answer":"candidate"}', encoding="utf-8")
 
             packet, key = prepare_blind_packet(
-                self.dataset,
+                dataset,
                 baseline_dir=baseline_dir,
                 candidate_dir=candidate_dir,
                 seed="secret-seed",
