@@ -58,3 +58,11 @@ requires three real project cases, at least two blinded preferences over a
 generic baseline, and at least one attributable stop, pivot, or positioning
 decision. Unit tests and schema checks are necessary but do not satisfy this
 product-quality gate.
+
+## Ouroboros boundary comparison
+
+Ouroboros is tracked as a contrasting execution-oriented reference. The
+adopt/adapt/reject review is recorded in
+[`reference-ouroboros.md`](reference-ouroboros.md). Palamedes borrows its
+execution-versus-evaluation distinction and bounded contract patterns, but not
+its Agent OS execution loop.
