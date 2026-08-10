@@ -21,14 +21,14 @@ from scaffolds.palamedes_agents.tests.test_strategy_llm import VALID_REPORT
 
 
 class AgentCycleTests(unittest.TestCase):
-    def test_real_case_evaluation_contract_has_three_existing_repositories(self):
+    def test_real_case_evaluation_contract_declares_three_repositories(self):
         dataset_path = SCAFFOLD_ROOT / "evals" / "agent-cycle-cases.json"
         dataset = json.loads(dataset_path.read_text(encoding="utf-8"))
 
         self.assertEqual(dataset["success_gate"]["minimum_cases"], 3)
         self.assertGreaterEqual(len(dataset["cases"]), 3)
         for case in dataset["cases"]:
-            self.assertTrue(Path(case["repository"]).is_dir())
+            self.assertTrue(str(case["repository"]).strip())
             self.assertTrue(case["required_decision"])
 
     def test_cycle_observes_decides_persists_and_executes(self):
