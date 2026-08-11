@@ -29,6 +29,7 @@ setup(
         "palamedes_lifecycle",
         "palamedes_observe",
         "palamedes_observatory",
+        "palamedes_opportunity",
         "palamedes_invention",
         "palamedes_pursuit",
         "palamedes_workspace",
