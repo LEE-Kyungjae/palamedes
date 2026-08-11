@@ -3330,6 +3330,9 @@ def _print_help(output: TextIO) -> None:
                 "                       resume a failed/interrupted run from verified checkpoints",
                 "  /invent <context>    discover structurally new product possibilities without committing",
                 "  /inventions          show the latest product invention",
+                "  /opportunity <context>",
+                "                       inspect product, growth, revenue, content, social, and risk perspectives",
+                "  /opportunities       show the latest multi-perspective opportunity scan",
                 "  /invent-commit <candidate-id> <reason>  human-select a frontier candidate",
                 "  /invent-observations  list open observation requirements from failed tests",
                 "  /invent-observe <observation-id> <evidence>  resolve one requirement",
@@ -3661,6 +3664,37 @@ def build_autonomous_invention_context(
     return json.dumps(contract, ensure_ascii=False, indent=2, sort_keys=True)
 
 
+def run_autonomous_opportunity_scout(
+    *, provider: ChatProvider, mission_store: MissionStore, context: str
+) -> Dict[str, Any]:
+    from palamedes_opportunity import OpportunityStore, run_opportunity_scout
+
+    opportunity_store = OpportunityStore(mission_store.root.parent / "opportunities")
+    role_usage: List[Dict[str, Any]] = []
+
+    def ask(role: str, prompt: str) -> Dict[str, Any]:
+        try:
+            return _provider_json(
+                provider,
+                system=(
+                    f"ROLE: {role}. Find product-specific strategic opportunities by "
+                    "connecting multiple perspectives. Preserve useful established "
+                    "patterns when their causal fit is grounded. Separate facts, "
+                    "inferences, and hypotheses. Return exactly one JSON object."
+                ),
+                prompt=f"ROLE: {role}\n{prompt}",
+            )
+        finally:
+            role_usage.append(_capture_provider_usage(provider, role))
+
+    record = run_opportunity_scout(
+        ask=ask, store=opportunity_store, context=context
+    )
+    record["provider_usage"] = _provider_usage_summary(provider, role_usage)
+    opportunity_store.save(record)
+    return record
+
+
 def run_autonomous_pursuit(
     *, provider: ChatProvider, mission_store: MissionStore, objective: str
 ) -> Dict[str, Any]:
@@ -3951,6 +3985,45 @@ def render_invention(record: Dict[str, Any]) -> str:
         "",
         "This is an exploration frontier, not a selected plan or implementation instruction.",
         "Human commitment, design, mission approval, and delivery authority remain separate.",
+    ])
+    return "\n".join(lines)
+
+
+def render_opportunity_scout(record: Dict[str, Any]) -> str:
+    critic = record.get("critic", {})
+    assessments = {
+        row.get("opportunity_id"): row
+        for row in critic.get("assessments", [])
+        if isinstance(row, dict)
+    }
+    lines = [
+        f"Opportunity scout: {record.get('opportunity_scout_id', '?')}",
+        f"  status: {record.get('status', '?')}",
+        f"  perspectives inspected: {len(record.get('perspective_findings', []))}",
+        f"  opportunities: {len(record.get('opportunities', []))}",
+    ]
+    summary = str(critic.get("portfolio_summary", "")).strip()
+    if summary:
+        lines.extend(["", summary])
+    top_ids = set(critic.get("top_opportunity_ids", []))
+    for row in record.get("opportunities", []):
+        opportunity_id = row.get("opportunity_id", "?")
+        assessment = assessments.get(opportunity_id, {})
+        marker = "*" if opportunity_id in top_ids else "-"
+        lines.extend([
+            "",
+            f"  {marker} {opportunity_id}: {row.get('title', '')}",
+            f"    type: {row.get('opportunity_type', '?')} / {assessment.get('disposition', '?')}",
+            f"    why: {row.get('observation', '')} → {row.get('current_gap', '')}",
+            f"    mechanism: {row.get('mechanism', '')}",
+            f"    business effect: {row.get('business_effect', '')}",
+            f"    fastest test: {row.get('fastest_test', '')}",
+            f"    failure: {row.get('failure_condition', '')}",
+        ])
+    lines.extend([
+        "",
+        "These are product opportunities and testable business hypotheses, not implementation instructions.",
+        "Planning and delivery authority remain ungranted.",
     ])
     return "\n".join(lines)
 
@@ -5000,6 +5073,52 @@ def run_chat(
                 if latest_invention is not None
                 else "No product invention has been generated.\n"
             )
+            continue
+        if text == "/opportunities":
+            from palamedes_opportunity import OpportunityStore
+
+            latest_opportunity = OpportunityStore(
+                mission_store.root.parent / "opportunities"
+            ).latest()
+            output.write(
+                render_opportunity_scout(latest_opportunity) + "\n"
+                if latest_opportunity is not None
+                else "No opportunity scan has been generated.\n"
+            )
+            continue
+        if text.startswith("/opportunity "):
+            opportunity_context = text[len("/opportunity ") :].strip()
+            if not opportunity_context:
+                output.write("/opportunity requires product context.\n")
+                continue
+            output.write(
+                "Running opportunity scout: product structure → nine perspectives → "
+                "cross-perspective synthesis → reality critique\n"
+            )
+            try:
+                from palamedes_observe import collect_observation, observation_context
+
+                ref_value = os.environ.get("PALAMEDES_REF_ROOT", "").strip()
+                opportunity_observation = collect_observation(
+                    workspace,
+                    ref_root=Path(ref_value).expanduser() if ref_value else None,
+                )
+                grounded_context = json.dumps({
+                    "user_context": opportunity_context,
+                    "bounded_workspace_context": observation_context(opportunity_observation),
+                }, ensure_ascii=False, sort_keys=True)
+                opportunity_record = run_autonomous_opportunity_scout(
+                    provider=provider,
+                    mission_store=mission_store,
+                    context=grounded_context,
+                )
+            except (OSError, RuntimeError, ValueError) as exc:
+                output.write(f"[opportunity scout error] {exc}\n")
+                continue
+            output.write(render_opportunity_scout(opportunity_record) + "\n")
+            continue
+        if text == "/opportunity":
+            output.write("/opportunity requires product context.\n")
             continue
         if text == "/invent-observations":
             from palamedes_invention import ProductInventionStore

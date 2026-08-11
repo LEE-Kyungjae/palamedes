@@ -1461,6 +1461,26 @@ python3 palamedes.py observatory --limit 200 --json
 
 ## Product Invention
 
+### Multi-perspective opportunity scouting
+
+Use `/opportunity <context>` when Palamedes should proactively inspect a product for
+retention, monetization, content, social, operational, distribution, platform, and risk
+opportunities. `/opportunities` shows the latest scan. The scout maps product structure,
+rotates through nine perspectives, connects at least two perspectives per opportunity,
+and challenges the resulting causal and business hypotheses.
+
+The scout deliberately preserves established patterns such as battle passes,
+subscriptions, bundles, seasons, marketplaces, or referral loops when the observed
+product structure gives them a specific causal fit. It labels conventionality instead of
+confusing novelty with usefulness. Every result states the observation, latent need,
+current gap, mechanism, expected behavior change, business effect, fastest test, and
+failure condition. The result grants neither planning nor delivery authority.
+
+```text
+/opportunity 반복 플레이는 있지만 장기 진행과 반복 매출 구조가 약한 게임을 검토해라.
+/opportunities
+```
+
 `/cycle` remains the bounded product-audit and mission-selection path. Use
 `/invent <context>` when Palamedes must discover product possibilities or pressure
 an idea before any commitment, design, or delivery planning:
