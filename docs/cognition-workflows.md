@@ -11,6 +11,7 @@ and execution authority are different operations.
 
 ```text
 /cycle <context>
+/cycle --mode product <context>
 ```
 
 Component and audit cycles run context governor, interpreter, inventor, adversary,
@@ -21,14 +22,46 @@ candidate; a sanitized selector can choose but cannot rewrite it. The host alone
 issues a draft from the selected frozen substance. `/approve` and delivery authority
 remain separate.
 
+The frozen evidence bundle has a host-derived mission claim ledger. Only direct
+observations and host-verified records enter it, preserving the bounded source
+wording, confidence, and custody. An inventor can cite an ID but cannot replace that
+source wording with its own demand or revenue claim. Advisory interpretations,
+hypotheses, unknowns, and reference code remain useful context but are not
+mission-citable. When a frozen v1 cycle is resumed, the host verifies its original v1
+fingerprint before deriving the v2 ledger; legacy transfer mappings that predate the
+source-support contract are excluded rather than silently upgraded.
+
 Before a product cycle, Palamedes can query other GitNexus-indexed repositories by
 operational pressure rather than feature name. Every accepted source is tied to a
 repository path, full revision, symbol range, committed-file hash, and excerpt hash.
+A persisted packet is re-read with `git show <revision>:<path>` at bundle ingestion;
+self-consistent packet hashes alone are not repository proof. Source-claim anchors
+must be exact bounded excerpt members, but that check proves citation membership—not
+that the excerpt semantically entails the model's interpretation. Git re-verification
+proves the committed file and range, not the historical GitNexus ranking or semantic
+symbol classification.
 A transfer must explain `source pressure → causal mechanism/invariant → target pressure
 → adaptation → limits`, cite both source and local target evidence, state material
 differences, and deny design, selection, delivery, and code-reuse authority. If this
 evidence is missing or degraded, the architecture role abstains instead of inventing a
-predecessor.
+predecessor. Raw GitNexus excerpts alone never enter the v3 analogist partition: only
+a `palamedes-architecture-transfer/2` mapping that passes source, target, difference,
+limitation, and authority validation is eligible. Stale indexes, unavailable
+repositories, partial
+queries, and revision drift are recorded as degradations; one bad repository does not
+authorize fabrication or erase independently verified sources.
+
+Architecture query/design calls occur before the visible product roles, but they are
+still paid cycle work. Their provider identity, attempts, and token usage are stored as
+precycle artifacts and consume the same cycle budget. Provider exceptions and invalid
+JSON/schema attempts are retained as rejected paid artifacts instead of disappearing
+from usage accounting. Resume keeps the original provider/model identity and frozen
+budget rather than relabelling the cycle.
+
+Candidate-required approvals and probe authority preconditions compile into sealed,
+unresolved specialized authority gates. A selected bounded probe may become a reviewable
+draft, but generic `/approve` cannot satisfy those specialized gates or authorize price,
+rewards, launch, implementation, or delivery.
 
 ## Opportunity Scout
 

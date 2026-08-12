@@ -11,16 +11,22 @@
     {
       "source_id": "control-one-session-use",
       "evidence_kind": "observed_system_fact",
+      "epistemic_class": "direct_observation",
+      "decision_authority": "mission_citable",
       "observation": "The product is a self-contained narrative designed to be completed once without an account."
     },
     {
       "source_id": "control-static-content",
       "evidence_kind": "observed_capacity",
+      "epistemic_class": "direct_observation",
+      "decision_authority": "mission_citable",
       "observation": "Content is finalized annually and there is no ongoing content or operations capacity."
     },
     {
       "source_id": "control-license-policy",
       "evidence_kind": "product_constraint",
+      "epistemic_class": "direct_observation",
+      "decision_authority": "mission_citable",
       "observation": "The lifetime license explicitly prohibits follow-on paid items and behavioral engagement mechanics."
     }
   ],
@@ -29,6 +35,8 @@
       {
         "source_id": "control-no-repeat-signal",
         "evidence_kind": "telemetry",
+        "epistemic_class": "direct_observation",
+        "decision_authority": "mission_citable",
         "observation": "There is no observed repeat-use loop, account identity, returning cohort, or unfinished cross-session need."
       }
     ],

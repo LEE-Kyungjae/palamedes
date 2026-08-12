@@ -760,7 +760,66 @@ def _cycle_paid_artifacts(cycle: Dict[str, Any]) -> List[Dict[str, Any]]:
     schema retries. Usage reporting and budget accounting must agree on this
     set or the enforced ceiling drifts from the reported cost.
     """
-    return list(cycle.get("artifacts", [])) + list(cycle.get("rejected_artifacts", []))
+    return (
+        list(cycle.get("precycle_artifacts", []))
+        + list(cycle.get("artifacts", []))
+        + list(cycle.get("rejected_artifacts", []))
+    )
+
+
+def _precycle_usage_artifacts(
+    provider_usage: Optional[Dict[str, Any]],
+    *,
+    provider: ChatProvider,
+) -> List[Dict[str, Any]]:
+    """Turn preparation-stage usage into cycle-owned, budgeted call records."""
+
+    if provider_usage is None:
+        return []
+    if not isinstance(provider_usage, dict):
+        raise ValueError("precycle provider usage must be an object")
+    if (
+        provider_usage.get("provider") != provider.provider_name
+        or provider_usage.get("model") != provider.model
+    ):
+        raise ValueError("precycle provider usage identity does not match the cycle")
+    roles = provider_usage.get("roles")
+    if not isinstance(roles, list):
+        raise ValueError("precycle provider usage roles must be an array")
+    artifacts: List[Dict[str, Any]] = []
+    for index, row in enumerate(roles):
+        if not isinstance(row, dict):
+            raise ValueError("precycle provider usage role must be an object")
+        role = str(row.get("role", "")).strip()
+        custody = str(row.get("custody", "unmetered")).strip()
+        usage = row.get("usage", {})
+        if not role or custody not in {"provider_reported", "unmetered"}:
+            raise ValueError("precycle provider usage role is malformed")
+        if not isinstance(usage, dict):
+            raise ValueError("precycle provider usage tokens must be an object")
+        artifact: Dict[str, Any] = {
+            "role": role,
+            "call_index": index + 1,
+            "provider": provider.provider_name,
+            "model": provider.model,
+            "usage_custody": custody,
+            "precycle": True,
+            "attempted": True,
+        }
+        normalized_usage = _normalize_token_usage(usage)
+        if normalized_usage:
+            artifact["provider_usage"] = normalized_usage
+        if isinstance(row.get("json_custody"), dict):
+            artifact["json_custody"] = dict(row["json_custody"])
+        artifacts.append(artifact)
+    attempted_calls = provider_usage.get("attempted_calls")
+    if (
+        not isinstance(attempted_calls, int)
+        or isinstance(attempted_calls, bool)
+        or attempted_calls != len(artifacts)
+    ):
+        raise ValueError("precycle attempted-call count does not match its role records")
+    return artifacts
 
 
 def _cycle_budget_spent(cycle: Dict[str, Any]) -> Tuple[int, int]:
@@ -809,6 +868,53 @@ def _budget_overrun_message(
         + "; ".join(overruns)
         + " · the preflight ceiling gates starting a role and cannot cap the "
         "cost of a role already started"
+    )
+
+
+def _record_cycle_budget_accounting(
+    cycle: Dict[str, Any],
+    budget: Optional[Dict[str, Any]],
+    *,
+    progress: Optional[Callable[[str], None]] = None,
+) -> None:
+    """Persist and disclose post-call budget state before checkpoint/final save."""
+
+    if not isinstance(budget, dict):
+        return
+    spent_calls, spent_tokens = _cycle_budget_spent(cycle)
+    overrun = _budget_overrun_message(cycle, budget)
+    previous = cycle.get("budget_accounting")
+    previous_message = (
+        str(previous.get("overrun_message", ""))
+        if isinstance(previous, dict)
+        else ""
+    )
+    cycle["budget_accounting"] = {
+        "provider_calls_spent": spent_calls,
+        "tokens_spent": spent_tokens,
+        "provider_calls_max": budget.get("provider_calls_max"),
+        "token_budget_high": budget.get("token_budget_high"),
+        "status": "overrun" if overrun else "within_preflight_ceiling",
+        "overrun_message": overrun or "",
+    }
+    if overrun and overrun != previous_message and progress:
+        progress(f"[{cycle.get('cognition_cycle_id', '?')}] {overrun}")
+
+
+def _prompt_with_schema_repair(prompt: str, error: str) -> str:
+    """Insert repair guidance before the terminal host-owned JSON packet."""
+
+    marker = "\n\nHOST_PACKET_JSON:\n"
+    if marker not in prompt:
+        raise ValueError("schema-repair prompt has no terminal HOST_PACKET_JSON")
+    prefix, host_packet = prompt.rsplit(marker, 1)
+    return (
+        prefix
+        + "\n\nThe previous response at this exact invocation was rejected by "
+        + f"the host contract: {error}\nReturn a corrected object without "
+        + "changing sound product substance or inventing evidence."
+        + marker
+        + host_packet
     )
 
 
@@ -1613,15 +1719,14 @@ def _compile_partitioned_product_contract(
     claim_source_ids = scope.get("claim_source_ids", [])
     if not isinstance(claim_source_ids, list) or not claim_source_ids:
         raise ValueError("host-issued product draft has no bounded evidence lineage")
-    mission_allowlist = set(
-        evidence_bundle.get("citation_allowlists", {}).get(
-            "mission_source_ids", []
-        )
+    from palamedes_evidence_bundle import project_mission_evidence
+
+    projected_evidence = project_mission_evidence(
+        evidence_bundle,
+        claim_source_ids,
+        strict=False,
     )
-    citable_claim_source_ids = [
-        source_id for source_id in claim_source_ids if source_id in mission_allowlist
-    ]
-    if not citable_claim_source_ids:
+    if not projected_evidence:
         raise ValueError(
             "host-issued product draft has no mission-citable evidence source"
         )
@@ -1640,8 +1745,52 @@ def _compile_partitioned_product_contract(
         if isinstance(row, dict) and str(row.get("early_signal", "")).strip()
     ]
     required_approvals = authority.get("required_approvals", [])
+    authority_preconditions = probe.get("authority_preconditions", [])
     if not isinstance(required_approvals, list):
         raise ValueError("candidate authority approvals must be an array")
+    if not isinstance(authority_preconditions, list):
+        raise ValueError("candidate action-probe authority preconditions must be an array")
+    authority_gate_rows = []
+    for gate_kind, source_path, requirements in (
+        (
+            "required_approval",
+            "candidate.authority.required_approvals",
+            required_approvals,
+        ),
+        (
+            "action_probe_authority_precondition",
+            "candidate.action_probe.authority_preconditions",
+            authority_preconditions,
+        ),
+    ):
+        for requirement in requirements:
+            if not isinstance(requirement, str) or not requirement.strip():
+                raise ValueError(
+                    "candidate specialized authority gates must be non-empty strings"
+                )
+            normalized_requirement = requirement.strip()
+            gate_identity = {
+                "candidate_id": candidate_id,
+                "gate_kind": gate_kind,
+                "requirement": normalized_requirement,
+                "source_path": source_path,
+            }
+            authority_gate_rows.append(
+                {
+                    "gate_id": f"authority-gate-{_fingerprint(gate_identity)[:12]}",
+                    "gate_kind": gate_kind,
+                    "requirement": normalized_requirement,
+                    "source_path": source_path,
+                    "status": "unresolved",
+                }
+            )
+    authority_gate_contract = {
+        "gate_contract_version": "palamedes-specialized-authority-gates/1",
+        "status": "unresolved" if authority_gate_rows else "clear",
+        "generic_mission_approval_satisfies": False,
+        "resolution_path_status": "not_implemented",
+        "gates": authority_gate_rows,
+    }
     transfer_limits: List[str] = []
     architecture = candidate.get("architecture_transfer")
     if isinstance(architecture, dict):
@@ -1656,15 +1805,23 @@ def _compile_partitioned_product_contract(
         if limit:
             transfer_limits.append(limit)
 
-    observed_signal = str(candidate.get("observed_signal", "")).strip()
     evidence = [
         {
-            "claim": observed_signal,
-            "source": str(source_id).strip(),
-            "confidence": 65,
+            "claim": row["claim"],
+            "source": row["source"],
+            "confidence": row["confidence"],
         }
-        for source_id in citable_claim_source_ids
-        if str(source_id).strip()
+        for row in projected_evidence
+    ]
+    mission_evidence_custody = [
+        {
+            "source": row["source"],
+            "epistemic_class": row["epistemic_class"],
+            "claim_payload": row["claim_payload"],
+            "custody": row["custody"],
+            "source_record_fingerprint": row["source_record_fingerprint"],
+        }
+        for row in projected_evidence
     ]
     causal_chain = business.get("causal_chain", [])
     if not isinstance(causal_chain, list):
@@ -1681,6 +1838,10 @@ def _compile_partitioned_product_contract(
         str(authority.get("escalation_trigger", "")).strip(),
         str(burden.get("capacity_or_cost_limit", "")).strip(),
         *(f"Required approval: {item}" for item in required_approvals),
+        *(
+            f"Action-probe authority precondition: {item}"
+            for item in authority_preconditions
+        ),
         *transfer_limits,
     ]
     constraints = list(dict.fromkeys(item for item in constraints if item))
@@ -1693,6 +1854,76 @@ def _compile_partitioned_product_contract(
     mechanism = str(candidate.get("product_mechanism", "")).strip()
     business_effect = str(business.get("revenue_or_value_effect", "")).strip()
     title = str(candidate.get("title", "")).strip()
+
+    trusted_scope_keys: set[str] = set()
+    trusted_scope_sources: set[str] = set()
+
+    def add_trusted_surface(value: Any, source_id: Any) -> None:
+        surface = str(value or "").strip()
+        if not surface or surface.lower() in {"global", "all", "*", "unknown"}:
+            return
+        if surface.startswith("surface:"):
+            scope_key = surface
+        else:
+            scope_key = f"surface:{surface}"
+        trusted_scope_keys.add(scope_key)
+        if str(source_id or "").strip():
+            trusted_scope_sources.add(str(source_id).strip())
+
+    authority_context = evidence_bundle.get("authority_context", {})
+    if isinstance(authority_context, dict):
+        for lane, id_field in (
+            ("purposes", "purpose_id"),
+            ("constraints", "constraint_id"),
+        ):
+            rows = authority_context.get(lane, [])
+            if not isinstance(rows, list):
+                continue
+            for row in rows:
+                if not isinstance(row, dict):
+                    continue
+                if str(row.get("status", "active")).strip() not in {
+                    "active",
+                    "approved",
+                    "",
+                }:
+                    continue
+                add_trusted_surface(row.get("scope"), row.get(id_field))
+    for item in evidence_bundle.get("product_signals", []):
+        if not isinstance(item, dict):
+            continue
+        if item.get("decision_authority") != "mission_citable":
+            continue
+        if item.get("epistemic_class") not in {
+            "direct_observation",
+            "host_verified",
+        }:
+            continue
+        if item.get("freshness") != "current":
+            continue
+        item_id = item.get("item_id")
+        for scope_key in item.get("scope_keys", []):
+            add_trusted_surface(scope_key, item_id)
+        payload = item.get("payload")
+        if isinstance(payload, dict) and item.get("kind") in {
+            "capability",
+            "integration_gap",
+        }:
+            add_trusted_surface(payload.get("surface_key"), item_id)
+    surface_keys = sorted(
+        key.removeprefix("surface:")
+        for key in trusted_scope_keys
+        if key.startswith("surface:")
+    )
+    trusted_surface_key = surface_keys[0] if len(surface_keys) == 1 else ""
+    scope_custody = {
+        "scope_status": (
+            "derived_from_trusted_bundle" if trusted_scope_keys else "unknown"
+        ),
+        "derivation_authority": "host_only",
+        "candidate_scope_accepted": False,
+        "source_ids": sorted(trusted_scope_sources),
+    }
 
     raw_contract = {
         "mission": f"Run the bounded opportunity probe for {title}.",
@@ -1746,10 +1977,12 @@ def _compile_partitioned_product_contract(
         # scale at component prevents a speculative idea from masquerading as a
         # full product build while still preserving strategic lineage.
         "work_scale": "component",
-        "surface_key": "product-opportunity",
-        "scope_keys": ["surface:product-opportunity"],
+        "surface_key": trusted_surface_key,
+        "scope_keys": sorted(trusted_scope_keys),
     }
     contract = validate_mission_draft(raw_contract)
+    contract["specialized_authority_gates"] = authority_gate_contract
+    contract["scope_custody"] = scope_custody
     cognition_lineage = {
         "protocol_version": cognition.get("protocol_version", ""),
         "evidence_bundle_id": evidence_bundle.get("bundle_id", ""),
@@ -1764,6 +1997,10 @@ def _compile_partitioned_product_contract(
         "host_issuance_authority": True,
         "planning_authority_granted": False,
         "delivery_authority_granted": False,
+        "mission_evidence_custody": mission_evidence_custody,
+        "specialized_authority_gate_fingerprint": _fingerprint(
+            authority_gate_contract
+        ),
     }
     contract["cognition_cycle_id"] = cycle_id
     contract["selected_candidate_id"] = candidate_id
@@ -1785,6 +2022,8 @@ def _compile_partitioned_product_contract(
             "draft_fingerprint": contract["contract_fingerprint"],
             "product_cognition_lineage": cognition_lineage,
             "role_lineage": contract["role_lineage"],
+            "specialized_authority_gates": authority_gate_contract,
+            "scope_custody": scope_custody,
         }
     )
     contract["mission_id"] = f"mission-{governance_fingerprint[:12]}"
@@ -1840,13 +2079,16 @@ def render_partitioned_product_cognition(cycle: Dict[str, Any]) -> str:
             lines.append(
                 f"  abstained {abstention.get('role', '?')}: {abstention.get('reason', '')}"
             )
-    lines.extend(
-        [
-            "",
-            "The selected result is a host-issued draft copied from frozen substance.",
-            "Human mission approval and delivery authority remain separate.",
-        ]
-    )
+    lines.append("")
+    if decision.get("mode") == "commit":
+        lines.append(
+            "The selected result is a host-issued draft copied from frozen substance."
+        )
+    else:
+        lines.append(
+            "No candidate was selected; surfaced frozen substance remains advisory."
+        )
+    lines.append("Human mission approval and delivery authority remain separate.")
     return "\n".join(lines)
 
 
@@ -1861,6 +2103,8 @@ def run_partitioned_product_cycle(
     progress: Optional[Callable[[str], None]] = None,
     schema_retry_limit: int = 1,
     resume_cycle_id: str = "",
+    precycle_provider_usage: Optional[Dict[str, Any]] = None,
+    preparation_input_bundle_id: str = "",
 ) -> Dict[str, Any]:
     """Run product-only v3 cognition with persistent provider checkpoints."""
 
@@ -1869,13 +2113,19 @@ def run_partitioned_product_cycle(
         run_partitioned_product_cognition,
         thaw,
     )
-    from palamedes_evidence_bundle import validate_cognition_evidence_bundle
+    from palamedes_evidence_bundle import (
+        upgrade_cognition_evidence_bundle_v1,
+        validate_cognition_evidence_bundle,
+    )
 
     if not isinstance(schema_retry_limit, int) or isinstance(schema_retry_limit, bool):
         raise ValueError("schema_retry_limit must be an integer")
     if not 0 <= schema_retry_limit <= 1:
         raise ValueError("schema_retry_limit must be 0 or 1")
-    validate_cognition_evidence_bundle(evidence_bundle)
+    if evidence_bundle.get("bundle_version") == "palamedes-cognition-evidence/1":
+        evidence_bundle = upgrade_cognition_evidence_bundle_v1(evidence_bundle)
+    else:
+        validate_cognition_evidence_bundle(evidence_bundle)
     seed = {
         "protocol": "palamedes-partitioned-product-cognition/3",
         "context": context,
@@ -1885,29 +2135,155 @@ def run_partitioned_product_cycle(
     }
     cycle_id = f"cycle-{_fingerprint(seed)[:12]}"
     if resume_cycle_id:
-        if resume_cycle_id != cycle_id:
-            existing = cycle_store.load(resume_cycle_id)
-            preserved = existing.get("evidence_bundle")
-            if not isinstance(preserved, dict):
-                raise ValueError("resumed product cycle has no frozen evidence bundle")
-            if evidence_bundle.get("bundle_id") != preserved.get("bundle_id"):
-                raise ValueError("resume must use the product cycle's frozen evidence bundle")
-            context = str(existing.get("context", ""))
-            seed["context"] = context
-            cycle_id = resume_cycle_id
-        else:
-            existing = cycle_store.load(cycle_id)
+        existing = cycle_store.load(resume_cycle_id)
+        cycle_id = resume_cycle_id
     else:
         path = cycle_store.path(cycle_id)
         existing = cycle_store.load(cycle_id) if path.is_file() else None
+    existing_bundle_upgraded = False
+    if existing:
+        if (
+            existing.get("cognition_cycle_version")
+            != "palamedes-product-cognition-cycle/3"
+        ):
+            raise ValueError("cycle ID collides with an incompatible cognition protocol")
+        if (
+            existing.get("provider") != provider.provider_name
+            or existing.get("model") != provider.model
+        ):
+            raise ValueError(
+                "resume provider and model must match the original product cycle"
+            )
+        for artifact_lane in (
+            "precycle_artifacts",
+            "artifacts",
+            "rejected_artifacts",
+        ):
+            artifacts = existing.get(artifact_lane, [])
+            if not isinstance(artifacts, list) or any(
+                not isinstance(artifact, dict)
+                or artifact.get("provider") != existing.get("provider")
+                or artifact.get("model") != existing.get("model")
+                for artifact in artifacts
+            ):
+                raise ValueError(
+                    "resumed product cycle contains mixed or malformed provider artifacts"
+                )
+        if resume_cycle_id:
+            preserved = existing.get("evidence_bundle")
+            if not isinstance(preserved, dict):
+                raise ValueError("resumed product cycle has no frozen evidence bundle")
+            if preserved.get("bundle_version") == "palamedes-cognition-evidence/1":
+                preserved = upgrade_cognition_evidence_bundle_v1(preserved)
+                legacy_contract = existing.pop("compiled_contract", None)
+                existing["evidence_bundle"] = preserved
+                existing["evidence_bundle_id"] = preserved["bundle_id"]
+                existing["evidence_bundle_status"] = "frozen_verified_upgraded_v1"
+                existing["legacy_v1_draft_invalidation"] = {
+                    "status": "invalidated",
+                    "reason": (
+                        "v1 mission citations admitted advisory sources and cannot be "
+                        "returned under the v2 host claim ledger"
+                    ),
+                    "contract_fingerprint": (
+                        str(legacy_contract.get("contract_fingerprint", ""))
+                        if isinstance(legacy_contract, dict)
+                        else ""
+                    ),
+                }
+                legacy_active_artifacts = existing.get("artifacts", [])
+                if not isinstance(legacy_active_artifacts, list):
+                    raise ValueError("legacy v1 product artifacts are malformed")
+                invalidated_at = utc_now()
+                for artifact in legacy_active_artifacts:
+                    invalidated = dict(artifact)
+                    invalidated["legacy_contract_invalidation"] = {
+                        "status": "invalidated",
+                        "reason": (
+                            "evidence contract upgraded from v1 to v2; this paid output "
+                            "cannot be reused against a changed host packet"
+                        ),
+                        "invalidated_at": invalidated_at,
+                    }
+                    existing.setdefault("rejected_artifacts", []).append(invalidated)
+                existing["artifacts"] = []
+                existing_bundle_upgraded = True
+            else:
+                validate_cognition_evidence_bundle(preserved)
+            if evidence_bundle.get("bundle_id") != preserved.get("bundle_id"):
+                raise ValueError(
+                    "resume must use the product cycle's frozen evidence bundle"
+                )
+            evidence_bundle = preserved
+            context = str(existing.get("context", ""))
+            if not context:
+                raise ValueError("resumed product cycle has no preserved context")
+            if precycle_provider_usage is not None:
+                raise ValueError(
+                    "resume cannot attach new preparation calls to a frozen product cycle"
+                )
+            preserved_budget = existing.get("budget")
+            if not isinstance(preserved_budget, dict):
+                preserved_budget = {}
+            if budget is not None and dict(budget) != preserved_budget:
+                raise ValueError(
+                    "resume budget must exactly match the original product cycle"
+                )
+            budget = dict(preserved_budget)
+
+    supplied_precycle_artifacts = _precycle_usage_artifacts(
+        precycle_provider_usage,
+        provider=provider,
+    )
     if existing and existing.get("status") in {"selected", "defer", "reject"}:
+        if existing_bundle_upgraded:
+            cycle_store.save(existing)
+            raise ValueError(
+                "legacy v1 terminal draft invalidated; run a new product cycle"
+            )
+        if supplied_precycle_artifacts:
+            start_index = len(_cycle_paid_artifacts(existing))
+            attached = []
+            for offset, artifact in enumerate(supplied_precycle_artifacts, start=1):
+                row = dict(artifact)
+                row["call_index"] = start_index + offset
+                row["precycle_attempt_ordinal"] = (
+                    sum(
+                        1
+                        for prior in existing.get("precycle_artifacts", [])
+                        if prior.get("role") == row.get("role")
+                    )
+                    + offset
+                )
+                row["attached_after_completed_dedup"] = True
+                attached.append(row)
+            existing.setdefault("precycle_artifacts", []).extend(attached)
+            existing["live_model_call_count"] = _cycle_budget_spent(existing)[0]
+            existing["provider_usage"] = _cognition_usage_summary(
+                provider, _cycle_paid_artifacts(existing)
+            )
+            _record_cycle_budget_accounting(
+                existing,
+                existing.get("budget"),
+                progress=progress,
+            )
+            cycle_store.save(existing)
         return {
             "cycle": existing,
             "contract": existing.get("compiled_contract"),
         }
-    if existing and existing.get("cognition_cycle_version") != "palamedes-product-cognition-cycle/3":
-        raise ValueError("cycle ID collides with an incompatible cognition protocol")
-
+    if existing:
+        preserved_precycle_artifacts = existing.get("precycle_artifacts", [])
+        if not isinstance(preserved_precycle_artifacts, list):
+            raise ValueError("product cycle precycle artifacts are malformed")
+        if (
+            supplied_precycle_artifacts
+            and supplied_precycle_artifacts != preserved_precycle_artifacts
+        ):
+            raise ValueError("product cycle preparation usage changed after creation")
+        precycle_artifacts = list(preserved_precycle_artifacts)
+    else:
+        precycle_artifacts = supplied_precycle_artifacts
     cycle: Dict[str, Any] = {
         "cognition_cycle_version": "palamedes-product-cognition-cycle/3",
         "cognition_cycle_id": cycle_id,
@@ -1918,10 +2294,20 @@ def run_partitioned_product_cycle(
         "context": context,
         "evidence_bundle": evidence_bundle,
         "evidence_bundle_id": evidence_bundle["bundle_id"],
-        "evidence_bundle_status": "frozen_verified",
+        "evidence_bundle_status": (
+            str(existing.get("evidence_bundle_status", "frozen_verified"))
+            if existing
+            else "frozen_verified"
+        ),
         "started_at": existing.get("started_at", utc_now()) if existing else utc_now(),
         "provider": provider.provider_name,
         "model": provider.model,
+        "budget": dict(budget) if isinstance(budget, dict) else {},
+        "preparation_input_bundle_id": (
+            str(existing.get("preparation_input_bundle_id", ""))
+            if existing
+            else str(preparation_input_bundle_id).strip()
+        ),
         "role_order": [
             "product_opportunity_inventor",
             "cross_domain_architecture_analogist",
@@ -1929,6 +2315,7 @@ def run_partitioned_product_cycle(
             "blinded_product_cognition_adversary",
             "product_cognition_selector",
         ],
+        "precycle_artifacts": precycle_artifacts,
         "artifacts": list(existing.get("artifacts", [])) if existing else [],
         "rejected_artifacts": list(existing.get("rejected_artifacts", [])) if existing else [],
         "outcome_analyses": list(existing.get("outcome_analyses", [])) if existing else [],
@@ -1936,6 +2323,7 @@ def run_partitioned_product_cycle(
         "host_issuance_authority": True,
         "outcome_analyst_runs_before_outcome": False,
     }
+    _record_cycle_budget_accounting(cycle, budget, progress=progress)
     cycle_store.save(cycle)
     common, partitions, constitution = partition_cognition_evidence_bundle(
         evidence_bundle
@@ -1955,12 +2343,18 @@ def run_partitioned_product_cycle(
         active_role = role
         active_role_was_fresh = False
         prior_error = (retry_feedback or {}).get(invocation_key, "")
-        if prior_error:
-            prompt += (
-                "\n\nThe previous response at this exact invocation was rejected by "
-                f"the host contract: {prior_error}\nReturn a corrected object without "
-                "changing sound product substance or inventing evidence."
+        if not prior_error:
+            prior_error = next(
+                (
+                    str(row.get("rejection_reason", "")).strip()
+                    for row in reversed(cycle["rejected_artifacts"])
+                    if row.get("invocation_key") == invocation_key
+                    and str(row.get("rejection_reason", "")).strip()
+                ),
+                "",
             )
+        if prior_error:
+            prompt = _prompt_with_schema_repair(prompt, prior_error)
         prompt_fp = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
         for artifact in cycle["artifacts"]:
             if artifact.get("invocation_key") != invocation_key:
@@ -1992,15 +2386,48 @@ def run_partitioned_product_cycle(
             progress(f"[{cycle_id}] {invocation_key} started")
         started_at = utc_now()
         started = time.monotonic()
-        output = _provider_json(
-            provider,
-            system=(
-                "You are one isolated role in Palamedes product cognition v3. "
-                "Return exactly one JSON object. Use only the host packet and do "
-                "not claim planning or delivery authority."
-            ),
-            prompt=prompt,
-        )
+        fresh_call_count += 1
+        active_role_was_fresh = True
+        try:
+            output = _provider_json(
+                provider,
+                system=(
+                    "You are one isolated role in Palamedes product cognition v3. "
+                    "Return exactly one JSON object. Use only the host packet and do "
+                    "not claim planning or delivery authority."
+                ),
+                prompt=prompt,
+            )
+        except Exception as exc:
+            duration_ms = round((time.monotonic() - started) * 1000)
+            usage = _capture_provider_usage(provider, role)
+            failed_artifact: Dict[str, Any] = {
+                "role": role,
+                "invocation_key": invocation_key,
+                "call_index": len(_cycle_paid_artifacts(cycle)) + 1,
+                "provider": provider.provider_name,
+                "model": provider.model,
+                "started_at": started_at,
+                "failed_at": utc_now(),
+                "duration_ms": duration_ms,
+                "prompt_fingerprint": prompt_fp,
+                "failure": str(exc),
+                "usage_custody": usage["custody"],
+                "attempted": True,
+            }
+            if isinstance(exc, ValueError):
+                failed_artifact["rejection_reason"] = str(exc)
+            if usage["usage"]:
+                failed_artifact["provider_usage"] = usage["usage"]
+            if isinstance(usage.get("json_custody"), dict):
+                failed_artifact["json_custody"] = usage["json_custody"]
+            cycle["rejected_artifacts"].append(failed_artifact)
+            cycle["provider_usage"] = _cognition_usage_summary(
+                provider, _cycle_paid_artifacts(cycle)
+            )
+            _record_cycle_budget_accounting(cycle, budget, progress=progress)
+            cycle_store.save(cycle)
+            raise
         duration_ms = round((time.monotonic() - started) * 1000)
         artifact = _role_artifact(
             role=role,
@@ -2017,9 +2444,8 @@ def run_partitioned_product_cycle(
         cycle["provider_usage"] = _cognition_usage_summary(
             provider, _cycle_paid_artifacts(cycle)
         )
+        _record_cycle_budget_accounting(cycle, budget, progress=progress)
         cycle_store.save(cycle)
-        fresh_call_count += 1
-        active_role_was_fresh = True
         if progress:
             progress(f"[{cycle_id}] {invocation_key} completed in {duration_ms}ms")
         return output
@@ -2081,7 +2507,7 @@ def run_partitioned_product_cycle(
             for row in cognition.get("frozen_candidates", [])
         ]
         cycle["completed_at"] = utc_now()
-        cycle["live_model_call_count"] = fresh_call_count
+        cycle["live_model_call_count"] = _cycle_budget_spent(cycle)[0]
         cycle["provider_usage"] = _cognition_usage_summary(
             provider, _cycle_paid_artifacts(cycle)
         )
@@ -2094,6 +2520,7 @@ def run_partitioned_product_cycle(
                 artifacts=cycle["artifacts"],
             )
             cycle["compiled_contract"] = contract
+        _record_cycle_budget_accounting(cycle, budget, progress=progress)
         cycle_store.save(cycle)
         return {"cycle": cycle, "contract": contract}
     except Exception as exc:
@@ -2124,10 +2551,11 @@ def run_partitioned_product_cycle(
         cycle["status"] = "failed"
         cycle["failed_at"] = utc_now()
         cycle["failure"] = str(exc)
-        cycle["live_model_call_count"] = fresh_call_count
+        cycle["live_model_call_count"] = _cycle_budget_spent(cycle)[0]
         cycle["provider_usage"] = _cognition_usage_summary(
             provider, _cycle_paid_artifacts(cycle)
         )
+        _record_cycle_budget_accounting(cycle, budget, progress=progress)
         cycle_store.save(cycle)
         if retryable:
             if progress:
@@ -2148,8 +2576,67 @@ def run_partitioned_product_cycle(
                 progress=progress,
                 schema_retry_limit=schema_retry_limit - 1,
                 resume_cycle_id=cycle_id,
+                precycle_provider_usage=None,
+                preparation_input_bundle_id=preparation_input_bundle_id,
             )
         raise
+
+
+def _completed_product_cycle_for_preparation_input(
+    *,
+    cycle_store: CognitionCycleStore,
+    provider: ChatProvider,
+    preparation_input_bundle_id: str,
+) -> Optional[str]:
+    """Find a completed v3 cycle before paying for duplicate preparation calls."""
+
+    if not preparation_input_bundle_id:
+        return None
+    matches: List[Tuple[str, str]] = []
+    for path in sorted(cycle_store.root.glob("cycle-*.json")):
+        try:
+            cycle = cycle_store.load(path.stem)
+        except (OSError, ValueError, json.JSONDecodeError):
+            continue
+        if (
+            cycle.get("cognition_cycle_version")
+            != "palamedes-product-cognition-cycle/3"
+            or cycle.get("status") not in {"selected", "defer", "reject"}
+            or cycle.get("provider") != provider.provider_name
+            or cycle.get("model") != provider.model
+            or cycle.get("preparation_input_bundle_id")
+            != preparation_input_bundle_id
+            or not isinstance(cycle.get("evidence_bundle"), dict)
+        ):
+            continue
+        matches.append((str(cycle.get("completed_at", "")), path.stem))
+    return max(matches)[1] if matches else None
+
+
+def _product_preparation_input_fingerprint(
+    evidence_bundle: Dict[str, Any],
+) -> str:
+    """Fingerprint stable product semantics before optional architecture search."""
+
+    substantive_signals = [
+        row
+        for row in evidence_bundle.get("product_signals", [])
+        if isinstance(row, dict) and row.get("kind") != "workspace_observation"
+    ]
+    identity = {
+        "protocol": "palamedes-product-preparation-input/1",
+        "request": evidence_bundle.get("request", {}),
+        "workspace_git_head": evidence_bundle.get("workspace", {}).get(
+            "git_head", ""
+        ),
+        "authority_context": evidence_bundle.get("authority_context", {}),
+        "product_signals": substantive_signals,
+        "outcome_memory": evidence_bundle.get("outcome_memory", []),
+        "knowledge": evidence_bundle.get("knowledge", []),
+        "unknowns": evidence_bundle.get("unknowns", []),
+        "exploration_frontier": evidence_bundle.get("exploration_frontier", {}),
+    }
+    return "preparation-" + _fingerprint(identity)[:16]
 
 
 def run_context_ablation(
@@ -3327,7 +3814,33 @@ def render_mission(contract: Dict[str, Any]) -> str:
     lines.append(f"  next probe: {probe['step']}")
     lines.append(f"  expected learning: {probe['expected_learning']}")
     lines.append("")
-    lines.append("Run /approve to persist this mission or /reject <reason> to reject it.")
+    authority_gates = contract.get("specialized_authority_gates")
+    authority_gate_rows = (
+        authority_gates.get("gates", [])
+        if isinstance(authority_gates, dict)
+        and isinstance(authority_gates.get("gates", []), list)
+        else []
+    )
+    unresolved_specialized_gates = bool(
+        isinstance(authority_gates, dict)
+        and (
+            authority_gates.get("status") == "unresolved"
+            or any(
+                isinstance(gate, dict) and gate.get("status") == "unresolved"
+                for gate in authority_gate_rows
+            )
+        )
+    )
+    if unresolved_specialized_gates:
+        lines.append(
+            "Specialized authority gates remain unresolved; generic mission approval "
+            "is unavailable until an authorized resolution path exists. "
+            "Use /reject <reason> to reject this draft."
+        )
+    else:
+        lines.append(
+            "Run /approve to persist this mission or /reject <reason> to reject it."
+        )
     return "\n".join(lines)
 
 
@@ -3438,6 +3951,63 @@ def approve_mission(
                 "vision actual investment budget exhausted for "
                 + ", ".join(exhausted_actual_fields)
                 + "; regenerate the autonomous vision before approving more work"
+            )
+    product_cognition_lineage = contract.get("product_cognition_lineage")
+    if isinstance(product_cognition_lineage, dict):
+        authority_gates = contract.get("specialized_authority_gates")
+        if not isinstance(authority_gates, dict):
+            raise ValueError(
+                "product-cognition mission approval blocked: specialized authority "
+                "gate custody is missing; regenerate the product cycle"
+            )
+        expected_gate_fingerprint = str(
+            product_cognition_lineage.get(
+                "specialized_authority_gate_fingerprint", ""
+            )
+        ).strip()
+        if (
+            authority_gates.get("gate_contract_version")
+            != "palamedes-specialized-authority-gates/1"
+            or not expected_gate_fingerprint
+            or _fingerprint(authority_gates) != expected_gate_fingerprint
+            or authority_gates.get("generic_mission_approval_satisfies") is not False
+        ):
+            raise ValueError(
+                "product-cognition mission approval blocked: specialized authority "
+                "gate custody is invalid or changed; regenerate the product cycle"
+            )
+        gate_rows = authority_gates.get("gates")
+        if not isinstance(gate_rows, list):
+            raise ValueError(
+                "product-cognition mission approval blocked: specialized authority "
+                "gates are malformed; regenerate the product cycle"
+            )
+        unresolved = []
+        for gate in gate_rows:
+            if not isinstance(gate, dict):
+                raise ValueError(
+                    "product-cognition mission approval blocked: specialized authority "
+                    "gates are malformed; regenerate the product cycle"
+                )
+            requirement = str(gate.get("requirement", "")).strip()
+            source_path = str(gate.get("source_path", "")).strip()
+            if (
+                not requirement
+                or not source_path
+                or gate.get("status") != "unresolved"
+            ):
+                raise ValueError(
+                    "product-cognition mission approval blocked: an authority gate "
+                    "contains an unverified resolution; regenerate the product cycle"
+                )
+            unresolved.append(f"{requirement} [{source_path}]")
+        if unresolved:
+            raise ValueError(
+                "unresolved specialized authority gates: "
+                + "; ".join(unresolved)
+                + ". Generic /approve cannot satisfy them, and no specialized "
+                "resolution command is implemented; add an authorized governance "
+                "resolution path before retrying approval"
             )
     from palamedes_prompt import PromptAgendaStore
     from palamedes_product_alignment import (
@@ -4445,32 +5015,32 @@ def architecture_target_facts_from_bundle(
 ) -> List[Dict[str, str]]:
     """Project mission-citable local evidence into architecture target facts."""
 
-    from palamedes_evidence_bundle import validate_cognition_evidence_bundle
+    from palamedes_evidence_bundle import mission_claim_ledger
 
-    validate_cognition_evidence_bundle(evidence_bundle)
-    rows = list(evidence_bundle.get("product_signals", [])) + list(
-        evidence_bundle.get("knowledge", [])
-    )
+    if not isinstance(maximum, int) or isinstance(maximum, bool) or maximum < 1:
+        raise ValueError("architecture target fact maximum must be a positive integer")
+    ledger = mission_claim_ledger(evidence_bundle)
     facts: List[Dict[str, str]] = []
-    for row in rows:
-        if not isinstance(row, dict) or row.get("decision_authority") not in {
-            "mission_citable",
-            "advisory",
+    for fact_id, entry in ledger.items():
+        kind = str(entry.get("kind", "")).strip()
+        if kind not in {
+            "capability",
+            "integration_gap",
+            "knowledge_claim",
+            "mission_outcome_observation",
+            "workspace_document",
         }:
             continue
-        fact_id = str(row.get("item_id", "")).strip()
-        payload = row.get("payload", {})
-        if not fact_id or not isinstance(payload, dict):
+        if kind == "workspace_document" and not str(
+            entry.get("claim_payload", {}).get("excerpt", "")
+            if isinstance(entry.get("claim_payload"), dict)
+            else ""
+        ).strip():
             continue
-        preferred = (
-            payload.get("statement")
-            or payload.get("claim")
-            or payload.get("excerpt")
-            or payload.get("observation")
-        )
-        if not isinstance(preferred, str) or not preferred.strip():
-            preferred = json.dumps(payload, ensure_ascii=False, sort_keys=True)
-        facts.append({"fact_id": fact_id, "fact": preferred.strip()[:2000]})
+        claim = str(entry.get("claim", "")).strip()
+        if not fact_id or not claim:
+            continue
+        facts.append({"fact_id": fact_id, "fact": claim[:2000]})
         if len(facts) >= maximum:
             break
     return facts
@@ -4523,52 +5093,63 @@ def run_autonomous_architecture_transfer(
         finally:
             role_usage.append(_capture_provider_usage(provider, role))
 
-    queries = propose_mechanism_queries(ask, target_facts, max_queries=3)
-    adapter = GitNexusEvidenceAdapter(
-        limits=EvidenceLimits(
-            max_repositories=2,
-            max_queries=3,
-            max_results_per_query=4,
-            max_sources_total=12,
-            max_excerpt_chars=1400,
-            max_total_excerpt_chars=12000,
-            max_query_chars=480,
-            timeout_seconds=30,
-        )
-    )
-    packet = adapter.collect(queries, current_repo_path=workspace)
+    packet: Optional[Dict[str, Any]] = None
     transfers: List[Dict[str, Any]] = []
-    if len(packet.get("sources", [])) >= 2:
-        transfers = propose_architecture_transfers(
-            ask,
-            {
-                **target_context,
-                "target_domain": "current_product_system",
-                "trusted_target_facts": target_facts,
-                "planning_authority_granted": False,
-                "delivery_authority_granted": False,
-            },
-            evidence_packet=packet,
-            target_fact_ids=[row["fact_id"] for row in target_facts],
-            max_transfers=4,
-            target_domain="current_product_system",
+    failure = ""
+    try:
+        queries = propose_mechanism_queries(ask, target_facts, max_queries=3)
+        adapter = GitNexusEvidenceAdapter(
+            limits=EvidenceLimits(
+                max_repositories=2,
+                max_queries=3,
+                max_results_per_query=4,
+                max_sources_total=12,
+                max_excerpt_chars=1400,
+                max_total_excerpt_chars=12000,
+                max_query_chars=480,
+                timeout_seconds=30,
+            )
         )
+        packet = adapter.collect(queries, current_repo_path=workspace)
+        if len(packet.get("sources", [])) >= 2:
+            transfers = propose_architecture_transfers(
+                ask,
+                {
+                    **target_context,
+                    "target_domain": "current_product_system",
+                    "trusted_target_facts": target_facts,
+                    "planning_authority_granted": False,
+                    "delivery_authority_granted": False,
+                },
+                evidence_packet=packet,
+                target_fact_ids=[row["fact_id"] for row in target_facts],
+                max_transfers=4,
+                target_domain="current_product_system",
+            )
+    except (OSError, RuntimeError, ValueError) as exc:
+        # A failed model/schema attempt is still a paid call. Return degraded
+        # evidence with its complete usage custody so the product-cycle budget
+        # cannot silently forget preparation work.
+        failure = str(exc)
     return {
         "status": (
             "ready"
             if transfers
             else "degraded"
-            if packet.get("status") == "degraded"
+            if failure or (isinstance(packet, dict) and packet.get("status") == "degraded")
             else "unavailable"
         ),
         "reason": (
             "validated cross-domain architecture transfers available"
             if transfers
+            else f"architecture transfer degraded: {failure}"
+            if failure
             else "no bounded transfer survived source and target validation"
         ),
         "target_facts": target_facts,
         "evidence_packet": packet,
         "transfers": transfers,
+        "failure": failure,
         "provider_usage": _provider_usage_summary(provider, role_usage),
     }
 
@@ -6627,6 +7208,7 @@ def run_chat(
                     + "\n"
                 )
                 audit_mode = cycle_mode != "product"
+            product_v3_mode = cycle_mode == "product" or resume_product_v3
             wait_gate = mission_store.external_evidence_wait_gate()
             if wait_gate is not None and cycle_mode != "lookup":
                 output.write(
@@ -6708,10 +7290,14 @@ def run_chat(
                     if latest_vision_id
                     else None
                 )
-                if not audit_mode and vision_store.needs_wake(
-                    len(mission_store.outcomes()),
-                    _fingerprint(current_product_ground_truth),
-                    actual_investment,
+                if (
+                    not audit_mode
+                    and not product_v3_mode
+                    and vision_store.needs_wake(
+                        len(mission_store.outcomes()),
+                        _fingerprint(current_product_ground_truth),
+                        actual_investment,
+                    )
                 ):
                     output.write(
                         "Vision wake: searching beyond adjacent product features.\n"
@@ -6728,7 +7314,7 @@ def run_chat(
                         ),
                     )
                     output.write(render_vision(vision_record) + "\n")
-                if not audit_mode:
+                if not audit_mode and not product_v3_mode:
                     try:
                         meta_learning = run_automatic_meta_learning(
                             provider=provider,
@@ -6769,7 +7355,7 @@ def run_chat(
                 )
                 active_vision = (
                     None
-                    if audit_mode
+                    if audit_mode or product_v3_mode
                     else selected_vision_context(vision_store.latest())
                 )
                 if active_vision:
@@ -6851,6 +7437,25 @@ def run_chat(
                     user_request=context,
                     mode="audit" if audit_mode else "product",
                 )
+                preparation_input_bundle_id = (
+                    _product_preparation_input_fingerprint(evidence_bundle)
+                    if product_v3_mode
+                    else ""
+                )
+                if cycle_mode == "product" and not resume_product_v3:
+                    completed_cycle_id = _completed_product_cycle_for_preparation_input(
+                        cycle_store=cognition_store,
+                        provider=provider,
+                        preparation_input_bundle_id=preparation_input_bundle_id,
+                    )
+                    if completed_cycle_id:
+                        resume_product_v3 = True
+                        resume_cycle_id = completed_cycle_id
+                        output.write(
+                            "Product cognition dedup: reusing completed frozen cycle "
+                            "before architecture preparation calls.\n"
+                        )
+                architecture_provider_usage: Optional[Dict[str, Any]] = None
                 if cycle_mode == "product" and not resume_product_v3:
                     target_facts = architecture_target_facts_from_bundle(
                         evidence_bundle
@@ -6871,6 +7476,9 @@ def run_chat(
                                         "observation_id", ""
                                     ),
                                 },
+                            )
+                            architecture_provider_usage = architecture_result.get(
+                                "provider_usage"
                             )
                             packet = architecture_result.get("evidence_packet")
                             transfers = architecture_result.get("transfers", [])
@@ -6936,6 +7544,8 @@ def run_chat(
                         ),
                         evidence_bundle=evidence_bundle,
                         resume_cycle_id=resume_cycle_id,
+                        precycle_provider_usage=architecture_provider_usage,
+                        preparation_input_bundle_id=preparation_input_bundle_id,
                     )
                 else:
                     result = run_cognition_cycle(
@@ -6975,6 +7585,11 @@ def run_chat(
             )
             contract = result["contract"]
             if contract is None:
+                if (
+                    cycle.get("cognition_cycle_version")
+                    == "palamedes-product-cognition-cycle/3"
+                ):
+                    output.write(render_partitioned_product_cognition(cycle) + "\n")
                 output.write(
                     f"Cycle {cycle['cognition_cycle_id']} ended with "
                     f"{cycle['decision']}; no mission draft was issued.\n"

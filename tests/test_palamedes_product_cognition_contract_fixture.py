@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""Deterministic protocol fixtures, not evidence of autonomous model insight.
+
+The provider below deliberately returns known-good static objects so these tests
+can exercise isolation, freezing, selector custody, and positive/control routing.
+Semantic capability is evaluated separately with a live provider whose outputs
+are not supplied by this module.
+"""
 
 import copy
 import json
@@ -55,8 +62,8 @@ def candidate_for(result, role):
     return next(row for row in result["frozen_candidates"] if row["inventor_role"] == role)
 
 
-class HiddenAcceptanceProvider:
-    """Static provider whose branch is determined only by its visible evidence."""
+class ContractFixtureProvider:
+    """Static schema fixture; it must never be reported as a semantic evaluator."""
 
     REQUIRED_POSITIVE_IDS = {
         "signal-repeat-behavior",
@@ -68,31 +75,29 @@ class HiddenAcceptanceProvider:
         self.fixture = CognitionFixture(candidate_mutator=self._strengthen_transfer)
 
     @staticmethod
-    def _strengthen_transfer(role, candidate, _packet):
+    def _strengthen_transfer(role, candidate, packet):
         if role != CROSS_DOMAIN_ARCHITECTURE_ANALOGIST:
             return
+        mapping_record = packet["exclusive_evidence"][0]
+        mapping = mapping_record["payload"]
+        limits = [
+            mapping["transfer_limit"],
+            *mapping["non_transferable_assumptions"],
+        ]
         candidate["architecture_transfer"] = {
-            "source": "Durable workflow execution history and replay",
-            "source_ids": list(candidate["evidence_scope"]["claim_source_ids"])[-1:],
-            "pressure": (
-                "Retries, late facts, rule changes, and recovery must preserve one "
-                "authoritative account state."
-            ),
-            "mechanism": (
-                "Append-only facts, idempotent projection, immutable rule versions, "
-                "and replayable recovery"
-            ),
-            "target": "Cross-session progress and appearance entitlement state",
-            "adaptation": (
-                "Append immutable activity facts, apply each match once with an "
-                "idempotency key, pin rules to an immutable version, keep one active "
-                "version pointer, and rebuild the projection before rollback."
-            ),
-            "limits": [
-                "Workflow correctness does not prove player demand or willingness to pay.",
-                "Transfer state invariants, not source code or infrastructure policy wholesale.",
-            ],
+            "source": mapping["source_domain"],
+            "source_ids": [mapping_record["source_id"]],
+            "pressure": mapping["source_pressure"],
+            "mechanism": mapping["source_pattern"],
+            "target": mapping["target_pressure"],
+            "adaptation": mapping["adaptation"],
+            "limits": limits,
         }
+        candidate["product_mechanism"] = mapping["adaptation"]
+        candidate["product_opportunity_lineage"]["mechanism"] = mapping[
+            "adaptation"
+        ]
+        candidate["failure_basis"]["transfer_limit"] = limits[0]
 
     def _record_and_abstain(self, role, prompt):
         packet = host_packet(prompt)
@@ -124,7 +129,7 @@ class HiddenAcceptanceProvider:
 
 
 def run_case(case):
-    provider = HiddenAcceptanceProvider()
+    provider = ContractFixtureProvider()
     result = run_partitioned_product_cognition(
         ask=provider,
         common_evidence=case["common_evidence"],
@@ -232,8 +237,8 @@ def positive_rubric(result):
     }
 
 
-class HiddenProductCognitionAcceptanceTests(unittest.TestCase):
-    def test_positive_fixture_and_actual_product_prompt_do_not_name_the_answer(self):
+class ProductCognitionContractFixtureTests(unittest.TestCase):
+    def test_static_fixture_and_actual_product_prompt_do_not_name_the_answer(self):
         case = load_case("case-pc-001.input.json")
         visible_input = {
             "request": case["request"],
@@ -253,7 +258,7 @@ class HiddenProductCognitionAcceptanceTests(unittest.TestCase):
                 with self.subTest(surface=type(surface).__name__, forbidden=forbidden):
                     self.assertNotIn(forbidden, normalized)
 
-    def test_positive_case_connects_signal_to_business_and_safe_probe(self):
+    def test_static_outputs_survive_the_full_product_contract(self):
         case = load_case("case-pc-001.input.json")
         _, first = run_case(case)
         _, second = run_case(case)
@@ -266,7 +271,7 @@ class HiddenProductCognitionAcceptanceTests(unittest.TestCase):
             with self.subTest(rubric=name):
                 self.assertTrue(passed)
 
-    def test_negative_control_breaks_template_lock_in(self):
+    def test_control_routes_to_host_abstention_without_a_candidate(self):
         positive = load_case("case-pc-001.input.json")
         control = load_case("case-pc-001.control.json")
         _, positive_result = run_case(positive)

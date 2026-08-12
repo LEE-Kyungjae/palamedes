@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import io
+import copy
+import hashlib
 import json
 import os
 import tempfile
@@ -17,8 +19,78 @@ from tests.test_palamedes_cognition_v3 import (
     BLINDED_ADVERSARY_ROLE,
     CognitionFixture,
     INVENTOR_ROLES,
+    PartitionedProductProvider,
     SELECTOR_ROLE,
 )
+
+
+def product_evidence_bundle(
+    state_root: Path, *, request: str = "Find an unasked product opportunity."
+):
+    from palamedes_product_alignment import ProductAlignmentStore
+
+    ProductAlignmentStore(state_root / "product-alignment").record_capability(
+        capability_id="capability-match-events",
+        statement="Completed matches emit stable player, mode, and result events.",
+        source_ids=["host-product-observation"],
+        surface_key="game-economy",
+    )
+    return build_cognition_evidence_bundle(
+        state_root=state_root,
+        snapshot={
+            "observation_id": "observation-product-fixture",
+            "snapshot_fingerprint": "a" * 64,
+            "signals": {
+                "observed_at": "2026-08-13T00:00:00+00:00",
+                "documents": [],
+                "git": {"head": "b" * 40, "branch": "main"},
+                "change": {"reasons": []},
+                "test": {"executed": False},
+            },
+        },
+        user_request=request,
+        mode="product",
+    )
+
+
+def frozen_v1_bundle(bundle):
+    legacy = copy.deepcopy(bundle)
+    legacy.pop("mission_claim_ledger", None)
+    legacy["bundle_version"] = "palamedes-cognition-evidence/1"
+    all_items = []
+    for field in ("product_signals", "outcome_memory", "knowledge", "unknowns"):
+        all_items.extend(legacy[field])
+    for rows in legacy["exploration_frontier"].values():
+        all_items.extend(rows)
+    all_items.extend(legacy["cross_domain_transfer"]["reference_patterns"])
+    all_items.extend(legacy["cross_domain_transfer"]["transfer_mappings"])
+    legacy["citation_allowlists"]["mission_source_ids"] = sorted(
+        row["item_id"]
+        for row in all_items
+        if row.get("decision_authority") in {"mission_citable", "advisory"}
+    )
+    identity = {
+        "bundle_version": legacy["bundle_version"],
+        "request": legacy["request"],
+        "workspace": legacy["workspace"],
+        "authority_context": legacy["authority_context"],
+        "product_signals": legacy["product_signals"],
+        "outcome_memory": legacy["outcome_memory"],
+        "knowledge": legacy["knowledge"],
+        "unknowns": legacy["unknowns"],
+        "exploration_frontier": legacy["exploration_frontier"],
+        "cross_domain_transfer": legacy["cross_domain_transfer"],
+        "citation_allowlists": legacy["citation_allowlists"],
+        "selection_manifest": legacy["selection_manifest"],
+        "delivery_authority_granted": False,
+    }
+    canonical = json.dumps(
+        identity, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
+    legacy["bundle_id"] = "evidence-" + hashlib.sha256(
+        canonical.encode("utf-8")
+    ).hexdigest()[:16]
+    return legacy
 
 
 class FakePalamedes:
@@ -3190,19 +3262,46 @@ class PalamedesChatTests(unittest.TestCase):
                 evidence_ids=["route-audit"],
             )
             provider = StaticChatProvider()
-            output = io.StringIO()
-            palamedes_chat.run_chat(
-                palamedes_module=fake,
-                provider=provider,
-                session_id="vision-product-ground-truth",
-                input_stream=io.StringIO(
-                    "/cycle improve the game product without assuming greenfield work\n"
-                    "/quit\n"
-                ),
-                output=output,
+            mission_store = palamedes_chat.MissionStore(
+                fake.STATE_DIR / "missions"
             )
-            contracts = list((fake.STATE_DIR / "missions").glob("mission-*.json"))
-            contract = json.loads(contracts[0].read_text(encoding="utf-8"))
+            vision_record = palamedes_chat.run_autonomous_vision(
+                provider=provider,
+                mission_store=mission_store,
+                context=palamedes_chat.build_autonomous_vision_context(
+                    mission_store=mission_store,
+                    user_context=(
+                        "Improve the game product without assuming greenfield work."
+                    ),
+                    workspace_context={},
+                ),
+            )
+            contract = palamedes_chat.validate_mission_draft(
+                StaticChatProvider._mission_payload()
+            )
+            investment = vision_record["investment_judgment"]
+            contract["vision_lineage"] = {
+                "vision_genesis_id": vision_record["vision_genesis_id"],
+                "vision_context_fingerprint": vision_record.get(
+                    "context_fingerprint", ""
+                ),
+                "product_ground_truth_fingerprint": vision_record.get(
+                    "product_ground_truth_fingerprint", ""
+                ),
+                "requirement_gate_passed": vision_record.get(
+                    "requirement_gate", {}
+                ).get(
+                    "passed", False
+                ),
+                "evidence_maturity": investment["evidence_maturity"],
+                "selected_alternative": investment["selected_alternative"],
+                "renewal_evidence": investment["renewal_evidence"],
+                "kill_criteria": investment["kill_criteria"],
+                "debt_guard": investment["debt_guard"],
+                "scale_guard": investment["scale_guard"],
+                "investment_envelope": vision_record["investment_envelope"],
+                "delivery_authority_granted": False,
+            }
             from palamedes_vision import VisionStore
 
             vision_store = VisionStore(fake.STATE_DIR / "visions")
@@ -3333,8 +3432,6 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertIn("capability-rust-realtime", desire_prompt)
         self.assertIn("gap-local-game-bypass", desire_prompt)
         self.assertIn("Product invariants outrank", desire_prompt)
-        self.assertIn("Vision wake:", output.getvalue())
-        self.assertEqual(len(contracts), 1)
         self.assertIn("vision_lineage", contract)
         self.assertTrue(contract["vision_lineage"]["requirement_gate_passed"])
         self.assertEqual(
@@ -3770,10 +3867,22 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertIn("Omit it entirely", prompt)
         self.assertIn("advisory vision agenda", prompt)
 
-    def test_independent_cognition_cycle_and_post_outcome_analysis(self):
+    def test_product_cycle_preserves_specialized_gates_and_blocks_generic_approval(self):
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             with PalamedesIsolation(root) as isolated:
+                from palamedes_product_alignment import ProductAlignmentStore
+
+                ProductAlignmentStore(
+                    isolated.STATE_DIR / "product-alignment"
+                ).record_capability(
+                    capability_id="capability-match-events",
+                    statement=(
+                        "Completed matches emit stable player, mode, and result events."
+                    ),
+                    source_ids=["host-product-observation"],
+                    surface_key="game-economy",
+                )
                 provider = StaticChatProvider()
                 output = io.StringIO()
                 with patch.dict(os.environ, {"PALAMEDES_REF_ROOT": ""}):
@@ -3784,7 +3893,6 @@ class PalamedesChatTests(unittest.TestCase):
                         input_stream=io.StringIO(
                             "/cycle --mode product find a mission worth planning\n"
                             "/approve\n"
-                            "/outcome success The selected probe matched its forecast\n"
                             "/quit\n"
                         ),
                         output=output,
@@ -3793,12 +3901,6 @@ class PalamedesChatTests(unittest.TestCase):
                     (isolated.STATE_DIR / "missions" / "cognition").glob("cycle-*.json")
                 )
                 cycle = json.loads(cycle_path.read_text(encoding="utf-8"))
-                experience_path = next(
-                    (isolated.STATE_DIR / "thoughts" / "experiences").glob("*.json")
-                )
-                experience = json.loads(
-                    experience_path.read_text(encoding="utf-8")
-                )
                 mission_contract = json.loads(
                     next(
                         (isolated.STATE_DIR / "missions").glob("mission-*.json")
@@ -3813,41 +3915,328 @@ class PalamedesChatTests(unittest.TestCase):
                 "product_cognition_selector",
             ],
         )
-        self.assertEqual(len(cycle["outcome_analyses"]), 1)
-        self.assertEqual(
-            cycle["outcome_analyses"][0]["role"], "outcome_analyst"
-        )
+        self.assertEqual(cycle["outcome_analyses"], [])
         self.assertEqual(cycle["live_model_call_count"], 4)
+        self.assertEqual(
+            [row["role"] for row in cycle["precycle_artifacts"]],
+            ["architecture_transfer_mechanism_query_designer"],
+        )
+        self.assertEqual(cycle["provider_usage"]["attempted_calls"], 4)
         self.assertFalse(cycle["outcome_analyst_runs_before_outcome"])
         self.assertEqual(
             [call[-1]["content"].splitlines()[0] for call in provider.calls],
             [
-                "ROLE: vision_agenda_architect",
-                "ROLE: desire_interpreter",
-                "ROLE: distant_analogy_explorer",
-                "ROLE: mechanism_fusion_inventor",
-                "ROLE: product_world_builder",
-                "ROLE: maniac_critic_and_vision_author",
-                "ROLE: vision_reality_governor",
                 "ROLE: architecture_transfer_mechanism_query_designer",
                 "ROLE_ASSIGNMENT: product_opportunity_inventor",
                 "ROLE: origin-blinded product adversary",
                 "ROLE: product cognition selector",
-                "ROLE: outcome_analyst",
             ],
         )
-        self.assertIn("Outcome analyst completed", output.getvalue())
+        self.assertIn("unresolved specialized authority gates", output.getvalue())
+        self.assertIn("Generic /approve cannot satisfy them", output.getvalue())
         self.assertEqual(
-            experience["mission_contract_id"],
-            mission_contract["mission_id"],
+            mission_contract["specialized_authority_gates"]["status"],
+            "unresolved",
         )
-        self.assertEqual(experience["outcome_status"], "success")
-        self.assertEqual(experience["evidence_source_type"], "implementer_claim")
-        self.assertEqual(experience["causal_signature"], "approval-lineage-observed")
-        self.assertEqual(experience["probe_status"], "completed")
-        self.assertEqual(experience["finding"], "expected_result")
-        self.assertFalse(experience["followup_required"])
-        self.assertEqual(experience["followup_kind"], "none")
+        self.assertEqual(mission_contract["status"], "draft")
+
+    def test_deferred_product_cycle_still_surfaces_the_discovered_insight(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                from palamedes_product_alignment import ProductAlignmentStore
+
+                ProductAlignmentStore(
+                    isolated.STATE_DIR / "product-alignment"
+                ).record_capability(
+                    capability_id="capability-match-events",
+                    statement=(
+                        "Completed matches emit stable player, mode, and result events."
+                    ),
+                    source_ids=["host-product-observation"],
+                    surface_key="game-economy",
+                )
+                provider = StaticChatProvider()
+                provider.product_cognition_fixture.selector_mode = "defer"
+                output = io.StringIO()
+                with patch.dict(os.environ, {"PALAMEDES_REF_ROOT": ""}):
+                    palamedes_chat.run_chat(
+                        palamedes_module=isolated,
+                        provider=provider,
+                        session_id="deferred-product-insight",
+                        input_stream=io.StringIO(
+                            "/cycle --mode product find an unasked product move\n"
+                            "/quit\n"
+                        ),
+                        output=output,
+                    )
+
+        rendered = output.getvalue()
+        self.assertIn("Cross-mode seasonal journey", rendered)
+        self.assertIn("business effect:", rendered)
+        self.assertIn("reversible probe:", rendered)
+        self.assertIn("No candidate was selected", rendered)
+        self.assertNotIn("The selected result is", rendered)
+        self.assertIn("no mission draft was issued", rendered)
+
+    def test_product_v3_skips_unused_vision_and_meta_learning_and_deduplicates_preparation(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with PalamedesIsolation(root) as isolated:
+                from palamedes_product_alignment import ProductAlignmentStore
+
+                ProductAlignmentStore(
+                    isolated.STATE_DIR / "product-alignment"
+                ).record_capability(
+                    capability_id="capability-match-events",
+                    statement=(
+                        "Completed matches emit stable player, mode, and result events."
+                    ),
+                    source_ids=["host-product-observation"],
+                    surface_key="game-economy",
+                )
+                provider = StaticChatProvider()
+                output = io.StringIO()
+                command = (
+                    "/cycle --mode product find the same unasked product move\n"
+                    "/cycle --mode product find the same unasked product move\n"
+                    "/quit\n"
+                )
+                with patch.dict(os.environ, {"PALAMEDES_REF_ROOT": ""}), patch(
+                    "palamedes_chat.run_autonomous_vision"
+                ) as vision, patch(
+                    "palamedes_chat.run_automatic_meta_learning"
+                ) as meta:
+                    palamedes_chat.run_chat(
+                        palamedes_module=isolated,
+                        provider=provider,
+                        session_id="product-v3-dedup",
+                        input_stream=io.StringIO(command),
+                        output=output,
+                    )
+
+        vision.assert_not_called()
+        meta.assert_not_called()
+        self.assertEqual(len(provider.calls), 4)
+        self.assertEqual(
+            [call[-1]["content"].splitlines()[0] for call in provider.calls],
+            [
+                "ROLE: architecture_transfer_mechanism_query_designer",
+                "ROLE_ASSIGNMENT: product_opportunity_inventor",
+                "ROLE: origin-blinded product adversary",
+                "ROLE: product cognition selector",
+            ],
+        )
+        self.assertIn("Product cognition dedup", output.getvalue())
+
+    def test_architecture_target_facts_exclude_advisory_and_workspace_metadata(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            claim_path = root / "knowledge" / "claims" / "advisory.json"
+            claim_path.parent.mkdir(parents=True, exist_ok=True)
+            claim_path.write_text(
+                json.dumps(
+                    {
+                        "knowledge_id": "knowledge-advisory",
+                        "status": "active",
+                        "domain": "product",
+                        "claim_type": "interpretation",
+                        "claim": "A model imagines recurring revenue.",
+                        "source_ids": ["model"],
+                        "confidence": 90,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            bundle = product_evidence_bundle(root)
+
+        facts = palamedes_chat.architecture_target_facts_from_bundle(bundle)
+        self.assertEqual(len(facts), 1)
+        self.assertEqual(
+            facts[0]["fact"],
+            "Completed matches emit stable player, mode, and result events.",
+        )
+        self.assertNotIn("workspace", json.dumps(facts))
+        self.assertNotIn("recurring revenue", json.dumps(facts))
+
+    def test_product_schema_repair_keeps_host_packet_terminal_and_survives_resume(self):
+        class InvalidCandidateOnce(PartitionedProductProvider):
+            def __init__(self, fixture):
+                super().__init__(fixture)
+                self.invalid = True
+                self.prompts = []
+
+            def stream(self, messages):
+                prompt = messages[-1]["content"]
+                self.prompts.append(prompt)
+                if prompt.startswith("ROLE_ASSIGNMENT:") and self.invalid:
+                    self.invalid = False
+                    payload = self.fixture(PRODUCT_OPPORTUNITY_INVENTOR, prompt)
+                    payload["candidate"]["output_kind"] = "code_review"
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        from palamedes_cognition_v3 import PRODUCT_OPPORTUNITY_INVENTOR
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            bundle = product_evidence_bundle(root)
+            store = palamedes_chat.CognitionCycleStore(root / "cognition")
+            first = InvalidCandidateOnce(CognitionFixture())
+            with self.assertRaisesRegex(ValueError, "product_opportunity"):
+                palamedes_chat.run_partitioned_product_cycle(
+                    provider=first,
+                    context="Find an unasked product opportunity.",
+                    cycle_store=store,
+                    evidence_bundle=bundle,
+                    schema_retry_limit=0,
+                )
+            failed = json.loads(next(store.root.glob("cycle-*.json")).read_text())
+            resumed = InvalidCandidateOnce(CognitionFixture())
+            resumed.invalid = False
+            result = palamedes_chat.run_partitioned_product_cycle(
+                provider=resumed,
+                context="ignored",
+                cycle_store=store,
+                evidence_bundle=bundle,
+                resume_cycle_id=failed["cognition_cycle_id"],
+            )
+
+        retry_prompt = resumed.prompts[0]
+        packet_marker = "\n\nHOST_PACKET_JSON:\n"
+        self.assertIn("rejected by the host contract", retry_prompt)
+        self.assertEqual(retry_prompt.count(packet_marker), 1)
+        json.loads(retry_prompt.rsplit(packet_marker, 1)[1])
+        self.assertEqual(result["cycle"]["status"], "selected")
+
+    def test_product_resume_preserves_budget_and_persists_post_call_overrun(self):
+        class MeteredProductProvider(PartitionedProductProvider):
+            def stream(self, messages):
+                self.last_usage = None
+                yield from super().stream(messages)
+                self.last_usage = {
+                    "input_tokens": 80,
+                    "output_tokens": 40,
+                    "total_tokens": 120,
+                }
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            bundle = product_evidence_bundle(root)
+            store = palamedes_chat.CognitionCycleStore(root / "cognition")
+            budget = {"provider_calls_max": 99, "token_budget_high": 50}
+            with self.assertRaisesRegex(ValueError, "token budget exhausted"):
+                palamedes_chat.run_partitioned_product_cycle(
+                    provider=MeteredProductProvider(CognitionFixture()),
+                    context="Find an unasked product opportunity.",
+                    cycle_store=store,
+                    evidence_bundle=bundle,
+                    budget=budget,
+                )
+            failed = json.loads(next(store.root.glob("cycle-*.json")).read_text())
+            self.assertEqual(failed["budget_accounting"]["status"], "overrun")
+            self.assertIn("tokens 120>50", failed["budget_accounting"]["overrun_message"])
+            with self.assertRaisesRegex(ValueError, "exactly match"):
+                palamedes_chat.run_partitioned_product_cycle(
+                    provider=MeteredProductProvider(CognitionFixture()),
+                    context="ignored",
+                    cycle_store=store,
+                    evidence_bundle=bundle,
+                    budget={"provider_calls_max": 100, "token_budget_high": 500},
+                    resume_cycle_id=failed["cognition_cycle_id"],
+                )
+
+    def test_failed_v1_resume_upgrades_bundle_and_invalidates_active_checkpoint(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            bundle = product_evidence_bundle(root)
+            store = palamedes_chat.CognitionCycleStore(root / "cognition")
+            provider = PartitionedProductProvider(
+                CognitionFixture(), fail_role=BLINDED_ADVERSARY_ROLE
+            )
+            with self.assertRaisesRegex(RuntimeError, "simulated"):
+                palamedes_chat.run_partitioned_product_cycle(
+                    provider=provider,
+                    context="Find an unasked product opportunity.",
+                    cycle_store=store,
+                    evidence_bundle=bundle,
+                    budget={"provider_calls_max": 10, "token_budget_high": 100000},
+                )
+            cycle = json.loads(next(store.root.glob("cycle-*.json")).read_text())
+            cycle["evidence_bundle"] = frozen_v1_bundle(bundle)
+            cycle["evidence_bundle_id"] = cycle["evidence_bundle"]["bundle_id"]
+            store.save(cycle)
+            result = palamedes_chat.run_partitioned_product_cycle(
+                provider=PartitionedProductProvider(CognitionFixture()),
+                context="ignored",
+                cycle_store=store,
+                evidence_bundle=cycle["evidence_bundle"],
+                resume_cycle_id=cycle["cognition_cycle_id"],
+            )
+
+        self.assertEqual(
+            result["cycle"]["evidence_bundle_status"],
+            "frozen_verified_upgraded_v1",
+        )
+        invalidated = [
+            row
+            for row in result["cycle"]["rejected_artifacts"]
+            if "legacy_contract_invalidation" in row
+        ]
+        self.assertEqual(len(invalidated), 1)
+        self.assertFalse(invalidated[0].get("checkpoint_reused", False))
+        self.assertGreaterEqual(result["cycle"]["live_model_call_count"], 5)
+
+    def test_terminal_v1_resume_invalidates_legacy_compiled_contract(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            bundle = product_evidence_bundle(root)
+            store = palamedes_chat.CognitionCycleStore(root / "cognition")
+            result = palamedes_chat.run_partitioned_product_cycle(
+                provider=PartitionedProductProvider(CognitionFixture()),
+                context="Find an unasked product opportunity.",
+                cycle_store=store,
+                evidence_bundle=bundle,
+            )
+            cycle = result["cycle"]
+            cycle["evidence_bundle"] = frozen_v1_bundle(bundle)
+            cycle["evidence_bundle_id"] = cycle["evidence_bundle"]["bundle_id"]
+            store.save(cycle)
+            with self.assertRaisesRegex(ValueError, "terminal draft invalidated"):
+                palamedes_chat.run_partitioned_product_cycle(
+                    provider=PartitionedProductProvider(CognitionFixture()),
+                    context="ignored",
+                    cycle_store=store,
+                    evidence_bundle=cycle["evidence_bundle"],
+                    resume_cycle_id=cycle["cognition_cycle_id"],
+                )
+            saved = store.load(cycle["cognition_cycle_id"])
+
+        self.assertEqual(
+            saved["evidence_bundle_status"], "frozen_verified_upgraded_v1"
+        )
+        self.assertNotIn("compiled_contract", saved)
+        self.assertEqual(saved["legacy_v1_draft_invalidation"]["status"], "invalidated")
+
+    def test_product_render_with_unresolved_specialized_gates_never_invites_approve(self):
+        contract = StaticChatProvider._mission_payload()
+        contract["mission_id"] = "mission-render-gate"
+        contract["specialized_authority_gates"] = {
+            "status": "unresolved",
+            "gates": [
+                {
+                    "gate_id": "gate-1",
+                    "status": "unresolved",
+                    "requirement": "economy review",
+                }
+            ],
+        }
+
+        rendered = palamedes_chat.render_mission(contract)
+
+        self.assertIn("generic mission approval is unavailable", rendered)
+        self.assertNotIn("Run /approve", rendered)
 
     def test_audit_cycle_skips_vision_and_emits_run_scoped_progress(self):
         with tempfile.TemporaryDirectory() as tempdir:
@@ -5192,11 +5581,14 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertEqual(
             palamedes_chat._cycle_budget_spent(
                 {
+                    "precycle_artifacts": [
+                        {"provider_usage": {"total_tokens": 3}}
+                    ],
                     "artifacts": [{"provider_usage": {"total_tokens": 10}}],
                     "rejected_artifacts": [{"provider_usage": {"total_tokens": 5}}],
                 }
             ),
-            (2, 15),
+            (3, 18),
         )
 
     def test_explicit_resume_reuses_legacy_checkpoints_after_plan_drift(self):

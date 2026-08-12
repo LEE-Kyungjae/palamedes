@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import copy
+import hashlib
 import json
 import tempfile
 import unittest
@@ -11,7 +12,10 @@ from palamedes_architecture_transfer import (
     CommandResult,
     EvidenceLimits,
     GitNexusEvidenceAdapter,
+    TRANSFER_CONTRACT_VERSION,
     propose_mechanism_queries,
+    propose_architecture_transfers,
+    reverify_gitnexus_evidence_packet,
     validate_architecture_transfers,
     validate_gitnexus_evidence_packet,
 )
@@ -108,8 +112,24 @@ def collect_packet(root, *, reverse=False, limits=None, definitions=None):
     return adapter.collect(mechanism_queries(), current_repo_path=runner.current), runner
 
 
+def reseal_packet(packet):
+    unsigned = copy.deepcopy(packet)
+    unsigned.pop("packet_id", None)
+    canonical = json.dumps(
+        unsigned,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    packet["packet_id"] = "gitnexus-packet:" + hashlib.sha256(
+        canonical.encode("utf-8")
+    ).hexdigest()
+    return packet
+
+
 def valid_transfer(source_ids):
     row = {
+        "transfer_contract_version": TRANSFER_CONTRACT_VERSION,
         "transfer_id": "transfer-ledger",
         "source_ids": source_ids[:2],
         "source_domain": "payment fulfillment",
@@ -123,6 +143,7 @@ def valid_transfer(source_ids):
             "replay observes the prior transition instead of granting again",
         ],
         "failure_prevented": "Duplicate fulfillment after retry.",
+        "source_support_semantics_verified": False,
         "target_pressure": "Recorded activity can be replayed while a reward claim is retried.",
         "target_evidence_ids": ["fact-events"],
         "responsibility_mapping": [{
@@ -149,6 +170,30 @@ def valid_transfer(source_ids):
         "local_falsifier": "Reconciliation cannot deterministically reproduce one progress balance.",
         "source_outcome_is_target_forecast": False,
     }
+    source_claims = {
+        "source_pressure": row["source_pressure"],
+        "source_pattern": row["source_pattern"],
+        "source_invariant": row["source_invariant"],
+        **{
+            f"source_causal_chain[{index}]": claim
+            for index, claim in enumerate(row["source_causal_chain"])
+        },
+        "failure_prevented": row["failure_prevented"],
+    }
+    row["source_claim_support"] = [
+        {
+            "claim_path": claim_path,
+            "claim": claim,
+            "anchors": [
+                {
+                    "source_id": source_id,
+                    "exact_quote": "ensure_idempotent(key)",
+                }
+                for source_id in row["source_ids"]
+            ],
+        }
+        for claim_path, claim in source_claims.items()
+    ]
     row.update({field: False for field in AUTHORITY_FIELDS})
     return row
 
@@ -173,8 +218,17 @@ class GitNexusEvidenceAdapterTests(unittest.TestCase):
             query_call = next(args for args, _, _ in runner_a.calls if "query" in args)
             self.assertIn("--limit", query_call)
             self.assertNotIn("--content", query_call)
+            self.assertEqual(query_call[query_call.index("--query") + 1], "idempotent")
+            self.assertNotIn(
+                "idempotent failure retry recovery",
+                query_call,
+            )
             self.assertTrue(
                 any(args[0] == "git" and "show" in args for args, _, _ in runner_a.calls)
+            )
+            self.assertEqual(
+                reverify_gitnexus_evidence_packet(packet_a, runner=runner_a),
+                packet_a,
             )
 
     def test_host_enforces_result_excerpt_and_total_bounds(self):
@@ -192,6 +246,117 @@ class GitNexusEvidenceAdapterTests(unittest.TestCase):
             self.assertEqual(len(packet["sources"]), 2)
             self.assertTrue(all(len(row["excerpt"]) == 80 for row in packet["sources"]))
             self.assertTrue(all(row["excerpt_truncated"] for row in packet["sources"]))
+
+    def test_capped_excerpt_hash_uses_the_same_whitespace_normalization_as_validator(self):
+        limits = EvidenceLimits(
+            max_repositories=1,
+            max_queries=1,
+            max_results_per_query=1,
+            max_sources_total=1,
+            max_excerpt_chars=80,
+            max_total_excerpt_chars=1000,
+        )
+        content = "x" * 79 + " " + "y" * 100
+        with tempfile.TemporaryDirectory() as root:
+            packet, _ = collect_packet(
+                root,
+                limits=limits,
+                definitions=[definition(1, content=content)],
+            )
+
+        self.assertEqual(packet["sources"][0]["excerpt"], "x" * 79)
+        validate_gitnexus_evidence_packet(packet)
+
+    def test_stale_catalog_row_does_not_consume_verified_repository_slot(self):
+        with tempfile.TemporaryDirectory() as root:
+            runner = FakeRunner(root)
+            stale = Path(root) / "stale"
+            stale.mkdir()
+
+            def run(args, *, cwd, timeout):
+                if args[-1] == "list":
+                    runner.calls.append((list(args), Path(cwd), timeout))
+                    return CommandResult(
+                        0,
+                        json.dumps(
+                            {
+                                "repositories": [
+                                    {
+                                        "name": "Target",
+                                        "path": str(runner.current),
+                                        "lastCommit": REVISION,
+                                    },
+                                    {
+                                        "name": "AStale",
+                                        "path": str(stale),
+                                        "lastCommit": REVISION,
+                                    },
+                                    {
+                                        "name": "Payments",
+                                        "path": str(runner.source),
+                                        "lastCommit": REVISION,
+                                    },
+                                ]
+                            }
+                        ),
+                    )
+                if (
+                    args[0] == "git"
+                    and "rev-parse" in args
+                    and str(stale.resolve()) in args
+                ):
+                    runner.calls.append((list(args), Path(cwd), timeout))
+                    return CommandResult(0, "b" * 40 + "\n")
+                return runner(args, cwd=cwd, timeout=timeout)
+
+            packet = GitNexusEvidenceAdapter(
+                run,
+                cli_prefix=["gitnexus"],
+                limits=EvidenceLimits(max_repositories=1, max_sources_total=18),
+            ).collect(mechanism_queries(), current_repo_path=runner.current)
+
+        self.assertEqual(
+            [row["repository"] for row in packet["repositories"]],
+            ["Payments"],
+        )
+        self.assertEqual(len(packet["repository_results"]), 1)
+        self.assertTrue(
+            any(
+                row.get("repository") == "AStale"
+                and row.get("code") == "unverifiable_snapshot"
+                for row in packet["degradations"]
+            )
+        )
+
+    def test_gitnexus_cache_status_is_not_read_into_revision_snapshot_identity(self):
+        with tempfile.TemporaryDirectory() as root:
+            runner = FakeRunner(root)
+            source_status_calls = 0
+
+            def run(args, *, cwd, timeout):
+                nonlocal source_status_calls
+                if (
+                    args[0] == "git"
+                    and "status" in args
+                    and str(runner.source) in args
+                ):
+                    runner.calls.append((list(args), Path(cwd), timeout))
+                    source_status_calls += 1
+                    return CommandResult(
+                        0,
+                        "" if source_status_calls == 1 else "?? .gitnexus/query.lock",
+                    )
+                return runner(args, cwd=cwd, timeout=timeout)
+
+            packet = GitNexusEvidenceAdapter(
+                run, cli_prefix=["gitnexus"]
+            ).collect(mechanism_queries(), current_repo_path=runner.current)
+
+        self.assertTrue(packet["sources"])
+        self.assertEqual(source_status_calls, 0)
+        self.assertFalse(
+            any(row.get("code") == "snapshot_drift" for row in packet["degradations"])
+        )
 
     def test_gitnexus_unavailable_returns_valid_non_authoritative_degradation(self):
         with tempfile.TemporaryDirectory() as root:
@@ -233,6 +398,50 @@ class GitNexusEvidenceAdapterTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "source_id"):
                 validate_gitnexus_evidence_packet(fabricated)
 
+    def test_repository_reverification_rejects_self_consistent_fabricated_excerpt(self):
+        with tempfile.TemporaryDirectory() as root:
+            packet, runner = collect_packet(root)
+            fabricated = copy.deepcopy(packet)
+            source = fabricated["sources"][0]
+            fake_excerpt = "def fabricated(): return 'attacker supplied'"
+            fake_file = fake_excerpt + "\n"
+            source["excerpt"] = fake_excerpt
+            source["excerpt_sha256"] = hashlib.sha256(
+                fake_excerpt.encode("utf-8")
+            ).hexdigest()
+            source["revision_file_sha256"] = hashlib.sha256(
+                fake_file.encode("utf-8")
+            ).hexdigest()
+            source_digest = hashlib.sha256(
+                (
+                    f"{source['repo_snapshot_id']}\0{source['native_symbol_id']}\0"
+                    f"{source['excerpt_sha256']}\0{source['revision_file_sha256']}"
+                ).encode("utf-8")
+            ).hexdigest()
+            source["source_id"] = "gitnexus-source:" + source_digest
+            reseal_packet(fabricated)
+
+            # All attacker-controlled hashes and IDs agree structurally.
+            validate_gitnexus_evidence_packet(fabricated)
+            with self.assertRaisesRegex(
+                ValueError,
+                "file hash does not match|excerpt does not match",
+            ):
+                reverify_gitnexus_evidence_packet(fabricated, runner=runner)
+
+    def test_repository_reverification_rejects_blank_padded_fabricated_range(self):
+        with tempfile.TemporaryDirectory() as root:
+            packet, runner = collect_packet(root)
+            fabricated = copy.deepcopy(packet)
+            fabricated["sources"][0]["end_line"] += 1
+            reseal_packet(fabricated)
+
+            # Range fields are structurally self-consistent but not the
+            # canonical substantive range reconstructed from Git.
+            validate_gitnexus_evidence_packet(fabricated)
+            with self.assertRaisesRegex(ValueError, "canonically bounded"):
+                reverify_gitnexus_evidence_packet(fabricated, runner=runner)
+
 
 class MechanismQueryTests(unittest.TestCase):
     def test_provider_queries_cite_target_facts_and_cover_operational_pressures(self):
@@ -270,12 +479,40 @@ class MechanismQueryTests(unittest.TestCase):
         )
         self.assertEqual(rows, mechanism_queries())
 
+    def test_query_repair_receives_full_shape_previous_object_and_literal_coverage(self):
+        invalid = {
+            "mechanism_queries": [
+                {
+                    **mechanism_queries()[0],
+                    "search_terms": ["consistency invariant", "authority entitlement"],
+                }
+            ]
+        }
+        prompts = []
+        responses = [invalid, {"mechanism_queries": mechanism_queries()}]
+
+        def ask(_role, prompt):
+            prompts.append(prompt)
+            return responses.pop(0)
+
+        rows = propose_mechanism_queries(
+            ask,
+            [{"fact_id": "fact-events", "fact": "Activity events are recorded."}],
+            max_queries=1,
+        )
+
+        self.assertEqual(rows, mechanism_queries())
+        self.assertIn("Required JSON shape", prompts[0])
+        self.assertIn("PREVIOUS_OBJECT", prompts[1])
+        self.assertIn("rollback/replay", prompts[1])
+
 
 class ArchitectureTransferContractTests(unittest.TestCase):
     def packet_and_transfer(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
-        packet, _ = collect_packet(temporary.name)
+        packet, runner = collect_packet(temporary.name)
+        self.packet_runner = runner
         transfer = valid_transfer([row["source_id"] for row in packet["sources"]])
         return packet, transfer
 
@@ -288,8 +525,97 @@ class ArchitectureTransferContractTests(unittest.TestCase):
             target_domain="live service game",
         )
         self.assertEqual(rows[0]["authority"], "mechanism_candidate_only")
+        self.assertEqual(
+            rows[0]["transfer_contract_version"], TRANSFER_CONTRACT_VERSION
+        )
         self.assertEqual(rows[0]["source_revisions"], [REVISION])
         self.assertFalse(rows[0]["source_outcome_is_target_forecast"])
+        self.assertFalse(rows[0]["source_support_semantics_verified"])
+        self.assertEqual(
+            rows[0]["source_support_verification"],
+            "normalized_exact_excerpt_membership_only",
+        )
+        self.assertEqual(len(rows[0]["source_claim_support"]), 6)
+
+    def test_provider_repair_receives_previous_object_and_exact_false_contract(self):
+        packet, transfer = self.packet_and_transfer()
+        invalid = copy.deepcopy(transfer)
+        invalid["decision_authority_granted"] = True
+        prompts = []
+        responses = [{"transfers": [invalid]}, {"transfers": [transfer]}]
+
+        def ask(_role, prompt):
+            prompts.append(prompt)
+            return responses.pop(0)
+
+        rows = propose_architecture_transfers(
+            ask,
+            {"target_domain": "live service game"},
+            evidence_packet=packet,
+            target_fact_ids={"fact-events"},
+            target_domain="live service game",
+            packet_runner=self.packet_runner,
+        )
+
+        self.assertFalse(rows[0]["decision_authority_granted"])
+        self.assertIn("PREVIOUS_OBJECT", prompts[1])
+        self.assertIn('"decision_authority_granted":true', prompts[1])
+        self.assertIn("literal JSON false", prompts[1])
+        self.assertIn("source_claim_support", prompts[1])
+        self.assertIn("local_probe", prompts[1])
+        self.assertIn("local_falsifier", prompts[1])
+
+    def test_provider_repairs_an_empty_local_probe_with_full_skeleton(self):
+        packet, transfer = self.packet_and_transfer()
+        invalid = copy.deepcopy(transfer)
+        invalid["local_probe"] = ""
+        prompts = []
+        responses = [{"transfers": [invalid]}, {"transfers": [transfer]}]
+
+        def ask(_role, prompt):
+            prompts.append(prompt)
+            return responses.pop(0)
+
+        rows = propose_architecture_transfers(
+            ask,
+            {"target_domain": "live service game"},
+            evidence_packet=packet,
+            target_fact_ids={"fact-events"},
+            target_domain="live service game",
+            packet_runner=self.packet_runner,
+        )
+
+        self.assertEqual(rows[0]["local_probe"], transfer["local_probe"])
+        self.assertIn("local_probe must be a non-empty string", prompts[1])
+        self.assertIn("exact JSON skeleton", prompts[1])
+
+    def test_rejects_arbitrary_source_claims_without_a_claim_quote_ledger(self):
+        packet, transfer = self.packet_and_transfer()
+        transfer["source_pattern"] = (
+            "Two arbitrary symbols establish a distributed consensus protocol."
+        )
+        del transfer["source_claim_support"]
+        with self.assertRaisesRegex(ValueError, "source_claim_support"):
+            validate_architecture_transfers(
+                [transfer], evidence_packet=packet, target_fact_ids={"fact-events"}
+            )
+
+    def test_rejects_fabricated_anchor_and_claim_ledger_mismatch(self):
+        packet, transfer = self.packet_and_transfer()
+        transfer["source_claim_support"][0]["anchors"][0]["exact_quote"] = (
+            "this text is not present in the source excerpt"
+        )
+        with self.assertRaisesRegex(ValueError, "not present in the cited source excerpt"):
+            validate_architecture_transfers(
+                [transfer], evidence_packet=packet, target_fact_ids={"fact-events"}
+            )
+
+        transfer = valid_transfer([row["source_id"] for row in packet["sources"]])
+        transfer["source_claim_support"][0]["claim"] = "A fabricated replacement claim."
+        with self.assertRaisesRegex(ValueError, "must repeat the referenced source claim"):
+            validate_architecture_transfers(
+                [transfer], evidence_packet=packet, target_fact_ids={"fact-events"}
+            )
 
     def test_rejects_source_fabrication(self):
         packet, transfer = self.packet_and_transfer()
@@ -334,6 +660,21 @@ class ArchitectureTransferContractTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, message):
                 validate_architecture_transfers(
                     [invalid], evidence_packet=packet, target_fact_ids={"fact-events"}
+                )
+
+    def test_rejects_missing_or_stale_transfer_contract_version(self):
+        packet, transfer = self.packet_and_transfer()
+        for bad_version in (None, "palamedes-architecture-transfer/1"):
+            invalid = copy.deepcopy(transfer)
+            if bad_version is None:
+                invalid.pop("transfer_contract_version")
+            else:
+                invalid["transfer_contract_version"] = bad_version
+            with self.assertRaisesRegex(ValueError, "transfer_contract_version"):
+                validate_architecture_transfers(
+                    [invalid],
+                    evidence_packet=packet,
+                    target_fact_ids={"fact-events"},
                 )
 
     def test_rejects_same_domain_and_requires_material_differences(self):

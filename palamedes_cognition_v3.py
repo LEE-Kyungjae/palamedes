@@ -106,6 +106,41 @@ _ADVERSE_VALUES = {
     "regression",
 }
 
+_GENERIC_PRODUCT_EVIDENCE_KINDS = {
+    "bounded_user_request",
+    "git_metadata",
+    "repository_metadata",
+    "test_metadata",
+    "unknown_boundary",
+    "workspace_git_metadata",
+    "workspace_observation",
+}
+
+_PRODUCT_BEARING_CLAIM_FIELDS = (
+    "claim",
+    "excerpt",
+    "observation",
+    "observed_outcome",
+    "observed_result",
+    "result",
+    "statement",
+)
+
+_BLINDED_CLAIM_IDENTITY_FIELDS = {
+    "candidate_fingerprint",
+    "candidate_id",
+    "evidence_packet_id",
+    "inventor_role",
+    "item_id",
+    "native_symbol_id",
+    "partition_fingerprint",
+    "repo_snapshot_id",
+    "role",
+    "source_id",
+    "source_ids",
+    "stable_identity",
+}
+
 
 class FrozenDict(Mapping):
     """A recursively immutable mapping used at every protocol boundary."""
@@ -256,9 +291,9 @@ def partition_cognition_evidence_bundle(
     failure-earned boundary must be adapted to the same target reality.  The raw
     request plus bounded knowledge/unknowns belong only to the opportunity
     inventor; prior opportunity and invention names are intentionally excluded.
-    Revision-pinned reference patterns and validated transfer mappings belong only
-    to the architecture analogist.  Only direct adverse outcome observations enter
-    the failure operator's partition.
+    Only host-validated transfer mappings belong to the architecture analogist;
+    raw revision-pinned excerpts alone cannot authorize it to invent a mapping.
+    Only direct adverse outcome observations enter the failure operator's partition.
     """
 
     from palamedes_evidence_bundle import validate_cognition_evidence_bundle
@@ -301,12 +336,10 @@ def partition_cognition_evidence_bundle(
     transfer = _object(
         bundle.get("cross_domain_transfer", {}), "bundle.cross_domain_transfer"
     )
-    architecture_partition = []
-    for lane in ("reference_patterns", "transfer_mappings"):
-        architecture_partition.extend(
-            as_source(item, f"cross_domain_transfer.{lane}[{index}]")
-            for index, item in enumerate(transfer.get(lane, []))
-        )
+    architecture_partition = [
+        as_source(item, f"cross_domain_transfer.transfer_mappings[{index}]")
+        for index, item in enumerate(transfer.get("transfer_mappings", []))
+    ]
 
     direct_failure_ids = set(
         bundle.get("citation_allowlists", {}).get("direct_failure_ids", [])
@@ -396,6 +429,131 @@ def _normalized_marker(value: Any) -> str:
     if not isinstance(value, str):
         return ""
     return value.strip().lower().replace("-", "_").replace(" ", "_")
+
+
+def _record_kind(record: Mapping[str, Any]) -> str:
+    return _normalized_marker(record.get("kind") or record.get("evidence_kind"))
+
+
+def _substantive_product_source_ids(
+    records: Sequence[Mapping[str, Any]], constitution: Any
+) -> set[str]:
+    """Return host-citable local facts that are more than workspace metadata."""
+
+    allowlist: Optional[set[str]] = None
+    if isinstance(constitution, Mapping) and "mission_source_allowlist" in constitution:
+        raw_allowlist = constitution.get("mission_source_allowlist")
+        if not isinstance(raw_allowlist, list):
+            raise ValueError("constitution.mission_source_allowlist must be an array")
+        allowlist = {
+            _text(item, "constitution.mission_source_allowlist[]")
+            for item in raw_allowlist
+        }
+
+    substantive: set[str] = set()
+    for record in records:
+        source_id = _text(record.get("source_id"), "product evidence.source_id")
+        if allowlist is not None and source_id not in allowlist:
+            continue
+        if _record_kind(record) in _GENERIC_PRODUCT_EVIDENCE_KINDS:
+            continue
+        authority = _normalized_marker(record.get("decision_authority"))
+        if authority != "mission_citable":
+            continue
+        epistemic_class = _normalized_marker(record.get("epistemic_class"))
+        if epistemic_class not in {
+            "direct_observation",
+            "direct_user_input",
+            "host_verified",
+        }:
+            continue
+        payload = record.get("payload")
+        claim_containers = [record]
+        if isinstance(payload, Mapping):
+            claim_containers.append(payload)
+        if not any(
+            isinstance(container.get(field), str)
+            and bool(container.get(field).strip())
+            for container in claim_containers
+            for field in _PRODUCT_BEARING_CLAIM_FIELDS
+        ):
+            continue
+        substantive.add(source_id)
+    return substantive
+
+
+def _validated_architecture_mapping(
+    record: Mapping[str, Any], field: str
+) -> Optional[Dict[str, Any]]:
+    """Project the immutable fields an analogist is permitted to copy."""
+
+    from palamedes_architecture_transfer import TRANSFER_CONTRACT_VERSION
+
+    if _record_kind(record) != "cross_domain_architecture_transfer":
+        return None
+    if _normalized_marker(record.get("decision_authority")) != "advisory":
+        return None
+    if _normalized_marker(record.get("epistemic_class")) != "hypothesis":
+        return None
+    if record.get("delivery_authority_granted") is not False:
+        return None
+    payload = record.get("payload")
+    if not isinstance(payload, Mapping):
+        return None
+    if payload.get("transfer_contract_version") != TRANSFER_CONTRACT_VERSION:
+        return None
+    if payload.get("same_primary_job") is not False:
+        return None
+    if payload.get("source_outcome_is_target_forecast") is not False:
+        return None
+    if payload.get("authority") != "mechanism_candidate_only":
+        return None
+    for authority_field in (
+        "decision_authority_granted",
+        "design_authority_granted",
+        "selection_authority_granted",
+        "delivery_authority_granted",
+        "code_reuse_authority_granted",
+    ):
+        if payload.get(authority_field) is not False:
+            return None
+    projected = {
+        "source": _text(payload.get("source_domain"), f"{field}.payload.source_domain"),
+        "pressure": _text(
+            payload.get("source_pressure"), f"{field}.payload.source_pressure"
+        ),
+        "mechanism": _text(
+            payload.get("source_pattern"), f"{field}.payload.source_pattern"
+        ),
+        "target": _text(
+            payload.get("target_pressure"), f"{field}.payload.target_pressure"
+        ),
+        "adaptation": _text(
+            payload.get("adaptation"), f"{field}.payload.adaptation"
+        ),
+    }
+    limits = [
+        _text(payload.get("transfer_limit"), f"{field}.payload.transfer_limit")
+    ]
+    for limit in _strings(
+        payload.get("non_transferable_assumptions"),
+        f"{field}.payload.non_transferable_assumptions",
+    ):
+        if limit not in limits:
+            limits.append(limit)
+    projected["limits"] = limits
+    return projected
+
+
+def _architecture_mapping_catalog(
+    records: Sequence[Mapping[str, Any]], field: str
+) -> Dict[str, Dict[str, Any]]:
+    catalog: Dict[str, Dict[str, Any]] = {}
+    for index, record in enumerate(records):
+        mapping = _validated_architecture_mapping(record, f"{field}[{index}]")
+        if mapping is not None:
+            catalog[_text(record.get("source_id"), f"{field}[{index}].source_id")] = mapping
+    return catalog
 
 
 def _is_adverse_evidence(record: Mapping[str, Any]) -> bool:
@@ -673,6 +831,7 @@ def _normalize_role_specific(
     claim_source_ids: set[str],
     exclusive_source_ids: set[str],
     failure_basis: Dict[str, Any],
+    architecture_mappings: Mapping[str, Mapping[str, Any]],
 ) -> Dict[str, Any]:
     if role == PRODUCT_OPPORTUNITY_INVENTOR:
         row = _exact_object(
@@ -710,8 +869,22 @@ def _normalize_role_specific(
                 f"{field}.source_ids must come from the analogist's exclusive partition: "
                 + ", ".join(non_partition)
             )
+        if len(source_ids) != 1 or source_ids[0] not in architecture_mappings:
+            raise ValueError(
+                f"{field}.source_ids must select exactly one host-validated transfer mapping"
+            )
         row["source_ids"] = source_ids
         row["limits"] = _strings(row["limits"], f"{field}.limits", minimum=1)
+        mapping = architecture_mappings[source_ids[0]]
+        for name in ("source", "pressure", "mechanism", "target", "adaptation"):
+            if row[name] != mapping[name]:
+                raise ValueError(
+                    f"{field}.{name} must exactly copy the host-validated transfer mapping"
+                )
+        if row["limits"] != mapping["limits"]:
+            raise ValueError(
+                f"{field}.limits must exactly preserve the host-validated transfer limits"
+            )
         return row
 
     row = _exact_object(
@@ -760,6 +933,8 @@ def _normalize_candidate(
     received_source_ids: List[str],
     exclusive_source_ids: set[str],
     adverse_source_ids: set[str],
+    architecture_mappings: Mapping[str, Mapping[str, Any]],
+    substantive_product_source_ids: set[str],
 ) -> Dict[str, Any]:
     role_field = _ROLE_CANDIDATE_FIELD[role]
     row = _exact_object(
@@ -804,6 +979,11 @@ def _normalize_candidate(
         raise ValueError(
             f"{scope_field}.claim_source_ids cites fabricated source IDs: "
             + ", ".join(fabricated)
+        )
+    if not set(claims) & substantive_product_source_ids:
+        raise ValueError(
+            f"{scope_field}.claim_source_ids must include substantive non-generic "
+            "mission-citable product evidence"
         )
     scope["received_source_ids"] = received
     scope["claim_source_ids"] = claims
@@ -851,7 +1031,20 @@ def _normalize_candidate(
         claim_source_ids=set(claims),
         exclusive_source_ids=exclusive_source_ids,
         failure_basis=failure_basis,
+        architecture_mappings=architecture_mappings,
     )
+    if role == CROSS_DOMAIN_ARCHITECTURE_ANALOGIST:
+        transfer = row[role_field]
+        if row["product_mechanism"] != transfer["adaptation"]:
+            raise ValueError(
+                f"{role}.candidate.product_mechanism must exactly copy "
+                "architecture_transfer.adaptation"
+            )
+        if row["failure_basis"]["transfer_limit"] != transfer["limits"][0]:
+            raise ValueError(
+                f"{role}.candidate.failure_basis.transfer_limit must preserve "
+                "the host-validated primary transfer limit"
+            )
     return row
 
 
@@ -873,7 +1066,12 @@ def _candidate_contract_text(role: str) -> str:
             "Add architecture_transfer with exactly: source, source_ids, pressure, "
             "mechanism, target, adaptation, limits. This is a causal "
             "source→pressure→mechanism→target→adaptation→limits transfer, not a list "
-            "of libraries or a claim that two products look alike. limits is a non-empty array."
+            "of libraries or a claim that two products look alike. Select exactly one "
+            "exclusive host-validated mapping source_id, then copy source, pressure, "
+            "mechanism, target, adaptation, and the complete ordered limits array from "
+            "that mapping without paraphrase. product_mechanism must exactly copy "
+            "architecture_transfer.adaptation and failure_basis.transfer_limit must "
+            "exactly copy its first limit."
         ),
         FAILURE_EXPERIENCED_OPERATOR: (
             "Add failure_earned_boundary with exactly: source_failure_ids, "
@@ -893,8 +1091,11 @@ fingerprint; the host owns identity. {role_requirement}
 business_effect has exactly revenue_or_value_effect, causal_chain (at least two
 steps), leading_indicator, countervailing_risk. product_opportunity_lineage has
 exactly source_signal_ids, signal, latent_need, mechanism, behavior_change,
-business_effect, non_obvious_leap; the last three causal values must repeat the
-candidate values exactly. second_order_effects is non-empty and each entry has
+business_effect, non_obvious_leap. lineage.mechanism must exactly copy
+candidate.product_mechanism; lineage.behavior_change must exactly copy
+candidate.behavior_change; lineage.business_effect must be non-empty and exactly
+copy candidate.business_effect.revenue_or_value_effect. second_order_effects is
+non-empty and each entry has
 stakeholder, horizon, valence (benefit|risk|mixed), first_order_effect,
 second_order_effect, feedback_or_externality, early_signal.
 
@@ -908,14 +1109,21 @@ intervention, target_actor, observation_window, metric,
 baseline_or_counterfactual, falsifier, rollback, stop_condition,
 authority_preconditions (non-empty array), and branches. branches has exactly
 if_supported, if_refuted, if_inconclusive. The probe must change or expose reality;
-do not return a code review, planning workshop, or another meta-review.
+do not return a code review, planning workshop, or another meta-review. kind must
+be exactly one of {json.dumps(sorted(PROBE_KINDS))}; for a mock or concept shown
+to people use behavioral_exposure, never invent a descriptive enum.
+terminal_output_kind must be exactly one of
+{json.dumps(sorted(PROBE_TERMINAL_OUTPUTS))}; a report/document is not terminal
+reality, so a cohort concept exposure ends in observed_actor_response.
 
 failure_basis has exactly basis_type (direct|no_signal), source_ids, lesson,
 missing_viability_condition, guardrail, transfer_limit. direct may cite only an
 explicit adverse source in the supplied packet; no_signal must use [].
 evidence_scope has exactly received_source_ids and claim_source_ids. Copy
 received_source_ids from allowed_source_ids in the same order. claim_source_ids
-must be a non-empty subset. Never fabricate a source ID.
+must be a non-empty subset. Never fabricate a source ID. A source ID certifies
+only the exact host-supplied source payload; it does not turn observed_signal or
+any other model-authored interpretation into an observed fact.
 """.strip()
 
 
@@ -990,6 +1198,31 @@ def _forced_architecture_abstention(received_source_ids: List[str]) -> Dict[str,
     return payload
 
 
+def _forced_product_grounding_abstention(
+    role: str, received_source_ids: List[str]
+) -> Dict[str, Any]:
+    payload = {
+        "role": role,
+        "reason_code": "no_substantive_product_evidence",
+        "reason": (
+            "Only generic request, workspace, repository, test, or unknown metadata "
+            "is available; it cannot ground a product opportunity."
+        ),
+        "missing_evidence": (
+            "A non-generic mission-citable product observation or host-verified "
+            "capability, gap, document claim, or adverse outcome."
+        ),
+        "wake_condition": (
+            "Add a bounded host-citable product fact beyond workspace or Git metadata."
+        ),
+        "received_source_ids": list(received_source_ids),
+    }
+    payload["abstention_id"] = (
+        "abstention-" + fingerprint(payload).split(":", 1)[1][:16]
+    )
+    return payload
+
+
 def _ask_object(ask: Callable[[str, str], Any], role: str, prompt: str) -> Dict[str, Any]:
     return _object(ask(role, prompt), f"response from {role}")
 
@@ -1023,6 +1256,63 @@ def _sanitize_candidate_content(candidate: Mapping[str, Any]) -> Dict[str, Any]:
         source_ids = boundary.pop("source_failure_ids", [])
         boundary["source_failure_count"] = len(source_ids)
     return content
+
+
+def _sanitize_host_claim_value(value: Any) -> Any:
+    """Remove stable identities while preserving exact host-owned claim substance."""
+
+    if isinstance(value, Mapping):
+        sanitized = {}
+        for raw_key, item in value.items():
+            key = str(raw_key)
+            if (
+                key in _BLINDED_CLAIM_IDENTITY_FIELDS
+                or key.endswith("_id")
+                or key.endswith("_ids")
+                or key.endswith("_fingerprint")
+            ):
+                continue
+            sanitized[key] = _sanitize_host_claim_value(item)
+        return sanitized
+    if isinstance(value, (list, tuple)):
+        return [_sanitize_host_claim_value(item) for item in value]
+    return _json_clone(value, "host claim")
+
+
+def _sanitize_host_claims(
+    candidate: Mapping[str, Any], evidence_by_source_id: Mapping[str, Mapping[str, Any]]
+) -> List[Dict[str, Any]]:
+    """Expose cited host evidence to a critic under opaque, origin-free references."""
+
+    scope = candidate.get("evidence_scope")
+    if not isinstance(scope, Mapping):
+        raise ValueError("frozen candidate evidence_scope is malformed")
+    claim_source_ids = scope.get("claim_source_ids")
+    if not isinstance(claim_source_ids, (list, tuple)):
+        raise ValueError("frozen candidate claim_source_ids is malformed")
+    claims: List[Dict[str, Any]] = []
+    for index, source_id in enumerate(claim_source_ids, start=1):
+        record = evidence_by_source_id.get(str(source_id))
+        if record is None:
+            raise ValueError("frozen candidate cites evidence missing from host custody")
+        claims.append(
+            {
+                "claim_ref": f"claim-{index}",
+                "custody": "host_supplied_evidence",
+                "evidence_kind": _record_kind(record) or "unspecified",
+                "epistemic_class": _normalized_marker(
+                    record.get("epistemic_class")
+                )
+                or "unspecified",
+                "decision_authority": _normalized_marker(
+                    record.get("decision_authority")
+                )
+                or "unspecified",
+                "status": _normalized_marker(record.get("status")) or "unspecified",
+                "claim_payload": _sanitize_host_claim_value(record),
+            }
+        )
+    return claims
 
 
 def _normalize_critique(
@@ -1082,18 +1372,26 @@ def _normalize_critique(
 
 
 def _adversary_prompt(
-    *, constitution: Any, review_subject_id: str, sanitized_content: Dict[str, Any]
+    *,
+    constitution: Any,
+    review_subject_id: str,
+    sanitized_content: Dict[str, Any],
+    sanitized_host_claims: List[Dict[str, Any]],
 ) -> str:
     packet = {
         "constitution": constitution,
         "review_subject_id": review_subject_id,
         "candidate": sanitized_content,
+        "host_claims": sanitized_host_claims,
     }
     return f"""ROLE: origin-blinded product adversary
 
 Review exactly one frozen candidate. Author identity, inventor assignment, raw
 evidence IDs, persuasive history, and every rival candidate are withheld. Do not
-guess them and do not rewrite the candidate.
+guess them and do not rewrite the candidate. host_claims contains sanitized exact
+host-owned payloads cited by this candidate under fresh opaque references. Treat
+candidate wording as inference, not observation: explicitly judge whether those
+host claims support observed_signal, lineage, mechanism, and causal business effect.
 
 Return exactly these fields: review_subject_id, verdict (qualified|disqualified),
 disqualification_reasons (use [] when qualified), constitutional_tension,
@@ -1206,6 +1504,17 @@ and sanitized blinded critiques in HOST_PACKET_JSON. You cannot see raw evidence
 partitions, inventor identities, generation history, or unsanitized candidate data.
 Do not rewrite, patch, merge, or issue a candidate. The host alone may issue a draft.
 
+These modes govern the next bounded epistemic action, not a production build.
+commit means the host may copy exactly one qualified candidate's already-bounded
+action_probe into a human-reviewable draft; it does not approve the product thesis,
+price, reward, launch, implementation, or delivery. Do not demand the evidence that
+the candidate's own reversible probe is specifically designed to obtain. Instead ask
+whether existing evidence justifies running that probe under its authority
+preconditions, falsifier, stop condition, and rollback. Specialized approvals may
+remain unresolved on the draft and are not satisfied by this selection. Defer only
+when even the proposed epistemic action is unsafe, non-discriminating, ungrounded, or
+not worth its bounded cost.
+
 Return exactly: mode, selected_candidate_ids, rationale, unresolved_conflicts, and
 decision_details. Modes and exact decision_details fields are:
   commit: commitment_scope, review_trigger
@@ -1281,6 +1590,11 @@ def run_partitioned_product_cognition(
     )
 
     common_source_ids = [row["source_id"] for row in common]
+    evidence_by_source_id = {
+        row["source_id"]: row
+        for row in common
+        + [record for role in INVENTOR_ROLES for record in exclusive[role]]
+    }
     generated: List[Dict[str, Any]] = []
     abstentions: List[Dict[str, Any]] = []
     partition_audit: List[Dict[str, Any]] = []
@@ -1298,6 +1612,12 @@ def run_partitioned_product_cognition(
         failure_archive_adverse_source_ids = {
             row["source_id"] for row in exclusive_records if _is_adverse_evidence(row)
         }
+        substantive_product_source_ids = _substantive_product_source_ids(
+            received_records, constitution_payload
+        )
+        architecture_mappings = _architecture_mapping_catalog(
+            exclusive_records, f"partitions.{role}"
+        )
         partition_payload = {
             "role": role,
             "common_source_ids": common_source_ids,
@@ -1312,7 +1632,20 @@ def run_partitioned_product_cognition(
             "exclusive_source_ids": [row["source_id"] for row in exclusive_records],
         }
 
-        if role == CROSS_DOMAIN_ARCHITECTURE_ANALOGIST and not exclusive_records:
+        if (
+            role == PRODUCT_OPPORTUNITY_INVENTOR
+            and not substantive_product_source_ids
+        ):
+            abstention = _forced_product_grounding_abstention(
+                role, received_source_ids
+            )
+            abstentions.append(abstention)
+            audit_row["outcome_id"] = abstention["abstention_id"]
+            audit_row["outcome_kind"] = "host_forced_abstention"
+            partition_audit.append(audit_row)
+            continue
+
+        if role == CROSS_DOMAIN_ARCHITECTURE_ANALOGIST and not architecture_mappings:
             abstention = _forced_architecture_abstention(received_source_ids)
             abstentions.append(abstention)
             audit_row["outcome_id"] = abstention["abstention_id"]
@@ -1322,6 +1655,16 @@ def run_partitioned_product_cognition(
 
         if role == FAILURE_EXPERIENCED_OPERATOR and not failure_archive_adverse_source_ids:
             abstention = _forced_failure_abstention(received_source_ids)
+            abstentions.append(abstention)
+            audit_row["outcome_id"] = abstention["abstention_id"]
+            audit_row["outcome_kind"] = "host_forced_abstention"
+            partition_audit.append(audit_row)
+            continue
+
+        if not substantive_product_source_ids:
+            abstention = _forced_product_grounding_abstention(
+                role, received_source_ids
+            )
             abstentions.append(abstention)
             audit_row["outcome_id"] = abstention["abstention_id"]
             audit_row["outcome_kind"] = "host_forced_abstention"
@@ -1376,6 +1719,8 @@ def run_partitioned_product_cognition(
             received_source_ids=received_source_ids,
             exclusive_source_ids={row["source_id"] for row in exclusive_records},
             adverse_source_ids=adverse_source_ids,
+            architecture_mappings=architecture_mappings,
+            substantive_product_source_ids=substantive_product_source_ids,
         )
         candidate_fp = fingerprint(
             {
@@ -1415,6 +1760,9 @@ def run_partitioned_product_cognition(
             ).hexdigest()[:16]
         )
         sanitized_content = _sanitize_candidate_content(candidate)
+        sanitized_host_claims = _sanitize_host_claims(
+            candidate, evidence_by_source_id
+        )
         response = _ask_object(
             ask,
             BLINDED_ADVERSARY_ROLE,
@@ -1422,6 +1770,7 @@ def run_partitioned_product_cognition(
                 constitution=constitution_payload,
                 review_subject_id=review_subject_id,
                 sanitized_content=sanitized_content,
+                sanitized_host_claims=sanitized_host_claims,
             ),
         )
         critique = _normalize_critique(
@@ -1453,26 +1802,51 @@ def run_partitioned_product_cognition(
         }
         for critique in frozen_critiques
     ]
-    selector_response = _ask_object(
-        ask,
-        SELECTOR_ROLE,
-        _selector_prompt(
-            constitution=constitution_payload,
-            candidates=selector_candidates,
-            critiques=selector_critiques,
-        ),
-    )
     known_ids = {row["candidate_id"] for row in frozen_candidates}
     qualified_ids = {
         row["candidate_id"]
         for row in frozen_critiques
         if row["verdict"] == "qualified"
     }
-    decision = _normalize_selector_decision(
-        selector_response,
-        known_candidate_ids=known_ids,
-        qualified_candidate_ids=qualified_ids,
-    )
+    if frozen_candidates:
+        selector_response = _ask_object(
+            ask,
+            SELECTOR_ROLE,
+            _selector_prompt(
+                constitution=constitution_payload,
+                candidates=selector_candidates,
+                critiques=selector_critiques,
+            ),
+        )
+        decision = _normalize_selector_decision(
+            selector_response,
+            known_candidate_ids=known_ids,
+            qualified_candidate_ids=qualified_ids,
+        )
+        selector_called = True
+    else:
+        decision = {
+            "mode": "defer",
+            "selected_candidate_ids": [],
+            "rationale": (
+                "The host admitted no grounded candidate, so no model selection "
+                "or product-opportunity commitment is permitted."
+            ),
+            "unresolved_conflicts": [
+                "Substantive non-generic product evidence is unavailable."
+            ],
+            "decision_details": {
+                "missing_condition": (
+                    "At least one qualified candidate grounded in substantive "
+                    "mission-citable product evidence."
+                ),
+                "wake_trigger": (
+                    "A bounded host-citable product fact enters an inventor partition."
+                ),
+                "review_at": "At the next evidence refresh.",
+            },
+        }
+        selector_called = False
 
     # Recompute after selection as a tripwire even though the selector only saw a
     # serialized sanitized copy and the records themselves are immutable.
@@ -1514,6 +1888,7 @@ def run_partitioned_product_cognition(
                 "sanitized_blinded_critiques",
             ],
             "selector_mutation_authority": False,
+            "selector_called": selector_called,
             "host_issuance_authority": True,
         },
     }
