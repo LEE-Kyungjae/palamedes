@@ -944,6 +944,13 @@ make schema-check
 
 ## 라이선스와 기여
 
-저장소의 라이선스와 기여 방식은 영어 상세 문서 및 프로젝트 파일을
-따릅니다. 번역에서 의미 차이가 생기면 [README.md](README.md)의 영어
-명세를 기준으로 합니다.
+Palamedes는 [MIT License](LICENSE)로 배포되는 오픈소스 소프트웨어입니다.
+라이선스 조건에 따라 소프트웨어를 사용·복사·수정·병합·공개·배포·재허가하거나
+판매할 수 있습니다. 소프트웨어의 복사본 또는 실질적인 일부에는 저작권 고지와
+허가 고지를 포함해야 합니다.
+
+Copyright (c) 2026 LEE Kyungjae.
+
+기여 방식은 [CONTRIBUTING.md](CONTRIBUTING.md)를 참고하세요. 번역에서 의미 차이가
+생기면 [LICENSE](LICENSE) 원문과 [README.md](README.md)의 영어 명세를
+기준으로 합니다.

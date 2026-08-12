@@ -1710,6 +1710,16 @@ something that can alter the next step. AI should eventually originate and
 challenge direction—not merely generate more tasks—but that capability must be
 demonstrated against baselines and outcomes.
 
+## License
+
+Palamedes is open-source software licensed under the
+[MIT License](LICENSE). You may use, copy, modify, merge, publish, distribute,
+sublicense, and sell copies of the software, subject to the license terms. The
+copyright notice and permission notice must be included in copies or substantial
+portions of the software.
+
+Copyright (c) 2026 LEE Kyungjae.
+
 ## 📈 Star History
 
 <a href="https://star-history.com/#LEE-Kyungjae/Palamedes&Date">
