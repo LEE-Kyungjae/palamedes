@@ -99,6 +99,7 @@ OpenRouter, OpenAI, 작업공간 선택과 plan-state CLI는
 | 경쟁 해석 탐색 | `/think <topic>` |
 | 다관점 제품 기회 발견 | `/opportunity <context>` |
 | 제한된 미션 발원과 선택 | `/cycle <context>` |
+| GitNexus 교차 도메인 근거를 포함한 분리형 제품 발명 | `/cycle --mode product <context>` |
 | 구조적 제품 발명 탐색 | `/invent <context>` |
 | 제품 세계 발원 | `/vision <context>` |
 | 저비용 founder-prompt 탐색 | `/vision-scout <context>` |
@@ -107,7 +108,9 @@ OpenRouter, OpenAI, 작업공간 선택과 plan-state CLI는
 | 변화 기반 제한 cognition | `palamedes watch --once` |
 
 워크플로별 권한 경계는 [인지 워크플로](docs/cognition-workflows.ko.md)를
-참고하세요.
+참고하세요. 제품 cycle의 architecture analogist에는 raw reference 검색 결과가 아니라
+host validator를 통과한 transfer mapping만 전달됩니다. 미해결 전문 승인은 범용
+`/approve` 명령으로 충족할 수 없습니다.
 
 ## 구조
 

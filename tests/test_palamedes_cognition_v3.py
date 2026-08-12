@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from palamedes_cognition_v3 import (
     BLINDED_ADVERSARY_ROLE,
@@ -12,11 +13,19 @@ from palamedes_cognition_v3 import (
     INVENTOR_ROLES,
     PRODUCT_OPPORTUNITY_INVENTOR,
     SELECTOR_ROLE,
+    partition_cognition_evidence_bundle,
     run_partitioned_product_cognition,
     thaw,
 )
-from palamedes_chat import CognitionCycleStore, run_partitioned_product_cycle
+from palamedes_chat import (
+    CognitionCycleStore,
+    MissionStore,
+    approve_mission,
+    run_partitioned_product_cycle,
+)
 from palamedes_evidence_bundle import build_cognition_evidence_bundle
+from palamedes_product_alignment import ProductAlignmentStore
+from tests.test_palamedes_architecture_transfer import collect_packet
 
 
 def evidence_partitions(*, failure=True, failure_status="failure"):
@@ -30,12 +39,42 @@ def evidence_partitions(*, failure=True, failure_status="failure"):
         ],
         CROSS_DOMAIN_ARCHITECTURE_ANALOGIST: [
             {
-                "source_id": "source-ledger-log",
-                "evidence_kind": "external_architecture",
-                "source_domain": "append-only financial ledgers",
-                "target_domain": "seasonal game progression",
-                "pressure": "late and duplicate events must not corrupt derived balances",
-                "mechanism": "immutable events plus idempotent projection",
+                "source_id": "mapping-ledger-projection",
+                "kind": "cross_domain_architecture_transfer",
+                "status": "candidate",
+                "epistemic_class": "hypothesis",
+                "decision_authority": "advisory",
+                "delivery_authority_granted": False,
+                "payload": {
+                    "transfer_contract_version": "palamedes-architecture-transfer/2",
+                    "source_domain": "append-only financial ledgers",
+                    "source_pressure": (
+                        "Duplicate, late, and corrected events must not corrupt balances."
+                    ),
+                    "source_pattern": (
+                        "Immutable facts plus idempotent, rebuildable projections"
+                    ),
+                    "target_pressure": (
+                        "Seasonal progress and reward entitlement state must survive retries."
+                    ),
+                    "adaptation": (
+                        "Use match IDs as idempotency keys and rebuild season views from facts."
+                    ),
+                    "transfer_limit": (
+                        "Ledger correctness does not prove the reward loop is enjoyable."
+                    ),
+                    "non_transferable_assumptions": [
+                        "Do not copy financial compliance complexity into the game wholesale."
+                    ],
+                    "same_primary_job": False,
+                    "source_outcome_is_target_forecast": False,
+                    "authority": "mechanism_candidate_only",
+                    "decision_authority_granted": False,
+                    "design_authority_granted": False,
+                    "selection_authority_granted": False,
+                    "delivery_authority_granted": False,
+                    "code_reuse_authority_granted": False,
+                },
             }
         ],
         FAILURE_EXPERIENCED_OPERATOR: (
@@ -56,10 +95,20 @@ def common_evidence():
     return [
         {
             "source_id": "game-event-stream",
-            "evidence_kind": "observed_system_fact",
+            "evidence_kind": "capability",
+            "epistemic_class": "direct_observation",
+            "decision_authority": "mission_citable",
             "observation": "Completed matches already emit player, mode, and result events.",
         }
     ]
+
+
+def record_substantive_product_fact(state_root):
+    ProductAlignmentStore(Path(state_root) / "product-alignment").record_capability(
+        capability_id="capability-repeat-events",
+        statement="Repeat activity events are already available for bounded cohorts.",
+        source_ids=["host-observation-repeat-events"],
+    )
 
 
 def _packet(prompt):
@@ -194,7 +243,7 @@ class CognitionFixture:
                 "A free seasonal track credits healthy play across modes before a paid track is tested."
             ),
             CROSS_DOMAIN_ARCHITECTURE_ANALOGIST: (
-                "Append match events immutably and project idempotent seasonal progress."
+                "Use match IDs as idempotency keys and rebuild season views from facts."
             ),
             FAILURE_EXPERIENCED_OPERATOR: (
                 "Let broad outcome goals earn progress while capping narrow daily pressure."
@@ -320,17 +369,20 @@ class CognitionFixture:
             }
         elif role == CROSS_DOMAIN_ARCHITECTURE_ANALOGIST:
             candidate["architecture_transfer"] = {
-                "source": "Append-only financial ledger projection",
+                "source": "append-only financial ledgers",
                 "source_ids": exclusive,
                 "pressure": "Duplicate, late, and corrected events must not corrupt balances.",
                 "mechanism": "Immutable facts plus idempotent, rebuildable projections",
-                "target": "Seasonal progress and reward entitlement state",
+                "target": "Seasonal progress and reward entitlement state must survive retries.",
                 "adaptation": "Use match IDs as idempotency keys and rebuild season views from facts.",
                 "limits": [
                     "Ledger correctness does not prove the reward loop is enjoyable.",
                     "Do not copy financial compliance complexity into the game wholesale.",
                 ],
             }
+            candidate["failure_basis"]["transfer_limit"] = (
+                "Ledger correctness does not prove the reward loop is enjoyable."
+            )
         else:
             candidate["failure_earned_boundary"] = {
                 "source_failure_ids": [packet["adverse_source_ids"][0]],
@@ -342,6 +394,39 @@ class CognitionFixture:
                 "transfer_limit": "The boundary does not establish a season price or content cadence.",
             }
         return candidate
+
+
+class PartitionedProductProvider:
+    last_usage = None
+
+    def __init__(
+        self,
+        fixture,
+        *,
+        provider_name="fixture",
+        model="product-v3",
+        fail_role="",
+    ):
+        self.fixture = fixture
+        self.provider_name = provider_name
+        self.model = model
+        self.fail_role = fail_role
+        self.failed = False
+
+    def stream(self, messages):
+        prompt = messages[-1]["content"]
+        if prompt.startswith("ROLE_ASSIGNMENT:"):
+            role = prompt.splitlines()[0].split(":", 1)[1].strip()
+        elif prompt.startswith("ROLE: origin-blinded"):
+            role = BLINDED_ADVERSARY_ROLE
+        elif prompt.startswith("ROLE: product cognition selector"):
+            role = SELECTOR_ROLE
+        else:
+            raise AssertionError(prompt[:120])
+        if role == self.fail_role and not self.failed:
+            self.failed = True
+            raise RuntimeError("simulated partitioned product provider failure")
+        yield json.dumps(self.fixture(role, prompt))
 
 
 class PartitionedProductCognitionTests(unittest.TestCase):
@@ -404,6 +489,34 @@ class PartitionedProductCognitionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "fabricated source IDs"):
             self.run_fixture(CognitionFixture(candidate_mutator=mutate))
 
+    def test_candidate_must_cite_the_substantive_source_not_only_generic_metadata(self):
+        partitions = evidence_partitions()
+        partitions[PRODUCT_OPPORTUNITY_INVENTOR].insert(
+            0,
+            {
+                "source_id": "workspace-generic",
+                "kind": "workspace_observation",
+                "status": "observed",
+                "epistemic_class": "direct_observation",
+                "decision_authority": "mission_citable",
+                "observation": "Git metadata exists.",
+            },
+        )
+
+        def mutate(role, candidate, _packet):
+            if role == PRODUCT_OPPORTUNITY_INVENTOR:
+                candidate["evidence_scope"]["claim_source_ids"] = [
+                    "workspace-generic"
+                ]
+                candidate["product_opportunity_lineage"]["source_signal_ids"] = [
+                    "workspace-generic"
+                ]
+
+        with self.assertRaisesRegex(ValueError, "substantive non-generic"):
+            self.run_fixture(
+                CognitionFixture(candidate_mutator=mutate), partitions=partitions
+            )
+
     def test_rejects_generic_code_review_output(self):
         def mutate(role, candidate, _packet):
             if role == PRODUCT_OPPORTUNITY_INVENTOR:
@@ -428,6 +541,60 @@ class PartitionedProductCognitionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "limits"):
             self.run_fixture(CognitionFixture(candidate_mutator=mutate))
 
+    def test_rejects_architecture_content_mutation_behind_a_valid_mapping_id(self):
+        def mutate(role, candidate, _packet):
+            if role == CROSS_DOMAIN_ARCHITECTURE_ANALOGIST:
+                transfer = candidate["architecture_transfer"]
+                self.assertEqual(
+                    transfer["source_ids"], ["mapping-ledger-projection"]
+                )
+                transfer["pressure"] = "Invented pressure behind a valid source ID."
+                transfer["mechanism"] = "Invented mechanism behind a valid source ID."
+                transfer["adaptation"] = "Invented target architecture."
+                transfer["limits"] = ["Invented and weakened transfer limit."]
+
+        with self.assertRaisesRegex(
+            ValueError, "must exactly copy the host-validated transfer mapping"
+        ):
+            self.run_fixture(CognitionFixture(candidate_mutator=mutate))
+
+    def test_rejects_omitting_any_host_validated_transfer_limit(self):
+        def mutate(role, candidate, _packet):
+            if role == CROSS_DOMAIN_ARCHITECTURE_ANALOGIST:
+                candidate["architecture_transfer"]["limits"] = [
+                    "Ledger correctness does not prove the reward loop is enjoyable."
+                ]
+
+        with self.assertRaisesRegex(ValueError, "exactly preserve"):
+            self.run_fixture(CognitionFixture(candidate_mutator=mutate))
+
+    def test_unversioned_architecture_mapping_forces_host_abstention(self):
+        partitions = evidence_partitions()
+        partitions[CROSS_DOMAIN_ARCHITECTURE_ANALOGIST][0]["payload"].pop(
+            "transfer_contract_version"
+        )
+        fixture, result = self.run_fixture(partitions=partitions)
+        self.assertNotIn(CROSS_DOMAIN_ARCHITECTURE_ANALOGIST, fixture.calls)
+        abstention = next(
+            row
+            for row in result["abstentions"]
+            if row["role"] == CROSS_DOMAIN_ARCHITECTURE_ANALOGIST
+        )
+        self.assertEqual(
+            abstention["reason_code"], "no_validated_cross_domain_evidence"
+        )
+
+    def test_inventor_prompt_names_exact_probe_enums_without_solution_catalog(self):
+        fixture, _ = self.run_fixture()
+        prompt = next(
+            prompt
+            for role, prompt in fixture.prompts
+            if role == PRODUCT_OPPORTUNITY_INVENTOR
+        )
+        self.assertIn("behavioral_exposure", prompt)
+        self.assertIn("observed_actor_response", prompt)
+        self.assertIn("lineage.business_effect", prompt)
+
     def test_missing_failure_archive_forces_host_abstention_without_calling_role(self):
         fixture, result = self.run_fixture(partitions=evidence_partitions(failure=False))
         self.assertNotIn(FAILURE_EXPERIENCED_OPERATOR, fixture.calls)
@@ -451,6 +618,37 @@ class PartitionedProductCognitionTests(unittest.TestCase):
             abstention["reason_code"], "no_validated_cross_domain_evidence"
         )
         self.assertEqual(len(result["frozen_candidates"]), 2)
+
+    def test_raw_gitnexus_excerpts_without_validated_mapping_force_abstention(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            packet, _ = collect_packet(tempdir)
+            from palamedes_architecture_transfer import (
+                validate_gitnexus_evidence_packet,
+            )
+
+            with patch(
+                "palamedes_architecture_transfer.reverify_gitnexus_evidence_packet",
+                side_effect=lambda value: validate_gitnexus_evidence_packet(value),
+            ):
+                bundle = build_cognition_evidence_bundle(
+                    state_root=Path(tempdir) / ".palamedes",
+                    snapshot={
+                        "observation_id": "observation-raw-reference-only",
+                        "snapshot_fingerprint": "snapshot-raw-reference-only",
+                        "signals": {
+                            "git": {"head": "abc123", "branch": "main"},
+                            "change": {"summary": "activity is observable"},
+                            "test": {},
+                        },
+                    },
+                    user_request="Find a bounded product opportunity.",
+                    mode="product",
+                    architecture_packet=packet,
+                    transfer_mappings=[],
+                )
+            _, partitions, _ = partition_cognition_evidence_bundle(bundle)
+
+        self.assertEqual(partitions[CROSS_DOMAIN_ARCHITECTURE_ANALOGIST], [])
 
     def test_nonadverse_archive_cannot_be_promoted_to_failure_experience(self):
         fixture, result = self.run_fixture(
@@ -487,6 +685,10 @@ class PartitionedProductCognitionTests(unittest.TestCase):
         inventor_prompts = {
             role: prompt for role, prompt in fixture.prompts if role in INVENTOR_ROLES
         }
+        for prompt in inventor_prompts.values():
+            self.assertIn(
+                "does not turn observed_signal", prompt
+            )
         self.assertNotIn(
             "Cross-mode seasonal journey",
             inventor_prompts[CROSS_DOMAIN_ARCHITECTURE_ANALOGIST],
@@ -510,12 +712,22 @@ class PartitionedProductCognitionTests(unittest.TestCase):
         }
         self.assertEqual(len(adversary_packets), 3)
         for packet in adversary_packets:
-            self.assertEqual(set(packet), {"constitution", "review_subject_id", "candidate"})
+            self.assertEqual(
+                set(packet),
+                {"constitution", "review_subject_id", "candidate", "host_claims"},
+            )
             serialized = json.dumps(packet, ensure_ascii=False, sort_keys=True)
             self.assertNotIn("candidate_id", serialized)
             self.assertNotIn("candidate_fingerprint", serialized)
             self.assertNotIn("inventor_role", serialized)
             self.assertNotIn("source_id", serialized)
+            self.assertTrue(packet["host_claims"])
+            self.assertTrue(
+                all(
+                    row["custody"] == "host_supplied_evidence"
+                    for row in packet["host_claims"]
+                )
+            )
             visible_title = packet["candidate"]["title"]
             for rival_title in all_titles - {visible_title}:
                 self.assertNotIn(rival_title, serialized)
@@ -575,6 +787,15 @@ class PartitionedProductCognitionTests(unittest.TestCase):
                 self.assertEqual(result["host_issued_result"]["result_kind"], expected_kind[mode])
                 self.assertEqual(result["host_issued_result"]["issued_by"], "product_cognition_host")
 
+    def test_selector_prompt_distinguishes_probe_draft_from_product_launch(self):
+        fixture, _ = self.run_fixture(CognitionFixture(selector_mode="defer"))
+        prompt = next(
+            prompt for role, prompt in fixture.prompts if role == SELECTOR_ROLE
+        )
+        self.assertIn("next bounded epistemic action", prompt)
+        self.assertIn("does not approve the product thesis", prompt)
+        self.assertIn("Do not demand the evidence", prompt)
+
     def test_public_result_can_be_explicitly_thawed_for_serialization(self):
         _, result = self.run_fixture()
         mutable = thaw(result)
@@ -585,28 +806,64 @@ class PartitionedProductCognitionTests(unittest.TestCase):
             result["frozen_candidates"][0]["title"],
         )
 
+    def test_generic_metadata_and_empty_document_force_abstention_and_host_defer(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            bundle = build_cognition_evidence_bundle(
+                state_root=Path(tempdir) / ".palamedes",
+                snapshot={
+                    "observation_id": "observation-generic-only",
+                    "snapshot_fingerprint": "snapshot-generic-only",
+                    "signals": {
+                        "git": {"head": "abc123", "branch": "main"},
+                        "change": {"summary": "repository activity is observable"},
+                        "test": {"status": "passing"},
+                        "documents": [
+                            {
+                                "path": "README.md",
+                                "content_sha256": "a" * 64,
+                                "headings": [],
+                                "excerpt": "",
+                                "excerpt_truncated": False,
+                            }
+                        ],
+                    },
+                },
+                user_request=(
+                    "Invent a recurring seasonal product opportunity from this repository."
+                ),
+                mode="product",
+            )
+            common, partitions, constitution = partition_cognition_evidence_bundle(
+                bundle
+            )
+            fixture = CognitionFixture()
+            result = run_partitioned_product_cognition(
+                ask=fixture,
+                common_evidence=common,
+                partitions=partitions,
+                constitution=constitution,
+            )
+
+        self.assertEqual(fixture.calls, [])
+        self.assertEqual(result["frozen_candidates"], ())
+        self.assertEqual(result["host_issued_result"]["result_kind"], "defer")
+        self.assertFalse(result["audit"]["selector_called"])
+        product_abstention = next(
+            row
+            for row in result["abstentions"]
+            if row["role"] == PRODUCT_OPPORTUNITY_INVENTOR
+        )
+        self.assertEqual(
+            product_abstention["reason_code"], "no_substantive_product_evidence"
+        )
+        self.assertIn("host-citable product fact", product_abstention["wake_condition"])
+
     def test_chat_product_wrapper_persists_v3_and_compiles_only_host_selected_substance(self):
         fixture = CognitionFixture()
 
-        class Provider:
-            provider_name = "fixture"
-            model = "product-v3"
-            last_usage = None
-
-            def stream(self, messages):
-                prompt = messages[-1]["content"]
-                if prompt.startswith("ROLE_ASSIGNMENT:"):
-                    role = prompt.splitlines()[0].split(":", 1)[1].strip()
-                elif prompt.startswith("ROLE: origin-blinded"):
-                    role = BLINDED_ADVERSARY_ROLE
-                elif prompt.startswith("ROLE: product cognition selector"):
-                    role = SELECTOR_ROLE
-                else:
-                    raise AssertionError(prompt[:120])
-                yield json.dumps(fixture(role, prompt))
-
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
+            record_substantive_product_fact(root / ".palamedes")
             bundle = build_cognition_evidence_bundle(
                 state_root=root / ".palamedes",
                 snapshot={
@@ -625,7 +882,7 @@ class PartitionedProductCognitionTests(unittest.TestCase):
                 mode="product",
             )
             result = run_partitioned_product_cycle(
-                provider=Provider(),
+                provider=PartitionedProductProvider(fixture),
                 context="Bounded product context",
                 cycle_store=CognitionCycleStore(
                     root / ".palamedes" / "missions" / "cognition"
@@ -653,6 +910,351 @@ class PartitionedProductCognitionTests(unittest.TestCase):
         self.assertEqual(contract["selected_candidate_id"], selected["candidate_id"])
         self.assertIn(selected["action_probe"]["intervention"], contract["next_probe"]["step"])
         self.assertNotIn("context_governor", [row["role"] for row in cycle["artifacts"]])
+        self.assertNotEqual(
+            contract["evidence"][0]["claim"], selected["observed_signal"]
+        )
+        evidence_custody = contract["product_cognition_lineage"][
+            "mission_evidence_custody"
+        ]
+        self.assertEqual(
+            evidence_custody[0]["source"], contract["evidence"][0]["source"]
+        )
+        self.assertEqual(evidence_custody[0]["custody"]["owner"], "host")
+        self.assertFalse(
+            evidence_custody[0]["custody"]["candidate_language_certified"]
+        )
+        self.assertEqual(contract["surface_key"], "")
+        self.assertEqual(contract["scope_keys"], [])
+        self.assertEqual(contract["scope_custody"]["scope_status"], "unknown")
+        self.assertFalse(contract["scope_custody"]["candidate_scope_accepted"])
+        gate_contract = contract["specialized_authority_gates"]
+        self.assertEqual(gate_contract["status"], "unresolved")
+        self.assertFalse(gate_contract["generic_mission_approval_satisfies"])
+        self.assertEqual(
+            {row["source_path"] for row in gate_contract["gates"]},
+            {
+                "candidate.authority.required_approvals",
+                "candidate.action_probe.authority_preconditions",
+            },
+        )
+        self.assertEqual(
+            [row["status"] for row in gate_contract["gates"]],
+            ["unresolved"] * 4,
+        )
+        with self.assertRaisesRegex(
+            ValueError,
+            "Generic /approve cannot satisfy them.*no specialized resolution command",
+        ):
+            approve_mission(
+                object(),
+                MissionStore(root / ".palamedes" / "missions"),
+                contract,
+                "product-gate-test",
+            )
+
+    def test_product_contract_scope_comes_only_from_trusted_bundle_alignment(self):
+        fixture = CognitionFixture()
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            state_root = root / ".palamedes"
+            ProductAlignmentStore(state_root / "product-alignment").record_capability(
+                capability_id="capability-match-events",
+                statement="Match completion events are already available.",
+                source_ids=["host-observation-1"],
+                surface_key="game:yut",
+            )
+            bundle = build_cognition_evidence_bundle(
+                state_root=state_root,
+                snapshot={
+                    "observation_id": "observation-scoped",
+                    "snapshot_fingerprint": "snapshot-scoped",
+                    "signals": {
+                        "git": {"head": "abc123", "branch": "main"},
+                        "change": {"summary": "repeat activity is observable"},
+                        "test": {},
+                    },
+                },
+                user_request="Find a bounded product opportunity.",
+                mode="product",
+            )
+            result = run_partitioned_product_cycle(
+                provider=PartitionedProductProvider(fixture),
+                context="The model receives no authority to name the execution scope.",
+                cycle_store=CognitionCycleStore(
+                    state_root / "missions" / "cognition"
+                ),
+                evidence_bundle=bundle,
+            )
+
+        contract = result["contract"]
+        self.assertEqual(contract["surface_key"], "game:yut")
+        self.assertEqual(contract["scope_keys"], ["surface:game:yut"])
+        self.assertEqual(
+            contract["scope_custody"]["scope_status"],
+            "derived_from_trusted_bundle",
+        )
+        self.assertTrue(contract["scope_custody"]["source_ids"])
+        self.assertFalse(contract["scope_custody"]["candidate_scope_accepted"])
+
+    def test_product_resume_rejects_provider_or_model_change_without_relabeling(self):
+        fixture = CognitionFixture()
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            state_root = root / ".palamedes"
+            record_substantive_product_fact(state_root)
+            bundle = build_cognition_evidence_bundle(
+                state_root=state_root,
+                snapshot={
+                    "observation_id": "observation-resume",
+                    "snapshot_fingerprint": "snapshot-resume",
+                    "signals": {
+                        "git": {"head": "abc123", "branch": "main"},
+                        "change": {"summary": "repeat activity is observable"},
+                        "test": {},
+                    },
+                },
+                user_request="Find a bounded product opportunity.",
+                mode="product",
+            )
+            cycle_store = CognitionCycleStore(
+                state_root / "missions" / "cognition"
+            )
+            original_provider = PartitionedProductProvider(
+                fixture,
+                provider_name="original-provider",
+                model="original-model",
+                fail_role=SELECTOR_ROLE,
+            )
+            with self.assertRaisesRegex(RuntimeError, "simulated partitioned"):
+                run_partitioned_product_cycle(
+                    provider=original_provider,
+                    context="Preserve product-cycle identity across retries.",
+                    cycle_store=cycle_store,
+                    evidence_bundle=bundle,
+                    schema_retry_limit=0,
+                )
+            cycle_path = next(cycle_store.root.glob("cycle-*.json"))
+            failed_cycle = json.loads(cycle_path.read_text(encoding="utf-8"))
+            cycle_id = failed_cycle["cognition_cycle_id"]
+            artifact_count = len(failed_cycle["artifacts"])
+
+            changed_provider = PartitionedProductProvider(
+                CognitionFixture(),
+                provider_name="replacement-provider",
+                model="replacement-model",
+            )
+            with self.assertRaisesRegex(
+                ValueError,
+                "provider and model must match the original product cycle",
+            ):
+                run_partitioned_product_cycle(
+                    provider=changed_provider,
+                    context="A caller-supplied replacement context.",
+                    cycle_store=cycle_store,
+                    evidence_bundle=bundle,
+                    resume_cycle_id=cycle_id,
+                )
+
+            preserved = cycle_store.load(cycle_id)
+            self.assertEqual(preserved["provider"], "original-provider")
+            self.assertEqual(preserved["model"], "original-model")
+            self.assertEqual(len(preserved["artifacts"]), artifact_count)
+            self.assertEqual(changed_provider.fixture.calls, [])
+
+    def test_product_resume_rejects_mixed_checkpoint_provider_identity(self):
+        fixture = CognitionFixture()
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            state_root = root / ".palamedes"
+            record_substantive_product_fact(state_root)
+            bundle = build_cognition_evidence_bundle(
+                state_root=state_root,
+                snapshot={
+                    "observation_id": "observation-mixed-resume",
+                    "snapshot_fingerprint": "snapshot-mixed-resume",
+                    "signals": {
+                        "git": {"head": "abc123", "branch": "main"},
+                        "change": {"summary": "repeat activity is observable"},
+                        "test": {},
+                    },
+                },
+                user_request="Find a bounded product opportunity.",
+                mode="product",
+            )
+            cycle_store = CognitionCycleStore(
+                state_root / "missions" / "cognition"
+            )
+            provider = PartitionedProductProvider(
+                fixture,
+                provider_name="original-provider",
+                model="original-model",
+                fail_role=SELECTOR_ROLE,
+            )
+            with self.assertRaises(RuntimeError):
+                run_partitioned_product_cycle(
+                    provider=provider,
+                    context="Detect mixed provider checkpoints.",
+                    cycle_store=cycle_store,
+                    evidence_bundle=bundle,
+                    schema_retry_limit=0,
+                )
+            cycle_path = next(cycle_store.root.glob("cycle-*.json"))
+            stored = json.loads(cycle_path.read_text(encoding="utf-8"))
+            stored["artifacts"][0]["model"] = "foreign-model"
+            cycle_store.save(stored)
+
+            with self.assertRaisesRegex(ValueError, "mixed or malformed"):
+                run_partitioned_product_cycle(
+                    provider=PartitionedProductProvider(
+                        CognitionFixture(),
+                        provider_name="original-provider",
+                        model="original-model",
+                    ),
+                    context="Detect mixed provider checkpoints.",
+                    cycle_store=cycle_store,
+                    evidence_bundle=bundle,
+                    resume_cycle_id=stored["cognition_cycle_id"],
+                )
+
+    def test_product_cycle_budgets_and_reports_architecture_preparation_calls(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            state_root = Path(tempdir) / ".palamedes"
+            record_substantive_product_fact(state_root)
+            bundle = build_cognition_evidence_bundle(
+                state_root=state_root,
+                snapshot={
+                    "observation_id": "observation-precycle-usage",
+                    "snapshot_fingerprint": "snapshot-precycle-usage",
+                    "signals": {
+                        "git": {"head": "abc123", "branch": "main"},
+                        "change": {"summary": "repeat activity is observable"},
+                        "test": {},
+                    },
+                },
+                user_request="Find a bounded product opportunity.",
+                mode="product",
+            )
+            provider = PartitionedProductProvider(CognitionFixture())
+            result = run_partitioned_product_cycle(
+                provider=provider,
+                context="Count preparation and partitioned cognition together.",
+                cycle_store=CognitionCycleStore(
+                    state_root / "missions" / "cognition"
+                ),
+                evidence_bundle=bundle,
+                budget={"provider_calls_max": 5, "token_budget_high": 1000},
+                precycle_provider_usage={
+                    "provider": provider.provider_name,
+                    "model": provider.model,
+                    "attempted_calls": 2,
+                    "metered_calls": 1,
+                    "unmetered_calls": 1,
+                    "totals": {"total_tokens": 21},
+                    "roles": [
+                        {
+                            "role": "architecture_transfer_mechanism_query_designer",
+                            "custody": "provider_reported",
+                            "usage": {"total_tokens": 21},
+                        },
+                        {
+                            "role": "cross_domain_architecture_transfer_inventor",
+                            "custody": "unmetered",
+                            "usage": {},
+                        },
+                    ],
+                },
+            )
+
+        cycle = result["cycle"]
+        self.assertEqual(cycle["live_model_call_count"], 5)
+        self.assertEqual(cycle["provider_usage"]["attempted_calls"], 5)
+        self.assertEqual(len(cycle["precycle_artifacts"]), 2)
+        self.assertEqual(cycle["provider_usage"]["totals"]["total_tokens"], 21)
+
+    def test_failed_product_provider_call_is_persisted_and_budgeted(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            state_root = Path(tempdir) / ".palamedes"
+            record_substantive_product_fact(state_root)
+            bundle = build_cognition_evidence_bundle(
+                state_root=state_root,
+                snapshot={
+                    "observation_id": "observation-paid-failure",
+                    "snapshot_fingerprint": "snapshot-paid-failure",
+                    "signals": {
+                        "git": {"head": "abc123", "branch": "main"},
+                        "change": {"summary": "repeat activity is observable"},
+                        "test": {},
+                    },
+                },
+                user_request="Find a bounded product opportunity.",
+                mode="product",
+            )
+            store = CognitionCycleStore(state_root / "missions" / "cognition")
+            provider = PartitionedProductProvider(
+                CognitionFixture(), fail_role=PRODUCT_OPPORTUNITY_INVENTOR
+            )
+            with self.assertRaisesRegex(RuntimeError, "simulated partitioned"):
+                run_partitioned_product_cycle(
+                    provider=provider,
+                    context="Preserve failed-call custody.",
+                    cycle_store=store,
+                    evidence_bundle=bundle,
+                    schema_retry_limit=0,
+                )
+            cycle = json.loads(
+                next(store.root.glob("cycle-*.json")).read_text(encoding="utf-8")
+            )
+
+        self.assertEqual(cycle["live_model_call_count"], 1)
+        self.assertEqual(cycle["provider_usage"]["attempted_calls"], 1)
+        self.assertEqual(cycle["artifacts"], [])
+        self.assertEqual(len(cycle["rejected_artifacts"]), 1)
+        self.assertTrue(cycle["rejected_artifacts"][0]["attempted"])
+        self.assertIn("simulated partitioned", cycle["rejected_artifacts"][0]["failure"])
+
+    def test_product_resume_restores_original_budget_after_failed_call(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            state_root = Path(tempdir) / ".palamedes"
+            record_substantive_product_fact(state_root)
+            bundle = build_cognition_evidence_bundle(
+                state_root=state_root,
+                snapshot={
+                    "observation_id": "observation-resume-budget",
+                    "snapshot_fingerprint": "snapshot-resume-budget",
+                    "signals": {
+                        "git": {"head": "abc123", "branch": "main"},
+                        "change": {"summary": "repeat activity is observable"},
+                        "test": {},
+                    },
+                },
+                user_request="Find a bounded product opportunity.",
+                mode="product",
+            )
+            store = CognitionCycleStore(state_root / "missions" / "cognition")
+            provider = PartitionedProductProvider(
+                CognitionFixture(), fail_role=SELECTOR_ROLE
+            )
+            with self.assertRaisesRegex(RuntimeError, "simulated partitioned"):
+                run_partitioned_product_cycle(
+                    provider=provider,
+                    context="Keep the original product-cycle budget on resume.",
+                    cycle_store=store,
+                    evidence_bundle=bundle,
+                    budget={"provider_calls_max": 3, "token_budget_high": 1000},
+                    schema_retry_limit=0,
+                )
+            cycle_id = next(store.root.glob("cycle-*.json")).stem
+            with self.assertRaisesRegex(ValueError, "budget exhausted"):
+                run_partitioned_product_cycle(
+                    provider=provider,
+                    context="Ignored replacement context.",
+                    cycle_store=store,
+                    evidence_bundle=bundle,
+                    resume_cycle_id=cycle_id,
+                )
+            preserved_budget = store.load(cycle_id)["budget"]
+
+        self.assertEqual(preserved_budget["provider_calls_max"], 3)
 
 
 if __name__ == "__main__":

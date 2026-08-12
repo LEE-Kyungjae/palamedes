@@ -11,6 +11,7 @@ Palamedes는 발견, 평가, commitment와 실행 권한이 서로 다른 작업
 
 ```text
 /cycle <context>
+/cycle --mode product <context>
 ```
 
 component·audit cycle은 context governor, interpreter, inventor, adversary와
@@ -21,12 +22,42 @@ selector를 실행합니다. product mode는 더 엄격한 v3 프로토콜을 �
 뿐 수정하지 못합니다. 최종 draft는 host가 선택된 동결 후보에서만 발행합니다.
 `/approve`와 delivery 권한은 계속 분리됩니다.
 
+동결 evidence bundle에는 host가 만든 mission claim ledger가 포함됩니다. 직접 관측과
+host가 검증한 record만 들어가며, 제한된 원문 claim, confidence와 custody를 보존합니다.
+발명가는 source ID를 인용할 수 있지만 그 원문을 자신이 만든 수요·매출 주장으로
+바꿀 수 없습니다. Advisory 해석, 가설, unknown과 reference code는 유용한 context지만
+mission-citable 근거는 아닙니다. 동결된 v1 cycle을 resume하면 먼저 원래 v1 fingerprint를
+검증한 뒤 v2 ledger를 만듭니다. Source-support 계약 이전의 legacy transfer mapping은
+조용히 승격하지 않고 제외합니다.
+
 product cycle 전에 Palamedes는 기능명이 아니라 운영 압력으로 다른 GitNexus 인덱스
 저장소를 검색할 수 있습니다. 채택되는 근거는 저장소 경로, 전체 revision, symbol 범위,
-해당 revision의 파일 hash와 excerpt hash에 묶입니다. 전이는 반드시 `원본 압력 → 인과
+해당 revision의 파일 hash와 excerpt hash에 묶입니다. Persisted packet은 bundle에
+들어올 때 `git show <revision>:<path>`로 다시 읽습니다.
+Packet 내부 hash가 서로 일치한다는 사실만으로 repository 근거가 되지는 않습니다.
+Source claim anchor는 제한된 excerpt에 정확히 포함돼야 하지만, 이 검사는 인용 소속만
+증명할 뿐 excerpt가 모델 해석을 의미론적으로 뒷받침한다는 사실까지 증명하지 않습니다.
+Git 재검증은 commit된 파일과 범위를 증명하지만 과거 GitNexus ranking이나 symbol의
+의미 분류까지 증명하지는 않습니다.
+전이는 반드시 `원본 압력 → 인과
 메커니즘/불변식 → 현재 제품 압력 → 적용법 → 적용 한계`를 설명하고 원본과 현재 제품
 근거를 모두 인용해야 합니다. 설계·선택·배포·코드 재사용 권한은 모두 부정됩니다.
-근거가 없거나 degraded이면 architecture 역할은 전례를 지어내지 않고 기권합니다.
+근거가 없거나 degraded이면 architecture 역할은 전례를 지어내지 않고 기권합니다. Raw
+GitNexus excerpt만으로는 v3 analogist partition에 들어갈 수 없고, source·target·차이·한계·
+권한 검증을 통과한 `palamedes-architecture-transfer/2` mapping만 전달됩니다. Stale
+index, 접근 불가
+저장소, partial query와 revision drift는 degradation으로 기록됩니다. 한 저장소의 실패가
+근거 조작을 허용하거나 독립적으로 검증된 다른 source를 지우지는 않습니다.
+
+Architecture query·transfer 준비 호출은 화면에 보이는 product role보다 먼저 실행되지만
+동일한 cycle의 유료 작업입니다. Provider identity, attempt와 token usage가 precycle
+artifact로 저장되고 같은 cycle budget을 소비합니다. Provider 예외와 잘못된 JSON/schema
+시도도 rejected paid artifact로 남아 usage에서 사라지지 않습니다. Resume은 원래
+provider/model identity와 동결 budget을 유지합니다.
+
+후보가 요구한 승인과 probe authority precondition은 봉인된 미해결 specialized authority
+gate로 컴파일됩니다. 선택된 제한 probe가 검토 가능한 draft가 될 수는 있지만 범용
+`/approve`는 전문 gate를 충족하거나 가격·보상·출시·구현·delivery를 승인할 수 없습니다.
 
 ## Opportunity Scout
 

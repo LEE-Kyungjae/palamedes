@@ -11,9 +11,13 @@ from typing import Any, Callable, Dict, Iterable, List, Sequence
 from palamedes_observe import utc_now
 
 
-BUNDLE_VERSION = "palamedes-cognition-evidence/1"
+BUNDLE_VERSION = "palamedes-cognition-evidence/2"
+LEGACY_BUNDLE_VERSION = "palamedes-cognition-evidence/1"
 MAX_TEXT_CHARS = 1_600
 MAX_TOTAL_BYTES = 96_000
+MISSION_CITABLE_EPISTEMIC_CLASSES = frozenset(
+    {"direct_observation", "host_verified"}
+)
 LANE_CAPS = {
     "product_signals": 16,
     "outcome_memory": 24,
@@ -180,6 +184,94 @@ def _evidence_item(
         "confidence": max(0, min(100, int(confidence or 0))),
         "payload": bounded_payload,
     }
+
+
+_CLAIM_FIELD_BY_KIND = {
+    "capability": "statement",
+    "integration_gap": "statement",
+    "knowledge_claim": "claim",
+    "mission_outcome_observation": "observation",
+    "workspace_document": "excerpt",
+}
+
+
+def _mission_claim_entry(item: Dict[str, Any]) -> Dict[str, Any] | None:
+    """Project only host-owned source content into a mission-citable claim.
+
+    A citation identifies a bounded source record; it never certifies wording
+    authored later by an inventor model.  Advisory material and model
+    interpretations remain useful context but intentionally have no entry in
+    this ledger.
+    """
+    if item.get("decision_authority") != "mission_citable":
+        return None
+    epistemic_class = str(item.get("epistemic_class", "")).strip()
+    if epistemic_class not in MISSION_CITABLE_EPISTEMIC_CLASSES:
+        return None
+    payload = item.get("payload")
+    if not isinstance(payload, dict):
+        return None
+    bounded_payload = _bounded_json(payload)
+    claim_field = _CLAIM_FIELD_BY_KIND.get(str(item.get("kind", "")))
+    source_claim = bounded_payload.get(claim_field) if claim_field else None
+    source_claim_preserved_verbatim = bool(
+        claim_field
+        and isinstance(source_claim, str)
+        and source_claim.strip()
+    )
+    claim = (
+        source_claim.strip()
+        if source_claim_preserved_verbatim
+        else _canonical_json(bounded_payload)
+    )
+    if not claim:
+        return None
+    source_record_fingerprint = str(
+        item.get("source_record_fingerprint", "")
+    ).strip()
+    if not source_record_fingerprint:
+        return None
+    source_id = str(item.get("item_id", "")).strip()
+    if not source_id:
+        return None
+    return {
+        "source_id": source_id,
+        "kind": str(item.get("kind", "")).strip(),
+        "claim": _clip(claim),
+        "claim_field": claim_field or "$",
+        "claim_payload": bounded_payload,
+        "confidence": max(0, min(100, int(item.get("confidence", 0) or 0))),
+        "epistemic_class": epistemic_class,
+        "observed_at": str(item.get("observed_at", "")).strip(),
+        "freshness": str(item.get("freshness", "")).strip(),
+        "source_record_fingerprint": source_record_fingerprint,
+        "source_ids": sorted(
+            {
+                str(source).strip()
+                for source in item.get("source_ids", [])
+                if str(source).strip()
+            }
+        ),
+        "custody": {
+            "owner": "host",
+            "projection": "bounded_source_payload",
+            "source_claim_preserved_verbatim": source_claim_preserved_verbatim,
+            "candidate_language_certified": False,
+        },
+    }
+
+
+def _derive_mission_claim_ledger(
+    items: Sequence[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    entries = [
+        entry
+        for item in items
+        if isinstance(item, dict)
+        for entry in [_mission_claim_entry(item)]
+        if entry is not None
+    ]
+    return sorted(entries, key=lambda entry: entry["source_id"])
 
 
 def _append_capped(
@@ -514,17 +606,21 @@ def _project_knowledge(
         knowledge_id = _clip(row.get("knowledge_id"), 200)
         if not knowledge_id:
             continue
+        host_verified = (
+            row.get("claim_type") in {"fact", "capability", "constraint"}
+            and row.get("epistemic_profile", {}).get("evidence_layer")
+            in {"behavior", "outcome", "mixed"}
+        )
         knowledge.append(
             _evidence_item(
                 kind="knowledge_claim",
                 status="active",
                 epistemic_class=(
-                    "host_verified"
-                    if row.get("claim_type") in {"fact", "capability", "constraint"}
-                    and row.get("epistemic_profile", {}).get("evidence_layer") in {"behavior", "outcome", "mixed"}
-                    else "model_interpretation"
+                    "host_verified" if host_verified else "model_interpretation"
                 ),
-                decision_authority="mission_citable",
+                decision_authority=(
+                    "mission_citable" if host_verified else "advisory"
+                ),
                 observed_at=_clip(row.get("last_verified_at"), 100),
                 source_ids=_strings(row.get("source_ids"), 24),
                 payload={
@@ -928,11 +1024,14 @@ def _project_architecture(
         raise ValueError("architecture mappings require a GitNexus evidence packet")
 
     from palamedes_architecture_transfer import (
+        reverify_gitnexus_evidence_packet,
         validate_architecture_transfers,
-        validate_gitnexus_evidence_packet,
     )
 
-    validated_packet = validate_gitnexus_evidence_packet(packet)
+    # Architecture packets cross a persisted/external trust boundary here.
+    # Re-read their revision-pinned Git objects; packet hashes alone are
+    # reproducible by an attacker and are not evidence of repository custody.
+    validated_packet = reverify_gitnexus_evidence_packet(packet)
     validated_mappings = []
     if mappings:
         validated_mappings = validate_architecture_transfers(
@@ -1021,10 +1120,147 @@ def _bundle_identity(bundle: Dict[str, Any]) -> Dict[str, Any]:
         "unknowns": bundle["unknowns"],
         "exploration_frontier": bundle["exploration_frontier"],
         "cross_domain_transfer": bundle["cross_domain_transfer"],
+        "mission_claim_ledger": bundle["mission_claim_ledger"],
         "citation_allowlists": bundle["citation_allowlists"],
         "selection_manifest": bundle["selection_manifest"],
         "delivery_authority_granted": False,
     }
+
+
+def _legacy_v1_bundle_identity(bundle: Dict[str, Any]) -> Dict[str, Any]:
+    """Reconstruct the exact identity sealed by cognition-evidence v1.
+
+    This intentionally remains separate from the current identity.  It exists
+    only so a frozen cycle can prove its old envelope was not modified before
+    the host derives the narrower v2 claim ledger.
+    """
+
+    return {
+        "bundle_version": bundle["bundle_version"],
+        "request": bundle["request"],
+        "workspace": bundle["workspace"],
+        "authority_context": bundle["authority_context"],
+        "product_signals": bundle["product_signals"],
+        "outcome_memory": bundle["outcome_memory"],
+        "knowledge": bundle["knowledge"],
+        "unknowns": bundle["unknowns"],
+        "exploration_frontier": bundle["exploration_frontier"],
+        "cross_domain_transfer": bundle["cross_domain_transfer"],
+        "citation_allowlists": bundle["citation_allowlists"],
+        "selection_manifest": bundle["selection_manifest"],
+        "delivery_authority_granted": False,
+    }
+
+
+def _bundle_items(bundle: Dict[str, Any]) -> List[Dict[str, Any]]:
+    items = list(bundle.get("product_signals", []))
+    items.extend(bundle.get("outcome_memory", []))
+    items.extend(bundle.get("knowledge", []))
+    items.extend(bundle.get("unknowns", []))
+    frontier = bundle.get("exploration_frontier", {})
+    if isinstance(frontier, dict):
+        for rows in frontier.values():
+            if isinstance(rows, list):
+                items.extend(rows)
+    transfer = bundle.get("cross_domain_transfer", {})
+    if isinstance(transfer, dict):
+        items.extend(transfer.get("reference_patterns", []))
+        items.extend(transfer.get("transfer_mappings", []))
+    return items
+
+
+def upgrade_cognition_evidence_bundle_v1(bundle: Dict[str, Any]) -> Dict[str, Any]:
+    """Safely and deterministically migrate a frozen v1 bundle to v2.
+
+    The v1 fingerprint is verified *before* any migration.  The host then
+    re-derives the mission claim ledger from the frozen source items and makes
+    its IDs the exact mission citation allow-list.  Legacy architecture
+    mappings are excluded because v1 did not bind their source-side claims to
+    exact excerpts; silently carrying them forward would bless evidence under
+    a contract it never satisfied.
+
+    The input object is never mutated.
+    """
+
+    if not isinstance(bundle, dict) or bundle.get("bundle_version") != LEGACY_BUNDLE_VERSION:
+        raise ValueError("expected a cognition evidence v1 bundle")
+    if bundle.get("delivery_authority_granted") is not False:
+        raise ValueError("legacy evidence cannot grant delivery authority")
+    try:
+        expected_v1_id = (
+            "evidence-"
+            + _fingerprint(_legacy_v1_bundle_identity(bundle))[:16]
+        )
+    except (KeyError, TypeError) as exc:
+        raise ValueError("legacy cognition evidence bundle is incomplete") from exc
+    if bundle.get("bundle_id") != expected_v1_id:
+        raise ValueError("legacy cognition evidence bundle fingerprint mismatch")
+
+    upgraded: Dict[str, Any] = json.loads(_canonical_json(bundle))
+    transfer = upgraded.get("cross_domain_transfer")
+    if not isinstance(transfer, dict):
+        raise ValueError("legacy cross_domain_transfer must be an object")
+    legacy_mappings = transfer.get("transfer_mappings", [])
+    if not isinstance(legacy_mappings, list):
+        raise ValueError("legacy transfer_mappings must be an array")
+    dropped_mapping_ids = [
+        str(row.get("item_id", "")).strip()
+        for row in legacy_mappings
+        if isinstance(row, dict) and str(row.get("item_id", "")).strip()
+    ]
+    transfer["transfer_mappings"] = []
+
+    manifest = upgraded.get("selection_manifest")
+    if not isinstance(manifest, dict):
+        raise ValueError("legacy selection_manifest must be an object")
+    dropped = set(dropped_mapping_ids)
+    for field in ("included", "freshness_unknown_ids"):
+        values = manifest.get(field, [])
+        if isinstance(values, list):
+            manifest[field] = [value for value in values if value not in dropped]
+    if legacy_mappings:
+        diagnostics = manifest.setdefault("diagnostics", [])
+        if not isinstance(diagnostics, list):
+            raise ValueError("legacy selection diagnostics must be an array")
+        diagnostics.append(
+            {
+                "lane": "cross_domain_transfer",
+                "source": "legacy_v1",
+                "reason": "legacy_unverified_transfer_mapping_excluded",
+            }
+        )
+        excluded = manifest.setdefault("excluded", [])
+        if not isinstance(excluded, list):
+            raise ValueError("legacy selection exclusions must be an array")
+        excluded.extend(
+            {
+                "id": item_id,
+                "lane": "transfer_mappings",
+                "reason": "legacy_unverified_transfer_mapping_excluded",
+            }
+            for item_id in dropped_mapping_ids
+        )
+        upgraded["status"] = "degraded"
+
+    allowlists = upgraded.get("citation_allowlists")
+    if not isinstance(allowlists, dict):
+        raise ValueError("legacy citation allowlists are required")
+    allowlists["transfer_mapping_ids"] = []
+    upgraded["bundle_version"] = BUNDLE_VERSION
+    upgraded["mission_claim_ledger"] = _derive_mission_claim_ledger(
+        _bundle_items(upgraded)
+    )
+    allowlists["mission_source_ids"] = sorted(
+        entry["source_id"] for entry in upgraded["mission_claim_ledger"]
+    )
+    upgraded["bundle_id"] = ""
+    upgraded["bundle_id"] = (
+        "evidence-" + _fingerprint(_bundle_identity(upgraded))[:16]
+    )
+    if len(_canonical_json(upgraded).encode("utf-8")) > MAX_TOTAL_BYTES:
+        raise ValueError("upgraded cognition evidence exceeds the bounded total byte budget")
+    validate_cognition_evidence_bundle(upgraded)
+    return upgraded
 
 
 def build_cognition_evidence_bundle(
@@ -1125,11 +1361,8 @@ def build_cognition_evidence_bundle(
         for row in raw_gates
         if isinstance(row, dict) and row.get("status") == "open"
     ]
-    citation_ids = {
-        item["item_id"]
-        for item in all_items
-        if item.get("decision_authority") in {"mission_citable", "advisory"}
-    }
+    claim_ledger = _derive_mission_claim_ledger(all_items)
+    citation_ids = {entry["source_id"] for entry in claim_ledger}
     bundle: Dict[str, Any] = {
         "bundle_version": BUNDLE_VERSION,
         "bundle_id": "",
@@ -1157,6 +1390,7 @@ def build_cognition_evidence_bundle(
             "reference_patterns": patterns,
             "transfer_mappings": mappings,
         },
+        "mission_claim_ledger": claim_ledger,
         "citation_allowlists": {
             "mission_source_ids": sorted(citation_ids),
             "mission_eligible_discovery_ids": sorted(mission_eligible_discoveries),
@@ -1203,6 +1437,12 @@ def validate_cognition_evidence_bundle(bundle: Dict[str, Any]) -> None:
     if len(item_ids) != len(set(item_ids)):
         raise ValueError("evidence item IDs must be unique")
     available = set(item_ids)
+    expected_claim_ledger = _derive_mission_claim_ledger(items)
+    if bundle.get("mission_claim_ledger") != expected_claim_ledger:
+        raise ValueError("mission claim ledger must be the exact host projection")
+    mission_claim_ids = {
+        entry["source_id"] for entry in expected_claim_ledger
+    }
     allowlists = bundle.get("citation_allowlists")
     if not isinstance(allowlists, dict):
         raise ValueError("citation allowlists are required")
@@ -1212,8 +1452,14 @@ def validate_cognition_evidence_bundle(bundle: Dict[str, Any]) -> None:
         "transfer_mapping_ids",
     ):
         values = allowlists.get(field)
-        if not isinstance(values, list) or not set(values).issubset(available):
+        if (
+            not isinstance(values, list)
+            or len(values) != len(set(values))
+            or not set(values).issubset(available)
+        ):
             raise ValueError(f"{field} cites unavailable evidence")
+    if set(allowlists["mission_source_ids"]) != mission_claim_ids:
+        raise ValueError("mission source allowlist must exactly match the claim ledger")
     reference_items = {
         item["item_id"]: item
         for item in bundle.get("cross_domain_transfer", {}).get(
@@ -1248,6 +1494,24 @@ def validate_cognition_evidence_bundle(bundle: Dict[str, Any]) -> None:
             raise ValueError("architecture source outcome cannot become a target forecast")
         if payload.get("same_primary_job") is not False:
             raise ValueError("architecture transfer must be genuinely cross-domain")
+        if (
+            payload.get("transfer_contract_version")
+            != "palamedes-architecture-transfer/2"
+        ):
+            raise ValueError("architecture transfer contract version is invalid")
+        if payload.get("source_support_semantics_verified") is not False:
+            raise ValueError(
+                "architecture source support cannot claim semantic verification"
+            )
+        if (
+            payload.get("source_support_verification")
+            != "normalized_exact_excerpt_membership_only"
+        ):
+            raise ValueError("architecture source support boundary is invalid")
+        if not isinstance(payload.get("source_claim_support"), list) or not payload[
+            "source_claim_support"
+        ]:
+            raise ValueError("architecture source claim support is required")
         for field in (
             "decision_authority_granted",
             "design_authority_granted",
@@ -1335,3 +1599,68 @@ def citation_allowlist(bundle: Dict[str, Any], purpose: str) -> set[str]:
     if field is None:
         raise ValueError(f"unsupported citation purpose: {purpose}")
     return set(bundle["citation_allowlists"].get(field, []))
+
+
+def mission_claim_ledger(bundle: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    """Return a detached, host-owned map of exact mission-citable claims.
+
+    Ledger claims come only from direct observations or host-verified source
+    records.  Model interpretations, hypotheses, advisory references, and
+    unknowns never appear here even when they remain visible to cognition roles.
+    """
+    validate_cognition_evidence_bundle(bundle)
+    return {
+        entry["source_id"]: json.loads(_canonical_json(entry))
+        for entry in bundle["mission_claim_ledger"]
+    }
+
+
+def project_mission_evidence(
+    bundle: Dict[str, Any],
+    source_ids: Sequence[str],
+    *,
+    strict: bool = True,
+) -> List[Dict[str, Any]]:
+    """Project cited source IDs into their exact host-owned evidence wording.
+
+    The caller supplies IDs, not prose.  Consequently an inventor's
+    ``observed_signal`` cannot replace the source claim merely by citing one of
+    these IDs.  With ``strict=True`` (the default), any advisory or unavailable
+    ID fails closed; callers intentionally filtering a mixed candidate scope may
+    opt into ``strict=False`` and must still reject an empty result.
+    """
+    if isinstance(source_ids, (str, bytes)) or not isinstance(source_ids, Sequence):
+        raise ValueError("mission evidence source_ids must be an array")
+    requested: List[str] = []
+    for index, source_id in enumerate(source_ids):
+        normalized = str(source_id or "").strip()
+        if not normalized:
+            raise ValueError(
+                f"mission evidence source_ids[{index}] must be a non-empty string"
+            )
+        if normalized not in requested:
+            requested.append(normalized)
+    ledger = mission_claim_ledger(bundle)
+    unavailable = [source_id for source_id in requested if source_id not in ledger]
+    if strict and unavailable:
+        raise ValueError(
+            "mission evidence cites non-citable or unavailable source IDs: "
+            + ", ".join(unavailable)
+        )
+    projected = []
+    for source_id in requested:
+        entry = ledger.get(source_id)
+        if entry is None:
+            continue
+        projected.append(
+            {
+                "claim": entry["claim"],
+                "source": source_id,
+                "confidence": entry["confidence"],
+                "epistemic_class": entry["epistemic_class"],
+                "claim_payload": entry["claim_payload"],
+                "custody": entry["custody"],
+                "source_record_fingerprint": entry["source_record_fingerprint"],
+            }
+        )
+    return projected

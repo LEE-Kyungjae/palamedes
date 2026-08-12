@@ -116,7 +116,9 @@ For OpenRouter, OpenAI, workspace selection, and plan-state CLI examples, see
 
 Each workflow preserves different authority boundaries. Read
 [Cognition Workflows](docs/cognition-workflows.md) before integrating automated
-approval or execution.
+approval or execution. Product cycles expose only host-validated transfer
+mappings—not raw reference hits—to the architecture analogist, and unresolved
+specialized approvals cannot be satisfied by the generic `/approve` command.
 
 ## Architecture
 

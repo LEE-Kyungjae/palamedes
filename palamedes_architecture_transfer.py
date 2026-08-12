@@ -14,13 +14,14 @@ import json
 import os
 import re
 import subprocess
+import unicodedata
 from dataclasses import asdict, dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence
 
 
 EVIDENCE_PACKET_VERSION = "palamedes-gitnexus-evidence/1"
-TRANSFER_CONTRACT_VERSION = "palamedes-architecture-transfer/1"
+TRANSFER_CONTRACT_VERSION = "palamedes-architecture-transfer/2"
 MECHANISM_QUERY_VERSION = "palamedes-mechanism-query/1"
 
 AUTHORITY_FIELDS = (
@@ -37,6 +38,14 @@ TRANSFER_DIFFERENCE_FIELDS = (
     "beneficiary_power",
     "authority_and_data",
 )
+SOURCE_CLAIM_FIELDS = (
+    "source_pressure",
+    "source_pattern",
+    "source_invariant",
+    "failure_prevented",
+)
+SOURCE_SUPPORT_SEMANTICS_FIELD = "source_support_semantics_verified"
+SOURCE_SUPPORT_VERIFICATION = "normalized_exact_excerpt_membership_only"
 PRESSURE_SEARCH_VOCABULARY = {
     "failure": (
         "failure", "retry", "recovery", "duplicate", "idempotent",
@@ -55,6 +64,12 @@ PRESSURE_SEARCH_VOCABULARY = {
         "authority", "permission", "entitlement", "ownership", "approval",
         "capability", "access control", "권한", "소유", "승인", "자격",
     ),
+}
+EXECUTION_SEARCH_PRIORITY = {
+    "failure": ("idempotent", "retry", "recovery", "duplicate", "failure"),
+    "consistency": ("invariant", "checkpoint", "ledger", "transaction", "consistency"),
+    "rollback": ("replay", "rollback", "migration", "compensation", "reversible"),
+    "authority": ("entitlement", "authority", "permission", "ownership", "approval"),
 }
 TOPIC_COPY_TERMS = (
     "battle pass", "battlepass", "season pass", "reward track",
@@ -246,6 +261,36 @@ def _query_categories(search_terms: Sequence[str]) -> set[str]:
     }
 
 
+def _execution_search_terms(search_terms: Sequence[str]) -> List[str]:
+    """Compile prose search terms into bounded GitNexus lexical probes.
+
+    The model chooses pressures and mechanisms. The host owns query execution:
+    GitNexus symbol search is materially more reliable with one recognized
+    mechanism token than with a long conjunction-like sentence. Select at most
+    one literal per required pressure category, in stable category order.
+    """
+
+    haystack = " ".join(search_terms).casefold()
+    selected: List[str] = []
+    for category in PRESSURE_SEARCH_VOCABULARY:
+        priority = EXECUTION_SEARCH_PRIORITY.get(
+            category, PRESSURE_SEARCH_VOCABULARY[category]
+        )
+        match = next(
+            (
+                term
+                for term in priority
+                if term.casefold() in haystack
+            ),
+            "",
+        )
+        if match and match not in selected:
+            selected.append(match)
+    if not selected:
+        raise ValueError("search terms contain no executable pressure vocabulary")
+    return selected
+
+
 def validate_mechanism_queries(
     rows: Any,
     *,
@@ -335,6 +380,22 @@ def propose_mechanism_queries(
 
     facts = _target_facts(target_facts)
     ids = [row["fact_id"] for row in facts]
+    skeleton = {
+        "mechanism_queries": [
+            {
+                "query_id": "mechanism-query-stable-id",
+                "mechanism": "causal mechanism to locate in unrelated systems",
+                "target_pressure": "local pressure supported by cited target facts",
+                "target_evidence_ids": [ids[0]],
+                "search_terms": [
+                    "retry recovery",
+                    "consistency invariant",
+                    "rollback replay",
+                    "authority entitlement",
+                ],
+            }
+        ]
+    }
     prompt = f"""
 Derive at most {max_queries} cross-domain architecture searches from the trusted
 target facts below. Search by operational pressure and causal mechanism, never by
@@ -344,12 +405,34 @@ entitlement boundaries. Return JSON with `mechanism_queries`; every row must hav
 exactly query_id, mechanism, target_pressure, target_evidence_ids, search_terms.
 Only cite supplied fact IDs. Search terms are literal GitNexus terms, not claims.
 
+The host recognizes pressure coverage mechanically. Across all search_terms include
+at least one literal from every row below (one query may cover several rows):
+  failure: retry | failure | recovery | duplicate | idempotent
+  consistency: consistency | invariant | ledger | transaction | checkpoint
+  rollback: rollback | reversible | migration | replay | compensation
+  authority: authority | permission | entitlement | ownership | approval
+
+Required JSON shape (replace the example substance; preserve the exact fields):
+{_canonical_json(skeleton)}
+
 Target facts: {_canonical_json(facts)}
 """
     last_error = ""
-    for attempt in range(2):
-        repair = "" if attempt == 0 else f"\nPrevious output was invalid: {last_error}. Return one corrected JSON object."
+    previous_output: Any = None
+    for attempt in range(3):
+        repair = ""
+        if attempt:
+            repair = (
+                "\nThe host rejected the previous object. Repair that same object; "
+                "do not invent target IDs or add feature/topic names.\n"
+                f"VALIDATION_ERROR: {last_error}\n"
+                f"PREVIOUS_OBJECT: {_canonical_json(previous_output)}\n"
+                "Before returning, verify the combined search_terms literally include "
+                "failure/retry, consistency/invariant, rollback/replay, and "
+                "authority/entitlement vocabulary. Return corrected JSON only."
+            )
         raw = ask("architecture_transfer_mechanism_query_designer", prompt + repair)
+        previous_output = raw
         rows = raw.get("mechanism_queries") if isinstance(raw, Mapping) else raw
         try:
             return validate_mechanism_queries(rows, target_fact_ids=ids, max_queries=max_queries)
@@ -469,26 +552,24 @@ class GitNexusEvidenceAdapter:
                 break
         if metadata_revision and metadata_revision != head:
             raise ValueError("GitNexus metadata revision differs from repository HEAD")
-        status = self._run(
-            ["git", "-C", str(path), "status", "--porcelain", "--untracked-files=all"],
-            cwd=current_repo,
-        ).stdout.strip()
         canonical_path = str(path.resolve(strict=False))
         return {
             "repository": repo["repository"],
             "repository_path": canonical_path,
             "revision": head,
             "repo_snapshot_id": _repo_snapshot_id(canonical_path, head),
-            # Query evidence comes from the revision-pinned GitNexus index, not
-            # the live worktree. Preserve a status fingerprint so a moving dirty
-            # tree is detected across the collection window; each cited excerpt
-            # is independently checked against `git show <revision>:<path>`.
-            "worktree_dirty": bool(status),
-            "worktree_status_fingerprint": _sha256_text(status),
+            # The live worktree and GitNexus cache are intentionally absent.
+            # Query identity is revision-pinned and cited text is re-read with
+            # `git show <revision>:<path>`.
         }
 
-    def _query(self, repo: Mapping[str, str], query: Mapping[str, Any], *, current_repo: Path) -> Any:
-        search = " ".join(query["search_terms"])
+    def _query(
+        self,
+        repo: Mapping[str, str],
+        search_term: str,
+        *,
+        current_repo: Path,
+    ) -> Any:
         return _decode_json_output(
             self._run([
                 *self._prefix(current_repo), "query", "--repo", repo["repository"],
@@ -497,7 +578,7 @@ class GitNexusEvidenceAdapter:
                 # and source ranges; read the actual excerpt from the pinned git
                 # revision below.
                 "--limit", str(self.limits.max_results_per_query),
-                "--query", search,
+                "--query", search_term,
             ], cwd=current_repo).stdout,
             "gitnexus query",
         )
@@ -562,10 +643,23 @@ class GitNexusEvidenceAdapter:
             except Exception:
                 continue
             committed_lines = committed_content.splitlines()
-            full_excerpt = "\n".join(committed_lines[start_line - 1 : end_line]).strip()
+            excerpt_lines = committed_lines[start_line - 1 : end_line]
+            # Canonicalize a symbol range to its first/last substantive line so
+            # a packet cannot later claim a broader blank-padded range with the
+            # same stripped excerpt.
+            while excerpt_lines and not excerpt_lines[0].strip():
+                excerpt_lines.pop(0)
+                start_line += 1
+            while excerpt_lines and not excerpt_lines[-1].strip():
+                excerpt_lines.pop()
+                end_line -= 1
+            full_excerpt = "\n".join(excerpt_lines).strip()
             if not full_excerpt:
                 continue
-            clipped = full_excerpt[: self.limits.max_excerpt_chars]
+            # The validator normalizes bounded text with strip(). Hash and
+            # identify that same canonical excerpt, including when the cap cuts
+            # immediately after whitespace.
+            clipped = full_excerpt[: self.limits.max_excerpt_chars].strip()
             excerpt_hash = _sha256_text(clipped)
             revision_file_hash = _sha256_text(committed_content)
             source_id = _source_id(
@@ -675,12 +769,15 @@ class GitNexusEvidenceAdapter:
                 })
                 continue
             unique_names.add(name_key)
-            if len(selected) < self.limits.max_repositories:
-                selected.append(row)
+            # Snapshot verification happens below. Keep later catalog rows so
+            # one stale index cannot consume a bounded verified-repository slot.
+            selected.append(row)
 
         source_by_id: Dict[str, Dict[str, Any]] = {}
         snapshots: Dict[str, Dict[str, str]] = {}
         for catalog_row in selected:
+            if len(snapshots) >= self.limits.max_repositories:
+                break
             name = catalog_row["repository"]
             result_row: Dict[str, Any] = {"repository": name, "status": "rejected", "query_ids": []}
             try:
@@ -690,7 +787,6 @@ class GitNexusEvidenceAdapter:
                     "scope": "repository", "code": "unverifiable_snapshot",
                     "repository": name, "detail": str(exc)[:300],
                 })
-                base["repository_results"].append(result_row)
                 continue
             snapshots[name] = snapshot
             base["repositories"].append(snapshot)
@@ -703,21 +799,36 @@ class GitNexusEvidenceAdapter:
             repo_failed = False
             for query in queries:
                 query_id = query["query_id"]
-                try:
-                    decoded = self._query(snapshot, query, current_repo=current_repo)
-                    rows = self._extract_sources(
-                        decoded,
-                        repo=snapshot,
-                        query_id=query_id,
-                        current_repo=current_repo,
-                    )
-                except Exception as exc:
-                    repo_failed = True
-                    base["degradations"].append({
-                        "scope": "query", "code": "query_failed", "repository": name,
-                        "query_id": query_id, "detail": str(exc)[:300],
-                    })
-                    continue
+                rows_by_id: Dict[str, Dict[str, Any]] = {}
+                for search_term in _execution_search_terms(query["search_terms"]):
+                    try:
+                        decoded = self._query(
+                            snapshot,
+                            search_term,
+                            current_repo=current_repo,
+                        )
+                        term_rows = self._extract_sources(
+                            decoded,
+                            repo=snapshot,
+                            query_id=query_id,
+                            current_repo=current_repo,
+                        )
+                    except Exception as exc:
+                        repo_failed = True
+                        base["degradations"].append({
+                            "scope": "query",
+                            "code": "query_failed",
+                            "repository": name,
+                            "query_id": query_id,
+                            "search_term": search_term,
+                            "detail": str(exc)[:300],
+                        })
+                        continue
+                    for term_row in term_rows:
+                        rows_by_id.setdefault(term_row["source_id"], term_row)
+                    if len(rows_by_id) >= self.limits.max_results_per_query:
+                        break
+                rows = list(rows_by_id.values())[: self.limits.max_results_per_query]
                 result_row["query_ids"].append(query_id)
                 if rows:
                     result_row["status"] = "ok"
@@ -732,8 +843,10 @@ class GitNexusEvidenceAdapter:
             result_row["query_ids"] = sorted(set(result_row["query_ids"]))
             base["repository_results"].append(result_row)
 
-        # Re-check both Git state and the GitNexus catalog after reading.  A
-        # moving snapshot invalidates only that repository's evidence.
+        # Re-check HEAD, indexed revision, path, and repository identity after
+        # reading. GitNexus may update its own cache or lock files while querying;
+        # worktree dirtiness cannot affect excerpts read via revision-pinned
+        # `git show`, so cache/status-only changes are not evidence drift.
         drifted: set[str] = set()
         try:
             final_catalog = self._list_repositories(current_repo=current_repo)
@@ -743,7 +856,16 @@ class GitNexusEvidenceAdapter:
                 if final_row is None:
                     raise ValueError(f"repository disappeared from catalog: {name}")
                 final_snapshot = self._git_snapshot(final_row, current_repo=current_repo)
-                if final_snapshot != snapshot:
+                stable_fields = (
+                    "repository",
+                    "repository_path",
+                    "revision",
+                    "repo_snapshot_id",
+                )
+                if any(
+                    final_snapshot.get(field) != snapshot.get(field)
+                    for field in stable_fields
+                ):
                     drifted.add(name)
         except Exception as exc:
             drifted.update(snapshots)
@@ -797,7 +919,14 @@ class GitNexusEvidenceAdapter:
 
 
 def validate_gitnexus_evidence_packet(packet: Any) -> Dict[str, Any]:
-    """Validate and return a canonical evidence packet without trusting its author."""
+    """Structurally validate and return a canonical evidence packet.
+
+    Hash and packet-ID checks detect accidental mutation but are reproducible by
+    an untrusted packet author.  Call :func:`reverify_gitnexus_evidence_packet`
+    at every persisted/external ingestion boundary to bind the packet to the
+    actual Git objects.  The adapter itself constructs excerpts from those Git
+    objects before it calls this structural validator.
+    """
 
     if not isinstance(packet, Mapping):
         raise ValueError("evidence packet must be an object")
@@ -927,12 +1056,213 @@ def validate_gitnexus_evidence_packet(packet: Any) -> Dict[str, Any]:
     return json.loads(_canonical_json(row))
 
 
+def reverify_gitnexus_evidence_packet(
+    packet: Any,
+    *,
+    runner: Optional[Runner] = None,
+) -> Dict[str, Any]:
+    """Re-read every persisted source from Git and fail closed on fabrication.
+
+    This is the trust-boundary validator.  It verifies that each repository
+    contains the declared commit, then re-reads the complete file at that
+    commit, checks its hash, reconstructs the bounded line-range excerpt, and
+    compares excerpt text and truncation state.  A packet author who merely
+    recomputes hashes, source IDs, and ``packet_id`` cannot pass this check.
+
+    ``runner`` exists for deterministic process-boundary tests; production
+    callers should leave it unset.
+    """
+
+    verified = validate_gitnexus_evidence_packet(packet)
+    command_runner = runner or _default_runner
+    limits = EvidenceLimits(**verified["limits"]).validated()
+    current_repo = Path(verified["current_repo_path"])
+
+    def run(args: Sequence[str], *, cwd: Path) -> str:
+        result = _normalize_result(
+            command_runner(list(args), cwd=cwd, timeout=limits.timeout_seconds)
+        )
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout).strip().splitlines()
+            message = detail[-1][:300] if detail else f"exit {result.returncode}"
+            raise ValueError(f"Git evidence re-verification failed: {message}")
+        return result.stdout
+
+    repositories = {
+        repo["repo_snapshot_id"]: repo for repo in verified["repositories"]
+    }
+    for repo in repositories.values():
+        revision = repo["revision"]
+        resolved = run(
+            [
+                "git",
+                "-C",
+                repo["repository_path"],
+                "rev-parse",
+                "--verify",
+                f"{revision}^{{commit}}",
+            ],
+            cwd=current_repo,
+        ).strip().casefold()
+        if resolved != revision:
+            raise ValueError("repository commit does not match the packet revision")
+
+    file_cache: Dict[tuple[str, str, str], str] = {}
+    for source in verified["sources"]:
+        repo = repositories[source["repo_snapshot_id"]]
+        if source["repository"] != repo["repository"]:
+            raise ValueError("source repository name does not match its Git snapshot")
+        cache_key = (repo["repository_path"], source["revision"], source["file_path"])
+        content = file_cache.get(cache_key)
+        if content is None:
+            content = run(
+                [
+                    "git",
+                    "-C",
+                    repo["repository_path"],
+                    "show",
+                    f"{source['revision']}:{source['file_path']}",
+                ],
+                cwd=current_repo,
+            )
+            file_cache[cache_key] = content
+        if _sha256_text(content) != source["revision_file_sha256"]:
+            raise ValueError("source file hash does not match revision-pinned Git content")
+        lines = content.splitlines()
+        if source["start_line"] > len(lines) or source["end_line"] > len(lines):
+            raise ValueError("source line range exceeds revision-pinned Git content")
+        if (
+            not lines[source["start_line"] - 1].strip()
+            or not lines[source["end_line"] - 1].strip()
+        ):
+            raise ValueError("source line range is not canonically bounded")
+        full_excerpt = "\n".join(
+            lines[source["start_line"] - 1 : source["end_line"]]
+        ).strip()
+        if not full_excerpt:
+            raise ValueError("source line range is empty at the packet revision")
+        clipped = full_excerpt[: limits.max_excerpt_chars].strip()
+        if clipped != source["excerpt"]:
+            raise ValueError("source excerpt does not match revision-pinned Git content")
+        if (len(full_excerpt) > len(clipped)) != source["excerpt_truncated"]:
+            raise ValueError("source excerpt truncation flag does not match Git content")
+    return verified
+
+
 def _mapping_rows(value: Any) -> Any:
     return value.get("transfers") if isinstance(value, Mapping) else value
 
 
 def _normalized_words(value: str) -> set[str]:
     return {token for token in re.findall(r"[0-9a-zA-Z가-힣]+", value.casefold()) if len(token) > 2}
+
+
+def _normalized_anchor_text(value: str) -> str:
+    """Normalize layout only; never use lexical overlap as semantic proof."""
+
+    return " ".join(unicodedata.normalize("NFKC", value).split())
+
+
+def _validate_source_claim_support(
+    value: Any,
+    *,
+    transfer_id: str,
+    source_ids: Sequence[str],
+    source_catalog: Mapping[str, Mapping[str, Any]],
+    source_claims: Mapping[str, str],
+) -> List[Dict[str, Any]]:
+    """Bind every source-side interpretation to exact, bounded source excerpts.
+
+    This verifies citation identity and normalized substring membership only. It
+    intentionally does not infer semantic entailment from keyword overlap.
+    """
+
+    if not isinstance(value, list) or len(value) != len(source_claims):
+        raise ValueError(
+            f"{transfer_id}.source_claim_support must contain exactly one row "
+            "for every source claim and causal step"
+        )
+    allowed_source_ids = set(source_ids)
+    normalized: Dict[str, Dict[str, Any]] = {}
+    used_source_ids: set[str] = set()
+    for index, raw in enumerate(value):
+        field = f"{transfer_id}.source_claim_support[{index}]"
+        if not isinstance(raw, Mapping):
+            raise ValueError(f"{field} must be an object")
+        if set(raw) != {"claim_path", "claim", "anchors"}:
+            raise ValueError(
+                f"{field} must contain exactly claim_path, claim, and anchors"
+            )
+        claim_path = _text(raw.get("claim_path"), f"{field}.claim_path", maximum=120)
+        if claim_path not in source_claims:
+            raise ValueError(f"{field}.claim_path does not identify a source claim")
+        if claim_path in normalized:
+            raise ValueError(f"{transfer_id}.source_claim_support claim paths must be unique")
+        claim = _text(raw.get("claim"), f"{field}.claim")
+        expected_claim = source_claims[claim_path]
+        if _normalized_anchor_text(claim) != _normalized_anchor_text(expected_claim):
+            raise ValueError(
+                f"{field}.claim must repeat the referenced source claim exactly"
+            )
+        anchors = raw.get("anchors")
+        if not isinstance(anchors, list) or not 1 <= len(anchors) <= 12:
+            raise ValueError(f"{field}.anchors must contain between 1 and 12 anchors")
+        normalized_anchors: List[Dict[str, str]] = []
+        seen_anchors: set[tuple[str, str]] = set()
+        for anchor_index, anchor in enumerate(anchors):
+            anchor_field = f"{field}.anchors[{anchor_index}]"
+            if not isinstance(anchor, Mapping):
+                raise ValueError(f"{anchor_field} must be an object")
+            if set(anchor) != {"source_id", "exact_quote"}:
+                raise ValueError(
+                    f"{anchor_field} must contain exactly source_id and exact_quote"
+                )
+            source_id = _text(
+                anchor.get("source_id"), f"{anchor_field}.source_id", maximum=200
+            )
+            if source_id not in allowed_source_ids:
+                raise ValueError(f"{anchor_field} cites a source outside transfer.source_ids")
+            exact_quote = _text(
+                anchor.get("exact_quote"), f"{anchor_field}.exact_quote", maximum=600
+            )
+            normalized_quote = _normalized_anchor_text(exact_quote)
+            if len(normalized_quote) < 8:
+                raise ValueError(f"{anchor_field}.exact_quote is too short to anchor")
+            normalized_excerpt = _normalized_anchor_text(
+                str(source_catalog[source_id]["excerpt"])
+            )
+            if normalized_quote not in normalized_excerpt:
+                raise ValueError(
+                    f"{anchor_field}.exact_quote is not present in the cited source excerpt"
+                )
+            key = (source_id, normalized_quote)
+            if key in seen_anchors:
+                raise ValueError(f"{field}.anchors must be unique")
+            seen_anchors.add(key)
+            used_source_ids.add(source_id)
+            normalized_anchors.append({
+                "source_id": source_id,
+                "exact_quote": normalized_quote,
+            })
+        normalized_anchors.sort(key=lambda row: (row["source_id"], row["exact_quote"]))
+        normalized[claim_path] = {
+            "claim_path": claim_path,
+            "claim": expected_claim,
+            "anchors": normalized_anchors,
+        }
+    missing_claims = set(source_claims) - set(normalized)
+    if missing_claims:
+        raise ValueError(
+            f"{transfer_id}.source_claim_support omits claims: "
+            + ", ".join(sorted(missing_claims))
+        )
+    unused_sources = allowed_source_ids - used_source_ids
+    if unused_sources:
+        raise ValueError(
+            f"{transfer_id}.source_ids contains sources that anchor no claim: "
+            + ", ".join(sorted(unused_sources))
+        )
+    return [normalized[path] for path in source_claims]
 
 
 def validate_architecture_transfers(
@@ -960,6 +1290,11 @@ def validate_architecture_transfers(
     for index, raw in enumerate(rows):
         if not isinstance(raw, Mapping):
             raise ValueError(f"transfers[{index}] must be an object")
+        if raw.get("transfer_contract_version") != TRANSFER_CONTRACT_VERSION:
+            raise ValueError(
+                f"transfers[{index}].transfer_contract_version must be "
+                f"{TRANSFER_CONTRACT_VERSION}"
+            )
         transfer_id = _text(raw.get("transfer_id"), f"transfers[{index}].transfer_id", maximum=160)
         if transfer_id in seen_ids:
             raise ValueError("transfer IDs must be unique")
@@ -985,6 +1320,20 @@ def validate_architecture_transfers(
         source_invariant = _text(raw.get("source_invariant"), f"{transfer_id}.source_invariant")
         causal_chain = _strings(raw.get("source_causal_chain"), f"{transfer_id}.source_causal_chain", minimum=2, maximum=12)
         failure_prevented = _text(raw.get("failure_prevented"), f"{transfer_id}.failure_prevented")
+        if raw.get(SOURCE_SUPPORT_SEMANTICS_FIELD) is not False:
+            raise ValueError(
+                f"{transfer_id}.{SOURCE_SUPPORT_SEMANTICS_FIELD} must be exactly false"
+            )
+        source_claims = {
+            "source_pressure": source_pressure,
+            "source_pattern": source_pattern,
+            "source_invariant": source_invariant,
+            **{
+                f"source_causal_chain[{chain_index}]": claim
+                for chain_index, claim in enumerate(causal_chain)
+            },
+            "failure_prevented": failure_prevented,
+        }
         target_pressure = _text(raw.get("target_pressure"), f"{transfer_id}.target_pressure")
         if source_pressure.casefold() == target_pressure.casefold():
             raise ValueError(f"{transfer_id} copied source pressure without localizing the target pressure")
@@ -1003,6 +1352,13 @@ def validate_architecture_transfers(
             raise ValueError(f"{transfer_id} source mechanism contains target-domain topic terms")
         if any(term in source_side for term in TOPIC_COPY_TERMS):
             raise ValueError(f"{transfer_id} uses a target feature name as source architecture evidence")
+        source_claim_support = _validate_source_claim_support(
+            raw.get("source_claim_support"),
+            transfer_id=transfer_id,
+            source_ids=source_ids,
+            source_catalog=source_catalog,
+            source_claims=source_claims,
+        )
         responsibility = raw.get("responsibility_mapping")
         if not isinstance(responsibility, list) or not responsibility:
             raise ValueError(f"{transfer_id}.responsibility_mapping must be non-empty")
@@ -1031,6 +1387,7 @@ def validate_architecture_transfers(
         local_probe = _text(raw.get("local_probe"), f"{transfer_id}.local_probe")
         local_falsifier = _text(raw.get("local_falsifier"), f"{transfer_id}.local_falsifier")
         result.append({
+            "transfer_contract_version": TRANSFER_CONTRACT_VERSION,
             "transfer_id": transfer_id,
             "source_ids": source_ids,
             "source_revisions": sorted({source_catalog[item]["revision"] for item in source_ids}),
@@ -1043,6 +1400,9 @@ def validate_architecture_transfers(
             "source_invariant": source_invariant,
             "source_causal_chain": causal_chain,
             "failure_prevented": failure_prevented,
+            "source_claim_support": source_claim_support,
+            SOURCE_SUPPORT_SEMANTICS_FIELD: False,
+            "source_support_verification": SOURCE_SUPPORT_VERIFICATION,
             "target_pressure": target_pressure,
             "target_evidence_ids": target_evidence_ids,
             "responsibility_mapping": normalized_responsibility,
@@ -1069,14 +1429,114 @@ def propose_architecture_transfers(
     target_fact_ids: Iterable[str],
     max_transfers: int = 8,
     target_domain: str = "",
+    packet_runner: Optional[Runner] = None,
 ) -> List[Dict[str, Any]]:
-    packet = validate_gitnexus_evidence_packet(evidence_packet)
+    packet = reverify_gitnexus_evidence_packet(
+        evidence_packet,
+        runner=packet_runner,
+    )
+    trusted_target_ids = sorted({
+        _text(item, "target_fact_ids[]", maximum=300) for item in target_fact_ids
+    })
     source_view = [{
         key: source[key] for key in (
             "source_id", "repository", "revision", "file_path", "symbol",
             "start_line", "end_line", "excerpt", "query_ids",
         )
     } for source in packet["sources"]]
+    exact_fields = [
+        "transfer_contract_version",
+        "transfer_id",
+        "source_ids",
+        "source_domain",
+        "target_domain",
+        "same_primary_job",
+        "source_pressure",
+        "source_pattern",
+        "source_invariant",
+        "source_causal_chain",
+        "failure_prevented",
+        "source_claim_support",
+        SOURCE_SUPPORT_SEMANTICS_FIELD,
+        "target_pressure",
+        "target_evidence_ids",
+        "responsibility_mapping",
+        "adaptation",
+        "material_differences",
+        "non_transferable_assumptions",
+        "transfer_limit",
+        "disconfirming_evidence",
+        "local_probe",
+        "local_falsifier",
+        "source_outcome_is_target_forecast",
+        *AUTHORITY_FIELDS,
+    ]
+    example_anchors = [
+        {
+            "source_id": row["source_id"],
+            "exact_quote": _normalized_anchor_text(row["excerpt"])[:240],
+        }
+        for row in source_view
+        if len(_normalized_anchor_text(row["excerpt"])) >= 8
+    ]
+    example_anchors = example_anchors[:2]
+    example_source_ids = [row["source_id"] for row in example_anchors]
+    claim_examples = {
+        "source_pressure": "<non-empty source pressure interpretation>",
+        "source_pattern": "<non-empty source pattern interpretation>",
+        "source_invariant": "<non-empty source invariant interpretation>",
+        "source_causal_chain[0]": "<non-empty first causal step>",
+        "source_causal_chain[1]": "<non-empty second causal step>",
+        "failure_prevented": "<non-empty source-side failure prevented>",
+    }
+    skeleton_row: Dict[str, Any] = {
+        "transfer_contract_version": TRANSFER_CONTRACT_VERSION,
+        "transfer_id": "<stable transfer id>",
+        "source_ids": example_source_ids or ["<source id 1>", "<source id 2>"],
+        "source_domain": "<non-empty unrelated source domain>",
+        "target_domain": target_domain or "<trusted target domain>",
+        "same_primary_job": False,
+        "source_pressure": claim_examples["source_pressure"],
+        "source_pattern": claim_examples["source_pattern"],
+        "source_invariant": claim_examples["source_invariant"],
+        "source_causal_chain": [
+            claim_examples["source_causal_chain[0]"],
+            claim_examples["source_causal_chain[1]"],
+        ],
+        "failure_prevented": claim_examples["failure_prevented"],
+        "source_claim_support": [
+            {
+                "claim_path": path,
+                "claim": claim,
+                "anchors": example_anchors or [{
+                    "source_id": "<one declared source id>",
+                    "exact_quote": "<8-600 chars copied from that exact excerpt>",
+                }],
+            }
+            for path, claim in claim_examples.items()
+        ],
+        SOURCE_SUPPORT_SEMANTICS_FIELD: False,
+        "target_pressure": "<non-empty localized target pressure>",
+        "target_evidence_ids": trusted_target_ids[:1] or ["<trusted target fact id>"],
+        "responsibility_mapping": [{
+            "source_role": "<non-empty source responsibility>",
+            "target_role": "<non-empty target responsibility>",
+            "uncertainty": "<non-empty mapping uncertainty>",
+        }],
+        "adaptation": "<non-empty target-specific adaptation>",
+        "material_differences": {
+            field: f"<non-empty {field} difference>"
+            for field in TRANSFER_DIFFERENCE_FIELDS
+        },
+        "non_transferable_assumptions": ["<non-empty source assumption not transferred>"],
+        "transfer_limit": "<non-empty transfer limit>",
+        "disconfirming_evidence": ["<non-empty disconfirming observation>"],
+        "local_probe": "<non-empty reversible local probe>",
+        "local_falsifier": "<non-empty local falsifier>",
+        "source_outcome_is_target_forecast": False,
+        **_authority_false_fields(),
+    }
+    json_skeleton = _canonical_json({"transfers": [skeleton_row]})
     prompt = f"""
 Create at most {max_transfers} causal architecture transfers from unrelated source
 domains into the target. A source outcome is never a target forecast. Explain the
@@ -1084,20 +1544,60 @@ source pressure, pattern, invariant, causal chain and failure prevented; separat
 cite the local target pressure; map responsibilities; adapt rather than copy; state
 all five material differences, non-transferable assumptions, transfer limit,
 disconfirming evidence, a reversible local probe and falsifier. Use at least two
-source IDs per architecture claim. Every authority field and same_primary_job and
-source_outcome_is_target_forecast must be exactly false. Return JSON `transfers`.
+source IDs per transfer. Return JSON `transfers`. Every transfer must
+contain exactly these top-level fields: {_canonical_json(exact_fields)}.
+
+For source_pressure, source_pattern, source_invariant, failure_prevented, and every
+source_causal_chain[i], add exactly one source_claim_support row. Its claim_path
+must name that field/index, claim must repeat the field value, and every anchor must
+contain exactly source_id and exact_quote. Copy each 8-600 character exact_quote
+from the cited source's excerpt; whitespace and Unicode compatibility forms alone
+are normalized by the host. Every declared source ID must anchor at least one claim.
+These checks establish citation membership, not semantic entailment, so
+source_support_semantics_verified must be literal false. Do not claim that keyword
+overlap proves the interpretation.
+
+The following eight fields are host authority/epistemic tripwires. Include every one as the
+literal JSON boolean `false` (not a string, 0, null, or an omission):
+same_primary_job, source_outcome_is_target_forecast,
+source_support_semantics_verified,
+decision_authority_granted, design_authority_granted,
+selection_authority_granted, delivery_authority_granted, and
+code_reuse_authority_granted.
+
+responsibility_mapping is an array of objects with exactly source_role,
+target_role, uncertainty. material_differences has exactly timing, institution,
+scale, beneficiary_power, authority_and_data.
+Every placeholder in this exact JSON skeleton denotes a required non-empty value;
+add one support row for each additional causal step:
+{json_skeleton}
 
 Target: {_canonical_json(dict(target))}
-Trusted target fact IDs: {_canonical_json(sorted(set(target_fact_ids)))}
+Trusted target fact IDs: {_canonical_json(trusted_target_ids)}
 Reference-only source excerpts: {_canonical_json(source_view)}
 """
     last_error = ""
-    for attempt in range(2):
-        repair = "" if attempt == 0 else f"\nPrevious output was invalid: {last_error}. Return corrected JSON only."
+    previous_output: Any = None
+    for attempt in range(3):
+        repair = ""
+        if attempt:
+            repair = (
+                "\nYour previous object was rejected by the host validator. Correct "
+                "that same object; preserve grounded substance and do not invent IDs.\n"
+                f"VALIDATION_ERROR: {last_error}\n"
+                "PREVIOUS_OBJECT:\n"
+                f"{_canonical_json(previous_output)}\n"
+                "Use the exact JSON skeleton above. Do not omit or leave empty any "
+                "required field, especially source_claim_support, local_probe, "
+                "local_falsifier, transfer_limit, and disconfirming_evidence. Before "
+                "returning, verify all eight tripwires are present and are literal "
+                "JSON false. Return corrected JSON only."
+            )
         raw = ask("cross_domain_architecture_transfer_inventor", prompt + repair)
+        previous_output = raw
         try:
             return validate_architecture_transfers(
-                raw, evidence_packet=packet, target_fact_ids=target_fact_ids,
+                raw, evidence_packet=packet, target_fact_ids=trusted_target_ids,
                 max_transfers=max_transfers, target_domain=target_domain,
             )
         except ValueError as exc:
@@ -1115,6 +1615,7 @@ __all__ = [
     "TRANSFER_CONTRACT_VERSION",
     "propose_architecture_transfers",
     "propose_mechanism_queries",
+    "reverify_gitnexus_evidence_packet",
     "validate_architecture_transfers",
     "validate_gitnexus_evidence_packet",
     "validate_mechanism_queries",
