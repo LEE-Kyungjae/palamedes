@@ -20,7 +20,10 @@ from palamedes_cognition_v3 import (
     run_partitioned_product_cognition,
     thaw,
 )
-from tests.test_palamedes_cognition_v3 import CognitionFixture
+from tests.test_palamedes_cognition_v3 import (
+    CognitionFixture,
+    validated_mapping_payload,
+)
 
 
 FIXTURE_ROOT = Path(__file__).parent / "fixtures" / "product-cognition"
@@ -129,12 +132,21 @@ class ContractFixtureProvider:
 
 
 def run_case(case):
+    prepared = copy.deepcopy(case)
+    architecture_rows = prepared["partitions"][
+        CROSS_DOMAIN_ARCHITECTURE_ANALOGIST
+    ]
+    if architecture_rows:
+        # The checked-in JSON describes the human-readable fixture. Admission
+        # deliberately uses a fresh revision-pinned, fully validated v2 mapping
+        # so this static protocol test cannot bypass the production boundary.
+        architecture_rows[0]["payload"] = validated_mapping_payload()
     provider = ContractFixtureProvider()
     result = run_partitioned_product_cognition(
         ask=provider,
-        common_evidence=case["common_evidence"],
-        partitions=case["partitions"],
-        constitution=case["constitution"],
+        common_evidence=prepared["common_evidence"],
+        partitions=prepared["partitions"],
+        constitution=prepared["constitution"],
     )
     return provider, thaw(result)
 
@@ -220,15 +232,16 @@ def positive_rubric(result):
             and contains_all(
                 transfer["adaptation"],
                 (
-                    "immutable activity facts",
-                    "idempotency key",
-                    "immutable version",
-                    "active version pointer",
-                    "rebuild",
-                    "rollback",
+                    "record progress",
+                    "claims separately",
+                    "stable event key",
+                    "claim ledger",
                 ),
             )
-            and any("does not prove player demand" in item.lower() for item in transfer["limits"])
+            and any(
+                contains_all(item, ("demand", "retention", "willingness to pay"))
+                for item in transfer["limits"]
+            )
         ),
         "host_surfaces_a_bounded_result": (
             result["host_issued_result"]["result_kind"] == "draft"

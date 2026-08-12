@@ -13,11 +13,13 @@ from palamedes_architecture_transfer import (
     EvidenceLimits,
     GitNexusEvidenceAdapter,
     TRANSFER_CONTRACT_VERSION,
+    TRANSFER_INTEGRITY_VERSION,
     propose_mechanism_queries,
     propose_architecture_transfers,
     reverify_gitnexus_evidence_packet,
     validate_architecture_transfers,
     validate_gitnexus_evidence_packet,
+    verify_architecture_transfer_integrity,
 )
 
 
@@ -536,6 +538,38 @@ class ArchitectureTransferContractTests(unittest.TestCase):
             "normalized_exact_excerpt_membership_only",
         )
         self.assertEqual(len(rows[0]["source_claim_support"]), 6)
+        integrity = rows[0]["host_validation_integrity"]
+        self.assertEqual(integrity["integrity_version"], TRANSFER_INTEGRITY_VERSION)
+        self.assertEqual(integrity["evidence_packet_id"], packet["packet_id"])
+        self.assertFalse(integrity["provenance_authenticated"])
+        verify_architecture_transfer_integrity(rows[0])
+
+    def test_integrity_record_binds_complete_mapping_packet_sources_and_targets(self):
+        packet, transfer = self.packet_and_transfer()
+        row = validate_architecture_transfers(
+            [transfer],
+            evidence_packet=packet,
+            target_fact_ids={"fact-events", "fact-other"},
+        )[0]
+        for mutation, message in (
+            (("adaptation", "A post-validation rewrite."), "mapping integrity"),
+            (("target_scope", ["fact-events"]), "validation integrity"),
+        ):
+            changed = copy.deepcopy(row)
+            if mutation[0] == "target_scope":
+                changed["host_validation_integrity"]["target_fact_ids"] = mutation[1]
+            else:
+                changed[mutation[0]] = mutation[1]
+            with self.assertRaisesRegex(ValueError, message):
+                verify_architecture_transfer_integrity(changed)
+
+        incomplete = {
+            "transfer_contract_version": TRANSFER_CONTRACT_VERSION,
+            "authority": "mechanism_candidate_only",
+            **{field: False for field in AUTHORITY_FIELDS},
+        }
+        with self.assertRaisesRegex(ValueError, "complete normalized v2"):
+            verify_architecture_transfer_integrity(incomplete)
 
     def test_provider_repair_receives_previous_object_and_exact_false_contract(self):
         packet, transfer = self.packet_and_transfer()

@@ -25,7 +25,28 @@ from palamedes_chat import (
 )
 from palamedes_evidence_bundle import build_cognition_evidence_bundle
 from palamedes_product_alignment import ProductAlignmentStore
-from tests.test_palamedes_architecture_transfer import collect_packet
+from palamedes_architecture_transfer import validate_architecture_transfers
+from tests.test_palamedes_architecture_transfer import collect_packet, valid_transfer
+
+
+_VALIDATED_MAPPING_PAYLOAD = None
+
+
+def validated_mapping_payload():
+    global _VALIDATED_MAPPING_PAYLOAD
+    if _VALIDATED_MAPPING_PAYLOAD is None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            packet, _ = collect_packet(tempdir)
+            transfer = valid_transfer(
+                [source["source_id"] for source in packet["sources"]]
+            )
+            _VALIDATED_MAPPING_PAYLOAD = validate_architecture_transfers(
+                [transfer],
+                evidence_packet=packet,
+                target_fact_ids={"fact-events"},
+                target_domain="live service game",
+            )[0]
+    return copy.deepcopy(_VALIDATED_MAPPING_PAYLOAD)
 
 
 def evidence_partitions(*, failure=True, failure_status="failure"):
@@ -45,36 +66,7 @@ def evidence_partitions(*, failure=True, failure_status="failure"):
                 "epistemic_class": "hypothesis",
                 "decision_authority": "advisory",
                 "delivery_authority_granted": False,
-                "payload": {
-                    "transfer_contract_version": "palamedes-architecture-transfer/2",
-                    "source_domain": "append-only financial ledgers",
-                    "source_pressure": (
-                        "Duplicate, late, and corrected events must not corrupt balances."
-                    ),
-                    "source_pattern": (
-                        "Immutable facts plus idempotent, rebuildable projections"
-                    ),
-                    "target_pressure": (
-                        "Seasonal progress and reward entitlement state must survive retries."
-                    ),
-                    "adaptation": (
-                        "Use match IDs as idempotency keys and rebuild season views from facts."
-                    ),
-                    "transfer_limit": (
-                        "Ledger correctness does not prove the reward loop is enjoyable."
-                    ),
-                    "non_transferable_assumptions": [
-                        "Do not copy financial compliance complexity into the game wholesale."
-                    ],
-                    "same_primary_job": False,
-                    "source_outcome_is_target_forecast": False,
-                    "authority": "mechanism_candidate_only",
-                    "decision_authority_granted": False,
-                    "design_authority_granted": False,
-                    "selection_authority_granted": False,
-                    "delivery_authority_granted": False,
-                    "code_reuse_authority_granted": False,
-                },
+                "payload": validated_mapping_payload(),
             }
         ],
         FAILURE_EXPERIENCED_OPERATOR: (
@@ -238,12 +230,17 @@ class CognitionFixture:
     def candidate(role, packet):
         allowed = list(packet["allowed_source_ids"])
         exclusive = [row["source_id"] for row in packet["exclusive_evidence"]]
+        architecture_payload = (
+            packet["exclusive_evidence"][0]["payload"]
+            if role == CROSS_DOMAIN_ARCHITECTURE_ANALOGIST
+            else None
+        )
         mechanism = {
             PRODUCT_OPPORTUNITY_INVENTOR: (
                 "A free seasonal track credits healthy play across modes before a paid track is tested."
             ),
             CROSS_DOMAIN_ARCHITECTURE_ANALOGIST: (
-                "Use match IDs as idempotency keys and rebuild season views from facts."
+                architecture_payload["adaptation"] if architecture_payload else ""
             ),
             FAILURE_EXPERIENCED_OPERATOR: (
                 "Let broad outcome goals earn progress while capping narrow daily pressure."
@@ -369,19 +366,19 @@ class CognitionFixture:
             }
         elif role == CROSS_DOMAIN_ARCHITECTURE_ANALOGIST:
             candidate["architecture_transfer"] = {
-                "source": "append-only financial ledgers",
+                "source": architecture_payload["source_domain"],
                 "source_ids": exclusive,
-                "pressure": "Duplicate, late, and corrected events must not corrupt balances.",
-                "mechanism": "Immutable facts plus idempotent, rebuildable projections",
-                "target": "Seasonal progress and reward entitlement state must survive retries.",
-                "adaptation": "Use match IDs as idempotency keys and rebuild season views from facts.",
+                "pressure": architecture_payload["source_pressure"],
+                "mechanism": architecture_payload["source_pattern"],
+                "target": architecture_payload["target_pressure"],
+                "adaptation": architecture_payload["adaptation"],
                 "limits": [
-                    "Ledger correctness does not prove the reward loop is enjoyable.",
-                    "Do not copy financial compliance complexity into the game wholesale.",
+                    architecture_payload["transfer_limit"],
+                    *architecture_payload["non_transferable_assumptions"],
                 ],
             }
             candidate["failure_basis"]["transfer_limit"] = (
-                "Ledger correctness does not prove the reward loop is enjoyable."
+                architecture_payload["transfer_limit"]
             )
         else:
             candidate["failure_earned_boundary"] = {
@@ -584,6 +581,22 @@ class PartitionedProductCognitionTests(unittest.TestCase):
             abstention["reason_code"], "no_validated_cross_domain_evidence"
         )
 
+    def test_version_authority_only_mapping_cannot_bypass_v3_admission(self):
+        partitions = evidence_partitions()
+        payload = partitions[CROSS_DOMAIN_ARCHITECTURE_ANALOGIST][0]["payload"]
+        payload.pop("host_validation_integrity")
+        payload.pop("source_claim_support")
+        fixture, result = self.run_fixture(partitions=partitions)
+        self.assertNotIn(CROSS_DOMAIN_ARCHITECTURE_ANALOGIST, fixture.calls)
+        abstention = next(
+            row
+            for row in result["abstentions"]
+            if row["role"] == CROSS_DOMAIN_ARCHITECTURE_ANALOGIST
+        )
+        self.assertEqual(
+            abstention["reason_code"], "no_validated_cross_domain_evidence"
+        )
+
     def test_inventor_prompt_names_exact_probe_enums_without_solution_catalog(self):
         fixture, _ = self.run_fixture()
         prompt = next(
@@ -650,12 +663,105 @@ class PartitionedProductCognitionTests(unittest.TestCase):
 
         self.assertEqual(partitions[CROSS_DOMAIN_ARCHITECTURE_ANALOGIST], [])
 
+    def test_bundle_built_validated_mapping_reaches_architecture_analogist(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            state_root = Path(tempdir) / ".palamedes"
+            snapshot = {
+                "observation_id": "observation-valid-transfer",
+                "snapshot_fingerprint": "snapshot-valid-transfer",
+                "signals": {
+                    "git": {"head": "abc123", "branch": "main"},
+                    "change": {"summary": "activity is observable"},
+                    "test": {},
+                },
+            }
+            baseline = build_cognition_evidence_bundle(
+                state_root=state_root,
+                snapshot=snapshot,
+                user_request="Find a bounded product opportunity.",
+                mode="product",
+            )
+            packet, _ = collect_packet(tempdir)
+            mapping = valid_transfer(
+                [source["source_id"] for source in packet["sources"]]
+            )
+            mapping["target_evidence_ids"] = [
+                baseline["product_signals"][0]["item_id"]
+            ]
+            from palamedes_architecture_transfer import (
+                validate_gitnexus_evidence_packet,
+            )
+
+            with patch(
+                "palamedes_architecture_transfer.reverify_gitnexus_evidence_packet",
+                side_effect=lambda value: validate_gitnexus_evidence_packet(value),
+            ):
+                bundle = build_cognition_evidence_bundle(
+                    state_root=state_root,
+                    snapshot=snapshot,
+                    user_request="Find a bounded product opportunity.",
+                    mode="product",
+                    architecture_packet=packet,
+                    transfer_mappings=[mapping],
+                )
+            _, projected, _ = partition_cognition_evidence_bundle(bundle)
+        partitions = evidence_partitions()
+        partitions[CROSS_DOMAIN_ARCHITECTURE_ANALOGIST] = projected[
+            CROSS_DOMAIN_ARCHITECTURE_ANALOGIST
+        ]
+        fixture, _ = self.run_fixture(partitions=partitions)
+        self.assertIn(CROSS_DOMAIN_ARCHITECTURE_ANALOGIST, fixture.calls)
+
     def test_nonadverse_archive_cannot_be_promoted_to_failure_experience(self):
         fixture, result = self.run_fixture(
             partitions=evidence_partitions(failure=True, failure_status="success")
         )
         self.assertNotIn(FAILURE_EXPERIENCED_OPERATOR, fixture.calls)
         self.assertEqual(result["abstentions"][0]["reason_code"], "no_adverse_evidence")
+
+    def test_partition_rechecks_success_even_if_allowlist_is_compromised(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            state_root = Path(tempdir) / ".palamedes"
+            outcomes = state_root / "missions/outcomes.jsonl"
+            outcomes.parent.mkdir(parents=True)
+            outcomes.write_text(
+                json.dumps(
+                    {
+                        "outcome_id": "outcome-success",
+                        "reported_outcome_status": "success",
+                        "execution_status": "completed",
+                        "outcome_type": "validated_improvement",
+                        "observation": "The bounded probe succeeded.",
+                    },
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            bundle = build_cognition_evidence_bundle(
+                state_root=state_root,
+                snapshot={
+                    "observation_id": "observation-success",
+                    "snapshot_fingerprint": "snapshot-success",
+                    "signals": {
+                        "git": {"head": "abc123", "branch": "main"},
+                        "change": {},
+                        "test": {},
+                    },
+                },
+                user_request="Find a bounded product opportunity.",
+                mode="product",
+            )
+            bundle["citation_allowlists"]["direct_failure_ids"] = [
+                "outcome-success"
+            ]
+            with patch(
+                "palamedes_evidence_bundle.validate_cognition_evidence_bundle",
+                return_value=None,
+            ):
+                _, partitions, _ = partition_cognition_evidence_bundle(bundle)
+
+        self.assertEqual(partitions[FAILURE_EXPERIENCED_OPERATOR], [])
 
     def test_disqualified_candidate_cannot_be_selected(self):
         fixture = CognitionFixture(

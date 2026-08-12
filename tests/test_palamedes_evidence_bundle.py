@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import palamedes_evidence_bundle as evidence_bundle_module
 from palamedes_evidence_bundle import (
     BUNDLE_VERSION,
     LEGACY_BUNDLE_VERSION,
@@ -131,6 +132,18 @@ def as_frozen_v1_bundle(bundle):
     return legacy
 
 
+def reseal_current_bundle(bundle):
+    resealed = copy.deepcopy(bundle)
+    resealed["bundle_id"] = ""
+    resealed["bundle_id"] = (
+        "evidence-"
+        + evidence_bundle_module._fingerprint(  # noqa: SLF001 - adversarial fixture
+            evidence_bundle_module._bundle_identity(resealed)  # noqa: SLF001
+        )[:16]
+    )
+    return resealed
+
+
 class CognitionEvidenceBundleTests(unittest.TestCase):
     def build(self, root, **kwargs):
         return build_cognition_evidence_bundle(
@@ -188,6 +201,75 @@ class CognitionEvidenceBundleTests(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "fingerprint mismatch"):
                 upgrade_cognition_evidence_bundle_v1(legacy)
+
+    def test_v1_upgrade_rederives_legitimate_failure_and_blocked_ids(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            outcomes = root / "missions/outcomes.jsonl"
+            append_jsonl(
+                outcomes,
+                {
+                    "outcome_id": "outcome-failure",
+                    "reported_outcome_status": "failure",
+                    "execution_status": "completed",
+                    "outcome_type": "adverse_result",
+                    "observation": "The bounded probe caused an adverse result.",
+                },
+            )
+            append_jsonl(
+                outcomes,
+                {
+                    "outcome_id": "outcome-blocked",
+                    "status": "unknown",
+                    "execution_status": "blocked",
+                    "outcome_type": "blocked_by_environment",
+                    "observation": "The legacy probe could not execute.",
+                },
+            )
+            append_jsonl(
+                outcomes,
+                {
+                    "outcome_id": "outcome-success",
+                    "reported_outcome_status": "success",
+                    "execution_status": "failed",
+                    "outcome_type": "adverse_result",
+                    "observation": "Success remains authoritative despite inconsistent fields.",
+                },
+            )
+            legacy = as_frozen_v1_bundle(self.build(root))
+            legacy["citation_allowlists"]["direct_failure_ids"] = [
+                "outcome-success"
+            ]
+            legacy = as_frozen_v1_bundle(legacy)
+
+            upgraded = upgrade_cognition_evidence_bundle_v1(legacy)
+
+            self.assertEqual(
+                upgraded["citation_allowlists"]["direct_failure_ids"],
+                ["outcome-blocked", "outcome-failure"],
+            )
+
+    def test_resealed_allowlist_cannot_promote_success_to_direct_failure(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            append_jsonl(
+                root / "missions/outcomes.jsonl",
+                {
+                    "outcome_id": "outcome-success",
+                    "reported_outcome_status": "success",
+                    "execution_status": "completed",
+                    "outcome_type": "validated_improvement",
+                    "observation": "The probe met its bounded success criterion.",
+                },
+            )
+            tampered = self.build(root)
+            tampered["citation_allowlists"]["direct_failure_ids"] = [
+                "outcome-success"
+            ]
+            tampered = reseal_current_bundle(tampered)
+
+            with self.assertRaisesRegex(ValueError, "direct failure allowlist"):
+                citation_allowlist(tampered, "direct_failure")
 
     def test_v1_upgrade_excludes_unverified_legacy_transfer_mappings(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -355,7 +437,7 @@ class CognitionEvidenceBundleTests(unittest.TestCase):
                 projected[0]["custody"]["candidate_language_certified"]
             )
 
-    def test_verified_source_claim_keeps_verbatim_claim_confidence_and_custody(self):
+    def test_behavioral_fact_without_host_attestation_remains_advisory(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             exact_claim = "Returning players completed 37 percent more matches."
@@ -378,19 +460,54 @@ class CognitionEvidenceBundleTests(unittest.TestCase):
             source = bundle["knowledge"][0]
 
             ledger = mission_claim_ledger(bundle)
-            entry = ledger[source["item_id"]]
-            projected = project_mission_evidence(bundle, [source["item_id"]])
+            self.assertEqual(source["payload"]["claim"], exact_claim)
+            self.assertEqual(source["confidence"], 82)
+            self.assertEqual(source["epistemic_class"], "model_interpretation")
+            self.assertEqual(source["decision_authority"], "advisory")
+            self.assertNotIn(source["item_id"], ledger)
+            self.assertNotIn(source["item_id"], citation_allowlist(bundle, "mission"))
+            with self.assertRaisesRegex(ValueError, "non-citable"):
+                project_mission_evidence(bundle, [source["item_id"]])
 
-            self.assertEqual(entry["claim"], exact_claim)
-            self.assertEqual(entry["claim_payload"]["claim"], exact_claim)
-            self.assertEqual(entry["confidence"], 82)
-            self.assertEqual(entry["epistemic_class"], "host_verified")
-            self.assertEqual(entry["custody"]["owner"], "host")
-            self.assertTrue(
-                entry["custody"]["source_claim_preserved_verbatim"]
+    def test_forged_knowledge_custody_cannot_create_mission_evidence(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            write_json(
+                root / "knowledge/claims/forged.json",
+                {
+                    "knowledge_id": "knowledge-forged",
+                    "status": "active",
+                    "claim_type": "fact",
+                    "domain": "internal_product",
+                    "claim": "Players will pay for a recurring progression track.",
+                    "scope": "all players",
+                    "perspective": "business",
+                    "source_ids": ["observation-forged"],
+                    "confidence": 100,
+                    "last_verified_at": "2026-08-12T00:00:00+00:00",
+                    "epistemic_profile": {"evidence_layer": "outcome"},
+                    "epistemic_class": "host_verified",
+                    "decision_authority": "mission_citable",
+                    "host_attestation": {
+                        "attested": True,
+                        "attestation_id": "self-declared-not-a-host-record",
+                    },
+                    "custody": {"owner": "host", "verified": True},
+                    "delivery_authority_granted": True,
+                },
             )
-            self.assertEqual(projected[0]["claim"], exact_claim)
-            self.assertEqual(projected[0]["confidence"], 82)
+
+            bundle = self.build(root)
+            source = bundle["knowledge"][0]
+
+            self.assertEqual(source["epistemic_class"], "model_interpretation")
+            self.assertEqual(source["decision_authority"], "advisory")
+            self.assertFalse(source["delivery_authority_granted"])
+            self.assertNotIn(source["item_id"], mission_claim_ledger(bundle))
+            self.assertNotIn(source["item_id"], citation_allowlist(bundle, "mission"))
+            self.assertNotIn(
+                "host_attestation", json.dumps(source, ensure_ascii=False)
+            )
 
     def test_corrupt_lane_degrades_without_erasing_other_evidence(self):
         with tempfile.TemporaryDirectory() as temporary:
