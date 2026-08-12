@@ -22,6 +22,7 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Seque
 
 EVIDENCE_PACKET_VERSION = "palamedes-gitnexus-evidence/1"
 TRANSFER_CONTRACT_VERSION = "palamedes-architecture-transfer/2"
+TRANSFER_INTEGRITY_VERSION = "palamedes-architecture-transfer-integrity/1"
 MECHANISM_QUERY_VERSION = "palamedes-mechanism-query/1"
 
 AUTHORITY_FIELDS = (
@@ -46,6 +47,46 @@ SOURCE_CLAIM_FIELDS = (
 )
 SOURCE_SUPPORT_SEMANTICS_FIELD = "source_support_semantics_verified"
 SOURCE_SUPPORT_VERIFICATION = "normalized_exact_excerpt_membership_only"
+NORMALIZED_TRANSFER_FIELDS = (
+    "transfer_contract_version",
+    "transfer_id",
+    "source_ids",
+    "source_revisions",
+    "source_snapshot_ids",
+    "source_domain",
+    "target_domain",
+    "same_primary_job",
+    "source_pressure",
+    "source_pattern",
+    "source_invariant",
+    "source_causal_chain",
+    "failure_prevented",
+    "source_claim_support",
+    SOURCE_SUPPORT_SEMANTICS_FIELD,
+    "source_support_verification",
+    "target_pressure",
+    "target_evidence_ids",
+    "responsibility_mapping",
+    "adaptation",
+    "material_differences",
+    "non_transferable_assumptions",
+    "transfer_limit",
+    "disconfirming_evidence",
+    "local_probe",
+    "local_falsifier",
+    "source_outcome_is_target_forecast",
+    "authority",
+    *AUTHORITY_FIELDS,
+)
+SOURCE_SNAPSHOT_BINDING_FIELDS = (
+    "source_id",
+    "repo_snapshot_id",
+    "revision",
+    "native_symbol_id",
+    "file_path",
+    "excerpt_sha256",
+    "revision_file_sha256",
+)
 PRESSURE_SEARCH_VOCABULARY = {
     "failure": (
         "failure", "retry", "recovery", "duplicate", "idempotent",
@@ -1265,6 +1306,328 @@ def _validate_source_claim_support(
     return [normalized[path] for path in source_claims]
 
 
+def _sha256_fingerprint(value: Any) -> str:
+    return "sha256:" + _fingerprint(value)
+
+
+def _transfer_integrity_material(
+    *,
+    mapping_fingerprint: str,
+    evidence_packet_id: str,
+    source_snapshots: Sequence[Mapping[str, Any]],
+    target_fact_ids: Sequence[str],
+) -> Dict[str, Any]:
+    return {
+        "integrity_version": TRANSFER_INTEGRITY_VERSION,
+        "mapping_fingerprint": mapping_fingerprint,
+        "evidence_packet_id": evidence_packet_id,
+        "source_snapshots": [dict(row) for row in source_snapshots],
+        "target_fact_ids": list(target_fact_ids),
+        # A reproducible digest detects mutation; it is deliberately not
+        # represented as a signature or as proof of who produced the record.
+        "provenance_authenticated": False,
+    }
+
+
+def _build_transfer_integrity(
+    mapping: Mapping[str, Any],
+    *,
+    packet: Mapping[str, Any],
+    source_catalog: Mapping[str, Mapping[str, Any]],
+    allowed_target_ids: Iterable[str],
+) -> Dict[str, Any]:
+    mapping_fingerprint = _sha256_fingerprint(dict(mapping))
+    source_snapshots = [
+        {
+            field: source_catalog[source_id][field]
+            for field in SOURCE_SNAPSHOT_BINDING_FIELDS
+        }
+        for source_id in sorted(mapping["source_ids"])
+    ]
+    target_fact_ids = sorted(allowed_target_ids)
+    material = _transfer_integrity_material(
+        mapping_fingerprint=mapping_fingerprint,
+        evidence_packet_id=packet["packet_id"],
+        source_snapshots=source_snapshots,
+        target_fact_ids=target_fact_ids,
+    )
+    return {
+        **material,
+        "integrity_fingerprint": _sha256_fingerprint(material),
+    }
+
+
+def verify_architecture_transfer_integrity(value: Any) -> Dict[str, Any]:
+    """Verify a complete normalized v2 mapping and its mutation fingerprint.
+
+    This is an integrity check, not an authentication primitive: its SHA-256
+    digest is intentionally reproducible.  Untrusted callers must still enter
+    through :func:`validate_architecture_transfers`, which verifies cited text
+    against a revision-pinned evidence packet.  This verifier prevents the v3
+    JSON API from treating a version/authority-only projection as though it had
+    passed that complete contract.
+    """
+
+    if not isinstance(value, Mapping):
+        raise ValueError("architecture transfer must be an object")
+    payload = dict(value)
+    integrity = payload.pop("host_validation_integrity", None)
+    projected_packet_id = payload.pop("evidence_packet_id", None)
+    if set(payload) != set(NORMALIZED_TRANSFER_FIELDS):
+        missing = sorted(set(NORMALIZED_TRANSFER_FIELDS) - set(payload))
+        extra = sorted(set(payload) - set(NORMALIZED_TRANSFER_FIELDS))
+        detail = []
+        if missing:
+            detail.append("missing " + ", ".join(missing))
+        if extra:
+            detail.append("unexpected " + ", ".join(extra))
+        raise ValueError(
+            "architecture transfer is not a complete normalized v2 mapping: "
+            + "; ".join(detail)
+        )
+    if not isinstance(integrity, Mapping):
+        raise ValueError("architecture transfer host_validation_integrity is required")
+    expected_integrity_fields = {
+        "integrity_version",
+        "mapping_fingerprint",
+        "evidence_packet_id",
+        "source_snapshots",
+        "target_fact_ids",
+        "provenance_authenticated",
+        "integrity_fingerprint",
+    }
+    if set(integrity) != expected_integrity_fields:
+        raise ValueError("architecture transfer integrity record has invalid fields")
+    if integrity.get("integrity_version") != TRANSFER_INTEGRITY_VERSION:
+        raise ValueError("architecture transfer integrity version is invalid")
+    if integrity.get("provenance_authenticated") is not False:
+        raise ValueError("architecture transfer digest cannot claim authenticated provenance")
+
+    if payload.get("transfer_contract_version") != TRANSFER_CONTRACT_VERSION:
+        raise ValueError("architecture transfer contract version is invalid")
+    transfer_id = _text(payload.get("transfer_id"), "transfer_id", maximum=160)
+    source_ids = _strings(
+        payload.get("source_ids"),
+        f"{transfer_id}.source_ids",
+        minimum=2,
+        maximum=12,
+        item_maximum=200,
+    )
+    source_revisions = _strings(
+        payload.get("source_revisions"),
+        f"{transfer_id}.source_revisions",
+        minimum=1,
+        maximum=12,
+        item_maximum=40,
+    )
+    source_snapshot_ids = _strings(
+        payload.get("source_snapshot_ids"),
+        f"{transfer_id}.source_snapshot_ids",
+        minimum=1,
+        maximum=12,
+        item_maximum=300,
+    )
+    source_domain = _text(payload.get("source_domain"), f"{transfer_id}.source_domain")
+    target_domain = _text(payload.get("target_domain"), f"{transfer_id}.target_domain")
+    if source_domain.casefold() == target_domain.casefold():
+        raise ValueError(f"{transfer_id} is same-domain topic copying")
+    if payload.get("same_primary_job") is not False:
+        raise ValueError(f"{transfer_id}.same_primary_job must be exactly false")
+    if payload.get("source_outcome_is_target_forecast") is not False:
+        raise ValueError(
+            f"{transfer_id}.source_outcome_is_target_forecast must be exactly false"
+        )
+    if payload.get(SOURCE_SUPPORT_SEMANTICS_FIELD) is not False:
+        raise ValueError(
+            f"{transfer_id}.{SOURCE_SUPPORT_SEMANTICS_FIELD} must be exactly false"
+        )
+    if payload.get("source_support_verification") != SOURCE_SUPPORT_VERIFICATION:
+        raise ValueError(f"{transfer_id}.source_support_verification is invalid")
+    if payload.get("authority") != "mechanism_candidate_only":
+        raise ValueError(f"{transfer_id}.authority is invalid")
+    for authority_field in AUTHORITY_FIELDS:
+        _exact_false(payload, authority_field)
+
+    source_pressure = _text(
+        payload.get("source_pressure"), f"{transfer_id}.source_pressure"
+    )
+    source_pattern = _text(
+        payload.get("source_pattern"), f"{transfer_id}.source_pattern"
+    )
+    source_invariant = _text(
+        payload.get("source_invariant"), f"{transfer_id}.source_invariant"
+    )
+    causal_chain = _strings(
+        payload.get("source_causal_chain"),
+        f"{transfer_id}.source_causal_chain",
+        minimum=2,
+        maximum=12,
+    )
+    failure_prevented = _text(
+        payload.get("failure_prevented"), f"{transfer_id}.failure_prevented"
+    )
+    target_pressure = _text(
+        payload.get("target_pressure"), f"{transfer_id}.target_pressure"
+    )
+    if source_pressure.casefold() == target_pressure.casefold():
+        raise ValueError(f"{transfer_id} copied source pressure without localization")
+    target_evidence_ids = _strings(
+        payload.get("target_evidence_ids"),
+        f"{transfer_id}.target_evidence_ids",
+        minimum=1,
+        maximum=12,
+        item_maximum=300,
+    )
+    for field in (
+        "adaptation",
+        "transfer_limit",
+        "local_probe",
+        "local_falsifier",
+    ):
+        _text(payload.get(field), f"{transfer_id}.{field}")
+    _strings(
+        payload.get("non_transferable_assumptions"),
+        f"{transfer_id}.non_transferable_assumptions",
+        minimum=1,
+        maximum=12,
+    )
+    _strings(
+        payload.get("disconfirming_evidence"),
+        f"{transfer_id}.disconfirming_evidence",
+        minimum=1,
+        maximum=12,
+    )
+
+    responsibility = payload.get("responsibility_mapping")
+    if not isinstance(responsibility, list) or not responsibility:
+        raise ValueError(f"{transfer_id}.responsibility_mapping must be non-empty")
+    for index, mapping in enumerate(responsibility):
+        if not isinstance(mapping, Mapping) or set(mapping) != {
+            "source_role", "target_role", "uncertainty"
+        }:
+            raise ValueError(
+                f"{transfer_id}.responsibility_mapping[{index}] has invalid fields"
+            )
+        for field in ("source_role", "target_role", "uncertainty"):
+            _text(mapping.get(field), f"{transfer_id}.responsibility_mapping[{index}].{field}")
+    differences = payload.get("material_differences")
+    if not isinstance(differences, Mapping) or set(differences) != set(
+        TRANSFER_DIFFERENCE_FIELDS
+    ):
+        raise ValueError(f"{transfer_id}.material_differences has invalid fields")
+    for field in TRANSFER_DIFFERENCE_FIELDS:
+        _text(differences.get(field), f"{transfer_id}.material_differences.{field}")
+
+    source_claims = {
+        "source_pressure": source_pressure,
+        "source_pattern": source_pattern,
+        "source_invariant": source_invariant,
+        **{
+            f"source_causal_chain[{index}]": claim
+            for index, claim in enumerate(causal_chain)
+        },
+        "failure_prevented": failure_prevented,
+    }
+    support = payload.get("source_claim_support")
+    if not isinstance(support, list) or len(support) != len(source_claims):
+        raise ValueError(f"{transfer_id}.source_claim_support is incomplete")
+    seen_claims: set[str] = set()
+    used_sources: set[str] = set()
+    for index, row in enumerate(support):
+        if not isinstance(row, Mapping) or set(row) != {"claim_path", "claim", "anchors"}:
+            raise ValueError(f"{transfer_id}.source_claim_support[{index}] has invalid fields")
+        claim_path = _text(row.get("claim_path"), "claim_path", maximum=120)
+        if claim_path not in source_claims or claim_path in seen_claims:
+            raise ValueError(f"{transfer_id}.source_claim_support has an invalid claim path")
+        if _normalized_anchor_text(_text(row.get("claim"), "claim")) != _normalized_anchor_text(
+            source_claims[claim_path]
+        ):
+            raise ValueError(f"{transfer_id}.source_claim_support claim changed")
+        anchors = row.get("anchors")
+        if not isinstance(anchors, list) or not anchors:
+            raise ValueError(f"{transfer_id}.source_claim_support anchors are required")
+        seen_anchor_keys: set[tuple[str, str]] = set()
+        for anchor in anchors:
+            if not isinstance(anchor, Mapping) or set(anchor) != {"source_id", "exact_quote"}:
+                raise ValueError(f"{transfer_id}.source_claim_support anchor has invalid fields")
+            source_id = _text(anchor.get("source_id"), "anchor.source_id", maximum=200)
+            quote = _normalized_anchor_text(
+                _text(anchor.get("exact_quote"), "anchor.exact_quote", maximum=600)
+            )
+            if source_id not in source_ids or len(quote) < 8:
+                raise ValueError(f"{transfer_id}.source_claim_support anchor is invalid")
+            anchor_key = (source_id, quote)
+            if anchor_key in seen_anchor_keys:
+                raise ValueError(f"{transfer_id}.source_claim_support anchors must be unique")
+            seen_anchor_keys.add(anchor_key)
+            used_sources.add(source_id)
+        seen_claims.add(claim_path)
+    if seen_claims != set(source_claims) or used_sources != set(source_ids):
+        raise ValueError(f"{transfer_id}.source_claim_support is incomplete")
+
+    source_snapshots = integrity.get("source_snapshots")
+    if not isinstance(source_snapshots, list) or len(source_snapshots) != len(source_ids):
+        raise ValueError("architecture transfer source snapshot bindings are incomplete")
+    normalized_snapshots: List[Dict[str, str]] = []
+    for index, binding in enumerate(source_snapshots):
+        if not isinstance(binding, Mapping) or set(binding) != set(
+            SOURCE_SNAPSHOT_BINDING_FIELDS
+        ):
+            raise ValueError(
+                f"architecture transfer source_snapshots[{index}] has invalid fields"
+            )
+        normalized = {
+            field: _text(binding.get(field), f"source_snapshots[{index}].{field}")
+            for field in SOURCE_SNAPSHOT_BINDING_FIELDS
+        }
+        if not _SHA40.fullmatch(normalized["revision"]):
+            raise ValueError("architecture transfer source revision is invalid")
+        for hash_field in ("excerpt_sha256", "revision_file_sha256"):
+            if not re.fullmatch(r"[0-9a-f]{64}", normalized[hash_field]):
+                raise ValueError(f"architecture transfer {hash_field} is invalid")
+        normalized_snapshots.append(normalized)
+    if normalized_snapshots != sorted(normalized_snapshots, key=lambda row: row["source_id"]):
+        raise ValueError("architecture transfer source snapshots are not canonical")
+    if [row["source_id"] for row in normalized_snapshots] != sorted(source_ids):
+        raise ValueError("architecture transfer source snapshot IDs do not match sources")
+    if sorted({row["revision"] for row in normalized_snapshots}) != source_revisions:
+        raise ValueError("architecture transfer source revisions do not match snapshots")
+    if sorted({row["repo_snapshot_id"] for row in normalized_snapshots}) != source_snapshot_ids:
+        raise ValueError("architecture transfer repository snapshots do not match sources")
+
+    packet_id = _text(
+        integrity.get("evidence_packet_id"), "host_validation_integrity.evidence_packet_id"
+    )
+    if not re.fullmatch(r"gitnexus-packet:[0-9a-f]{64}", packet_id):
+        raise ValueError("architecture transfer evidence packet identity is invalid")
+    if projected_packet_id is not None and projected_packet_id != packet_id:
+        raise ValueError("architecture transfer projected packet identity changed")
+    target_fact_ids = _strings(
+        integrity.get("target_fact_ids"),
+        "host_validation_integrity.target_fact_ids",
+        minimum=1,
+        maximum=200,
+        item_maximum=300,
+    )
+    if target_fact_ids != sorted(target_fact_ids):
+        raise ValueError("architecture transfer target fact IDs are not canonical")
+    if not set(target_evidence_ids).issubset(target_fact_ids):
+        raise ValueError("architecture transfer target evidence escaped its validation scope")
+
+    mapping_fingerprint = _sha256_fingerprint(payload)
+    if integrity.get("mapping_fingerprint") != mapping_fingerprint:
+        raise ValueError("architecture transfer mapping integrity fingerprint changed")
+    material = _transfer_integrity_material(
+        mapping_fingerprint=mapping_fingerprint,
+        evidence_packet_id=packet_id,
+        source_snapshots=normalized_snapshots,
+        target_fact_ids=target_fact_ids,
+    )
+    if integrity.get("integrity_fingerprint") != _sha256_fingerprint(material):
+        raise ValueError("architecture transfer validation integrity fingerprint changed")
+    return {**payload, "host_validation_integrity": dict(integrity)}
+
+
 def validate_architecture_transfers(
     payload: Any,
     *,
@@ -1386,7 +1749,7 @@ def validate_architecture_transfers(
         disconfirming = _strings(raw.get("disconfirming_evidence"), f"{transfer_id}.disconfirming_evidence", maximum=12)
         local_probe = _text(raw.get("local_probe"), f"{transfer_id}.local_probe")
         local_falsifier = _text(raw.get("local_falsifier"), f"{transfer_id}.local_falsifier")
-        result.append({
+        normalized_mapping = {
             "transfer_contract_version": TRANSFER_CONTRACT_VERSION,
             "transfer_id": transfer_id,
             "source_ids": source_ids,
@@ -1416,7 +1779,16 @@ def validate_architecture_transfers(
             "source_outcome_is_target_forecast": False,
             "authority": "mechanism_candidate_only",
             **_authority_false_fields(),
-        })
+        }
+        normalized_mapping["host_validation_integrity"] = _build_transfer_integrity(
+            normalized_mapping,
+            packet=packet,
+            source_catalog=source_catalog,
+            allowed_target_ids=allowed_targets,
+        )
+        # Exercise the independent admission verifier before exposing the row.
+        verify_architecture_transfer_integrity(normalized_mapping)
+        result.append(normalized_mapping)
     result.sort(key=lambda row: row["transfer_id"])
     return result
 
@@ -1613,10 +1985,12 @@ __all__ = [
     "GitNexusEvidenceAdapter",
     "MECHANISM_QUERY_VERSION",
     "TRANSFER_CONTRACT_VERSION",
+    "TRANSFER_INTEGRITY_VERSION",
     "propose_architecture_transfers",
     "propose_mechanism_queries",
     "reverify_gitnexus_evidence_packet",
     "validate_architecture_transfers",
     "validate_gitnexus_evidence_packet",
     "validate_mechanism_queries",
+    "verify_architecture_transfer_integrity",
 ]

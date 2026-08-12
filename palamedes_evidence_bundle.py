@@ -55,17 +55,26 @@ def _strings(value: Any, limit: int = 12) -> List[str]:
     return [_clip(item, 600) for item in value if str(item or "").strip()][:limit]
 
 
-def _bounded_json(value: Any, *, depth: int = 0) -> Any:
+def _bounded_json(
+    value: Any, *, depth: int = 0, max_object_fields: int = 32
+) -> Any:
     """Bound nested model/store material before it can monopolize a role context."""
     if depth >= 6:
         return _clip(value, 400)
     if isinstance(value, dict):
         return {
-            _clip(key, 160): _bounded_json(item, depth=depth + 1)
-            for key, item in list(sorted(value.items(), key=lambda pair: str(pair[0])))[:32]
+            _clip(key, 160): _bounded_json(
+                item, depth=depth + 1, max_object_fields=max_object_fields
+            )
+            for key, item in list(sorted(value.items(), key=lambda pair: str(pair[0])))[:max_object_fields]
         }
     if isinstance(value, list):
-        return [_bounded_json(item, depth=depth + 1) for item in value[:24]]
+        return [
+            _bounded_json(
+                item, depth=depth + 1, max_object_fields=max_object_fields
+            )
+            for item in value[:24]
+        ]
     if isinstance(value, str):
         return _clip(value)
     if value is None or isinstance(value, (bool, int, float)):
@@ -161,8 +170,9 @@ def _evidence_item(
     confidence: int = 0,
     freshness: str = "unknown",
     scope_keys: Sequence[str] = (),
+    payload_field_limit: int = 32,
 ) -> Dict[str, Any]:
-    bounded_payload = _bounded_json(payload)
+    bounded_payload = _bounded_json(payload, max_object_fields=payload_field_limit)
     identity = {
         "kind": kind,
         "stable_identity": stable_identity,
@@ -510,7 +520,6 @@ def _project_outcomes(
         diagnostics=diagnostics,
     )
     items = []
-    direct_failure_ids = set()
     for row in _semantic_sort(
         outcomes,
         time_fields=("recorded_at", "created_at"),
@@ -524,11 +533,6 @@ def _project_outcomes(
         ).lower()
         execution = _clip(row.get("execution_status"), 80).lower()
         outcome_type = _clip(row.get("outcome_type"), 120).lower()
-        if status in {"failure", "mixed", "blocked"} or execution in {
-            "failed",
-            "blocked",
-        } or (status != "success" and outcome_type in {"adverse_result", "blocked_by_environment"}):
-            direct_failure_ids.add(outcome_id)
         items.append(
             _evidence_item(
                 kind="mission_outcome_observation",
@@ -584,7 +588,56 @@ def _project_outcomes(
                 freshness="unknown",
             )
         )
-    return items, direct_failure_ids
+    return items, _derive_direct_failure_ids(items)
+
+
+def direct_failure_outcome_id(item: Any) -> str:
+    """Return the outcome ID only for a direct, structurally adverse observation.
+
+    Explicit success always wins over inconsistent execution/type fields.  This
+    predicate is host-owned so citation allow-lists cannot promote an otherwise
+    successful outcome into failure-earned authority.
+    """
+
+    if not isinstance(item, dict):
+        return ""
+    if (
+        item.get("kind") != "mission_outcome_observation"
+        or item.get("epistemic_class") != "direct_observation"
+        or item.get("decision_authority") != "mission_citable"
+    ):
+        return ""
+    payload = item.get("payload")
+    if not isinstance(payload, dict):
+        return ""
+    outcome_id = _clip(payload.get("outcome_id"), 200)
+    if not outcome_id:
+        return ""
+    reported_status = _clip(
+        payload.get("reported_outcome_status", item.get("status", "unknown")), 80
+    ).lower()
+    item_status = _clip(item.get("status"), 80).lower()
+    if reported_status and item_status and reported_status != item_status:
+        return ""
+    if reported_status == "success":
+        return ""
+    execution_status = _clip(payload.get("execution_status"), 80).lower()
+    outcome_type = _clip(payload.get("outcome_type"), 120).lower()
+    if (
+        reported_status in {"failure", "mixed", "blocked"}
+        or execution_status in {"failed", "blocked"}
+        or outcome_type in {"adverse_result", "blocked_by_environment"}
+    ):
+        return outcome_id
+    return ""
+
+
+def _derive_direct_failure_ids(items: Iterable[Dict[str, Any]]) -> set[str]:
+    return {
+        outcome_id
+        for item in items
+        if (outcome_id := direct_failure_outcome_id(item))
+    }
 
 
 def _project_knowledge(
@@ -606,21 +659,19 @@ def _project_knowledge(
         knowledge_id = _clip(row.get("knowledge_id"), 200)
         if not knowledge_id:
             continue
-        host_verified = (
-            row.get("claim_type") in {"fact", "capability", "constraint"}
-            and row.get("epistemic_profile", {}).get("evidence_layer")
-            in {"behavior", "outcome", "mixed"}
-        )
+        # Knowledge claims are authored by the cognition provider and persisted
+        # with model-supplied claim/profile fields.  The current knowledge store
+        # has no independently checkable host-attestation record that binds the
+        # exact claim text to its cited source records.  Consequently neither a
+        # strong-sounding claim_type nor evidence_layer can upgrade this lane's
+        # custody.  A future promotion path must verify such a host-owned chain;
+        # fields embedded in this record are never sufficient by themselves.
         knowledge.append(
             _evidence_item(
                 kind="knowledge_claim",
                 status="active",
-                epistemic_class=(
-                    "host_verified" if host_verified else "model_interpretation"
-                ),
-                decision_authority=(
-                    "mission_citable" if host_verified else "advisory"
-                ),
+                epistemic_class="model_interpretation",
+                decision_authority="advisory",
                 observed_at=_clip(row.get("last_verified_at"), 100),
                 source_ids=_strings(row.get("source_ids"), 24),
                 payload={
@@ -1102,6 +1153,10 @@ def _project_architecture(
                 "target_evidence_ids": mapping["target_evidence_ids"],
             },
             freshness="unknown",
+            # A normalized transfer plus its explicit integrity context has
+            # more fields than generic evidence. Preserve that complete host
+            # contract; the total bundle byte ceiling still bounds the lane.
+            payload_field_limit=48,
         )
         for mapping in validated_mappings[: LANE_CAPS["transfer_mappings"]]
     ]
@@ -1253,6 +1308,9 @@ def upgrade_cognition_evidence_bundle_v1(bundle: Dict[str, Any]) -> Dict[str, An
     allowlists["mission_source_ids"] = sorted(
         entry["source_id"] for entry in upgraded["mission_claim_ledger"]
     )
+    allowlists["direct_failure_ids"] = sorted(
+        _derive_direct_failure_ids(upgraded.get("outcome_memory", []))
+    )
     upgraded["bundle_id"] = ""
     upgraded["bundle_id"] = (
         "evidence-" + _fingerprint(_bundle_identity(upgraded))[:16]
@@ -1303,6 +1361,7 @@ def build_cognition_evidence_bundle(
         state_root, diagnostics=manifest["diagnostics"]
     )
     outcome_memory = outcome_memory[: LANE_CAPS["outcome_memory"]]
+    direct_failure_ids = _derive_direct_failure_ids(outcome_memory)
     knowledge, unknowns = _project_knowledge(
         state_root, diagnostics=manifest["diagnostics"]
     )
@@ -1460,6 +1519,13 @@ def validate_cognition_evidence_bundle(bundle: Dict[str, Any]) -> None:
             raise ValueError(f"{field} cites unavailable evidence")
     if set(allowlists["mission_source_ids"]) != mission_claim_ids:
         raise ValueError("mission source allowlist must exactly match the claim ledger")
+    expected_direct_failure_ids = sorted(
+        _derive_direct_failure_ids(bundle.get("outcome_memory", []))
+    )
+    if allowlists.get("direct_failure_ids") != expected_direct_failure_ids:
+        raise ValueError(
+            "direct failure allowlist must exactly match host-derived adverse outcomes"
+        )
     reference_items = {
         item["item_id"]: item
         for item in bundle.get("cross_domain_transfer", {}).get(

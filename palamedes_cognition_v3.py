@@ -296,7 +296,10 @@ def partition_cognition_evidence_bundle(
     Only direct adverse outcome observations enter the failure operator's partition.
     """
 
-    from palamedes_evidence_bundle import validate_cognition_evidence_bundle
+    from palamedes_evidence_bundle import (
+        direct_failure_outcome_id,
+        validate_cognition_evidence_bundle,
+    )
 
     validate_cognition_evidence_bundle(bundle)
 
@@ -355,13 +358,13 @@ def partition_cognition_evidence_bundle(
             else ""
         )
         if (
-            item.get("kind") != "mission_outcome_observation"
-            or outcome_id not in direct_failure_ids
+            outcome_id not in direct_failure_ids
+            or direct_failure_outcome_id(item) != outcome_id
         ):
             continue
         row = as_source(item, f"outcome_memory[{index}]")
         row["adverse"] = True
-        row["outcome_status"] = str(item.get("status", "")).strip()
+        row["outcome_status"] = str(payload.get("reported_outcome_status", "")).strip()
         failure_partition.append(row)
 
     constitution = {
@@ -487,7 +490,10 @@ def _validated_architecture_mapping(
 ) -> Optional[Dict[str, Any]]:
     """Project the immutable fields an analogist is permitted to copy."""
 
-    from palamedes_architecture_transfer import TRANSFER_CONTRACT_VERSION
+    from palamedes_architecture_transfer import (
+        TRANSFER_CONTRACT_VERSION,
+        verify_architecture_transfer_integrity,
+    )
 
     if _record_kind(record) != "cross_domain_architecture_transfer":
         return None
@@ -499,6 +505,14 @@ def _validated_architecture_mapping(
         return None
     payload = record.get("payload")
     if not isinstance(payload, Mapping):
+        return None
+    try:
+        # A public SHA digest is not provenance authentication.  This call also
+        # requires the complete normalized v2 invariant set, source snapshot
+        # bindings, target validation scope, and an unchanged host-produced
+        # integrity record; a version/authority-only JSON projection abstains.
+        verify_architecture_transfer_integrity(payload)
+    except ValueError:
         return None
     if payload.get("transfer_contract_version") != TRANSFER_CONTRACT_VERSION:
         return None
