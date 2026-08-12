@@ -89,6 +89,31 @@ class OpportunityScoutTests(unittest.TestCase):
             self.assertFalse(record["delivery_authority_granted"])
             self.assertEqual(store.latest()["opportunity_scout_id"], record["opportunity_scout_id"])
 
+    def test_repairs_nested_structure_entries_once(self):
+        fixture = OpportunityFixture()
+        original = fixture.__call__
+        structure_calls = 0
+
+        def malformed_once(role, prompt):
+            nonlocal structure_calls
+            value = original(role, prompt)
+            if role == "opportunity_structure_observer":
+                structure_calls += 1
+                if structure_calls == 1:
+                    value["observed_facts"] = [{"fact": "players repeat matches"}]
+            return value
+
+        with tempfile.TemporaryDirectory() as temporary:
+            record = run_opportunity_scout(
+                ask=malformed_once,
+                store=OpportunityStore(Path(temporary) / "opportunities"),
+                context="Assess opportunities.",
+            )
+        self.assertEqual(structure_calls, 2)
+        self.assertEqual(record["product_structure"]["observed_facts"], [
+            "players repeat short matches"
+        ])
+
     def test_requires_every_perspective_to_be_inspected(self):
         fixture = OpportunityFixture()
         original = fixture.__call__

@@ -1115,6 +1115,13 @@ implementation artifacts are intentionally unavailable):
         inventor_prompt = f"""ROLE: inventor
 Generate at least three competing outcome-level missions from distinct frames.
 Do not select a winner and do not criticize candidates.
+When the context asks for evidence of user or business value, at least two candidates
+must contain a small, reversible action with an observable user or beneficiary response.
+A readiness review, eligibility packet, measurement design, or request for another
+reviewer is not an action experiment. Use those only when the interpreter identifies a
+specific authority, safety, privacy, or observability boundary that makes live action
+currently impossible. Reduce claim scope and intervention size before retreating to a
+meta-evaluation mission.
 Return:
 {{
   "candidates": [
@@ -1160,6 +1167,11 @@ Interpreter artifact:
         adversary_prompt = f"""ROLE: adversary
 Attack every candidate, shared assumptions, proxy risks, hidden harms, owner bias,
 and Palamedes self-expansion. Do not select a winner or rewrite candidates.
+Set disqualifying=true only for a fatal issue that cannot be bounded by making the
+candidate's action smaller, reversible, time-boxed, explicitly consented, or more modest
+in its causal claim. Missing perfect attribution, full instrumentation, large samples, or
+publication-grade evidence is normally repairable for an exploratory probe. Distinguish
+"cannot safely learn" from "cannot yet prove a broad claim."
 Return:
 {{
   "critiques": [
@@ -1244,7 +1256,24 @@ only; do not rewrite the frozen candidates around them):
 Select, defer, or reject from the frozen candidates and critiques. You may not
 invent a new candidate. Then compile the selected candidate into the exact
 mission draft shape below. If evidence is weak, select an information-producing
-probe and preserve uncertainty. Classify whether this cycle originated a
+probe and preserve uncertainty. Prefer a small, reversible action that creates an
+observable user or beneficiary response over a mission whose output is only another
+eligibility packet, readiness review, measurement plan, reviewer judgment, or protocol.
+Weak evidence should narrow the action, claim, cohort, duration, or success threshold; it
+must not by itself cause retreat into meta-validation. If at least one frozen candidate is
+not disqualifying, select the best bounded action candidate unless its expected learning
+is lower than its concrete user, authority, safety, privacy, or irreversible-cost risk.
+Select a meta-evaluation candidate only when every action candidate is explicitly marked
+disqualifying by the adversary. In that case, state the shared fatal boundary in the
+selection reason; do not manufacture a new meta candidate in the selector.
+For a selected, non-disqualified action candidate, mission_contract.next_probe must reach
+the intervention and observe a real response inside its stated window. Consent checks,
+baseline freezing, preregistration, and reviewer checks may be preparation steps inside
+that probe, but the terminal output cannot be only a packet, review, eligibility ruling,
+protocol, or recommendation for a later experiment. If the action cannot be reached
+safely, defer or reject it instead of presenting meta-validation as an action probe.
+
+Classify whether this cycle originated a
 mission before implementation, selected or constrained an existing direction,
 or audited work that had already started. A retrospective audit is not mission
 origination. State whether the selection is exclusive, sequencing, conditional,
