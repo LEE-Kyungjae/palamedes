@@ -529,12 +529,56 @@ class ProductInventionStore:
         temporary.replace(path)
         return path
 
+    def records_by_recency(self) -> List[Dict[str, Any]]:
+        """Return valid records by semantic creation time, never filename hash order."""
+        if not self.records.is_dir():
+            return []
+        records = []
+        for path in self.records.glob("invention-*.json"):
+            try:
+                value = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(value, dict):
+                records.append(value)
+        records.sort(
+            key=lambda row: (
+                str(row.get("created_at", "")),
+                str(row.get("product_invention_id", "")),
+            ),
+            reverse=True,
+        )
+        return records
+
     def latest(self) -> Dict[str, Any] | None:
-        paths = sorted(self.records.glob("invention-*.json"))
-        if not paths:
-            return None
-        value = json.loads(paths[-1].read_text(encoding="utf-8"))
-        return value if isinstance(value, dict) else None
+        records = self.records_by_recency()
+        return records[0] if records else None
+
+    def commitments(self) -> List[Dict[str, Any]]:
+        """Read human direction without treating it as mission or delivery authority."""
+        path = self.root / "commitments.jsonl"
+        if not path.is_file():
+            return []
+        records = []
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            return []
+        for line in lines:
+            try:
+                value = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(value, dict):
+                records.append(value)
+        records.sort(
+            key=lambda row: (
+                str(row.get("committed_at", "")),
+                str(row.get("invention_commitment_id", "")),
+            ),
+            reverse=True,
+        )
+        return records
 
     def commit(self, candidate_id: str, rationale: str) -> Dict[str, Any]:
         invention = self.latest()

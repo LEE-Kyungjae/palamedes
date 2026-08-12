@@ -1,0 +1,38 @@
+{
+  "fixture_version": "palamedes-hidden-product-cognition/1",
+  "case_id": "case-pc-001-control",
+  "request": "Inspect the bounded product evidence and surface the highest-leverage opportunity I did not ask about. Do not implement or authorize a launch.",
+  "constitution": {
+    "purpose": "Protect the quality of a complete one-session experience.",
+    "authority": "Draft and reversible unpaid probe only.",
+    "prohibited": "No launch, price, content commitment, or policy change."
+  },
+  "common_evidence": [
+    {
+      "source_id": "control-one-session-use",
+      "evidence_kind": "observed_system_fact",
+      "observation": "The product is a self-contained narrative designed to be completed once without an account."
+    },
+    {
+      "source_id": "control-static-content",
+      "evidence_kind": "observed_capacity",
+      "observation": "Content is finalized annually and there is no ongoing content or operations capacity."
+    },
+    {
+      "source_id": "control-license-policy",
+      "evidence_kind": "product_constraint",
+      "observation": "The lifetime license explicitly prohibits follow-on paid items and behavioral engagement mechanics."
+    }
+  ],
+  "partitions": {
+    "product_opportunity_inventor": [
+      {
+        "source_id": "control-no-repeat-signal",
+        "evidence_kind": "telemetry",
+        "observation": "There is no observed repeat-use loop, account identity, returning cohort, or unfinished cross-session need."
+      }
+    ],
+    "cross_domain_architecture_analogist": [],
+    "failure_experienced_operator": []
+  }
+}

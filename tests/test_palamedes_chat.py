@@ -11,7 +11,14 @@ from pathlib import Path
 
 import palamedes_chat
 import palamedes
+from palamedes_evidence_bundle import build_cognition_evidence_bundle
 from palamedes_invention import ProductInventionStore
+from tests.test_palamedes_cognition_v3 import (
+    BLINDED_ADVERSARY_ROLE,
+    CognitionFixture,
+    INVENTOR_ROLES,
+    SELECTOR_ROLE,
+)
 
 
 class FakePalamedes:
@@ -64,10 +71,25 @@ class StaticChatProvider:
 
     def __init__(self) -> None:
         self.calls = []
+        self.product_cognition_fixture = CognitionFixture()
 
     def stream(self, messages):
         self.calls.append(messages)
         prompt = messages[-1]["content"]
+        if prompt.startswith("ROLE_ASSIGNMENT:"):
+            role = prompt.splitlines()[0].split(":", 1)[1].strip()
+            if role not in INVENTOR_ROLES:
+                raise AssertionError(role)
+            yield json.dumps(self.product_cognition_fixture(role, prompt))
+            return
+        if prompt.startswith("ROLE: origin-blinded product adversary"):
+            yield json.dumps(
+                self.product_cognition_fixture(BLINDED_ADVERSARY_ROLE, prompt)
+            )
+            return
+        if prompt.startswith("ROLE: product cognition selector"):
+            yield json.dumps(self.product_cognition_fixture(SELECTOR_ROLE, prompt))
+            return
         if prompt.startswith("ROLE: vision_scout_originator"):
             context = prompt.split("Product context:\n", 1)[-1].strip()
             source_quote = context.split(".", 1)[0].strip() + "."
@@ -3293,10 +3315,12 @@ class PalamedesChatTests(unittest.TestCase):
                 )
             )
             with self.assertRaisesRegex(ValueError, "vision lineage is stale"):
+                stale_contract = json.loads(json.dumps(contract))
+                stale_contract["work_scale"] = "component"
                 palamedes_chat.approve_mission(
                     fake,
                     palamedes_chat.MissionStore(fake.STATE_DIR / "missions"),
-                    contract,
+                    stale_contract,
                     "stale-vision-test",
                 )
 
@@ -3784,18 +3808,16 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertEqual(
             [item["role"] for item in cycle["artifacts"]],
             [
-                "context_governor",
-                "interpreter",
-                "inventor",
-                "adversary",
-                "selector",
+                "product_opportunity_inventor",
+                "blinded_product_cognition_adversary",
+                "product_cognition_selector",
             ],
         )
         self.assertEqual(len(cycle["outcome_analyses"]), 1)
         self.assertEqual(
             cycle["outcome_analyses"][0]["role"], "outcome_analyst"
         )
-        self.assertEqual(cycle["live_model_call_count"], 6)
+        self.assertEqual(cycle["live_model_call_count"], 4)
         self.assertFalse(cycle["outcome_analyst_runs_before_outcome"])
         self.assertEqual(
             [call[-1]["content"].splitlines()[0] for call in provider.calls],
@@ -3807,11 +3829,10 @@ class PalamedesChatTests(unittest.TestCase):
                 "ROLE: product_world_builder",
                 "ROLE: maniac_critic_and_vision_author",
                 "ROLE: vision_reality_governor",
-                "ROLE: context_governor",
-                "ROLE: interpreter",
-                "ROLE: inventor",
-                "ROLE: adversary",
-                "ROLE: selector",
+                "ROLE: architecture_transfer_mechanism_query_designer",
+                "ROLE_ASSIGNMENT: product_opportunity_inventor",
+                "ROLE: origin-blinded product adversary",
+                "ROLE: product cognition selector",
                 "ROLE: outcome_analyst",
             ],
         )
@@ -4648,6 +4669,143 @@ class PalamedesChatTests(unittest.TestCase):
             row.get("checkpoint_reused")
             for row in result["cycle"]["artifacts"][:3]
         ))
+
+    def test_cognition_cycle_identity_changes_with_eligible_evidence(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            snapshot = {
+                "observation_id": "observation-evidence",
+                "snapshot_fingerprint": "a" * 64,
+                "signals": {
+                    "observed_at": "2026-08-12T00:00:00+00:00",
+                    "documents": [],
+                    "git": {"head": "b" * 40, "branch": "main"},
+                },
+            }
+            first_bundle = build_cognition_evidence_bundle(
+                state_root=fake.STATE_DIR,
+                snapshot=snapshot,
+                user_request="Find one worthwhile product mission.",
+                mode="product",
+            )
+            first = palamedes_chat.run_cognition_cycle(
+                provider=StaticChatProvider(),
+                palamedes_module=fake,
+                context="Find one worthwhile product mission.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+                evidence_bundle=first_bundle,
+            )
+            claim_path = fake.STATE_DIR / "knowledge" / "claims" / "claim.json"
+            claim_path.parent.mkdir(parents=True, exist_ok=True)
+            claim_path.write_text(json.dumps({
+                "knowledge_id": "knowledge-new",
+                "status": "active",
+                "domain": "internal_product",
+                "claim_type": "interpretation",
+                "claim": "Recurring use has no long-term value-capture loop.",
+                "scope": "product",
+                "perspective": "repeat user",
+                "source_ids": ["observation-evidence"],
+                "confidence": 70,
+                "last_verified_at": "2026-08-12T00:01:00+00:00",
+            }), encoding="utf-8")
+            second_bundle = build_cognition_evidence_bundle(
+                state_root=fake.STATE_DIR,
+                snapshot=snapshot,
+                user_request="Find one worthwhile product mission.",
+                mode="product",
+            )
+            second = palamedes_chat.run_cognition_cycle(
+                provider=StaticChatProvider(),
+                palamedes_module=fake,
+                context="Find one worthwhile product mission.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+                evidence_bundle=second_bundle,
+            )
+
+        self.assertNotEqual(first_bundle["bundle_id"], second_bundle["bundle_id"])
+        self.assertNotEqual(
+            first["cycle"]["cognition_cycle_id"],
+            second["cycle"]["cognition_cycle_id"],
+        )
+        self.assertEqual(
+            second["cycle"]["evidence_bundle_id"], second_bundle["bundle_id"]
+        )
+
+    def test_cognition_resume_rejects_evidence_drift_and_pins_original_bundle(self):
+        class SelectorFailsOnceProvider(StaticChatProvider):
+            def __init__(self):
+                super().__init__()
+                self.failed = False
+
+            def stream(self, messages):
+                if messages[-1]["content"].startswith("ROLE: selector") and not self.failed:
+                    self.calls.append(messages)
+                    self.failed = True
+                    raise RuntimeError("transient selector failure")
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            snapshot = {
+                "observation_id": "observation-resume",
+                "snapshot_fingerprint": "c" * 64,
+                "signals": {"documents": [], "git": {"head": "d" * 40}},
+            }
+            original_bundle = build_cognition_evidence_bundle(
+                state_root=fake.STATE_DIR,
+                snapshot=snapshot,
+                user_request="Choose a product probe.",
+                mode="product",
+            )
+            provider = SelectorFailsOnceProvider()
+            store = palamedes_chat.CognitionCycleStore(
+                fake.STATE_DIR / "missions" / "cognition"
+            )
+            with self.assertRaisesRegex(RuntimeError, "transient selector"):
+                palamedes_chat.run_cognition_cycle(
+                    provider=provider,
+                    palamedes_module=fake,
+                    context="Choose a product probe.",
+                    cycle_store=store,
+                    evidence_bundle=original_bundle,
+                )
+            cycle_id = next(
+                path.stem
+                for path in (fake.STATE_DIR / "missions" / "cognition").glob("cycle-*.json")
+            )
+            drifted_bundle = build_cognition_evidence_bundle(
+                state_root=fake.STATE_DIR,
+                snapshot={**snapshot, "snapshot_fingerprint": "e" * 64},
+                user_request="Choose a product probe.",
+                mode="product",
+            )
+            with self.assertRaisesRegex(ValueError, "frozen evidence bundle"):
+                palamedes_chat.run_cognition_cycle(
+                    provider=provider,
+                    palamedes_module=fake,
+                    context="Choose a product probe.",
+                    cycle_store=store,
+                    resume_cycle_id=cycle_id,
+                    evidence_bundle=drifted_bundle,
+                )
+            resumed = palamedes_chat.run_cognition_cycle(
+                provider=provider,
+                palamedes_module=fake,
+                context="ignored on resume",
+                cycle_store=store,
+                resume_cycle_id=cycle_id,
+                evidence_bundle=original_bundle,
+            )
+
+        self.assertEqual(
+            resumed["cycle"]["evidence_bundle_id"], original_bundle["bundle_id"]
+        )
+        self.assertEqual(resumed["cycle"]["live_model_call_count"], 1)
 
     def test_cognition_cycle_retries_only_schema_invalid_role_once(self):
         class SelectorReturnsInvalidConfidenceOnce(StaticChatProvider):

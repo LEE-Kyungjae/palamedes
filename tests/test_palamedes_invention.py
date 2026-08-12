@@ -290,8 +290,28 @@ class ProductInventionTests(unittest.TestCase):
             self.assertFalse(commitment["design_authority_granted"])
             self.assertFalse(commitment["delivery_authority_granted"])
             self.assertTrue((store.root / "commitments.jsonl").is_file())
+            self.assertEqual(
+                store.commitments()[0]["invention_commitment_id"],
+                commitment["invention_commitment_id"],
+            )
             with self.assertRaisesRegex(ValueError, "existing invention candidate"):
                 store.commit("idea-404", "없는 후보를 선택한다.")
+
+    def test_latest_uses_created_at_instead_of_hashed_filename_order(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            store = ProductInventionStore(Path(temporary) / "inventions")
+            store.save({
+                "product_invention_id": "invention-ffffffffffff",
+                "created_at": "2026-08-10T00:00:00+00:00",
+            })
+            store.save({
+                "product_invention_id": "invention-000000000000",
+                "created_at": "2026-08-12T00:00:00+00:00",
+            })
+            self.assertEqual(
+                store.latest()["product_invention_id"],
+                "invention-000000000000",
+            )
 
     def test_disconfirmation_gap_becomes_deduplicated_resolvable_observation(self):
         with tempfile.TemporaryDirectory() as temporary:

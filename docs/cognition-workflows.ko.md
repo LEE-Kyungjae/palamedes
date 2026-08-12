@@ -7,16 +7,26 @@
 Palamedes는 발견, 평가, commitment와 실행 권한이 서로 다른 작업이므로 별도의
 워크플로를 제공합니다.
 
-## 4역할 cognition cycle
+## Cognition cycle
 
 ```text
 /cycle <context>
 ```
 
-cycle은 context governor, interpreter, inventor, adversary와 selector를 실행합니다.
-후보의 fate를 보존하고 mission draft를 만듭니다. `/approve`는 draft를 저장하고
-`/reject <reason>`은 기각을 기록합니다. 안전한 행동이 가능하면 검토 문서보다 작고
-가역적인 행동을 우선합니다.
+component·audit cycle은 context governor, interpreter, inventor, adversary와
+selector를 실행합니다. product mode는 더 엄격한 v3 프로토콜을 사용합니다. 요청하지
+않은 제품 기회를 찾는 발명가, 무관한 도메인의 아키텍처 원리를 옮기는 analogist,
+실제 실패 기록에서 경계를 찾는 operator가 서로 독립적으로 후보를 만들고 동결합니다.
+출처를 가린 adversary가 후보를 하나씩 검토하며, selector는 정제된 사본만 보고 선택할
+뿐 수정하지 못합니다. 최종 draft는 host가 선택된 동결 후보에서만 발행합니다.
+`/approve`와 delivery 권한은 계속 분리됩니다.
+
+product cycle 전에 Palamedes는 기능명이 아니라 운영 압력으로 다른 GitNexus 인덱스
+저장소를 검색할 수 있습니다. 채택되는 근거는 저장소 경로, 전체 revision, symbol 범위,
+해당 revision의 파일 hash와 excerpt hash에 묶입니다. 전이는 반드시 `원본 압력 → 인과
+메커니즘/불변식 → 현재 제품 압력 → 적용법 → 적용 한계`를 설명하고 원본과 현재 제품
+근거를 모두 인용해야 합니다. 설계·선택·배포·코드 재사용 권한은 모두 부정됩니다.
+근거가 없거나 degraded이면 architecture 역할은 전례를 지어내지 않고 기권합니다.
 
 ## Opportunity Scout
 
@@ -34,8 +44,9 @@ cycle은 context governor, interpreter, inventor, adversary와 selector를 실�
 각 기회는 결론을 실제로 바꾼 관점 finding과 reframe을 추적합니다. 계산 가능한 2단계
 인과 경로, 하류 효과에 대한 설계 대응, migration·운영 현실, 관측 가능한 반응까지
 도달하는 가역적 행동 probe를 기록합니다. 검토 문서를 검증 행동처럼 통과시킬 수
-없습니다. 구독, 시즌, 배틀패스, 번들, 마켓플레이스처럼 익숙한 패턴도 제품에 맞는
-인과 근거가 있으면 보존합니다.
+없습니다. 이미 알려진 제품 archetype도 제품에 맞는 인과 근거가 있으면 보존하지만,
+프롬프트가 해답 이름 목록을 주지는 않습니다. 제한된 제품 신호에서 스스로 추론해야
+합니다.
 
 Mission outcome은 제한된 경험 archive로 공급됩니다. 변경할 수 없는 관측 결과와 이후
 해석을 분리합니다. 직접 실패 교훈은 실제 adverse·mixed·failed·blocked outcome을
