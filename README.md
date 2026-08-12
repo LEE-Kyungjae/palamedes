@@ -1720,21 +1720,12 @@ portions of the software.
 
 Copyright (c) 2026 LEE Kyungjae.
 
-## 📈 Star History
+## Star History
 
-<a href="https://star-history.com/#LEE-Kyungjae/Palamedes&Date">
-  <picture>
-    <source
-      media="(prefers-color-scheme: dark)"
-      srcset="https://api.star-history.com/svg?repos=LEE-Kyungjae/Palamedes&type=Date&theme=dark"
-    />
-    <source
-      media="(prefers-color-scheme: light)"
-      srcset="https://api.star-history.com/svg?repos=LEE-Kyungjae/Palamedes&type=Date"
-    />
-    <img
-      alt="Star History Chart"
-      src="https://api.star-history.com/svg?repos=LEE-Kyungjae/Palamedes&type=Date"
-    />
-  </picture>
+<a href="https://www.star-history.com/?repos=LEE-Kyungjae%2FPalamedes&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=LEE-Kyungjae/Palamedes&type=date&theme=dark&legend=top-left&sealed_token=U33QpKO_oklxBeuwOfEdD2Gmq-HJhb3IRggfqJjLvFbMCBcmMBC_xBJ1IbS5ewZAaCVBGrfDsfsVMvhp_-pKkFZmOIP10VTsbZZ74hIC2PQNEsZuL0Yko7Te7mGMTzosQ8TKrC0YAjqm4Qktj29JiWxxuVfFoilk-USU7M8FkvUL-3LFgWcL0BH8wTjx" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=LEE-Kyungjae/Palamedes&type=date&legend=top-left&sealed_token=U33QpKO_oklxBeuwOfEdD2Gmq-HJhb3IRggfqJjLvFbMCBcmMBC_xBJ1IbS5ewZAaCVBGrfDsfsVMvhp_-pKkFZmOIP10VTsbZZ74hIC2PQNEsZuL0Yko7Te7mGMTzosQ8TKrC0YAjqm4Qktj29JiWxxuVfFoilk-USU7M8FkvUL-3LFgWcL0BH8wTjx" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=LEE-Kyungjae/Palamedes&type=date&legend=top-left&sealed_token=U33QpKO_oklxBeuwOfEdD2Gmq-HJhb3IRggfqJjLvFbMCBcmMBC_xBJ1IbS5ewZAaCVBGrfDsfsVMvhp_-pKkFZmOIP10VTsbZZ74hIC2PQNEsZuL0Yko7Te7mGMTzosQ8TKrC0YAjqm4Qktj29JiWxxuVfFoilk-USU7M8FkvUL-3LFgWcL0BH8wTjx" />
+ </picture>
 </a>
