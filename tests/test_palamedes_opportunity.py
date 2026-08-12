@@ -844,6 +844,24 @@ class OpportunityScoutTests(unittest.TestCase):
             record_a["opportunity_scout_id"], record_b["opportunity_scout_id"]
         )
 
+    def test_latest_uses_created_at_instead_of_file_mtime(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            store = OpportunityStore(Path(temporary) / "opportunities")
+            store.save({
+                "opportunity_scout_id": "opportunity-ffffffffffff",
+                "created_at": "2026-08-10T00:00:00+00:00",
+            })
+            store.save({
+                "opportunity_scout_id": "opportunity-000000000000",
+                "created_at": "2026-08-12T00:00:00+00:00",
+            })
+            old_path = store.records / "opportunity-ffffffffffff.json"
+            old_path.touch()
+            self.assertEqual(
+                store.latest()["opportunity_scout_id"],
+                "opportunity-000000000000",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

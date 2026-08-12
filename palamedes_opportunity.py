@@ -892,15 +892,29 @@ class OpportunityStore:
         temporary.replace(path)
         return path
 
-    def latest(self) -> Dict[str, Any] | None:
+    def records_by_recency(self) -> List[Dict[str, Any]]:
         if not self.records.is_dir():
-            return None
-        paths = list(self.records.glob("opportunity-*.json"))
-        if not paths:
-            return None
-        latest_path = max(paths, key=lambda path: path.stat().st_mtime_ns)
-        value = json.loads(latest_path.read_text(encoding="utf-8"))
-        return value if isinstance(value, dict) else None
+            return []
+        records = []
+        for path in self.records.glob("opportunity-*.json"):
+            try:
+                value = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(value, dict):
+                records.append(value)
+        records.sort(
+            key=lambda row: (
+                str(row.get("created_at", "")),
+                str(row.get("opportunity_scout_id", "")),
+            ),
+            reverse=True,
+        )
+        return records
+
+    def latest(self) -> Dict[str, Any] | None:
+        records = self.records_by_recency()
+        return records[0] if records else None
 
 
 def run_opportunity_scout(
@@ -1050,9 +1064,9 @@ PREVIOUS OBJECT:\n{json.dumps(reframing, ensure_ascii=False)}
 Synthesize product opportunities from the product structure and senior reframes. Do not
 brainstorm feature names. Each opportunity must replace a hidden assumption and connect
 at least two exact product perspectives plus at least two exact senior lenses. Preserve a
-familiar pattern such as a battle pass, subscription, bundle, season, marketplace,
-referral loop, creator tool, or recovery flow when its product-specific causal fit is
-strong; label it established_pattern rather than rejecting it as unoriginal.
+known product archetype when its product-specific causal fit is strong; label it
+established_pattern rather than rejecting it as unoriginal. Derive the archetype from the
+bounded signals instead of selecting from a supplied catalog of feature names.
 
 Every opportunity requires opportunity_id, title, opportunity_type (exactly one of
 {json.dumps(sorted(OPPORTUNITY_TYPES))}), perspectives,

@@ -7,16 +7,28 @@
 Palamedes exposes separate workflows because discovery, evaluation, commitment,
 and execution authority are different operations.
 
-## Four-role cognition cycle
+## Cognition cycle
 
 ```text
 /cycle <context>
 ```
 
-The cycle runs context governor, interpreter, inventor, adversary, and selector
-roles. It preserves candidate fates and produces a mission draft. `/approve`
-persists the draft; `/reject <reason>` records rejection. Bounded cycles prefer
-small, reversible actions over review documents when safe action is possible.
+Component and audit cycles run context governor, interpreter, inventor, adversary,
+and selector roles. Product mode uses a stricter v3 protocol: an unasked product
+opportunity inventor, a cross-domain architecture analogist, and a failure-experienced
+operator generate independently; one origin-blinded adversary reviews each frozen
+candidate; a sanitized selector can choose but cannot rewrite it. The host alone
+issues a draft from the selected frozen substance. `/approve` and delivery authority
+remain separate.
+
+Before a product cycle, Palamedes can query other GitNexus-indexed repositories by
+operational pressure rather than feature name. Every accepted source is tied to a
+repository path, full revision, symbol range, committed-file hash, and excerpt hash.
+A transfer must explain `source pressure → causal mechanism/invariant → target pressure
+→ adaptation → limits`, cite both source and local target evidence, state material
+differences, and deny design, selection, delivery, and code-reuse authority. If this
+evidence is missing or degraded, the architecture role abstains instead of inventing a
+predecessor.
 
 ## Opportunity Scout
 
@@ -37,9 +49,9 @@ Each opportunity must trace the perspective findings and reframes that changed
 its conclusion. It records a computed two-hop consequence path, a design response
 to a downstream effect, migration and operating reality, and a reversible action
 probe that reaches an observable response. A review document cannot masquerade as
-validation. Familiar patterns such as subscriptions, seasons, battle passes,
-bundles, and marketplaces remain valid when product-specific causal fit is
-present.
+validation. A known product archetype remains valid when the product-specific causal
+fit is present, but the prompt does not supply a catalog of solution names: the model
+must infer the opportunity from the bounded signals.
 
 Mission outcomes are supplied as a bounded experience archive. Immutable observed
 results remain separate from later interpretation. A direct failure lesson must

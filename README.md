@@ -106,6 +106,7 @@ For OpenRouter, OpenAI, workspace selection, and plan-state CLI examples, see
 | Explore competing interpretations | `/think <topic>` |
 | Discover multi-perspective product opportunities | `/opportunity <context>` |
 | Originate and select a bounded mission | `/cycle <context>` |
+| Run partitioned product invention with cross-domain GitNexus evidence | `/cycle --mode product <context>` |
 | Explore structural product inventions | `/invent <context>` |
 | Originate a product world | `/vision <context>` |
 | Run a lower-cost founder-prompt scout | `/vision-scout <context>` |

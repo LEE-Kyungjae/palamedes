@@ -390,6 +390,17 @@ def execute_wake(
             palamedes_module.STATE_DIR / "missions" / "prompt-intelligence"
         )
         discoveries = thought_store.active_discoveries()
+        from palamedes_evidence_bundle import (
+            build_cognition_evidence_bundle,
+            citation_allowlist,
+        )
+
+        evidence_bundle = build_cognition_evidence_bundle(
+            state_root=palamedes_module.STATE_DIR,
+            snapshot=snapshot,
+            user_request="Autonomous wake from bounded workspace changes.",
+            mode="product",
+        )
         result = run_cognition_cycle(
             provider=provider,
             palamedes_module=palamedes_module,
@@ -416,11 +427,10 @@ def execute_wake(
             cycle_store=CognitionCycleStore(
                 palamedes_module.STATE_DIR / "missions" / "cognition"
             ),
-            available_discovery_ids={
-                item["discovery_id"]
-                for item in discoveries
-                if item.get("promotion_state") == "mission_eligible"
-            },
+            available_discovery_ids=citation_allowlist(
+                evidence_bundle, "discovery"
+            ),
+            evidence_bundle=evidence_bundle,
         )
         contract = result["contract"]
         if contract:

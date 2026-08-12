@@ -1,0 +1,97 @@
+{
+  "fixture_version": "palamedes-hidden-product-cognition/1",
+  "case_id": "case-pc-001",
+  "request": "Inspect the bounded product evidence and surface the highest-leverage opportunity I did not ask about. Do not implement or authorize a launch.",
+  "constitution": {
+    "purpose": "Increase durable player value and sustainable product revenue while preserving fair competition.",
+    "authority": "Draft and reversible unpaid probe only.",
+    "prohibited": "No launch, price, reward grant, or competitive-power change."
+  },
+  "common_evidence": [
+    {
+      "source_id": "fact-activity-events",
+      "evidence_kind": "observed_system_fact",
+      "observation": "Every completed match emits account_id, mode_id, match_id, completion_time, and result."
+    },
+    {
+      "source_id": "fact-appearance-entitlements",
+      "evidence_kind": "observed_system_fact",
+      "observation": "The account service can grant non-power-changing appearance items and the client can display locked and owned items."
+    },
+    {
+      "source_id": "fact-account-history-gap",
+      "evidence_kind": "observed_system_fact",
+      "observation": "Beyond per-mode rank and owned appearances, no account state accumulates across weeks."
+    },
+    {
+      "source_id": "fact-content-capacity",
+      "evidence_kind": "observed_capacity",
+      "observation": "Every eight to ten weeks the team can ship ten appearance items and six lightweight goals within its current budget."
+    },
+    {
+      "source_id": "fact-fairness-boundary",
+      "evidence_kind": "product_constraint",
+      "observation": "Purchases must never affect stats, matchmaking, or win probability."
+    }
+  ],
+  "partitions": {
+    "product_opportunity_inventor": [
+      {
+        "source_id": "signal-repeat-behavior",
+        "evidence_kind": "telemetry",
+        "observation": "Forty-one percent of active accounts complete at least three matches in a week and twenty-six percent return the following week."
+      },
+      {
+        "source_id": "signal-value-capture-gap",
+        "evidence_kind": "commerce_observation",
+        "observation": "Revenue is concentrated in the initial purchase; continued play currently creates no optional follow-on purchase."
+      },
+      {
+        "source_id": "signal-mode-breadth",
+        "evidence_kind": "telemetry",
+        "observation": "Most highly active accounts use at least two modes."
+      }
+    ],
+    "cross_domain_architecture_analogist": [
+      {
+        "source_id": "validated-transfer-workflow-history",
+        "evidence_kind": "validated_cross_domain_architecture_transfer",
+        "transfer_id": "transfer-workflow-history-to-account-state",
+        "source_domain": "durable workflow execution",
+        "target_domain": "competitive multiplayer account state",
+        "same_primary_job": false,
+        "source_pressure": "Retries, code changes, and recovery must not create a second authoritative execution or make prior history uninterpretable.",
+        "source_pattern": "Stable execution identity, append-only history, deterministic replay, version-aware code paths, and reset recovery.",
+        "source_invariant": "One logical execution has one authoritative history from which compatible derived state can be reproduced.",
+        "failure_prevented": "Duplicate effects, retroactive reinterpretation, and unrecoverable projection drift.",
+        "target_pressure": "Activity can be duplicated or arrive late, earning rules change, and recovery must not alter already issued appearance items.",
+        "target_evidence_ids": [
+          "fact-activity-events",
+          "fact-appearance-entitlements",
+          "fact-account-history-gap"
+        ],
+        "adaptation": "Append accepted activity facts, deduplicate credit by immutable program version plus account and match identity, keep one active-version pointer, and rebuild projections before rollback changes that pointer.",
+        "material_differences": [
+          "Infrastructure execution correctness does not establish player demand.",
+          "Players bear fairness and purchase consequences that workflow operators do not."
+        ],
+        "transfer_limit": "The source supports state correctness only; it does not forecast retention, willingness to pay, or content economics.",
+        "source_outcome_is_target_forecast": false,
+        "decision_authority_granted": false,
+        "design_authority_granted": false,
+        "selection_authority_granted": false,
+        "delivery_authority_granted": false,
+        "code_reuse_authority_granted": false
+      }
+    ],
+    "failure_experienced_operator": [
+      {
+        "source_id": "failure-narrow-daily-goals",
+        "evidence_kind": "mission_outcome_observation",
+        "outcome_status": "mixed",
+        "adverse": true,
+        "observed_outcome": "A prior narrow daily-goal test increased completion while mode diversity fell and upkeep exceeded its weekly capacity after six weeks."
+      }
+    ]
+  }
+}
