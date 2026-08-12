@@ -177,8 +177,32 @@ CONTEXT:\n{context}
         "value_capture", "operational_cadence", "distribution_loops", "constraints",
         "underused_capabilities",
     ))
-    for field, value in structure.items():
-        _strings(value, f"structure.{field}")
+    try:
+        for field, value in structure.items():
+            _strings(value, f"structure.{field}")
+    except ValueError as exc:
+        structure = _ask(ask, "opportunity_structure_observer", f"""
+Repair the product-structure object without changing its meaning. The nested contract
+error was: {exc}. Every entry in every field must be a concise JSON string, never an
+object, number, boolean, or nested array. Return the complete object with these fields:
+observed_facts, inferences, unknowns, users, core_actions, repeat_loops, progression,
+content_supply, social_surfaces, value_capture, operational_cadence, distribution_loops,
+constraints, and underused_capabilities.
+
+PREVIOUS OBJECT:\n{json.dumps(structure, ensure_ascii=False)}
+""", required=(
+            "observed_facts", "inferences", "unknowns", "users", "core_actions",
+            "repeat_loops", "progression", "content_supply", "social_surfaces",
+            "value_capture", "operational_cadence", "distribution_loops", "constraints",
+            "underused_capabilities",
+        ), arrays=(
+            "observed_facts", "inferences", "unknowns", "users", "core_actions",
+            "repeat_loops", "progression", "content_supply", "social_surfaces",
+            "value_capture", "operational_cadence", "distribution_loops", "constraints",
+            "underused_capabilities",
+        ))
+        for field, value in structure.items():
+            _strings(value, f"structure.{field}")
 
     synthesis = _ask(ask, "multi_perspective_opportunity_synthesizer", f"""
 Rotate through every perspective independently, then connect observations across at

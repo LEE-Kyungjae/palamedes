@@ -4850,6 +4850,47 @@ class PalamedesChatTests(unittest.TestCase):
                 selector_prompt(listing_provider),
             )
 
+    def test_cycle_prompts_prefer_bounded_action_over_meta_validation(self):
+        class PromptCapturingProvider(StaticChatProvider):
+            def __init__(self):
+                super().__init__()
+                self.prompts = []
+
+            def stream(self, messages):
+                self.prompts.append(messages[-1].get("content", ""))
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = PromptCapturingProvider()
+            palamedes_chat.run_cognition_cycle(
+                provider=provider,
+                palamedes_module=fake,
+                context="Choose the smallest experiment that tests user value.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+            )
+
+        inventor = next(
+            prompt for prompt in provider.prompts if prompt.startswith("ROLE: inventor")
+        )
+        adversary = next(
+            prompt for prompt in provider.prompts if prompt.startswith("ROLE: adversary")
+        )
+        selector = next(
+            prompt for prompt in provider.prompts if prompt.startswith("ROLE: selector")
+        )
+        self.assertIn("at least two candidates", inventor)
+        self.assertIn("small, reversible action", inventor)
+        self.assertIn("cannot safely learn", adversary)
+        self.assertIn("publication-grade evidence is normally repairable", adversary)
+        self.assertIn("observable user or beneficiary response", selector)
+        self.assertIn("every action candidate is explicitly marked", selector)
+        self.assertIn("Weak evidence should narrow the action", selector)
+        self.assertIn("must reach\nthe intervention", selector)
+        self.assertIn("terminal output cannot be only a packet", selector)
+
     def test_cycle_budget_stops_a_role_before_an_unaffordable_call(self):
         class MeteredProvider(StaticChatProvider):
             def stream(self, messages):
