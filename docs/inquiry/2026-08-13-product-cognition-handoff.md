@@ -91,6 +91,8 @@ duplicate/crash replay probe로 변형했다. 또한 이 구조가 수요, 가�
 - `make compile`: 통과
 - 변경 파일 Ruff 검사: 통과
 - `git diff --check`: 통과
+- GitNexus 손상된 FTS cache를 삭제하고 전체 재분석: 통과
+  (`45,350 nodes`, `134,818 edges`, `186 clusters`, `300 flows`)
 
 테스트 통과는 계약·라우팅·custody의 회귀 방지를 뜻한다. 모델의 자율적인 의미 품질은
 위 live smoke와 앞으로 수행할 positive/negative holdout 평가로 별도로 판단해야 한다.
@@ -111,7 +113,6 @@ duplicate/crash replay probe로 변형했다. 또한 이 구조가 수요, 가�
 5. 아키텍처 integrity envelope는 변조 탐지이지 인증이 아니다. 직접 API가 완전한
    untrusted boundary가 되어야 한다면 opaque host capability 또는 ingest 시 Git 재검증을
    요구한다.
-6. 최종 커밋 이후 GitNexus index를 다시 만들고 HEAD 일치를 확인한다.
 
 ## 다음 세션 시작 절차
 
