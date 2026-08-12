@@ -3693,6 +3693,100 @@ def build_autonomous_invention_context(
     return json.dumps(contract, ensure_ascii=False, indent=2, sort_keys=True)
 
 
+def build_opportunity_experience_archive(
+    mission_store: MissionStore,
+) -> List[Dict[str, Any]]:
+    """Project immutable outcomes and bounded interpretations into a scout archive."""
+    contracts = {
+        str(row.get("mission_id", "")).strip(): row
+        for row in mission_store.contracts()
+        if str(row.get("mission_id", "")).strip()
+    }
+    interpretations = {
+        str(row.get("outcome_id", "")).strip(): row
+        for row in mission_store.outcome_interpretations()
+        if str(row.get("outcome_id", "")).strip()
+    }
+    archive = []
+    for outcome in mission_store.outcomes():
+        outcome_id = str(outcome.get("outcome_id", "")).strip()
+        if not outcome_id:
+            continue
+        mission_id = str(outcome.get("mission_contract_id", "")).strip()
+        contract = contracts.get(mission_id, {})
+        interpretation = interpretations.get(outcome_id, {})
+        observed = {
+            field: outcome[field]
+            for field in (
+                "recorded_at",
+                "execution_status",
+                "reported_outcome_status",
+                "status",
+                "outcome_type",
+                "observation",
+                "evidence_source_type",
+                "attribution",
+                "actual_investment",
+            )
+            if field in outcome
+        }
+        interpreted = {
+            field: interpretation[field]
+            for field in (
+                "causal_signature",
+                "mechanism_summary",
+                "work_scale",
+                "surface_key",
+                "finding_lane",
+                "probe_status",
+                "finding",
+                "mission_disposition",
+                "followup_required",
+                "followup_kind",
+                "successor_scope",
+                "next_probe",
+                "confidence",
+            )
+            if field in interpretation
+        }
+        archive.append({
+            "experience_id": outcome_id,
+            "mission_contract_id": mission_id,
+            "decision_context": {
+                field: contract[field]
+                for field in (
+                    "mission",
+                    "rationale",
+                    "success_metric",
+                    "hypotheses",
+                    "falsifiers",
+                    "constraints",
+                    "next_probe",
+                    "decision_scope",
+                    "selection_type",
+                    "causal_role",
+                    "implementation_state_at_start",
+                    "candidate_fates",
+                )
+                if field in contract
+            },
+            "observed": observed,
+            "interpreted": interpreted,
+            "epistemic_boundary": {
+                "observed_is_immutable_report": True,
+                "interpretation_is_analysis_not_observation": True,
+                "attribution_may_remain_unresolved": True,
+            },
+        })
+    return sorted(
+        archive,
+        key=lambda row: (
+            str(row.get("observed", {}).get("recorded_at", "")),
+            row["experience_id"],
+        ),
+    )
+
+
 def run_autonomous_opportunity_scout(
     *, provider: ChatProvider, mission_store: MissionStore, context: str
 ) -> Dict[str, Any]:
@@ -3707,9 +3801,11 @@ def run_autonomous_opportunity_scout(
                 provider,
                 system=(
                     f"ROLE: {role}. Find product-specific strategic opportunities by "
-                    "connecting multiple perspectives. Preserve useful established "
-                    "patterns when their causal fit is grounded. Separate facts, "
-                    "inferences, and hypotheses. Return exactly one JSON object."
+                    "connecting multiple perspectives and tracing second-order effects. "
+                    "Preserve useful established patterns when their causal fit is "
+                    "grounded. Never present an interpretation as an observed outcome or "
+                    "invent experience that is absent from the bounded archive. Return "
+                    "exactly one JSON object."
                 ),
                 prompt=f"ROLE: {role}\n{prompt}",
             )
@@ -3717,7 +3813,10 @@ def run_autonomous_opportunity_scout(
             role_usage.append(_capture_provider_usage(provider, role))
 
     record = run_opportunity_scout(
-        ask=ask, store=opportunity_store, context=context
+        ask=ask,
+        store=opportunity_store,
+        context=context,
+        experiences=build_opportunity_experience_archive(mission_store),
     )
     record["provider_usage"] = _provider_usage_summary(provider, role_usage)
     opportunity_store.save(record)
@@ -4029,8 +4128,12 @@ def render_opportunity_scout(record: Dict[str, Any]) -> str:
         f"Opportunity scout: {record.get('opportunity_scout_id', '?')}",
         f"  status: {record.get('status', '?')}",
         f"  perspectives inspected: {len(record.get('perspective_findings', []))}",
+        f"  senior lenses inspected: {len(record.get('deep_reframes', []))}",
+        f"  prior outcomes available: {record.get('experience_coverage', {}).get('experience_count', 0)}",
         f"  opportunities: {len(record.get('opportunities', []))}",
     ]
+    if record.get("experience_coverage", {}).get("archive_truncated"):
+        lines.append("  experience archive: truncated to the 12 newest bounded outcomes")
     summary = str(critic.get("portfolio_summary", "")).strip()
     if summary:
         lines.extend(["", summary])
@@ -4039,15 +4142,34 @@ def render_opportunity_scout(record: Dict[str, Any]) -> str:
         opportunity_id = row.get("opportunity_id", "?")
         assessment = assessments.get(opportunity_id, {})
         marker = "*" if opportunity_id in top_ids else "-"
+        insight = row.get("insight_chain", {})
+        reality = row.get("delivery_reality", {})
+        failure_basis = row.get("failure_basis", {})
+        consequence_graph = row.get("consequence_graph", {})
+        probe = row.get("validation_probe", {})
         lines.extend([
             "",
             f"  {marker} {opportunity_id}: {row.get('title', '')}",
             f"    type: {row.get('opportunity_type', '?')} / {assessment.get('disposition', '?')}",
             f"    why: {row.get('observation', '')} → {row.get('current_gap', '')}",
+            f"    reframe: {insight.get('hidden_assumption', '')} → {insight.get('reframe', '')}",
             f"    mechanism: {row.get('mechanism', '')}",
             f"    business effect: {row.get('business_effect', '')}",
+            f"    second-order: {insight.get('second_order_effect', '')}",
+            f"    feedback / externality: {insight.get('feedback_or_externality', '')}",
+            f"    consequence depth: {consequence_graph.get('computed_max_depth', '?')}",
+            f"    design invariant: {insight.get('design_invariant', '')}",
+            f"    operating burden: {reality.get('ongoing_operating_burden', '')}",
+            f"    migration / rollback: {reality.get('migration_path', '')} / {reality.get('rollback_boundary', '')}",
+            f"    failure basis: {failure_basis.get('basis_type', '?')} — {failure_basis.get('lesson', '')}",
+            f"    failure sources: {', '.join(failure_basis.get('source_experience_ids', [])) or '-'}",
+            f"    guardrail / transfer limit: {failure_basis.get('guardrail', '')} / {failure_basis.get('transfer_limit', '')}",
             f"    fastest test: {row.get('fastest_test', '')}",
+            f"    action probe: {probe.get('intervention', '')}",
+            f"    response / counterfactual: {probe.get('metric', '')} / {probe.get('baseline_or_counterfactual', '')}",
+            f"    rollback / stop: {probe.get('rollback', '')} / {probe.get('stop_condition', '')}",
             f"    failure: {row.get('failure_condition', '')}",
+            f"    critic gap: {assessment.get('senior_judgment_gap', '')}",
         ])
     lines.extend([
         "",
@@ -5122,7 +5244,7 @@ def run_chat(
                 continue
             output.write(
                 "Running opportunity scout: product structure → nine perspectives → "
-                "cross-perspective synthesis → reality critique\n"
+                "failure-aware senior reframing → second-order synthesis → reality critique\n"
             )
             try:
                 from palamedes_observe import collect_observation, observation_context
