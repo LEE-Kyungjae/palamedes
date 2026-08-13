@@ -210,6 +210,15 @@ Palamedes는 [MIT License](LICENSE)로 배포되는 오픈소스 소프트웨어
 
 Copyright (c) 2026 LEE Kyungjae.
 
+## Contributors
+
+코드, 문서, 테스트, 이슈 제보와 리뷰로 Palamedes를 함께 발전시켜 주시는 모든 분께
+감사드립니다.
+
+<a href="https://github.com/LEE-Kyungjae/Palamedes/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=LEE-Kyungjae/Palamedes" alt="Palamedes contributors">
+</a>
+
 ## Star History
 
 <a href="https://www.star-history.com/?repos=LEE-Kyungjae%2FPalamedes&type=date&legend=top-left">
