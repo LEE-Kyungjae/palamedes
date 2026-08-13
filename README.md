@@ -183,6 +183,15 @@ portions of the software.
 
 Copyright (c) 2026 LEE Kyungjae.
 
+## Contributors
+
+Thank you to everyone who helps Palamedes improve through code, documentation,
+testing, issue reports, and review.
+
+<a href="https://github.com/LEE-Kyungjae/Palamedes/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=LEE-Kyungjae/Palamedes" alt="Palamedes contributors">
+</a>
+
 ## Star History
 
 <a href="https://www.star-history.com/?repos=LEE-Kyungjae%2FPalamedes&type=date&legend=top-left">
