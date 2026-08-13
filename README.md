@@ -185,8 +185,8 @@ Copyright (c) 2026 LEE Kyungjae.
 
 <a href="https://www.star-history.com/?repos=LEE-Kyungjae%2FPalamedes&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=LEE-Kyungjae/Palamedes&type=date&theme=dark&legend=top-left&sealed_token=Vphwi-oj6xUbXcR8NjVKUKoSbjexMlAhcGnE_g9CRFyprIFxclu6NAUroX3XSY32PDPxCXKNk9qJtI-MOaHzQGJquo_2Y1MPO08ZPcdc50R2O3qUqZy6rrKKRhB0RqLBw0qoYBcHnEKmgoFXVkfGPYO6gYJ0_kYxAQ_FtplxUqlVQUvGvPS1HHU786TI" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=LEE-Kyungjae/Palamedes&type=date&legend=top-left&sealed_token=Vphwi-oj6xUbXcR8NjVKUKoSbjexMlAhcGnE_g9CRFyprIFxclu6NAUroX3XSY32PDPxCXKNk9qJtI-MOaHzQGJquo_2Y1MPO08ZPcdc50R2O3qUqZy6rrKKRhB0RqLBw0qoYBcHnEKmgoFXVkfGPYO6gYJ0_kYxAQ_FtplxUqlVQUvGvPS1HHU786TI" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=LEE-Kyungjae/Palamedes&type=date&legend=top-left&sealed_token=Vphwi-oj6xUbXcR8NjVKUKoSbjexMlAhcGnE_g9CRFyprIFxclu6NAUroX3XSY32PDPxCXKNk9qJtI-MOaHzQGJquo_2Y1MPO08ZPcdc50R2O3qUqZy6rrKKRhB0RqLBw0qoYBcHnEKmgoFXVkfGPYO6gYJ0_kYxAQ_FtplxUqlVQUvGvPS1HHU786TI" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=LEE-Kyungjae/Palamedes&type=date&theme=dark&legend=top-left&sealed_token=w7CzqL4RIY2WcVNVMxHP7hIbVIixWhZtY9GiHJf6rCTMCGY-l7arGtBeLwIzek6eJPnDggE30L7Y3ya10Vec8Dh1UbHOPOzl1zTJ0JS1Xw_4Hy-FSkypwm_8nfszEdTgzTCkNelZat-qfDyp_DK609tBE18mTvL90SB_EWtmX9MKh7Vd1l39X0GTG53-" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=LEE-Kyungjae/Palamedes&type=date&legend=top-left&sealed_token=w7CzqL4RIY2WcVNVMxHP7hIbVIixWhZtY9GiHJf6rCTMCGY-l7arGtBeLwIzek6eJPnDggE30L7Y3ya10Vec8Dh1UbHOPOzl1zTJ0JS1Xw_4Hy-FSkypwm_8nfszEdTgzTCkNelZat-qfDyp_DK609tBE18mTvL90SB_EWtmX9MKh7Vd1l39X0GTG53-" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=LEE-Kyungjae/Palamedes&type=date&legend=top-left&sealed_token=w7CzqL4RIY2WcVNVMxHP7hIbVIixWhZtY9GiHJf6rCTMCGY-l7arGtBeLwIzek6eJPnDggE30L7Y3ya10Vec8Dh1UbHOPOzl1zTJ0JS1Xw_4Hy-FSkypwm_8nfszEdTgzTCkNelZat-qfDyp_DK609tBE18mTvL90SB_EWtmX9MKh7Vd1l39X0GTG53-" />
  </picture>
 </a>
