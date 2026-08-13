@@ -48,6 +48,45 @@ idempotency key와 선택적 health gate를 지원합니다.
 4. 귀속을 성급히 단정하지 않고 관찰 가능한 outcome을 반환합니다.
 5. fingerprint conflict와 restore 계보를 존중합니다.
 
+## Custom cognition provider
+
+Provider 선택은 registry 기반입니다. Host는 CLI parser를 만들거나
+`provider_from_config`를 호출하기 전에 `ProviderRegistration`을 등록해 cognition
+cycle을 수정하지 않고 새 provider를 추가할 수 있습니다.
+
+```python
+from palamedes_chat import (
+    ProviderCapability,
+    ProviderRegistration,
+    register_chat_provider,
+)
+
+register_chat_provider(
+    ProviderRegistration(
+        capability=ProviderCapability(
+            name="company-llm",
+            transport="internal-gateway",
+            default_model="reasoner-v1",
+            supports_streaming=True,
+            supports_usage=True,
+            structured_json_mode="prompt_validated",
+            credential_kind="workload_identity",
+        ),
+        factory=lambda config: CompanyProvider(config),
+        health=lambda config: {
+            "provider": "company-llm",
+            "status": "ok",
+            "credential_hint": "workload identity",
+        },
+    )
+)
+```
+
+Provider object는 `stream(messages)`를 구현하고 안정적인 `provider_name`, `model`, 선택적
+`last_usage`를 제공합니다. Capability metadata는 `provider_capabilities()`로 확인할 수
+있습니다. Provider 등록은 tool, delivery 또는 decision 권한을 부여하지 않습니다. 새
+provider도 기존 validator에 제한된 cognition output만 공급합니다.
+
 ## 상세 가이드
 
 - [AgentScope 통합](integration-agentscope.md)

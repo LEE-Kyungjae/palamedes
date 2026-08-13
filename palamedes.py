@@ -3766,6 +3766,9 @@ def cmd_team(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    from palamedes_chat import provider_names
+
+    available_providers = provider_names(include_aliases=True)
     p = argparse.ArgumentParser(description="Palamedes local planning and mission intelligence")
     p.add_argument(
         "-w", "--workspace", dest="workspace_selector", default="",
@@ -3782,9 +3785,21 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("chat", help="Start an interactive AI-backed Palamedes session.")
     s.add_argument(
-        "--provider", choices=["openrouter", "openai", "codex"], default="openrouter"
+        "--provider", choices=available_providers, default="openrouter"
     )
     s.add_argument("--model", type=str, default="")
+    s.add_argument(
+        "--provider-base-url",
+        type=str,
+        default="",
+        help="Override the selected HTTP provider endpoint (for example a vLLM /v1 URL).",
+    )
+    s.add_argument(
+        "--provider-api-key-env",
+        type=str,
+        default="",
+        help="Name of the environment variable holding this provider's API key.",
+    )
     s.add_argument("--session", type=str, default="")
     s.add_argument("--workspace", type=str, default="")
     s.add_argument("--history-limit", type=int, default=24)
@@ -3845,9 +3860,11 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--wake-initial", action="store_true")
     s.add_argument("--auto-cognition", action="store_true")
     s.add_argument(
-        "--provider", choices=["openrouter", "openai", "codex"], default="openrouter"
+        "--provider", choices=available_providers, default="openrouter"
     )
     s.add_argument("--model", type=str, default="")
+    s.add_argument("--provider-base-url", type=str, default="")
+    s.add_argument("--provider-api-key-env", type=str, default="")
     s.add_argument("--max-calls-per-wake", type=int, default=2)
     s.add_argument("--max-calls-per-day", type=int, default=10)
     s.add_argument("--max-calls-total", type=int, default=20)

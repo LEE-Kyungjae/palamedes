@@ -652,12 +652,23 @@ def cmd_watch(args: Any, palamedes_module: Any) -> None:
     if args.auto_cognition:
         from palamedes_chat import provider_from_config, provider_health
 
-        health = provider_health(args.provider)
+        base_url = str(getattr(args, "provider_base_url", "") or "").strip()
+        api_key_env = str(
+            getattr(args, "provider_api_key_env", "") or ""
+        ).strip()
+        health = provider_health(
+            args.provider, base_url=base_url, api_key_env=api_key_env
+        )
         if health["status"] != "ok":
             raise ValueError(
                 f"{args.provider} is unavailable: {health['credential_hint']}"
             )
-        provider = provider_from_config(args.provider, args.model)
+        provider = provider_from_config(
+            args.provider,
+            args.model,
+            base_url=base_url,
+            api_key_env=api_key_env,
+        )
     store = WatchStore(palamedes_module.STATE_DIR / "watch")
     iteration = 0
     with WatchLock(store.root / "watch.lock"):
