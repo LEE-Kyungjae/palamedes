@@ -13,6 +13,7 @@ import sys
 import tempfile
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 from dataclasses import dataclass
@@ -23,6 +24,9 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Protocol, Text
 
 DEFAULT_OPENAI_MODEL = "gpt-5.6"
 DEFAULT_OPENROUTER_MODEL = "openai/gpt-5.1"
+DEFAULT_OPENAI_COMPATIBLE_MODEL = "local-model"
+DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-5"
+DEFAULT_GEMINI_MODEL = "gemini-2.5-pro"
 CHAT_COMMANDS = {
     "/think": "Explore the missing mode of thought before recommending action.",
     "/challenge": "Attack the strongest assumptions in the current direction and state what evidence would change the conclusion.",
@@ -53,6 +57,110 @@ class ChatProvider(Protocol):
 
     def stream(self, messages: List[Dict[str, str]]) -> Iterable[str]:
         ...
+
+
+@dataclass(frozen=True)
+class ProviderCapability:
+    """Discoverable construction and behavior contract for one provider."""
+
+    name: str
+    transport: str
+    default_model: str
+    supports_streaming: bool
+    supports_usage: bool
+    structured_json_mode: str
+    credential_kind: str
+    aliases: Tuple[str, ...] = ()
+    local_endpoint: bool = False
+
+
+@dataclass(frozen=True)
+class ProviderBuildConfig:
+    name: str
+    model: str = ""
+    base_url: str = ""
+    api_key_env: str = ""
+
+
+ProviderFactory = Callable[[ProviderBuildConfig], ChatProvider]
+
+
+@dataclass(frozen=True)
+class ProviderRegistration:
+    capability: ProviderCapability
+    factory: ProviderFactory
+    health: Callable[[ProviderBuildConfig], Dict[str, Any]]
+
+
+_PROVIDER_REGISTRY: Dict[str, ProviderRegistration] = {}
+_PROVIDER_ALIASES: Dict[str, str] = {}
+
+
+def register_chat_provider(
+    registration: ProviderRegistration, *, replace: bool = False
+) -> None:
+    """Register a provider without changing the cognition engine.
+
+    Third-party integrations may call this before CLI/parser construction or
+    before ``provider_from_config``. Aliases resolve to the same immutable
+    registration. Replacement is explicit so imports cannot silently hijack a
+    configured provider.
+    """
+
+    name = registration.capability.name.strip().lower()
+    if not re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", name):
+        raise ValueError("provider name must be a lowercase stable identifier")
+    aliases = tuple(alias.strip().lower() for alias in registration.capability.aliases)
+    for alias in aliases:
+        if not re.fullmatch(r"[a-z][a-z0-9_-]{0,63}", alias):
+            raise ValueError(f"invalid provider alias: {alias}")
+    occupied = {name, *aliases}
+    conflicts = sorted(
+        item
+        for item in occupied
+        if item in _PROVIDER_REGISTRY or item in _PROVIDER_ALIASES
+    )
+    if conflicts and not replace:
+        raise ValueError(f"provider name or alias already registered: {', '.join(conflicts)}")
+    if replace:
+        prior = _PROVIDER_REGISTRY.get(name)
+        if prior is not None:
+            for alias in prior.capability.aliases:
+                _PROVIDER_ALIASES.pop(alias, None)
+    _PROVIDER_REGISTRY[name] = registration
+    for alias in aliases:
+        _PROVIDER_ALIASES[alias] = name
+
+
+def _canonical_provider_name(name: str) -> str:
+    candidate = str(name or "").strip().lower()
+    return _PROVIDER_ALIASES.get(candidate, candidate)
+
+
+def provider_names(*, include_aliases: bool = False) -> Tuple[str, ...]:
+    names = sorted(_PROVIDER_REGISTRY)
+    if include_aliases:
+        names.extend(sorted(_PROVIDER_ALIASES))
+    return tuple(names)
+
+
+def provider_capabilities() -> List[Dict[str, Any]]:
+    """Return public capability metadata without credentials or secrets."""
+
+    return [
+        {
+            "name": row.capability.name,
+            "aliases": list(row.capability.aliases),
+            "transport": row.capability.transport,
+            "default_model": row.capability.default_model,
+            "supports_streaming": row.capability.supports_streaming,
+            "supports_usage": row.capability.supports_usage,
+            "structured_json_mode": row.capability.structured_json_mode,
+            "credential_kind": row.capability.credential_kind,
+            "local_endpoint": row.capability.local_endpoint,
+        }
+        for _, row in sorted(_PROVIDER_REGISTRY.items())
+    ]
 
 
 def _sse_events(response: Any) -> Iterable[Dict[str, Any]]:
@@ -105,6 +213,44 @@ def _normalize_token_usage(usage: Dict[str, Any]) -> Dict[str, int]:
     return normalized
 
 
+def _provider_execution_identity(provider: Any) -> Dict[str, Any]:
+    """Return a secret-free identity for checkpoint and usage custody."""
+
+    identity: Dict[str, Any] = {
+        "identity_version": "palamedes-provider-execution/1",
+        "provider": str(provider.provider_name),
+        "model": str(provider.model),
+    }
+    for field in ("base_url", "api_key_env", "timeout_seconds", "max_tokens"):
+        value = getattr(provider, field, None)
+        if isinstance(value, (str, int)) and not isinstance(value, bool):
+            identity[field] = value
+    canonical = json.dumps(
+        identity, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
+    identity["fingerprint"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return identity
+
+
+def _legacy_provider_identity_is_safe(provider: Any) -> bool:
+    """Allow old checkpoints only under the exact historical provider defaults."""
+
+    defaults = {
+        "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY"),
+        "openai": ("https://api.openai.com/v1", "OPENAI_API_KEY"),
+        "codex": (None, None),
+    }
+    expected = defaults.get(str(provider.provider_name))
+    if expected is None:
+        return False
+    expected_url, expected_env = expected
+    if expected_url is not None and getattr(provider, "base_url", None) != expected_url:
+        return False
+    if expected_env is not None and getattr(provider, "api_key_env", None) != expected_env:
+        return False
+    return True
+
+
 def _provider_usage_summary(
     provider: Any, role_usage: List[Dict[str, Any]]
 ) -> Dict[str, Any]:
@@ -115,6 +261,7 @@ def _provider_usage_summary(
     return {
         "provider": provider.provider_name,
         "model": provider.model,
+        "provider_execution_identity": _provider_execution_identity(provider),
         "attempted_calls": len(role_usage),
         "metered_calls": sum(
             row.get("custody") == "provider_reported" for row in role_usage
@@ -152,14 +299,15 @@ def _capture_provider_usage(provider: Any, role: str) -> Dict[str, Any]:
 class OpenRouterChatProvider:
     model: str = DEFAULT_OPENROUTER_MODEL
     base_url: str = "https://openrouter.ai/api/v1"
+    api_key_env: str = "OPENROUTER_API_KEY"
     provider_name: str = "openrouter"
     last_usage: Optional[Dict[str, int]] = None
 
     def stream(self, messages: List[Dict[str, str]]) -> Iterable[str]:
         self.last_usage = None
-        api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+        api_key = os.environ.get(self.api_key_env, "").strip()
         if not api_key:
-            raise RuntimeError("OpenRouter requires OPENROUTER_API_KEY")
+            raise RuntimeError(f"OpenRouter requires {self.api_key_env}")
         payload = {
             "model": self.model,
             "messages": messages,
@@ -195,17 +343,193 @@ class OpenRouterChatProvider:
 
 
 @dataclass
+class OpenAICompatibleChatProvider:
+    """OpenAI Chat Completions adapter for vLLM, Ollama and compatible APIs."""
+
+    model: str = DEFAULT_OPENAI_COMPATIBLE_MODEL
+    base_url: str = "http://127.0.0.1:8000/v1"
+    api_key_env: str = "PALAMEDES_OPENAI_COMPATIBLE_API_KEY"
+    provider_name: str = "openai-compatible"
+    last_usage: Optional[Dict[str, int]] = None
+
+    def stream(self, messages: List[Dict[str, str]]) -> Iterable[str]:
+        self.last_usage = None
+        api_key = os.environ.get(self.api_key_env, "").strip()
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "stream": True,
+            "stream_options": {"include_usage": True},
+        }
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        request = urllib.request.Request(
+            f"{self.base_url.rstrip('/')}/chat/completions",
+            data=json.dumps(payload).encode("utf-8"),
+            headers=headers,
+            method="POST",
+        )
+        with _open(request, self.provider_name) as response:
+            for event in _sse_events(response):
+                usage = event.get("usage")
+                if isinstance(usage, dict):
+                    self.last_usage = _normalize_token_usage(usage)
+                choices = event.get("choices", [])
+                if not isinstance(choices, list) or not choices:
+                    continue
+                choice = choices[0]
+                if not isinstance(choice, dict):
+                    continue
+                delta = choice.get("delta", {})
+                if not isinstance(delta, dict):
+                    continue
+                content = delta.get("content", "")
+                if isinstance(content, str) and content:
+                    yield content
+
+
+@dataclass
+class AnthropicMessagesChatProvider:
+    model: str = DEFAULT_ANTHROPIC_MODEL
+    base_url: str = "https://api.anthropic.com/v1"
+    api_key_env: str = "ANTHROPIC_API_KEY"
+    provider_name: str = "anthropic"
+    max_tokens: int = 8192
+    last_usage: Optional[Dict[str, int]] = None
+
+    def stream(self, messages: List[Dict[str, str]]) -> Iterable[str]:
+        self.last_usage = None
+        api_key = os.environ.get(self.api_key_env, "").strip()
+        if not api_key:
+            raise RuntimeError(f"Anthropic requires {self.api_key_env}")
+        system = "\n\n".join(
+            item.get("content", "")
+            for item in messages
+            if item.get("role") == "system"
+        )
+        conversation = [
+            {"role": item["role"], "content": item["content"]}
+            for item in messages
+            if item.get("role") in {"user", "assistant"}
+        ]
+        payload: Dict[str, Any] = {
+            "model": self.model,
+            "messages": conversation,
+            "max_tokens": self.max_tokens,
+            "stream": True,
+        }
+        if system:
+            payload["system"] = system
+        request = urllib.request.Request(
+            f"{self.base_url.rstrip('/')}/messages",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        usage: Dict[str, Any] = {}
+        with _open(request, "Anthropic") as response:
+            for event in _sse_events(response):
+                event_usage = event.get("usage")
+                if isinstance(event_usage, dict):
+                    usage.update(event_usage)
+                message = event.get("message")
+                if isinstance(message, dict) and isinstance(message.get("usage"), dict):
+                    usage.update(message["usage"])
+                if event.get("type") != "content_block_delta":
+                    continue
+                delta = event.get("delta", {})
+                if isinstance(delta, dict) and delta.get("type") == "text_delta":
+                    text = delta.get("text", "")
+                    if isinstance(text, str) and text:
+                        yield text
+        if usage:
+            self.last_usage = _normalize_token_usage(usage)
+
+
+@dataclass
+class GeminiChatProvider:
+    model: str = DEFAULT_GEMINI_MODEL
+    base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    api_key_env: str = "GEMINI_API_KEY"
+    provider_name: str = "gemini"
+    last_usage: Optional[Dict[str, int]] = None
+
+    def stream(self, messages: List[Dict[str, str]]) -> Iterable[str]:
+        self.last_usage = None
+        api_key = os.environ.get(self.api_key_env, "").strip()
+        if not api_key:
+            raise RuntimeError(f"Gemini requires {self.api_key_env}")
+        system = "\n\n".join(
+            item.get("content", "")
+            for item in messages
+            if item.get("role") == "system"
+        )
+        contents = []
+        for item in messages:
+            role = item.get("role")
+            if role not in {"user", "assistant"}:
+                continue
+            contents.append(
+                {
+                    "role": "model" if role == "assistant" else "user",
+                    "parts": [{"text": item.get("content", "")}],
+                }
+            )
+        payload: Dict[str, Any] = {"contents": contents}
+        if system:
+            payload["systemInstruction"] = {"parts": [{"text": system}]}
+        request = urllib.request.Request(
+            f"{self.base_url.rstrip('/')}/models/"
+            f"{urllib.parse.quote(self.model, safe='-._')}:streamGenerateContent?alt=sse",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "x-goog-api-key": api_key,
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with _open(request, "Gemini") as response:
+            for event in _sse_events(response):
+                usage = event.get("usageMetadata")
+                if isinstance(usage, dict):
+                    self.last_usage = _normalize_token_usage(
+                        {
+                            "input_tokens": usage.get("promptTokenCount"),
+                            "output_tokens": usage.get("candidatesTokenCount"),
+                            "cached_input_tokens": usage.get("cachedContentTokenCount"),
+                            "total_tokens": usage.get("totalTokenCount"),
+                        }
+                    )
+                candidates = event.get("candidates", [])
+                if not isinstance(candidates, list):
+                    continue
+                for candidate in candidates:
+                    content = candidate.get("content", {}) if isinstance(candidate, dict) else {}
+                    parts = content.get("parts", []) if isinstance(content, dict) else []
+                    for part in parts if isinstance(parts, list) else []:
+                        text = part.get("text", "") if isinstance(part, dict) else ""
+                        if isinstance(text, str) and text:
+                            yield text
+
+
+@dataclass
 class OpenAIResponsesChatProvider:
     model: str = DEFAULT_OPENAI_MODEL
     base_url: str = "https://api.openai.com/v1"
+    api_key_env: str = "OPENAI_API_KEY"
     provider_name: str = "openai"
     last_usage: Optional[Dict[str, int]] = None
 
     def stream(self, messages: List[Dict[str, str]]) -> Iterable[str]:
         self.last_usage = None
-        api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+        api_key = os.environ.get(self.api_key_env, "").strip()
         if not api_key:
-            raise RuntimeError("OpenAI requires OPENAI_API_KEY")
+            raise RuntimeError(f"OpenAI requires {self.api_key_env}")
         instructions = "\n\n".join(
             item["content"] for item in messages if item.get("role") == "system"
         )
@@ -332,39 +656,288 @@ class CodexCliChatProvider:
         yield final_text
 
 
-def provider_from_config(name: str, model: str = "") -> ChatProvider:
-    if name == "openrouter":
-        return OpenRouterChatProvider(
-            model=model
-            or os.environ.get("PALAMEDES_OPENROUTER_MODEL", DEFAULT_OPENROUTER_MODEL)
-        )
-    if name == "openai":
-        return OpenAIResponsesChatProvider(
-            model=model or os.environ.get("PALAMEDES_OPENAI_MODEL", DEFAULT_OPENAI_MODEL)
-        )
-    if name == "codex":
-        return CodexCliChatProvider(model=model or "configured-default")
-    raise ValueError("provider must be openrouter, openai, or codex")
+def _validated_api_key_env(value: str, default: str) -> str:
+    name = str(value or default).strip()
+    if not re.fullmatch(r"[A-Z_][A-Z0-9_]{0,127}", name):
+        raise ValueError("API key environment variable name is invalid")
+    return name
 
 
-def provider_health(name: str) -> Dict[str, Any]:
-    if name == "codex":
-        available = bool(shutil.which("codex"))
-        return {
-            "provider": name,
-            "status": "ok" if available else "unavailable",
-            "credential_hint": "run codex login if the CLI is not authenticated",
-            "cli_available": available,
-        }
-    env_name = "OPENROUTER_API_KEY" if name == "openrouter" else "OPENAI_API_KEY"
+def _validated_provider_base_url(value: str, default: str) -> str:
+    candidate = str(value or default).strip().rstrip("/")
+    parsed = urllib.parse.urlsplit(candidate)
+    if (
+        parsed.scheme not in {"http", "https"}
+        or not parsed.netloc
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.query
+        or parsed.fragment
+        or any(character.isspace() for character in candidate)
+    ):
+        raise ValueError("provider base URL must be an absolute http(s) URL")
+    return candidate
+
+
+def _api_health(
+    config: ProviderBuildConfig,
+    *,
+    default_key_env: str,
+    default_base_url: str,
+    key_required: bool,
+) -> Dict[str, Any]:
+    env_name = _validated_api_key_env(config.api_key_env, default_key_env)
     key_set = bool(os.environ.get(env_name, "").strip())
+    base_url = _validated_provider_base_url(config.base_url, default_base_url)
+    available = key_set or not key_required
     return {
-        "provider": name,
-        "status": "ok" if key_set else "unavailable",
+        "provider": _canonical_provider_name(config.name),
+        "status": "ok" if available else "unavailable",
+        "transport": "http",
+        "base_url": base_url,
         "api_key_env": env_name,
         "api_key_set": key_set,
-        "credential_hint": f"set {env_name}",
+        "credential_required": key_required,
+        "credential_hint": (
+            f"set {env_name}"
+            if key_required and not key_set
+            else "configured endpoint is ready for a connection attempt"
+        ),
     }
+
+
+def _register_builtin_chat_providers() -> None:
+    if _PROVIDER_REGISTRY:
+        return
+
+    def registration(
+        capability: ProviderCapability,
+        factory: ProviderFactory,
+        health: Callable[[ProviderBuildConfig], Dict[str, Any]],
+    ) -> None:
+        register_chat_provider(ProviderRegistration(capability, factory, health))
+
+    registration(
+        ProviderCapability(
+            name="openrouter",
+            transport="openai-chat-completions",
+            default_model=DEFAULT_OPENROUTER_MODEL,
+            supports_streaming=True,
+            supports_usage=True,
+            structured_json_mode="prompt_validated",
+            credential_kind="api_key",
+        ),
+        lambda config: OpenRouterChatProvider(
+            model=config.model
+            or os.environ.get("PALAMEDES_OPENROUTER_MODEL", DEFAULT_OPENROUTER_MODEL),
+            base_url=_validated_provider_base_url(
+                config.base_url,
+                os.environ.get(
+                    "PALAMEDES_OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
+                ),
+            ),
+            api_key_env=_validated_api_key_env(config.api_key_env, "OPENROUTER_API_KEY"),
+        ),
+        lambda config: _api_health(
+            config,
+            default_key_env="OPENROUTER_API_KEY",
+            default_base_url=os.environ.get(
+                "PALAMEDES_OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
+            ),
+            key_required=True,
+        ),
+    )
+    registration(
+        ProviderCapability(
+            name="openai",
+            transport="openai-responses",
+            default_model=DEFAULT_OPENAI_MODEL,
+            supports_streaming=True,
+            supports_usage=True,
+            structured_json_mode="prompt_validated",
+            credential_kind="api_key",
+        ),
+        lambda config: OpenAIResponsesChatProvider(
+            model=config.model
+            or os.environ.get("PALAMEDES_OPENAI_MODEL", DEFAULT_OPENAI_MODEL),
+            base_url=_validated_provider_base_url(
+                config.base_url,
+                os.environ.get("PALAMEDES_OPENAI_BASE_URL", "https://api.openai.com/v1"),
+            ),
+            api_key_env=_validated_api_key_env(config.api_key_env, "OPENAI_API_KEY"),
+        ),
+        lambda config: _api_health(
+            config,
+            default_key_env="OPENAI_API_KEY",
+            default_base_url=os.environ.get(
+                "PALAMEDES_OPENAI_BASE_URL", "https://api.openai.com/v1"
+            ),
+            key_required=True,
+        ),
+    )
+    registration(
+        ProviderCapability(
+            name="openai-compatible",
+            aliases=("vllm", "ollama", "lmstudio"),
+            transport="openai-chat-completions",
+            default_model=DEFAULT_OPENAI_COMPATIBLE_MODEL,
+            supports_streaming=True,
+            supports_usage=True,
+            structured_json_mode="prompt_validated",
+            credential_kind="optional_api_key",
+            local_endpoint=True,
+        ),
+        lambda config: OpenAICompatibleChatProvider(
+            model=config.model
+            or os.environ.get(
+                "PALAMEDES_OPENAI_COMPATIBLE_MODEL", DEFAULT_OPENAI_COMPATIBLE_MODEL
+            ),
+            base_url=_validated_provider_base_url(
+                config.base_url,
+                os.environ.get(
+                    "PALAMEDES_OPENAI_COMPATIBLE_BASE_URL", "http://127.0.0.1:8000/v1"
+                ),
+            ),
+            api_key_env=_validated_api_key_env(
+                config.api_key_env, "PALAMEDES_OPENAI_COMPATIBLE_API_KEY"
+            ),
+        ),
+        lambda config: _api_health(
+            config,
+            default_key_env="PALAMEDES_OPENAI_COMPATIBLE_API_KEY",
+            default_base_url=os.environ.get(
+                "PALAMEDES_OPENAI_COMPATIBLE_BASE_URL", "http://127.0.0.1:8000/v1"
+            ),
+            key_required=False,
+        ),
+    )
+    registration(
+        ProviderCapability(
+            name="anthropic",
+            aliases=("claude",),
+            transport="anthropic-messages",
+            default_model=DEFAULT_ANTHROPIC_MODEL,
+            supports_streaming=True,
+            supports_usage=True,
+            structured_json_mode="prompt_validated",
+            credential_kind="api_key",
+        ),
+        lambda config: AnthropicMessagesChatProvider(
+            model=config.model
+            or os.environ.get("PALAMEDES_ANTHROPIC_MODEL", DEFAULT_ANTHROPIC_MODEL),
+            base_url=_validated_provider_base_url(
+                config.base_url,
+                os.environ.get("PALAMEDES_ANTHROPIC_BASE_URL", "https://api.anthropic.com/v1"),
+            ),
+            api_key_env=_validated_api_key_env(config.api_key_env, "ANTHROPIC_API_KEY"),
+        ),
+        lambda config: _api_health(
+            config,
+            default_key_env="ANTHROPIC_API_KEY",
+            default_base_url=os.environ.get(
+                "PALAMEDES_ANTHROPIC_BASE_URL", "https://api.anthropic.com/v1"
+            ),
+            key_required=True,
+        ),
+    )
+    registration(
+        ProviderCapability(
+            name="gemini",
+            transport="gemini-generate-content",
+            default_model=DEFAULT_GEMINI_MODEL,
+            supports_streaming=True,
+            supports_usage=True,
+            structured_json_mode="prompt_validated",
+            credential_kind="api_key",
+        ),
+        lambda config: GeminiChatProvider(
+            model=config.model
+            or os.environ.get("PALAMEDES_GEMINI_MODEL", DEFAULT_GEMINI_MODEL),
+            base_url=_validated_provider_base_url(
+                config.base_url,
+                os.environ.get(
+                    "PALAMEDES_GEMINI_BASE_URL",
+                    "https://generativelanguage.googleapis.com/v1beta",
+                ),
+            ),
+            api_key_env=_validated_api_key_env(config.api_key_env, "GEMINI_API_KEY"),
+        ),
+        lambda config: _api_health(
+            config,
+            default_key_env="GEMINI_API_KEY",
+            default_base_url=os.environ.get(
+                "PALAMEDES_GEMINI_BASE_URL",
+                "https://generativelanguage.googleapis.com/v1beta",
+            ),
+            key_required=True,
+        ),
+    )
+    registration(
+        ProviderCapability(
+            name="codex",
+            transport="codex-cli",
+            default_model="configured-default",
+            supports_streaming=False,
+            supports_usage=True,
+            structured_json_mode="prompt_validated",
+            credential_kind="cli_login",
+            local_endpoint=True,
+        ),
+        lambda config: CodexCliChatProvider(model=config.model or "configured-default"),
+        lambda config: {
+            "provider": "codex",
+            "status": "ok" if shutil.which("codex") else "unavailable",
+            "transport": "cli",
+            "credential_hint": "run codex login if the CLI is not authenticated",
+            "cli_available": bool(shutil.which("codex")),
+        },
+    )
+
+
+_register_builtin_chat_providers()
+
+
+def provider_from_config(
+    name: str,
+    model: str = "",
+    *,
+    base_url: str = "",
+    api_key_env: str = "",
+) -> ChatProvider:
+    canonical = _canonical_provider_name(name)
+    registration = _PROVIDER_REGISTRY.get(canonical)
+    if registration is None:
+        raise ValueError(
+            f"unsupported provider {name!r}; available: {', '.join(provider_names())}"
+        )
+    return registration.factory(
+        ProviderBuildConfig(
+            name=canonical,
+            model=model,
+            base_url=base_url,
+            api_key_env=api_key_env,
+        )
+    )
+
+
+def provider_health(
+    name: str, *, base_url: str = "", api_key_env: str = ""
+) -> Dict[str, Any]:
+    canonical = _canonical_provider_name(name)
+    registration = _PROVIDER_REGISTRY.get(canonical)
+    if registration is None:
+        return {
+            "provider": str(name),
+            "status": "unavailable",
+            "credential_hint": f"choose one of: {', '.join(provider_names())}",
+        }
+    return registration.health(
+        ProviderBuildConfig(
+            name=canonical,
+            base_url=base_url,
+            api_key_env=api_key_env,
+        )
+    )
 
 
 class ChatSessionStore:
@@ -713,6 +1286,9 @@ def _role_artifact(
         "call_index": call_index,
         "provider": provider.provider_name,
         "model": provider.model,
+        "provider_execution_fingerprint": _provider_execution_identity(provider)[
+            "fingerprint"
+        ],
         "completed_at": utc_now(),
         "prompt_fingerprint": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
         "output_fingerprint": _fingerprint(output),
@@ -783,6 +1359,12 @@ def _precycle_usage_artifacts(
         or provider_usage.get("model") != provider.model
     ):
         raise ValueError("precycle provider usage identity does not match the cycle")
+    supplied_identity = provider_usage.get("provider_execution_identity")
+    current_identity = _provider_execution_identity(provider)
+    if isinstance(supplied_identity, dict) and supplied_identity.get(
+        "fingerprint"
+    ) != current_identity.get("fingerprint"):
+        raise ValueError("precycle provider execution identity changed")
     roles = provider_usage.get("roles")
     if not isinstance(roles, list):
         raise ValueError("precycle provider usage roles must be an array")
@@ -802,6 +1384,7 @@ def _precycle_usage_artifacts(
             "call_index": index + 1,
             "provider": provider.provider_name,
             "model": provider.model,
+            "provider_execution_fingerprint": current_identity["fingerprint"],
             "usage_custody": custody,
             "precycle": True,
             "attempted": True,
@@ -942,6 +1525,7 @@ def run_cognition_cycle(
 
         validate_cognition_evidence_bundle(evidence_bundle)
     started_at = utc_now()
+    provider_execution_identity = _provider_execution_identity(provider)
     current_context_views = _plan_context_views(palamedes_module)
     current_plan_context = current_context_views["strategic"]
     current_path_context = current_context_views["path_dependent"]
@@ -958,6 +1542,16 @@ def run_cognition_cycle(
             )
         if existing.get("provider") != provider.provider_name or existing.get("model") != provider.model:
             raise ValueError("resume provider and model must match the original cycle")
+        existing_provider_fingerprint = existing.get(
+            "provider_execution_fingerprint"
+        )
+        if existing_provider_fingerprint:
+            if existing_provider_fingerprint != provider_execution_identity["fingerprint"]:
+                raise ValueError("resume provider execution identity changed")
+        elif not _legacy_provider_identity_is_safe(provider):
+            raise ValueError(
+                "legacy cycle cannot resume through an unverified provider endpoint"
+            )
         cycle_id = resume_cycle_id
         context = str(existing.get("context", ""))
         if not context:
@@ -1010,6 +1604,9 @@ def run_cognition_cycle(
                 if isinstance(evidence_bundle, dict)
                 else ""
             ),
+            "provider_execution_fingerprint": provider_execution_identity[
+                "fingerprint"
+            ],
         }
         cycle_id = f"cycle-{_fingerprint(seed)[:12]}"
         existing_path = cycle_store.path(cycle_id)
@@ -1037,6 +1634,8 @@ def run_cognition_cycle(
         "started_at": existing.get("started_at", started_at) if existing else started_at,
         "provider": provider.provider_name,
         "model": provider.model,
+        "provider_execution_identity": provider_execution_identity,
+        "provider_execution_fingerprint": provider_execution_identity["fingerprint"],
         "role_order": ["context_governor", "interpreter", "inventor", "adversary", "selector", "outcome_analyst"],
         "artifacts": list(existing.get("artifacts", [])) if existing else [],
         "rejected_artifacts": list(existing.get("rejected_artifacts", [])) if existing else [],
@@ -1069,6 +1668,18 @@ def run_cognition_cycle(
                 output = artifact.get("output")
                 if not isinstance(output, dict) or artifact.get("output_fingerprint") != _fingerprint(output):
                     raise ValueError(f"{role} checkpoint fingerprint mismatch")
+                artifact_provider_fingerprint = artifact.get(
+                    "provider_execution_fingerprint"
+                )
+                if artifact_provider_fingerprint:
+                    if artifact_provider_fingerprint != provider_execution_identity[
+                        "fingerprint"
+                    ]:
+                        raise ValueError(f"{role} checkpoint provider identity changed")
+                elif not _legacy_provider_identity_is_safe(provider):
+                    raise ValueError(
+                        f"{role} legacy checkpoint has no verified provider endpoint"
+                    )
                 artifact["checkpoint_reused"] = True
                 if progress:
                     progress(f"[{cycle_id}] {role} {call_index}/5 checkpoint reused")
@@ -2126,12 +2737,14 @@ def run_partitioned_product_cycle(
         evidence_bundle = upgrade_cognition_evidence_bundle_v1(evidence_bundle)
     else:
         validate_cognition_evidence_bundle(evidence_bundle)
+    provider_execution_identity = _provider_execution_identity(provider)
     seed = {
         "protocol": "palamedes-partitioned-product-cognition/3",
         "context": context,
         "evidence_bundle_id": evidence_bundle["bundle_id"],
         "provider": provider.provider_name,
         "model": provider.model,
+        "provider_execution_fingerprint": provider_execution_identity["fingerprint"],
     }
     cycle_id = f"cycle-{_fingerprint(seed)[:12]}"
     if resume_cycle_id:
@@ -2154,6 +2767,16 @@ def run_partitioned_product_cycle(
             raise ValueError(
                 "resume provider and model must match the original product cycle"
             )
+        existing_provider_fingerprint = existing.get(
+            "provider_execution_fingerprint"
+        )
+        if existing_provider_fingerprint:
+            if existing_provider_fingerprint != provider_execution_identity["fingerprint"]:
+                raise ValueError("resume provider execution identity changed")
+        elif not _legacy_provider_identity_is_safe(provider):
+            raise ValueError(
+                "legacy product cycle cannot resume through an unverified provider endpoint"
+            )
         for artifact_lane in (
             "precycle_artifacts",
             "artifacts",
@@ -2164,6 +2787,11 @@ def run_partitioned_product_cycle(
                 not isinstance(artifact, dict)
                 or artifact.get("provider") != existing.get("provider")
                 or artifact.get("model") != existing.get("model")
+                or (
+                    artifact.get("provider_execution_fingerprint")
+                    and artifact.get("provider_execution_fingerprint")
+                    != provider_execution_identity["fingerprint"]
+                )
                 for artifact in artifacts
             ):
                 raise ValueError(
@@ -2302,6 +2930,8 @@ def run_partitioned_product_cycle(
         "started_at": existing.get("started_at", utc_now()) if existing else utc_now(),
         "provider": provider.provider_name,
         "model": provider.model,
+        "provider_execution_identity": provider_execution_identity,
+        "provider_execution_fingerprint": provider_execution_identity["fingerprint"],
         "budget": dict(budget) if isinstance(budget, dict) else {},
         "preparation_input_bundle_id": (
             str(existing.get("preparation_input_bundle_id", ""))
@@ -2366,6 +2996,20 @@ def run_partitioned_product_cycle(
                 or artifact.get("output_fingerprint") != _fingerprint(output)
             ):
                 raise ValueError(f"{invocation_key} checkpoint fingerprint mismatch")
+            artifact_provider_fingerprint = artifact.get(
+                "provider_execution_fingerprint"
+            )
+            if artifact_provider_fingerprint:
+                if artifact_provider_fingerprint != provider_execution_identity[
+                    "fingerprint"
+                ]:
+                    raise ValueError(
+                        f"{invocation_key} checkpoint provider identity changed"
+                    )
+            elif not _legacy_provider_identity_is_safe(provider):
+                raise ValueError(
+                    f"{invocation_key} legacy checkpoint has no verified provider endpoint"
+                )
             artifact["checkpoint_reused"] = True
             if progress:
                 progress(f"[{cycle_id}] {invocation_key} checkpoint reused")
@@ -2592,6 +3236,9 @@ def _completed_product_cycle_for_preparation_input(
 
     if not preparation_input_bundle_id:
         return None
+    provider_execution_fingerprint = _provider_execution_identity(provider)[
+        "fingerprint"
+    ]
     matches: List[Tuple[str, str]] = []
     for path in sorted(cycle_store.root.glob("cycle-*.json")):
         try:
@@ -2604,6 +3251,8 @@ def _completed_product_cycle_for_preparation_input(
             or cycle.get("status") not in {"selected", "defer", "reject"}
             or cycle.get("provider") != provider.provider_name
             or cycle.get("model") != provider.model
+            or cycle.get("provider_execution_fingerprint")
+            != provider_execution_fingerprint
             or cycle.get("preparation_input_bundle_id")
             != preparation_input_bundle_id
             or not isinstance(cycle.get("evidence_bundle"), dict)
@@ -8027,7 +8676,11 @@ def run_chat(
 
 
 def cmd_chat(args: Any, palamedes_module: Any) -> None:
-    health = provider_health(args.provider)
+    base_url = str(getattr(args, "provider_base_url", "") or "").strip()
+    api_key_env = str(getattr(args, "provider_api_key_env", "") or "").strip()
+    health = provider_health(
+        args.provider, base_url=base_url, api_key_env=api_key_env
+    )
     if health["status"] != "ok":
         raise ValueError(
             f"{args.provider} is unavailable: {health['credential_hint']}"
@@ -8044,7 +8697,12 @@ def cmd_chat(args: Any, palamedes_module: Any) -> None:
     ChatSessionStore(palamedes_module.STATE_DIR / "chat").path(session_id)
     if args.history_limit < 2 or args.history_limit > 200:
         raise ValueError("history-limit must be between 2 and 200")
-    provider = provider_from_config(args.provider, args.model)
+    provider = provider_from_config(
+        args.provider,
+        args.model,
+        base_url=base_url,
+        api_key_env=api_key_env,
+    )
     team_state = str(getattr(args, "team_state", "") or "").strip()
     team_store = None
     if team_state:

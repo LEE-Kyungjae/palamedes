@@ -24,6 +24,17 @@ from tests.test_palamedes_cognition_v3 import (
 )
 
 
+class FakeHTTPStream:
+    def __init__(self, events):
+        self.events = events
+
+    def __enter__(self):
+        return iter(self.events)
+
+    def __exit__(self, exc_type, exc, traceback):
+        return False
+
+
 def product_evidence_bundle(
     state_root: Path, *, request: str = "Find an unasked product opportunity."
 ):
@@ -4110,6 +4121,56 @@ class PalamedesChatTests(unittest.TestCase):
         json.loads(retry_prompt.rsplit(packet_marker, 1)[1])
         self.assertEqual(result["cycle"]["status"], "selected")
 
+    def test_product_resume_rejects_same_model_at_a_different_endpoint(self):
+        from palamedes_cognition_v3 import PRODUCT_OPPORTUNITY_INVENTOR
+
+        class EndpointProvider(PartitionedProductProvider):
+            provider_name = "openai-compatible"
+            model = "same-model"
+            api_key_env = "LOCAL_LLM_KEY"
+
+            def __init__(self, fixture, base_url, invalid=False):
+                super().__init__(fixture)
+                self.base_url = base_url
+                self.invalid = invalid
+
+            def stream(self, messages):
+                prompt = messages[-1]["content"]
+                if prompt.startswith("ROLE_ASSIGNMENT:") and self.invalid:
+                    self.invalid = False
+                    payload = self.fixture(PRODUCT_OPPORTUNITY_INVENTOR, prompt)
+                    payload["candidate"]["output_kind"] = "code_review"
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            bundle = product_evidence_bundle(root)
+            store = palamedes_chat.CognitionCycleStore(root / "cognition")
+            with self.assertRaisesRegex(ValueError, "product_opportunity"):
+                palamedes_chat.run_partitioned_product_cycle(
+                    provider=EndpointProvider(
+                        CognitionFixture(), "http://127.0.0.1:8000/v1", invalid=True
+                    ),
+                    context="Find an unasked product opportunity.",
+                    cycle_store=store,
+                    evidence_bundle=bundle,
+                    schema_retry_limit=0,
+                )
+            failed = json.loads(next(store.root.glob("cycle-*.json")).read_text())
+
+            with self.assertRaisesRegex(ValueError, "execution identity changed"):
+                palamedes_chat.run_partitioned_product_cycle(
+                    provider=EndpointProvider(
+                        CognitionFixture(), "http://127.0.0.1:9000/v1"
+                    ),
+                    context="ignored",
+                    cycle_store=store,
+                    evidence_bundle=bundle,
+                    resume_cycle_id=failed["cognition_cycle_id"],
+                )
+
     def test_product_resume_preserves_budget_and_persists_post_call_overrun(self):
         class MeteredProductProvider(PartitionedProductProvider):
             def stream(self, messages):
@@ -4936,6 +4997,188 @@ class PalamedesChatTests(unittest.TestCase):
 
         self.assertNotIn("api_key", health)
         self.assertIn("api_key_set", health)
+
+        with self.assertRaisesRegex(ValueError, "base URL"):
+            palamedes_chat.provider_health(
+                "openai-compatible",
+                base_url="https://user:secret@llm.example.com/v1",
+            )
+
+    def test_provider_registry_exposes_native_and_openai_compatible_backends(self):
+        names = set(palamedes_chat.provider_names(include_aliases=True))
+        capabilities = {
+            row["name"]: row for row in palamedes_chat.provider_capabilities()
+        }
+
+        self.assertTrue(
+            {
+                "openrouter",
+                "openai",
+                "openai-compatible",
+                "vllm",
+                "ollama",
+                "lmstudio",
+                "anthropic",
+                "claude",
+                "gemini",
+                "codex",
+            }.issubset(names)
+        )
+        self.assertTrue(capabilities["openai-compatible"]["local_endpoint"])
+        self.assertEqual(
+            capabilities["anthropic"]["transport"], "anthropic-messages"
+        )
+        self.assertEqual(
+            capabilities["gemini"]["structured_json_mode"], "prompt_validated"
+        )
+
+    def test_external_provider_can_register_without_cognition_changes(self):
+        registry = dict(palamedes_chat._PROVIDER_REGISTRY)
+        aliases = dict(palamedes_chat._PROVIDER_ALIASES)
+
+        class PluginProvider:
+            provider_name = "fixture-plugin"
+            model = "fixture-model"
+            last_usage = None
+
+            def stream(self, messages):
+                yield '{"plugin":true}'
+
+        try:
+            palamedes_chat.register_chat_provider(
+                palamedes_chat.ProviderRegistration(
+                    capability=palamedes_chat.ProviderCapability(
+                        name="fixture-plugin",
+                        aliases=("fixture-alias",),
+                        transport="test",
+                        default_model="fixture-model",
+                        supports_streaming=True,
+                        supports_usage=False,
+                        structured_json_mode="prompt_validated",
+                        credential_kind="none",
+                    ),
+                    factory=lambda config: PluginProvider(),
+                    health=lambda config: {
+                        "provider": "fixture-plugin",
+                        "status": "ok",
+                        "credential_hint": "none",
+                    },
+                )
+            )
+
+            provider = palamedes_chat.provider_from_config("fixture-alias")
+            self.assertEqual(provider.provider_name, "fixture-plugin")
+            self.assertEqual(
+                palamedes_chat.provider_health("fixture-plugin")["status"], "ok"
+            )
+        finally:
+            palamedes_chat._PROVIDER_REGISTRY.clear()
+            palamedes_chat._PROVIDER_REGISTRY.update(registry)
+            palamedes_chat._PROVIDER_ALIASES.clear()
+            palamedes_chat._PROVIDER_ALIASES.update(aliases)
+
+    def test_openai_compatible_provider_supports_keyless_vllm_stream(self):
+        provider = palamedes_chat.provider_from_config(
+            "vllm",
+            "local/reasoner",
+            base_url="http://127.0.0.1:9000/v1",
+        )
+        response = FakeHTTPStream(
+            [
+                b'data: {"choices":[{"delta":{"content":"hello"}}]}\n',
+                b'data: {"choices":[],"usage":{"prompt_tokens":4,"completion_tokens":2}}\n',
+                b"data: [DONE]\n",
+            ]
+        )
+        with patch.dict(os.environ, {}, clear=True), patch(
+            "palamedes_chat._open", return_value=response
+        ) as opened:
+            output = "".join(
+                provider.stream([{"role": "user", "content": "bounded"}])
+            )
+
+        request = opened.call_args.args[0]
+        payload = json.loads(request.data)
+        self.assertEqual(output, "hello")
+        self.assertEqual(payload["model"], "local/reasoner")
+        self.assertEqual(request.full_url, "http://127.0.0.1:9000/v1/chat/completions")
+        self.assertNotIn("Authorization", request.headers)
+        self.assertEqual(provider.last_usage["total_tokens"], 6)
+
+    def test_anthropic_provider_normalizes_stream_and_usage(self):
+        provider = palamedes_chat.provider_from_config("claude", "claude-test")
+        response = FakeHTTPStream(
+            [
+                b'data: {"type":"message_start","message":{"usage":{"input_tokens":7}}}\n',
+                b'data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"answer"}}\n',
+                b'data: {"type":"message_delta","usage":{"output_tokens":3}}\n',
+            ]
+        )
+        with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "secret"}, clear=True), patch(
+            "palamedes_chat._open", return_value=response
+        ) as opened:
+            output = "".join(
+                provider.stream(
+                    [
+                        {"role": "system", "content": "Return JSON."},
+                        {"role": "user", "content": "Reason."},
+                    ]
+                )
+            )
+
+        request = opened.call_args.args[0]
+        payload = json.loads(request.data)
+        self.assertEqual(output, "answer")
+        self.assertEqual(payload["system"], "Return JSON.")
+        self.assertEqual(payload["messages"][0]["role"], "user")
+        self.assertEqual(provider.last_usage["total_tokens"], 10)
+        self.assertNotIn("secret", str(palamedes_chat.provider_health("anthropic")))
+
+    def test_gemini_provider_projects_roles_text_and_usage(self):
+        provider = palamedes_chat.provider_from_config("gemini", "gemini-test")
+        response = FakeHTTPStream(
+            [
+                b'data: {"candidates":[{"content":{"parts":[{"text":"gemini answer"}]}}],"usageMetadata":{"promptTokenCount":8,"candidatesTokenCount":5,"totalTokenCount":13}}\n'
+            ]
+        )
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "secret"}, clear=True), patch(
+            "palamedes_chat._open", return_value=response
+        ) as opened:
+            output = "".join(
+                provider.stream(
+                    [
+                        {"role": "system", "content": "Bounded system."},
+                        {"role": "assistant", "content": "Prior."},
+                        {"role": "user", "content": "Next."},
+                    ]
+                )
+            )
+
+        request = opened.call_args.args[0]
+        payload = json.loads(request.data)
+        self.assertEqual(output, "gemini answer")
+        self.assertEqual(payload["systemInstruction"]["parts"][0]["text"], "Bounded system.")
+        self.assertEqual([row["role"] for row in payload["contents"]], ["model", "user"])
+        self.assertEqual(provider.last_usage["total_tokens"], 13)
+
+    def test_provider_cli_accepts_registry_alias_and_endpoint_overrides(self):
+        args = palamedes.build_parser().parse_args(
+            [
+                "chat",
+                "--provider",
+                "vllm",
+                "--model",
+                "local-model",
+                "--provider-base-url",
+                "http://127.0.0.1:8000/v1",
+                "--provider-api-key-env",
+                "LOCAL_LLM_KEY",
+            ]
+        )
+
+        self.assertEqual(args.provider, "vllm")
+        self.assertEqual(args.provider_base_url, "http://127.0.0.1:8000/v1")
+        self.assertEqual(args.provider_api_key_env, "LOCAL_LLM_KEY")
 
     def test_codex_provider_runs_ephemeral_read_only_and_isolated(self):
         provider = palamedes_chat.CodexCliChatProvider()

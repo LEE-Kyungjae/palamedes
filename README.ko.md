@@ -109,7 +109,8 @@ Palamedes는 범용 실행 runtime, 자동 배포 도구, 창의성이나 사업
 
 ## 빠른 시작
 
-Python 3.9 이상과 Codex CLI, OpenRouter 또는 OpenAI API key가 필요합니다.
+Python 3.9 이상과 Codex CLI, OpenRouter, OpenAI, Anthropic, Gemini 또는 vLLM 같은
+OpenAI-compatible endpoint 중 하나가 필요합니다.
 
 ```bash
 git clone https://github.com/LEE-Kyungjae/Palamedes.git
@@ -129,7 +130,7 @@ palamedes chat --provider codex
 /approve
 ```
 
-OpenRouter, OpenAI, 작업공간 선택과 plan-state CLI는
+vLLM·Ollama·LM Studio를 포함한 provider 설정, 작업공간 선택과 plan-state CLI는
 [시작하기](docs/getting-started.ko.md)를 참고하세요.
 
 ## 핵심 워크플로

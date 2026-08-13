@@ -76,7 +76,8 @@ credentials, side effects, and delivery authority.
 
 ## Quick Start
 
-Requirements: Python 3.9+ and Codex CLI, OpenRouter, or an OpenAI API key.
+Requirements: Python 3.9+ and one provider: Codex CLI, OpenRouter, OpenAI,
+Anthropic, Gemini, or an OpenAI-compatible endpoint such as vLLM.
 
 ```bash
 git clone https://github.com/LEE-Kyungjae/Palamedes.git
@@ -96,7 +97,8 @@ Inside the chat terminal:
 /approve
 ```
 
-For OpenRouter, OpenAI, workspace selection, and plan-state CLI examples, see
+For provider setup, including vLLM/Ollama/LM Studio, workspace selection, and
+plan-state CLI examples, see
 [Getting Started](docs/getting-started.md).
 
 ## Core Workflows

@@ -8,7 +8,8 @@
 
 - Python 3.9 이상
 - 로컬 저장소 또는 프로젝트 디렉터리
-- Codex CLI, OpenRouter, OpenAI API 중 하나
+- Codex CLI, OpenRouter, OpenAI, Anthropic, Gemini 또는 OpenAI-compatible
+  로컬·호스팅 endpoint 중 하나
 
 ## 설치
 
@@ -46,6 +47,46 @@ palamedes chat --provider openai
 ```
 
 기본 모델은 `PALAMEDES_OPENAI_MODEL`로 변경할 수 있습니다.
+
+## Anthropic 또는 Gemini로 시작
+
+```bash
+export ANTHROPIC_API_KEY="..."
+palamedes chat --provider anthropic --model claude-sonnet-4-5
+
+export GEMINI_API_KEY="..."
+palamedes chat --provider gemini --model gemini-2.5-pro
+```
+
+`claude`는 `anthropic`의 alias로 사용할 수 있습니다.
+
+## vLLM, Ollama, LM Studio 또는 compatible endpoint로 시작
+
+Palamedes는 streaming OpenAI Chat Completions endpoint에 연결할 수 있습니다. 로컬
+endpoint는 기본적으로 API key를 요구하지 않습니다.
+
+```bash
+palamedes chat \
+  --provider vllm \
+  --model Qwen/Qwen3-32B \
+  --provider-base-url http://127.0.0.1:8000/v1
+```
+
+인증이 필요한 compatible endpoint에는 secret 값 대신 secret을 보관한 환경변수의
+이름만 전달합니다.
+
+```bash
+export MY_LLM_KEY="..."
+palamedes chat \
+  --provider openai-compatible \
+  --model my-model \
+  --provider-base-url https://llm.example.com/v1 \
+  --provider-api-key-env MY_LLM_KEY
+```
+
+`vllm`, `ollama`, `lmstudio`는 `openai-compatible`의 alias입니다. 어떤 로컬 서비스가
+어떤 port를 사용하는지 Palamedes가 추측하지 않도록 endpoint는 명시적으로 받습니다.
+같은 provider option을 `palamedes watch`에서도 사용할 수 있습니다.
 
 ## 첫 세션
 

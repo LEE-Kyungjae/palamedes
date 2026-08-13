@@ -8,7 +8,8 @@
 
 - Python 3.9 or newer
 - A local repository or project directory
-- One provider: Codex CLI, OpenRouter, or the OpenAI API
+- One provider: Codex CLI, OpenRouter, OpenAI, Anthropic, Gemini, or an
+  OpenAI-compatible local/hosted endpoint
 
 ## Install
 
@@ -46,6 +47,46 @@ palamedes chat --provider openai
 ```
 
 Set `PALAMEDES_OPENAI_MODEL` to override the default model.
+
+## Start with Anthropic or Gemini
+
+```bash
+export ANTHROPIC_API_KEY="..."
+palamedes chat --provider anthropic --model claude-sonnet-4-5
+
+export GEMINI_API_KEY="..."
+palamedes chat --provider gemini --model gemini-2.5-pro
+```
+
+`claude` is accepted as an alias for `anthropic`.
+
+## Start with vLLM, Ollama, LM Studio, or another compatible endpoint
+
+Palamedes accepts any streaming OpenAI Chat Completions endpoint. Local
+endpoints do not require a key by default.
+
+```bash
+palamedes chat \
+  --provider vllm \
+  --model Qwen/Qwen3-32B \
+  --provider-base-url http://127.0.0.1:8000/v1
+```
+
+For a protected or hosted compatible endpoint, keep the secret in an
+environment variable and pass only its name:
+
+```bash
+export MY_LLM_KEY="..."
+palamedes chat \
+  --provider openai-compatible \
+  --model my-model \
+  --provider-base-url https://llm.example.com/v1 \
+  --provider-api-key-env MY_LLM_KEY
+```
+
+`vllm`, `ollama`, and `lmstudio` are aliases for `openai-compatible`; the
+endpoint remains explicit so Palamedes never guesses which local service owns
+a port. The same provider flags are available to `palamedes watch`.
 
 ## First session
 

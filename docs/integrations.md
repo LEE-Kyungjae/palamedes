@@ -52,6 +52,46 @@ A host should:
 4. Return observable outcomes without declaring attribution prematurely.
 5. Respect fingerprint conflicts and restore lineage.
 
+## Custom cognition providers
+
+Provider selection is registry-based. A host can add a provider without
+changing the cognition cycle by registering a `ProviderRegistration` before
+constructing the CLI parser or calling `provider_from_config`.
+
+```python
+from palamedes_chat import (
+    ProviderCapability,
+    ProviderRegistration,
+    register_chat_provider,
+)
+
+register_chat_provider(
+    ProviderRegistration(
+        capability=ProviderCapability(
+            name="company-llm",
+            transport="internal-gateway",
+            default_model="reasoner-v1",
+            supports_streaming=True,
+            supports_usage=True,
+            structured_json_mode="prompt_validated",
+            credential_kind="workload_identity",
+        ),
+        factory=lambda config: CompanyProvider(config),
+        health=lambda config: {
+            "provider": "company-llm",
+            "status": "ok",
+            "credential_hint": "workload identity",
+        },
+    )
+)
+```
+
+The provider object implements `stream(messages)` and exposes stable
+`provider_name`, `model`, and optional `last_usage`. Capability metadata is
+discoverable through `provider_capabilities()`. Registration does not grant
+tool, delivery, or decision authority; providers only supply bounded cognition
+outputs to the existing validators.
+
 ## Detailed guides
 
 - [AgentScope integration](integration-agentscope.md)
