@@ -1,0 +1,162 @@
+{
+  "blind_review_version": "palamedes-proof-review/1",
+  "review_fingerprint": "0543ef95367b1afe5def8518582c265b4825f784bf4fbc3a85bba1f44a327ff5",
+  "reviewed_at": "2026-08-15T16:12:10.178161+00:00",
+  "reviewer_id": "codex-case-zero-blind-3",
+  "reviews": [
+    {
+      "case_id": "case-zero-reacher-x",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.93,
+        "decision_difference": "Choose B to freeze expansion and first test whether a narrow founder segment repeatedly obtains evidence-backed X/LinkedIn shortlists that outperform manual search; advance to the existing outreach loop only if that test passes. Choosing A would validate the larger X-only prospecting-to-draft workflow immediately, reducing isolation of which stage creates or constrains value.",
+        "preferred": "B",
+        "rationale": "B better isolates the foundational discovery-and-qualification mechanism before outreach introduces additional confounders. Its bounded cohort, manual-search comparison, predefined thresholds, downstream-use measure, and repeat-use window make rejection more concrete and directly govern whether to continue, pivot, stop, or sequence outreach next. A is strongly project-specific and tests more of the claimed workflow, but combining shortlist quality with drafting and approval makes the smallest decision less identifiable and its success criteria less operationally bounded.",
+        "scores": {
+          "A": {
+            "causal_mechanism": 4,
+            "decision_usefulness": 4,
+            "falsifiability": 4,
+            "opportunity_discovery": 3,
+            "project_specificity": 5
+          },
+          "B": {
+            "causal_mechanism": 4,
+            "decision_usefulness": 5,
+            "falsifiability": 5,
+            "opportunity_discovery": 4,
+            "project_specificity": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-case-zero-blind-3",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-08-15T16:11:31.868183+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 9984,
+              "input_tokens": 19403,
+              "output_tokens": 323,
+              "reasoning_output_tokens": 65
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 19403,
+          "output_tokens": 323,
+          "reasoning_output_tokens": 65
+        }
+      }
+    },
+    {
+      "case_id": "case-zero-mcp-policy",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.94,
+        "decision_difference": "Choose A to test whether existing rules earn recurring required-check status before expanding into shared policy authority. Choose B only if the immediate decision is specifically whether centralized, cross-repository policy ownership is valuable enough to justify organizational infrastructure.",
+        "preferred": "A",
+        "rationale": "A isolates the adoption mechanism—required merge-time enforcement—in one qualified repository, measures genuine MCP-configuration decision opportunities, and defines explicit continue, pivot, and stop paths. Its bounded probe can distinguish useful enforcement from identity errors, coercive retention, rarity of relevant changes, and workflow friction. B tests the consequential shared-authority opportunity, but simultaneously varies central ownership, remote policy delivery, multi-repository coordination, and required-check placement, making rejection less diagnostic and increasing pilot-selection risk before rule value is established.",
+        "scores": {
+          "A": {
+            "causal_mechanism": 5,
+            "decision_usefulness": 5,
+            "falsifiability": 5,
+            "opportunity_discovery": 4,
+            "project_specificity": 5
+          },
+          "B": {
+            "causal_mechanism": 4,
+            "decision_usefulness": 4,
+            "falsifiability": 4,
+            "opportunity_discovery": 5,
+            "project_specificity": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-case-zero-blind-3",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-08-15T16:11:49.944381+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 16128,
+              "input_tokens": 19318,
+              "output_tokens": 327,
+              "reasoning_output_tokens": 83
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 19318,
+          "output_tokens": 327,
+          "reasoning_output_tokens": 83
+        }
+      }
+    },
+    {
+      "case_id": "case-zero-proxy",
+      "origin_visible": false,
+      "review": {
+        "confidence": 92,
+        "decision_difference": "B determines whether the existing gateway has distinct value as a forkable component behind adopter-owned controls before expanding the roadmap; A instead tests an initial gateway-native operational-control configuration and therefore presupposes more of the production direction it is meant to evaluate.",
+        "preferred": "B",
+        "rationale": "B more cleanly resolves the required boundary decision using a bounded, public-information probe: independent reproduction, deterministic failure tests, and comparison against existing alternatives can reject the component proposition without assuming private demand. A tests important safety mechanisms, but introducing gateway-native authentication partially advances the production-control boundary before choosing it, while its adopter-willingness signal is not fully testable from public repository evidence alone.",
+        "scores": {
+          "A": {
+            "causal_mechanism": 4,
+            "decision_usefulness": 4,
+            "falsifiability": 3,
+            "opportunity_discovery": 3,
+            "project_specificity": 5
+          },
+          "B": {
+            "causal_mechanism": 4,
+            "decision_usefulness": 5,
+            "falsifiability": 5,
+            "opportunity_discovery": 4,
+            "project_specificity": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-case-zero-blind-3",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-08-15T16:12:10.178109+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 16128,
+              "input_tokens": 19498,
+              "output_tokens": 419,
+              "reasoning_output_tokens": 196
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 19498,
+          "output_tokens": 419,
+          "reasoning_output_tokens": 196
+        }
+      }
+    }
+  ],
+  "run_id": "inventor-case-zero-001"
+}

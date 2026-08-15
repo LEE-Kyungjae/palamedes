@@ -1,0 +1,213 @@
+{
+  "case_id": "case-zero-reacher-x",
+  "condition": "palamedes",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-08-15T16:04:56.144890+00:00",
+  "information_fingerprint": "b76c5398b0dc53536fc608c0725b57eb346356e78cc0a37e97cf0c1ab6ab2492",
+  "mission": {
+    "beneficiary": "Founders seeking people who recently expressed a problem relevant to their product.",
+    "consequential_choice": "sequence: freeze roadmap expansion; test the narrow discovery-to-evidence shortlist loop first; continue to the existing approval-first outreach test only if shortlist quality, time savings, downstream use, and repeat behavior survive the predefined falsifiers; otherwise pivot the segment or stop investing in the loop",
+    "falsifiers": [
+      "Accepted-prospect precision, evidence quality, or time saved fails the predefined thresholds.",
+      "Participants accept plausible prospects but do not use the shortlist or repeat the same job after concierge support ends.",
+      "Manual search performs equally well or better on time and quality.",
+      "Results depend on one participant, one atypical task, or intensive researcher intervention.",
+      "Evidence emerges that another listed use case has materially stronger demand than the selected founder segment."
+    ],
+    "interpretation": "The smallest reversible test is the candidate that isolates discovery and qualification: whether one narrow segment can repeatedly obtain accepted, evidence-backed prospect shortlists. This produces foundational evidence before outreach outcomes introduce sender reputation, offer quality, platform risk, and provider reliability as confounders.",
+    "mission": "Prove that one narrowly defined user segment can repeatedly turn a plain-English need into an accepted, evidence-backed prospect shortlist using only existing X and LinkedIn capabilities.",
+    "next_probe": "Conduct 10–15 structured tasks with 5–8 founders, capturing prospect-level acceptance, evidence-quality ratings, completion time, corrections, downstream use of each shortlist, and whether each participant initiates the same task again within two weeks.",
+    "non_goals": [
+      "Proving positive replies, meetings, revenue, or the complete outreach loop.",
+      "Adding email, calendar, identity-resolution, document, platform, or sub-agent capabilities.",
+      "Optimizing media attachments or expanding agent autonomy.",
+      "Treating technical completion, prospect acceptance, or a small cohort as product-market fit.",
+      "Hardening every X and LinkedIn workflow before identifying failures that block this test."
+    ],
+    "rationale": "This candidate has the lowest operational and reputational risk, requires no new integration or agent surface, and yields prospect-level evidence about relevance, evidence quality, time saved, correction burden, and repeat behavior. Acceptance alone is not proof of realized commercial value, so success should justify testing the existing outreach step next rather than declaring the full loop proven.",
+    "situation": "ReacherX already claims an end-to-end discovery-to-outreach loop across X and LinkedIn, but the public repository provides no evidence of a prioritized user segment, repeat use, outcome benchmarks, or which step currently constrains value.",
+    "success_signal": "Across 10–15 structured tasks with 5–8 founders, predefined thresholds are met for accepted prospects per task, precision against human labels, evidence-quality ratings, time saved versus manual search, and initiation of the same job again within two weeks."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "e1c7f07349688787487ed208e57e6b003e31eaf408cb76b14f53974aedcf210f",
+  "provider": "codex",
+  "role_artifacts": {
+    "adversary": {
+      "candidate_critiques": [
+        {
+          "disconfirming_evidence": "Users accept prospects but do not act on them; acceptance poorly predicts replies or meetings; manual search is equally fast; repeat tasks disappear after concierge support; or a different listed use case shows materially stronger demand.",
+          "failure_mode": "Prospect acceptance is a weak proxy for realized value: founders may approve plausible names without contacting them, receiving responses, or changing a decision. A 5–8 founder cohort also risks segment-selection bias and novelty-driven repeat use.",
+          "hidden_harm": "Optimizing relevance labels could produce an impressive benchmark while steering the product toward research output rather than outcomes. Deferring outreach removes the step where trust, platform constraints, and commercial value may actually fail.",
+          "mission": "Prove that one narrowly defined user segment can repeatedly turn a plain-English need into an accepted, evidence-backed prospect shortlist using only existing X and LinkedIn capabilities."
+        },
+        {
+          "disconfirming_evidence": "High-quality accepted prospects and approved drafts still receive no better responses than manual outreach; users avoid sending despite approvals; provider failures cannot be cleanly excluded; results concentrate in one sender; or positive replies fail to produce repeat campaigns.",
+          "failure_mode": "Positive replies are sparse, delayed, and heavily affected by offer quality, sender reputation, timing, channel policy, and message volume. A 100–150-prospect test may lack power and cannot cleanly attribute failure to ReacherX.",
+          "hidden_harm": "This candidate would waste the most effort if wrong because it requires the broadest operational loop, instrumentation, sending activity, reply classification, account-risk management, and user coordination before isolating whether discovery, drafting, or the underlying offer caused the result. It may also expose users to spam, reputation, or platform-enforcement harm.",
+          "mission": "Prove that an evidence-backed prospect can be converted into an approved and positively answered social outreach action through the existing approval-first workflow."
+        },
+        {
+          "disconfirming_evidence": "Users with technically successful, low-latency sessions still reject prospects, heavily rewrite drafts, avoid sending, or fail to return; qualitative feedback identifies relevance or job fit rather than breakage as the dominant problem; or canonical-task gains do not improve real-user completion.",
+          "failure_mode": "Canonical replay tasks measure technical completion rather than user value and may be unstable because social results change over time. Repairing the top failure class assumes observed abandonment is caused by system faults rather than weak relevance, unclear positioning, or low demand.",
+          "hidden_harm": "The team could harden workflows nobody values, accumulate provider-specific maintenance, and mistake improved completion rates for product-market evidence. Reliability work may become open-ended because no public baseline identifies an acceptable service threshold.",
+          "mission": "Determine whether reliability—not missing functionality—is the binding constraint on repeatable value in the current X and LinkedIn loop."
+        },
+        {
+          "disconfirming_evidence": "Users draft comparably fast with templates or general-purpose AI; lower edit distance does not predict sends or responses; participants reuse drafting outside ReacherX but not the product workflow; or benefits vanish when concierge-selected prospects are removed.",
+          "failure_mode": "Using known-good prospects tests a detached writing assistant rather than ReacherX's stated discovery-to-action proposition. Time saved, edit distance, and approval can improve without better responses, while alternating conditions may create learning and carryover effects.",
+          "hidden_harm": "Success could pull the product into a crowded generic personalization category and underinvest in its claimed differentiator of finding people from real activity. Media validation and enrichment may add complexity without contributing to drafting value.",
+          "mission": "Prove that outreach drafting and approval assistance creates measurable value independently of ReacherX discovery quality."
+        }
+      ],
+      "shared_assumptions": [
+        "A single narrow segment can be selected credibly without private usage, interview, support, or demand evidence.",
+        "Founder-led sales or customer discovery is the right initial job despite the repository listing several use cases without prioritization.",
+        "Existing X and LinkedIn capabilities are sufficiently implemented, policy-compliant, and accessible to support controlled tests.",
+        "Small, concierge-assisted cohorts will generalize beyond novelty effects, founder affinity, and researcher intervention.",
+        "Acceptance, approval, time saved, replies, or repeat use can be assigned thresholds that meaningfully represent value before baselines are known.",
+        "Repeat behavior within roughly two weeks is observable and appropriate for the selected job's natural cadence.",
+        "Prospect quality, outreach quality, reliability, sender reputation, offer strength, and provider behavior can be isolated well enough to attribute outcomes.",
+        "Human labels of relevance, evidence quality, personalization, and reply sentiment will be consistent and unbiased.",
+        "Current telemetry can capture funnel transitions, failures, edits, sends, and repetition accurately, or can be added without materially changing the experiment.",
+        "Provider failures can be separated from product failures even though users experience both as one workflow.",
+        "Freezing integrations and agent-surface expansion is organizationally feasible and will not remove capabilities essential to the chosen segment.",
+        "Cost, latency, platform rate limits, account safety, consent, and reputational risk will not invalidate an apparently successful loop.",
+        "The existing manual-versus-agent comparison is the relevant counterfactual; simpler alternatives such as templates, native platform search, or general-purpose AI may be stronger controls.",
+        "Evidence from task completion or component benchmarks will predict durable product value rather than merely demonstrate technical competence."
+      ]
+    },
+    "interpreter": {
+      "interpretations": [
+        "One interpretation is that the smallest testable loop is need description to evidence-backed prospect shortlist; this isolates whether discovery and qualification are valuable before outreach execution is expanded.",
+        "A competing interpretation is that value cannot be established until the loop includes an approved social action and a measurable response, because a relevant shortlist alone may not create an actionable outcome.",
+        "Another interpretation is that the key uncertainty is outreach quality rather than discovery quality, given the existing emphasis on plan, copy, media, and approval workflows.",
+        "A competing interpretation is that reliability is the binding constraint: existing X and LinkedIn capabilities may already cover the intended loop, but failures and rough edges could prevent repeat use regardless of model quality.",
+        "The breadth of listed use cases may indicate a general-purpose platform strategy, or it may indicate unresolved positioning that makes evaluation criteria and repeatability difficult to define.",
+        "Cross-platform identity resolution could strengthen current-channel research without adding a new action channel, but it could also be premature infrastructure if users do not yet repeat the basic discovery-to-action loop.",
+        "Email and calendar integrations could make outcomes easier to observe, but they also introduce channel, deliverability, authorization, and scheduling variables that confound whether the existing core loop creates value.",
+        "Benchmarks could provide evidence about component quality, while only longitudinal user behavior or controlled task studies could establish that the complete loop is repeatable and valuable."
+      ],
+      "missing_evidence": [
+        "A defined initial user segment, job-to-be-done, and triggering situation against which repeatable value can be judged.",
+        "Baseline funnel data for need submission, search completion, qualified prospects, approved actions, sent actions, replies, and repeat sessions.",
+        "Operational success and failure rates for current X and LinkedIn discovery, enrichment, approval, and outreach workflows.",
+        "Representative task examples with human-labeled relevance, qualification, evidence quality, and outreach-quality judgments.",
+        "A clear primary outcome metric and threshold for declaring the loop valuable, such as accepted prospects per task, approved outreach rate, positive replies, time saved, or repeated use.",
+        "Evidence distinguishing whether user drop-off is caused by poor discovery, weak enrichment, low-quality drafts, approval friction, provider failures, or lack of demand.",
+        "Cohort or retention evidence showing that users return to perform the same job rather than merely trying the product once.",
+        "Comparative evidence for manual workflow versus agent-assisted workflow, including time, quality, trust, and correction burden.",
+        "Evidence about which of the listed use cases currently attracts users or produces the strongest outcomes.",
+        "The actual implementation and coverage of end-to-end telemetry, evaluations, retries, and provider-specific failure handling.",
+        "User interviews, usability studies, support requests, issue patterns, or public feedback that reveal the highest-friction step.",
+        "Cost and latency per completed loop, including provider expenses and human review time.",
+        "Platform-policy, account-safety, deliverability, and rate-limit evidence for sustained outreach workflows.",
+        "Evidence that media attachments materially improve outcomes rather than adding composer complexity.",
+        "A documented experiment design specifying cohort, task, intervention, comparison, duration, sample size, and decision rule."
+      ],
+      "observations": [
+        "ReacherX publicly describes a six-step loop: plain-language need definition, search strategy generation, prospect discovery, evidence-backed enrichment, proposed outreach, and user approval.",
+        "X/Twitter and LinkedIn discovery, enrichment, and approval-first outreach are described as available today.",
+        "The product emphasizes prospects found through real activity rather than static lists and supports both manual UI actions and agent-directed actions.",
+        "Image, GIF, and video attachments are already supported for social outreach, including platform-aware validation.",
+        "The roadmap explicitly prioritizes reliability, error handling, diagnostics, tests, and measurable benchmarks for discovery, qualification, enrichment, outreach, and plan quality.",
+        "The roadmap also proposes email, calendars, identity resolution, document ingestion, additional social platforms, and sub-agent swarms, all of which enlarge the integration or agent surface.",
+        "The repository documents multiple possible use cases—prospecting, recruiting, partnerships, investor outreach, user research, and creator growth—without identifying a single initial segment or job.",
+        "The package manifest contains infrastructure for analytics, AI providers, social-platform access, workflows, retries, authentication, billing, email delivery, and testing, but dependency presence does not demonstrate a working or valuable user loop.",
+        "Existing test scripts appear concentrated around plan batching, target selection, copy, usage, analytics, and Convex behavior; the packet does not show end-to-end outcome benchmarks.",
+        "The project is a 4.0.0 beta and asks contributors to coordinate before undertaking feature, integration, architecture, UX, or agent-behavior changes."
+      ]
+    },
+    "inventor": {
+      "candidate_missions": [
+        {
+          "beneficiary": "Founders seeking people who recently expressed a problem relevant to their product.",
+          "falsifier": "After a predefined task cohort, the product fails to meet thresholds for accepted prospects per task, precision against human labels, time saved versus manual search, or same-job repeat use.",
+          "mechanism": "Choose one job-to-be-done, such as founder-led customer discovery; run repeated tasks through need definition, discovery, qualification, and enrichment; require users to accept or reject each prospect and label the supporting evidence; defer outreach, email, calendars, new platforms, identity resolution, documents, and sub-agents.",
+          "mission": "Prove that one narrowly defined user segment can repeatedly turn a plain-English need into an accepted, evidence-backed prospect shortlist using only existing X and LinkedIn capabilities.",
+          "next_probe": "Conduct 10–15 structured tasks with 5–8 founders, capturing prospect-level acceptance, evidence-quality ratings, completion time, corrections, and whether each participant initiates the same task again within two weeks."
+        },
+        {
+          "beneficiary": "Founder-led sales users contacting people whose recent public activity demonstrates an active need.",
+          "falsifier": "The loop fails predefined thresholds for qualified-prospect acceptance, draft approval without substantial rewriting, successful sends, positive replies, or repeated campaign creation, even when provider failures are excluded.",
+          "mechanism": "Restrict the product to one segment, one trigger, and one current social channel; measure the complete sequence from need description through qualified prospect, draft approval, send success, and reply classification; freeze new integrations and agent-surface expansion during the test.",
+          "mission": "Prove that an evidence-backed prospect can be converted into an approved and positively answered social outreach action through the existing approval-first workflow.",
+          "next_probe": "Run a small concierge-assisted cohort of 100–150 reviewed prospects, instrument every funnel transition, classify replies manually, and compare agent drafts with users’ manually edited versions."
+        },
+        {
+          "beneficiary": "Existing beta users attempting recurring prospect discovery and approval-first outreach with current integrations.",
+          "falsifier": "Once completion reliability and latency meet predefined service thresholds, users still do not accept prospects, approve actions, or repeat the same job; this would show that reliability alone is not the core value constraint.",
+          "mechanism": "Create an end-to-end reliability harness for a fixed set of representative discovery-to-approved-action tasks; instrument provider errors, retries, latency, empty states, and step-level abandonment; repair only failures that prevent completion, without adding channels or capabilities.",
+          "mission": "Determine whether reliability—not missing functionality—is the binding constraint on repeatable value in the current X and LinkedIn loop.",
+          "next_probe": "Define 20 canonical tasks, replay them across X and LinkedIn over two weeks, establish baseline completion and failure rates, fix the top failure class, and test whether successful-loop and repeat-task rates materially improve."
+        },
+        {
+          "beneficiary": "Recruiters or founder-led sellers who already have target prospects but spend substantial time researching and composing personalized social messages.",
+          "falsifier": "Agent assistance does not reduce median preparation time or improve approval rate and judged personalization without increasing correction burden, or users decline to reuse it for subsequent prospects.",
+          "mechanism": "Let a narrowly defined cohort provide or select known-good prospects, then use existing enrichment, evidence, drafting, media validation, and approval workflows; compare agent-assisted outreach with users drafting manually while holding prospect quality constant.",
+          "mission": "Prove that outreach drafting and approval assistance creates measurable value independently of ReacherX discovery quality.",
+          "next_probe": "Run a within-user comparison on 10–20 prospects per participant, alternating manual and agent-assisted drafting, and measure preparation time, edit distance, approval, confidence, send rate, and subsequent reuse."
+        }
+      ]
+    }
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-08-15T16:03:10.846148+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 24994,
+          "output_tokens": 943,
+          "reasoning_output_tokens": 25
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-08-15T16:03:40.096709+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 25958,
+          "output_tokens": 741,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-08-15T16:04:23.623053+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 26753,
+          "output_tokens": 1091,
+          "reasoning_output_tokens": 34
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-08-15T16:04:56.142597+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 27943,
+          "output_tokens": 712,
+          "reasoning_output_tokens": 94
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 52224,
+      "input_tokens": 105648,
+      "output_tokens": 3487,
+      "reasoning_output_tokens": 153
+    }
+  }
+}

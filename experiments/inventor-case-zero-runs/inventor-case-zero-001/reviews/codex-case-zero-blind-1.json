@@ -1,0 +1,162 @@
+{
+  "blind_review_version": "palamedes-proof-review/1",
+  "review_fingerprint": "04668592675071d3fdad2aff6bfa98460af35a744dba07072d32a1a35639a392",
+  "reviewed_at": "2026-08-15T16:10:17.516159+00:00",
+  "reviewer_id": "codex-case-zero-blind-1",
+  "reviews": [
+    {
+      "case_id": "case-zero-reacher-x",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.93,
+        "decision_difference": "Choose B to validate evidence-backed shortlist value for one founder segment first, then test approval-first outreach only if the shortlist gate passes; A instead validates the broader X-only prospecting-to-draft loop in one stage.",
+        "preferred": "B",
+        "rationale": "B better isolates the foundational discovery-and-qualification mechanism before outreach introduces major confounders. Its bounded cohort, manual-search comparison, predefined thresholds, downstream-use measure, and repeat window create a clearer stop, pivot, or continue gate. A tests a valuable end-to-end loop, but combining shortlist quality and draft readiness makes failures harder to attribute and provides a less precise sequencing decision.",
+        "scores": {
+          "A": {
+            "causal_mechanism": 4,
+            "decision_usefulness": 4,
+            "falsifiability": 4,
+            "opportunity_discovery": 3,
+            "project_specificity": 5
+          },
+          "B": {
+            "causal_mechanism": 4,
+            "decision_usefulness": 5,
+            "falsifiability": 5,
+            "opportunity_discovery": 4,
+            "project_specificity": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-case-zero-blind-1",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-08-15T16:09:44.537991+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 9984,
+              "input_tokens": 19405,
+              "output_tokens": 376,
+              "reasoning_output_tokens": 159
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 19405,
+          "output_tokens": 376,
+          "reasoning_output_tokens": 159
+        }
+      }
+    },
+    {
+      "case_id": "case-zero-mcp-policy",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.94,
+        "decision_difference": "A determines whether merge-boundary enforcement creates recurring value before testing centralized policy authority; B prematurely bundles that workflow question with shared ownership and cross-repository authority. Evidence from A therefore gives a cleaner continue, pivot-to-identity, or stop decision and can justify sequencing B later.",
+        "preferred": "A",
+        "rationale": "A isolates the adoption mechanism—required merge-time enforcement versus optional local use—using existing mcp-policy capabilities in one qualified repository. Its bounded probe, normalized observations, explicit retention test, and branching decisions make rejection and interpretation unusually clear. B is relevant and testable, but simultaneously varies workflow placement, remote shared authority, durable ownership, and multi-repository coordination, so a failed pilot would reveal less about which assumption failed.",
+        "scores": {
+          "A": {
+            "causal_mechanism": 5,
+            "decision_usefulness": 5,
+            "falsifiability": 5,
+            "opportunity_discovery": 4,
+            "project_specificity": 5
+          },
+          "B": {
+            "causal_mechanism": 4,
+            "decision_usefulness": 4,
+            "falsifiability": 4,
+            "opportunity_discovery": 4,
+            "project_specificity": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-case-zero-blind-1",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-08-15T16:10:00.445434+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 9984,
+              "input_tokens": 19318,
+              "output_tokens": 371,
+              "reasoning_output_tokens": 133
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 19318,
+          "output_tokens": 371,
+          "reasoning_output_tokens": 133
+        }
+      }
+    },
+    {
+      "case_id": "case-zero-proxy",
+      "origin_visible": false,
+      "review": {
+        "confidence": 94,
+        "decision_difference": "Choose B to test whether the existing gateway is a distinct, useful routing component behind adopter-owned controls; choose A only after evidence suggests gateway-native operational controls are necessary and an operator is prepared to own them.",
+        "preferred": "B",
+        "rationale": "B more directly addresses the required boundary decision without first adding gateway-native production controls. Its bounded, independently reproducible probe isolates the gateway's contribution, tests realistic failure semantics, and compares it with established alternatives. A has stronger low-level safety mechanisms, but implementing mandatory authentication and deadlines partially advances the production-control-layer boundary before establishing that adopters need it.",
+        "scores": {
+          "A": {
+            "causal_mechanism": 5,
+            "decision_usefulness": 4,
+            "falsifiability": 5,
+            "opportunity_discovery": 4,
+            "project_specificity": 5
+          },
+          "B": {
+            "causal_mechanism": 4,
+            "decision_usefulness": 5,
+            "falsifiability": 5,
+            "opportunity_discovery": 5,
+            "project_specificity": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-case-zero-blind-1",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-08-15T16:10:17.516123+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 9984,
+              "input_tokens": 19502,
+              "output_tokens": 379,
+              "reasoning_output_tokens": 172
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 19502,
+          "output_tokens": 379,
+          "reasoning_output_tokens": 172
+        }
+      }
+    }
+  ],
+  "run_id": "inventor-case-zero-001"
+}

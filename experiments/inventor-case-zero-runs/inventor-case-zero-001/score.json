@@ -1,0 +1,185 @@
+{
+  "attributable_outcomes": 0,
+  "case_results": [
+    {
+      "case_id": "case-zero-reacher-x",
+      "decision": null,
+      "labor": null,
+      "outcome": null,
+      "review_count": 3,
+      "unanimous": true,
+      "vote_counts": {
+        "palamedes": 3,
+        "tie": 0,
+        "tournament": 0
+      },
+      "votes": [
+        {
+          "decision_difference": "Choose B to validate evidence-backed shortlist value for one founder segment first, then test approval-first outreach only if the shortlist gate passes; A instead validates the broader X-only prospecting-to-draft loop in one stage.",
+          "preferred_label": "B",
+          "preferred_system": "palamedes",
+          "rationale": "B better isolates the foundational discovery-and-qualification mechanism before outreach introduces major confounders. Its bounded cohort, manual-search comparison, predefined thresholds, downstream-use measure, and repeat window create a clearer stop, pivot, or continue gate. A tests a valuable end-to-end loop, but combining shortlist quality and draft readiness makes failures harder to attribute and provides a less precise sequencing decision.",
+          "reviewer_id": "codex-case-zero-blind-1",
+          "weighted_scores": {
+            "A": 4.0,
+            "B": 4.6
+          }
+        },
+        {
+          "decision_difference": "Choose B to freeze expansion and first validate that a narrow founder segment repeatedly obtains useful, evidence-backed shortlists with measurable advantage over manual search; test approval-first outreach only after that foundation passes. Choosing A would instead validate shortlist and drafting together, producing stronger end-to-end evidence but a less diagnostic initial sequencing decision.",
+          "preferred_label": "B",
+          "preferred_system": "palamedes",
+          "rationale": "B more cleanly isolates the discovery-and-qualification mechanism before outreach introduces offer quality, sender reputation, and platform reliability as confounders. Its bounded cohort, manual-search comparison, predefined thresholds, downstream-use measurement, and repeat-task window make rejection more credible and directly govern whether to continue, pivot, stop, or sequence outreach next. A tests a valuable end-to-end loop, but its broader scope makes failure attribution less precise and its benchmark proposal is less explicit about comparative value and bounded thresholds.",
+          "reviewer_id": "codex-case-zero-blind-2",
+          "weighted_scores": {
+            "A": 4.0,
+            "B": 4.6
+          }
+        },
+        {
+          "decision_difference": "Choose B to freeze expansion and first test whether a narrow founder segment repeatedly obtains evidence-backed X/LinkedIn shortlists that outperform manual search; advance to the existing outreach loop only if that test passes. Choosing A would validate the larger X-only prospecting-to-draft workflow immediately, reducing isolation of which stage creates or constrains value.",
+          "preferred_label": "B",
+          "preferred_system": "palamedes",
+          "rationale": "B better isolates the foundational discovery-and-qualification mechanism before outreach introduces additional confounders. Its bounded cohort, manual-search comparison, predefined thresholds, downstream-use measure, and repeat-use window make rejection more concrete and directly govern whether to continue, pivot, stop, or sequence outreach next. A is strongly project-specific and tests more of the claimed workflow, but combining shortlist quality with drafting and approval makes the smallest decision less identifiable and its success criteria less operationally bounded.",
+          "reviewer_id": "codex-case-zero-blind-3",
+          "weighted_scores": {
+            "A": 4.0,
+            "B": 4.6
+          }
+        }
+      ],
+      "winner": "palamedes"
+    },
+    {
+      "case_id": "case-zero-mcp-policy",
+      "decision": null,
+      "labor": null,
+      "outcome": null,
+      "review_count": 3,
+      "unanimous": true,
+      "vote_counts": {
+        "palamedes": 3,
+        "tie": 0,
+        "tournament": 0
+      },
+      "votes": [
+        {
+          "decision_difference": "A determines whether merge-boundary enforcement creates recurring value before testing centralized policy authority; B prematurely bundles that workflow question with shared ownership and cross-repository authority. Evidence from A therefore gives a cleaner continue, pivot-to-identity, or stop decision and can justify sequencing B later.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "A isolates the adoption mechanism—required merge-time enforcement versus optional local use—using existing mcp-policy capabilities in one qualified repository. Its bounded probe, normalized observations, explicit retention test, and branching decisions make rejection and interpretation unusually clear. B is relevant and testable, but simultaneously varies workflow placement, remote shared authority, durable ownership, and multi-repository coordination, so a failed pilot would reveal less about which assumption failed.",
+          "reviewer_id": "codex-case-zero-blind-1",
+          "weighted_scores": {
+            "A": 4.8,
+            "B": 4.2
+          }
+        },
+        {
+          "decision_difference": "Choose A to first establish whether existing rules create retained value at the merge boundary; pursue B's multi-repository shared authority only after that signal survives.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "A isolates workflow placement as the next causal adoption mechanism and uses a bounded single-repository probe with explicit thresholds for continuing, pivoting, or stopping. B tests a consequential shared-authority opportunity, but simultaneously varies repository count, central ownership, remote policy delivery, and required enforcement, making negative results harder to diagnose.",
+          "reviewer_id": "codex-case-zero-blind-2",
+          "weighted_scores": {
+            "A": 4.8,
+            "B": 4.4
+          }
+        },
+        {
+          "decision_difference": "Choose A to test whether existing rules earn recurring required-check status before expanding into shared policy authority. Choose B only if the immediate decision is specifically whether centralized, cross-repository policy ownership is valuable enough to justify organizational infrastructure.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "A isolates the adoption mechanism—required merge-time enforcement—in one qualified repository, measures genuine MCP-configuration decision opportunities, and defines explicit continue, pivot, and stop paths. Its bounded probe can distinguish useful enforcement from identity errors, coercive retention, rarity of relevant changes, and workflow friction. B tests the consequential shared-authority opportunity, but simultaneously varies central ownership, remote policy delivery, multi-repository coordination, and required-check placement, making rejection less diagnostic and increasing pilot-selection risk before rule value is established.",
+          "reviewer_id": "codex-case-zero-blind-3",
+          "weighted_scores": {
+            "A": 4.8,
+            "B": 4.4
+          }
+        }
+      ],
+      "winner": "palamedes"
+    },
+    {
+      "case_id": "case-zero-proxy",
+      "decision": null,
+      "labor": null,
+      "outcome": null,
+      "review_count": 3,
+      "unanimous": true,
+      "vote_counts": {
+        "palamedes": 3,
+        "tie": 0,
+        "tournament": 0
+      },
+      "votes": [
+        {
+          "decision_difference": "Choose B to test whether the existing gateway is a distinct, useful routing component behind adopter-owned controls; choose A only after evidence suggests gateway-native operational controls are necessary and an operator is prepared to own them.",
+          "preferred_label": "B",
+          "preferred_system": "palamedes",
+          "rationale": "B more directly addresses the required boundary decision without first adding gateway-native production controls. Its bounded, independently reproducible probe isolates the gateway's contribution, tests realistic failure semantics, and compares it with established alternatives. A has stronger low-level safety mechanisms, but implementing mandatory authentication and deadlines partially advances the production-control-layer boundary before establishing that adopters need it.",
+          "reviewer_id": "codex-case-zero-blind-1",
+          "weighted_scores": {
+            "A": 4.6,
+            "B": 4.8
+          }
+        },
+        {
+          "decision_difference": "Choose B to test whether the existing forkable routing component is independently useful behind adopter-owned infrastructure before implementing native production controls. Choose A only if the immediate decision is already narrowed to whether a minimally authenticated production-like gateway can operate safely.",
+          "preferred_label": "B",
+          "preferred_system": "palamedes",
+          "rationale": "B more cleanly tests the required boundary using reproducibility, failure semantics, independent evaluation, and comparison with established alternatives. It can reveal whether the gateway has distinct value as a routing component or whether adopters actually require native operational controls. A strongly tests safety invariants, but it begins by adding authentication and deadlines, partially committing to the production-control-layer boundary before establishing that this boundary is needed; its adopter-interest criterion is also less bounded by public repository evidence.",
+          "reviewer_id": "codex-case-zero-blind-2",
+          "weighted_scores": {
+            "A": 4.4,
+            "B": 4.6
+          }
+        },
+        {
+          "decision_difference": "B determines whether the existing gateway has distinct value as a forkable component behind adopter-owned controls before expanding the roadmap; A instead tests an initial gateway-native operational-control configuration and therefore presupposes more of the production direction it is meant to evaluate.",
+          "preferred_label": "B",
+          "preferred_system": "palamedes",
+          "rationale": "B more cleanly resolves the required boundary decision using a bounded, public-information probe: independent reproduction, deterministic failure tests, and comparison against existing alternatives can reject the component proposition without assuming private demand. A tests important safety mechanisms, but introducing gateway-native authentication partially advances the production-control boundary before choosing it, while its adopter-willingness signal is not fully testable from public repository evidence alone.",
+          "reviewer_id": "codex-case-zero-blind-3",
+          "weighted_scores": {
+            "A": 3.8,
+            "B": 4.6
+          }
+        }
+      ],
+      "winner": "palamedes"
+    }
+  ],
+  "claim_boundary": "Calibration only. Questions are researcher-authored from public artifacts, owner relevance is unverified, no human review or real outcome is claimed, and this run cannot satisfy the external Inventor gate.",
+  "claim_demonstrated": true,
+  "condition_usage": {
+    "input_token_ratio_treatment_to_comparison": 1.032,
+    "palamedes": {
+      "call_count": 12,
+      "input_tokens": 279412,
+      "output_tokens": 9761,
+      "reasoning_output_tokens": 377
+    },
+    "tournament": {
+      "call_count": 12,
+      "input_tokens": 270727,
+      "output_tokens": 7522,
+      "reasoning_output_tokens": 265
+    }
+  },
+  "labor_retirement_cases": 0,
+  "mission_quality_gate_passed": true,
+  "outcome_gate_applicable": false,
+  "outcome_gate_passed": null,
+  "preference_summary": {
+    "comparison_condition": "tournament",
+    "comparison_votes": 0,
+    "tie_votes": 0,
+    "total_votes": 9,
+    "treatment_condition": "palamedes",
+    "treatment_votes": 9,
+    "unanimous_cases": 3
+  },
+  "proof_score_version": "palamedes-proof-score/1",
+  "run_id": "inventor-case-zero-001",
+  "scored_at": "2026-08-15T16:12:16.435544+00:00"
+}

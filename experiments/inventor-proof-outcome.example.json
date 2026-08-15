@@ -1,0 +1,13 @@
+{
+  "case_id": "replace-case-id",
+  "started_at": "2026-01-01T00:00:00Z",
+  "ended_at": "2026-01-07T00:00:00Z",
+  "measurement_source": "must-exactly-match-preregistration",
+  "measurement_provenance": "measured",
+  "raw_evidence": "Immutable URL, content hash, timestamped export, or signed owner record",
+  "owner_attestation": "I confirm that this outcome occurred after the frozen decision.",
+  "selected_system": "palamedes",
+  "metric_value": 0,
+  "threshold_passed": false,
+  "attributable_decision": false
+}

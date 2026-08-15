@@ -1,0 +1,18 @@
+{
+  "admitted_cases": {},
+  "contacts": {
+    "mcp-policy": {
+      "status": "withdrawn_before_response"
+    },
+    "ml-patron": {
+      "status": "withdrawn_before_response"
+    },
+    "reacher-x": {
+      "status": "withdrawn_before_response"
+    }
+  },
+  "inventor_operator_state_version": "palamedes-inventor-operator/1",
+  "run_id": "",
+  "stage": "outreach_withdrawn",
+  "updated_at": "2026-08-15T15:48:06.824252+00:00"
+}

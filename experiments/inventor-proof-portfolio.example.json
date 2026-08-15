@@ -1,0 +1,88 @@
+{
+  "proof_portfolio_version": "palamedes-proof-portfolio/1",
+  "inventor_proof_version": "palamedes-inventor-proof/1",
+  "portfolio_id": "external-inventor-proof-replace-before-use",
+  "claim": "With equal calls and frozen project evidence, Palamedes originates more useful opportunities than a strong tournament and changes measured external outcomes.",
+  "claim_boundary": "Three independent external projects with blinded human review and measured probes; not universal creativity or startup-success proof.",
+  "generation_protocol": {
+    "same_model_required": true,
+    "same_information_packet_required": true,
+    "compute_is_not_equal": true,
+    "compute_tradeoff_must_be_reported": true,
+    "maximum_artifact_bytes": 24000
+  },
+  "inventor_protocol": {
+    "external_projects_required": true,
+    "independent_human_review_required": true,
+    "equal_call_comparator_required": true,
+    "comparison_condition": "tournament",
+    "treatment_condition": "palamedes",
+    "calls_per_condition": 4,
+    "probe_preregistered_before_reveal": true,
+    "measured_outcomes_required": true,
+    "failed_cases_retained": true
+  },
+  "rubric": {
+    "opportunity_discovery": {"weight": 20, "question": "Does this reveal an opportunity not already stated by the owner?"},
+    "causal_mechanism": {"weight": 20, "question": "Does it change a causal mechanism rather than rename a familiar feature?"},
+    "project_specificity": {"weight": 20, "question": "Would the proposal fail to transfer unchanged to an unrelated project?"},
+    "falsifiability": {"weight": 20, "question": "Can a bounded real-world probe reject it?"},
+    "decision_usefulness": {"weight": 20, "question": "Would it change a real continue, stop, pivot, position, or sequence decision?"}
+  },
+  "success_gate": {
+    "minimum_cases": 3,
+    "minimum_blinded_reviews_per_case": 3,
+    "palamedes_preferred_cases": 2,
+    "minimum_attributable_outcomes": 0,
+    "minimum_labor_retirement_cases": 0
+  },
+  "inventor_success_gate": {
+    "minimum_external_cases": 3,
+    "minimum_independent_human_reviews_per_case": 3,
+    "minimum_palamedes_preferred_cases": 2,
+    "minimum_measured_probe_outcomes": 3,
+    "minimum_positive_attributable_outcomes": 2
+  },
+  "cases": [
+    {
+      "case_id": "replace-project-one",
+      "owner_id": "replace-owner-one",
+      "owner_relationship": "independent_external",
+      "palamedes_tuning_exposure": false,
+      "repository": "/absolute/path/to/external/project-one",
+      "question": "Replace with the owner's unresolved consequential product question.",
+      "required_decision": "Replace with the decision that must change.",
+      "artifacts": ["README.md"],
+      "probe_preregistration": {
+        "decision_to_be_changed": "Replace before generation.",
+        "intervention_window": "1-7 days",
+        "primary_metric": "Replace with one observable metric.",
+        "success_threshold": "Replace with a numeric or categorical threshold.",
+        "failure_threshold": "Replace with a stopping threshold.",
+        "measurement_source": "replace-with-fixed-source"
+      }
+    },
+    {
+      "case_id": "replace-project-two",
+      "owner_id": "replace-owner-two",
+      "owner_relationship": "independent_external",
+      "palamedes_tuning_exposure": false,
+      "repository": "/absolute/path/to/external/project-two",
+      "question": "Replace before use.",
+      "required_decision": "Replace before use.",
+      "artifacts": ["README.md"],
+      "probe_preregistration": {"decision_to_be_changed": "Replace.", "intervention_window": "1-7 days", "primary_metric": "Replace.", "success_threshold": "Replace.", "failure_threshold": "Replace.", "measurement_source": "replace-source-two"}
+    },
+    {
+      "case_id": "replace-project-three",
+      "owner_id": "replace-owner-three",
+      "owner_relationship": "independent_external",
+      "palamedes_tuning_exposure": false,
+      "repository": "/absolute/path/to/external/project-three",
+      "question": "Replace before use.",
+      "required_decision": "Replace before use.",
+      "artifacts": ["README.md"],
+      "probe_preregistration": {"decision_to_be_changed": "Replace.", "intervention_window": "1-7 days", "primary_metric": "Replace.", "success_threshold": "Replace.", "failure_threshold": "Replace.", "measurement_source": "replace-source-three"}
+    }
+  ]
+}

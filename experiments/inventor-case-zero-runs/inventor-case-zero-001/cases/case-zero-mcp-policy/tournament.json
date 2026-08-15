@@ -1,0 +1,164 @@
+{
+  "case_id": "case-zero-mcp-policy",
+  "condition": "tournament",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-08-15T16:00:31.909312+00:00",
+  "information_fingerprint": "b79e8a2be8d27686de61b558508525ccb51032ed70702e09a84e83bb51e3d44a",
+  "mission": {
+    "beneficiary": "Security or platform maintainers responsible for controlling MCP server usage across repositories, with application teams receiving policy feedback in pull requests.",
+    "consequential_choice": "sequence: test shared policy authority through required multi-repository pull-request enforcement before adding features or centralized infrastructure",
+    "falsifiers": [
+      "No team is willing to require the check at merge time.",
+      "No security or platform maintainer accepts durable ownership of the shared policy.",
+      "Normal pull-request activity produces no actionable findings.",
+      "Developers routinely bypass or disable failures because enforcement creates more friction than value.",
+      "Teams prefer repository-local policies and find no value in shared authority."
+    ],
+    "interpretation": "The most important uncertainty is whether centrally owned policy enforced at the merge boundary creates recurring team value. This tests policy authority, ownership, workflow placement, and willingness to block changes without speculative feature development.",
+    "mission": "Pilot mcp-policy as a required pull-request check across two or three repositories using one remotely hosted policy.yml owned by a designated security or platform maintainer.",
+    "next_probe": "Recruit one security or platform owner and two or three repositories for a time-boxed pilot; configure the existing GitHub Action as a required pull-request check against one organization-hosted policy URL, then record setup friction, policy edits, findings, remediations, bypasses, and retention.",
+    "non_goals": [
+      "Building an MCP gateway, dashboard, or enterprise SaaS control plane.",
+      "Implementing SHA pinning or expanding the policy schema before demand is demonstrated.",
+      "Adding configuration formats, integrations, or security rules solely to broaden the feature set.",
+      "Detecting vulnerabilities inside MCP server implementations."
+    ],
+    "rationale": "The pilot is reversible and appears achievable with documented capabilities. It directly tests whether an owner will maintain shared policy, developers encounter actionable violations, and teams accept repeated merge-time enforcement.",
+    "situation": "mcp-policy already supports local CLI checks, a GitHub Action, remote policy retrieval, and a programmatic API, but the packet provides no evidence that teams need shared, recurring enforcement rather than individual validation.",
+    "success_signal": "A designated owner actively maintains the shared policy, participating repositories retain the required check through the pilot, and actionable failures are remediated rather than routinely bypassed."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "c51eebe79fd37e320c506c08563e463f59e49a52deb7c1edfe81a07f75a5ad1c",
+  "provider": "codex",
+  "role_artifacts": {
+    "candidates": [
+      {
+        "beneficiary": "Engineering or security maintainers responsible for preventing unauthorized MCP servers across a team’s repositories.",
+        "consequential_choice": "sequence: validate recurring team-owned pull-request enforcement before expanding the policy surface or building centralized infrastructure",
+        "falsifiers": [
+          "Teams rarely change MCP configurations, so the check produces too few recurring decisions to justify maintenance.",
+          "Teams disable or bypass the required check because policy failures create more friction than perceived risk reduction.",
+          "No durable owner emerges for the shared policy or exception decisions.",
+          "Usage remains limited to individual developers running one-off local checks."
+        ],
+        "interpretation": "The key uncertainty is workflow placement and policy authority: whether a centrally maintained policy enforced on every configuration change solves a recurring team problem. Adding more policy fields would improve validation depth without answering that adoption question.",
+        "mission": "Test repository-required enforcement of one centrally owned policy through the existing GitHub Action on every pull request that changes MCP configuration.",
+        "next_probe": "Recruit three teams with shared MCP configuration, install the existing GitHub Action as a required pull-request check backed by a centrally owned policy file, and observe configuration changes, violations, exception requests, bypasses, and retention for 30 days.",
+        "non_goals": [
+          "Adding new policy schema fields such as SHA pinning before recurring enforcement demand is established.",
+          "Building an MCP gateway, dashboard, or enterprise SaaS control plane.",
+          "Expanding support for more configuration formats solely to increase feature breadth.",
+          "Attempting to detect vulnerabilities inside MCP server implementations."
+        ],
+        "rationale": "This is the smallest reversible test that converts the product from an optional local script into a recurring team control. It uses existing capabilities, exposes real violations and ownership friction, and reveals whether maintainers value consistent enforcement enough to keep it required.",
+        "situation": "mcp-policy already validates developer MCP configurations through a local CLI, GitHub Action, and programmatic API, but the repository provides no evidence that teams need shared, recurring enforcement rather than occasional local checks.",
+        "success_signal": "Multiple teams keep the check required across repeated MCP configuration changes, assign an owner for policy updates, and use failures to block or correct unauthorized server additions."
+      },
+      {
+        "beneficiary": "Platform or security teams responsible for controlling MCP server usage across multiple developer repositories.",
+        "consequential_choice": "sequence: test centralized policy authority through required multi-repository CI enforcement before adding product features",
+        "falsifiers": [
+          "Teams refuse to make the check required or routinely bypass it.",
+          "No owner is willing to maintain the shared policy after initial setup.",
+          "Across multiple repositories and several weeks, the check produces no actionable findings and teams report that local review is sufficient.",
+          "Remote policy availability, integrity, or change-control concerns make URL-based enforcement less safe than repository-local policy."
+        ],
+        "interpretation": "The key uncertainty is policy authority and workflow placement, not validation capability. A centrally owned policy enforced on every pull request would test whether organizations value consistent governance across repositories without requiring a gateway, SaaS product, or major new feature set.",
+        "mission": "Pilot centralized policy distribution through the existing GitHub Action by having multiple repositories fetch one organization-controlled policy URL and enforce it as a required pull-request check.",
+        "next_probe": "Recruit one platform or security owner to configure a version-controlled, organization-hosted policy URL and require the existing GitHub Action in three repositories; record setup friction, violations, overrides, policy changes, and whether enforcement remains enabled after the pilot.",
+        "non_goals": [
+          "Building an MCP gateway or enterprise SaaS control plane.",
+          "Adding vulnerability scanning inside MCP server code.",
+          "Implementing SHA256 pinning before demand for shared enforcement is demonstrated.",
+          "Expanding policy syntax or supporting more configuration formats solely to increase feature count."
+        ],
+        "rationale": "This is technically feasible with the documented --policy-url and GitHub Action surfaces, improves safety by making policy changes centrally reviewable and enforcement difficult to bypass accidentally, and has low operating cost because it reuses existing hosting and CI. It directly tests recurring team value: whether security or platform owners maintain policy and whether repository teams accept enforcement repeatedly.",
+        "situation": "mcp-policy already provides local CLI, GitHub Action, and programmatic enforcement of allowlists, blocklists, and version constraints, but the repository provides no evidence that teams need shared, recurring policy enforcement rather than one-off local validation.",
+        "success_signal": "Within a bounded pilot, at least one policy owner maintains a shared policy used by three or more repositories, the check runs on normal pull requests for several weeks, and teams keep it enabled after it catches or prevents at least one unauthorized or unpinned server configuration."
+      },
+      {
+        "beneficiary": "Security or platform teams responsible for controlling developer tooling across repositories, with application teams receiving immediate policy feedback in pull requests.",
+        "consequential_choice": "sequence: test shared policy authority at the required pull-request boundary before building additional enforcement features or infrastructure",
+        "falsifiers": [
+          "No team is willing to make the check required at merge time.",
+          "No security or platform owner accepts responsibility for the shared policy.",
+          "Checks produce no meaningful violations across normal pull-request activity.",
+          "Developers routinely bypass, disable, or ignore failures because enforcement is too noisy or poorly timed.",
+          "Teams prefer repository-local policies and report no value from shared authority."
+        ],
+        "interpretation": "The highest-value uncertainty is whether a centrally owned policy enforced at the repository merge boundary creates team value. Testing this workflow yields more information than adding policy features because it exposes authority, ownership, enforcement frequency, and willingness to block changes.",
+        "mission": "Pilot mcp-policy as a required GitHub pull-request check for a small set of repositories, using one remotely hosted policy.yml owned by a designated security or platform maintainer.",
+        "next_probe": "Recruit one security or platform owner and two or three repositories for a time-boxed pilot; configure the existing action as a required pull-request check against one remotely hosted policy, then record policy edits, violations, remediations, bypass attempts, and whether teams retain enforcement.",
+        "non_goals": [
+          "Building an MCP gateway or enterprise SaaS control plane.",
+          "Implementing SHA pinning or expanding the policy schema before demand is observed.",
+          "Adding more config formats, transports, integrations, or security rules.",
+          "Optimizing broad distribution, branding, or monetization before recurring team use is demonstrated."
+        ],
+        "rationale": "This is reversible because repositories can remove the required check and remote policy reference without migrating infrastructure. It has high information gain because it tests policy authority and workflow placement together: whether someone will maintain a shared policy, whether developers encounter meaningful violations, and whether teams accept enforcement at merge time. Its opportunity cost is low because the existing GitHub Action and --policy-url capability appear sufficient for a manual pilot, avoiding speculative feature accumulation.",
+        "situation": "mcp-policy already supports local CLI checks, CI enforcement through a GitHub Action, remote policy retrieval, and a programmatic API, but the packet provides no evidence that teams need shared, recurring enforcement rather than an individual validation script.",
+        "success_signal": "Within the pilot, at least one designated owner actively updates the shared policy and multiple pull requests trigger actionable checks that teams remediate rather than routinely bypass, while participating repositories retain the required check through the evaluation period."
+      }
+    ]
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-08-15T15:59:08.679515+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 19837,
+          "output_tokens": 469,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-08-15T15:59:35.349523+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 19845,
+          "output_tokens": 532,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-08-15T16:00:14.099261+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 19845,
+          "output_tokens": 566,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-08-15T16:00:31.909275+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 21318,
+          "output_tokens": 489,
+          "reasoning_output_tokens": 0
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 39936,
+      "input_tokens": 80845,
+      "output_tokens": 2056,
+      "reasoning_output_tokens": 0
+    }
+  }
+}

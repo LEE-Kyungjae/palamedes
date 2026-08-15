@@ -1,0 +1,115 @@
+{
+  "claim_status": "unproven",
+  "frozen_cases": [
+    {
+      "case_id": "case-zero-reacher-x",
+      "information_fingerprint": "b76c5398b0dc53536fc608c0725b57eb346356e78cc0a37e97cf0c1ab6ab2492",
+      "repository_revision": "d593c62e235e44d9628a5bf54ee68b5157a75219"
+    },
+    {
+      "case_id": "case-zero-mcp-policy",
+      "information_fingerprint": "b79e8a2be8d27686de61b558508525ccb51032ed70702e09a84e83bb51e3d44a",
+      "repository_revision": "18e4efec40d61dfc4bc739a52f0fc802824ad42c"
+    },
+    {
+      "case_id": "case-zero-proxy",
+      "information_fingerprint": "b1242e72ceb40ad3f24acdba9f6420341417521ae7756fce92764ab39fa43c31",
+      "repository_revision": "e7693632cc986ed08aaedc7e26baf56ab4a187e8"
+    }
+  ],
+  "manifest_fingerprint": "a3751c321efeddcd07089e583058edd7dc1735f69b1a79005bffd37c9727c4f9",
+  "portfolio": {
+    "case_zero": true,
+    "cases": [
+      {
+        "artifacts": [
+          "README.md",
+          "ROADMAP.md",
+          "CONTRIBUTING.md",
+          "package.json"
+        ],
+        "case_id": "case-zero-reacher-x",
+        "question": "Based only on the public repository, what smallest evidence-producing product direction should ReacherX prioritize to test a repeatable user-value loop before expanding its integrations and agent surface?",
+        "repository": "/tmp/palamedes-inventor-case-zero/reacher-x",
+        "required_decision": "Choose one bounded positioning or sequencing decision that can be tested without assuming private usage data, and reject roadmap expansion that does not test the selected loop."
+      },
+      {
+        "artifacts": [
+          "README.md",
+          "package.json"
+        ],
+        "case_id": "case-zero-mcp-policy",
+        "question": "Based only on the public repository, what product boundary or adoption mechanism should mcp-policy test next to learn whether teams need it beyond a local validation script?",
+        "repository": "/tmp/palamedes-inventor-case-zero/mcp-policy",
+        "required_decision": "Choose one reversible evidence-producing direction concerning policy authority, workflow placement, or adoption, while rejecting feature accumulation that cannot establish recurring team value."
+      },
+      {
+        "artifacts": [
+          "README.md",
+          "docs/ROADMAP.md",
+          "docs/ARCHITECTURE.md",
+          "docs/FORK_AND_DEPLOY.md",
+          "package.json"
+        ],
+        "case_id": "case-zero-proxy",
+        "question": "Based only on the public repository, which product boundary should the OpenAI-compatible API gateway test before continuing its production feature roadmap?",
+        "repository": "/tmp/palamedes-inventor-case-zero/proxy",
+        "required_decision": "Choose a bounded probe that distinguishes a forkable developer gateway from a production operational control layer, without assuming private users or demand."
+      }
+    ],
+    "claim": "On three unfamiliar public repositories, the Palamedes four-call sequence produces a more decision-useful opportunity mission than a same-model four-call tournament.",
+    "claim_boundary": "Calibration only. Questions are researcher-authored from public artifacts, owner relevance is unverified, no human review or real outcome is claimed, and this run cannot satisfy the external Inventor gate.",
+    "generation_protocol": {
+      "comparison_condition": "tournament",
+      "compute_is_not_equal": true,
+      "compute_tradeoff_must_be_reported": true,
+      "fresh_session_per_call": true,
+      "maximum_artifact_bytes": 24000,
+      "model": "configured-default",
+      "palamedes_calls": 4,
+      "provider": "codex",
+      "same_information_packet_required": true,
+      "same_model_required": true,
+      "tournament_calls": 4,
+      "treatment_condition": "palamedes"
+    },
+    "owner_relevance_verified": false,
+    "portfolio_id": "public-oss-inventor-case-zero-001",
+    "preregistered_at": "2026-08-15T16:00:00Z",
+    "proof_portfolio_version": "palamedes-proof-portfolio/1",
+    "rubric": {
+      "causal_mechanism": {
+        "question": "Does it identify a causal product mechanism rather than rename a familiar feature?",
+        "weight": 20
+      },
+      "decision_usefulness": {
+        "question": "Would it change a continue, stop, position, or sequence decision before roadmap expansion?",
+        "weight": 20
+      },
+      "falsifiability": {
+        "question": "Can the mission be rejected through a bounded public-information probe?",
+        "weight": 20
+      },
+      "opportunity_discovery": {
+        "question": "Does the mission expose a consequential opportunity not already stated as a roadmap item?",
+        "weight": 20
+      },
+      "project_specificity": {
+        "question": "Is it grounded enough that the same mission would not transfer unchanged to an unrelated repository?",
+        "weight": 20
+      }
+    },
+    "success_gate": {
+      "minimum_attributable_outcomes": 0,
+      "minimum_blinded_reviews_per_case": 3,
+      "minimum_cases": 3,
+      "minimum_labor_retirement_cases": 0,
+      "palamedes_preferred_cases": 2
+    }
+  },
+  "portfolio_fingerprint": "b58e55a45ab550a4a50e35f97095ed151d62b9085ca6439438678a53e48ec5f7",
+  "prepared_at": "2026-08-15T15:56:56.390710+00:00",
+  "proof_run_version": "palamedes-proof-run/1",
+  "run_id": "inventor-case-zero-001",
+  "status": "prepared"
+}

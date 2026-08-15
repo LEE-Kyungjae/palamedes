@@ -1,0 +1,162 @@
+{
+  "blind_review_version": "palamedes-proof-review/1",
+  "review_fingerprint": "f78a71785e566529a2dfe86467a34d06d6b6ffe13171345ce3afb0273695539e",
+  "reviewed_at": "2026-08-15T16:11:08.981411+00:00",
+  "reviewer_id": "codex-case-zero-blind-2",
+  "reviews": [
+    {
+      "case_id": "case-zero-reacher-x",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.91,
+        "decision_difference": "Choose B to freeze expansion and first validate that a narrow founder segment repeatedly obtains useful, evidence-backed shortlists with measurable advantage over manual search; test approval-first outreach only after that foundation passes. Choosing A would instead validate shortlist and drafting together, producing stronger end-to-end evidence but a less diagnostic initial sequencing decision.",
+        "preferred": "B",
+        "rationale": "B more cleanly isolates the discovery-and-qualification mechanism before outreach introduces offer quality, sender reputation, and platform reliability as confounders. Its bounded cohort, manual-search comparison, predefined thresholds, downstream-use measurement, and repeat-task window make rejection more credible and directly govern whether to continue, pivot, stop, or sequence outreach next. A tests a valuable end-to-end loop, but its broader scope makes failure attribution less precise and its benchmark proposal is less explicit about comparative value and bounded thresholds.",
+        "scores": {
+          "A": {
+            "causal_mechanism": 4,
+            "decision_usefulness": 4,
+            "falsifiability": 4,
+            "opportunity_discovery": 3,
+            "project_specificity": 5
+          },
+          "B": {
+            "causal_mechanism": 4,
+            "decision_usefulness": 5,
+            "falsifiability": 5,
+            "opportunity_discovery": 4,
+            "project_specificity": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-case-zero-blind-2",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-08-15T16:10:40.159624+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 9984,
+              "input_tokens": 19405,
+              "output_tokens": 367,
+              "reasoning_output_tokens": 108
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 19405,
+          "output_tokens": 367,
+          "reasoning_output_tokens": 108
+        }
+      }
+    },
+    {
+      "case_id": "case-zero-mcp-policy",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.93,
+        "decision_difference": "Choose A to first establish whether existing rules create retained value at the merge boundary; pursue B's multi-repository shared authority only after that signal survives.",
+        "preferred": "A",
+        "rationale": "A isolates workflow placement as the next causal adoption mechanism and uses a bounded single-repository probe with explicit thresholds for continuing, pivoting, or stopping. B tests a consequential shared-authority opportunity, but simultaneously varies repository count, central ownership, remote policy delivery, and required enforcement, making negative results harder to diagnose.",
+        "scores": {
+          "A": {
+            "causal_mechanism": 5,
+            "decision_usefulness": 5,
+            "falsifiability": 5,
+            "opportunity_discovery": 4,
+            "project_specificity": 5
+          },
+          "B": {
+            "causal_mechanism": 4,
+            "decision_usefulness": 4,
+            "falsifiability": 4,
+            "opportunity_discovery": 5,
+            "project_specificity": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-case-zero-blind-2",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-08-15T16:10:53.133258+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 9984,
+              "input_tokens": 19320,
+              "output_tokens": 295,
+              "reasoning_output_tokens": 104
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 19320,
+          "output_tokens": 295,
+          "reasoning_output_tokens": 104
+        }
+      }
+    },
+    {
+      "case_id": "case-zero-proxy",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.91,
+        "decision_difference": "Choose B to test whether the existing forkable routing component is independently useful behind adopter-owned infrastructure before implementing native production controls. Choose A only if the immediate decision is already narrowed to whether a minimally authenticated production-like gateway can operate safely.",
+        "preferred": "B",
+        "rationale": "B more cleanly tests the required boundary using reproducibility, failure semantics, independent evaluation, and comparison with established alternatives. It can reveal whether the gateway has distinct value as a routing component or whether adopters actually require native operational controls. A strongly tests safety invariants, but it begins by adding authentication and deadlines, partially committing to the production-control-layer boundary before establishing that this boundary is needed; its adopter-interest criterion is also less bounded by public repository evidence.",
+        "scores": {
+          "A": {
+            "causal_mechanism": 5,
+            "decision_usefulness": 5,
+            "falsifiability": 4,
+            "opportunity_discovery": 3,
+            "project_specificity": 5
+          },
+          "B": {
+            "causal_mechanism": 4,
+            "decision_usefulness": 5,
+            "falsifiability": 5,
+            "opportunity_discovery": 4,
+            "project_specificity": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-case-zero-blind-2",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-08-15T16:11:08.981386+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 9984,
+              "input_tokens": 19409,
+              "output_tokens": 401,
+              "reasoning_output_tokens": 165
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 19409,
+          "output_tokens": 401,
+          "reasoning_output_tokens": 165
+        }
+      }
+    }
+  ],
+  "run_id": "inventor-case-zero-001"
+}

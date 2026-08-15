@@ -1,0 +1,203 @@
+{
+  "case_id": "case-zero-mcp-policy",
+  "condition": "palamedes",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-08-15T16:06:53.996381+00:00",
+  "information_fingerprint": "b79e8a2be8d27686de61b558508525ccb51032ed70702e09a84e83bb51e3d44a",
+  "mission": {
+    "beneficiary": "Repository maintainers and security or platform teams that need to prevent unauthorized MCP configuration changes before merge.",
+    "consequential_choice": "sequence: run the single-repository required-check probe first; continue to a 3–5-team pilot only if actionable violations and voluntary retention survive, pivot to identity accuracy if false positives dominate, and stop team-infrastructure expansion if relevant configuration changes or retained value are insufficient",
+    "falsifiers": [
+      "The team declines required-check status or removes it when the pilot ends.",
+      "Relevant MCP configuration changes are too rare to evaluate recurring value.",
+      "Failures are mostly caused by unresolved or inaccurate identities for URLs, Docker images, local executables, or package matching.",
+      "Maintainers routinely bypass the check, add blanket exceptions, or experience disproportionate merge delays.",
+      "The check is retained only because the experiment requires it rather than because maintainers judge it useful."
+    ],
+    "interpretation": "The most reversible and behaviorally informative surviving direction is the required pull-request-check candidate, narrowed first to one active repository with frequent MCP configuration changes. This tests workflow placement using existing functionality before adding central authority, precedence, exception, or SHA-pinning features.",
+    "mission": "Test whether mcp-policy becomes recurring team infrastructure when enforced as a required pull-request check rather than offered as an optional local script.",
+    "next_probe": "Recruit one team whose repository has recent, recurring MCP configuration changes; baseline the number of relevant changes, then make the existing GitHub Action required for a bounded pilot and record relevant check opportunities, actionable failures, false positives, remediation time, overrides, contributor coverage, disablement, and post-pilot voluntary retention.",
+    "non_goals": [
+      "Adding SHA256 pinning, dashboards, new rule types, or broader configuration-format support.",
+      "Building centralized policy publication, authentication, audit, caching, or rollback infrastructure.",
+      "Implementing layered policy precedence or exception workflows.",
+      "Comparing multiple enforcement placements before the underlying rules demonstrate actionable value."
+    ],
+    "rationale": "A required-check pilot observes real contributor behavior, remediation, bypass, false positives, and retention at the point where unauthorized configuration can be prevented. Starting with one qualified repository limits coordination cost and blocking harm. Measurements must be normalized by pull requests that actually modify MCP configuration, because total automated executions would otherwise confuse coercion with value.",
+    "situation": "mcp-policy offers local validation, a GitHub Action, and remote policy loading, but the packet contains no evidence of repeated team use, actionable pull-request violations, durable policy ownership, or retained enforcement.",
+    "success_signal": "In one repository with recurring MCP configuration changes, the check encounters multiple genuine decision opportunities, produces actionable failures with acceptable remediation time and low false-positive or override rates, affects more than one contributor, and is voluntarily retained as required after the pilot."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "8281d9b725a837d2e9082d9872e64d53604cf0fe6d5f9b7d9cbfd1d0eab467f4",
+  "provider": "codex",
+  "role_artifacts": {
+    "adversary": {
+      "candidate_critiques": [
+        {
+          "disconfirming_evidence": "Few pull requests modify MCP configuration; failures are mostly non-actionable; maintainers bypass or remove the check; contributors experience delays without measurable risk reduction; or teams retain it only because the experiment requires them to.",
+          "failure_mode": "The pilot may confuse workflow coercion with product demand: required checks guarantee executions even when MCP configuration changes are rare, so run counts and retention intent may not show recurring value. Recruiting teams willing to mandate an immature 0.1.2 check may also select unusually security-conscious adopters.",
+          "hidden_harm": "False positives or unresolved identities for URLs, Docker images, and local executables could block unrelated merges, encourage blanket exceptions, and damage trust. A four-week multi-team rollout would waste the most effort if wrong because it imposes coordination, branch-protection changes, monitoring, and remediation on several teams before proving that actionable MCP changes occur often enough.",
+          "mission": "Test required pull-request enforcement in 3–5 teams for four weeks."
+        },
+        {
+          "disconfirming_evidence": "No durable owner emerges; repositories resist common rules; natural policy changes are infrequent; adoption or remediation stalls after updates; teams copy the policy locally; or availability and trust concerns dominate the consistency benefit.",
+          "failure_mode": "The experiment may test URL distribution rather than policy authority. Manual publishing can hide requirements for authentication, integrity, caching, availability, rollback, precedence, and auditability, while one controlled update may manufacture activity that does not occur naturally.",
+          "hidden_harm": "A remote policy can create an organization-wide failure domain: an outage, accidental rule, or compromised endpoint could disrupt every consuming repository. It may also centralize authority before teams agree on ownership or exception rights.",
+          "mission": "Test centrally published, organization-owned policy across several repositories using the existing policy-URL capability."
+        },
+        {
+          "disconfirming_evidence": "Violation opportunities differ across phases; telemetry is incomplete; contributors alter behavior after the first phase; no placement yields actionable failures; or observed differences disappear when normalized by relevant MCP configuration changes rather than total executions.",
+          "failure_mode": "Placement is confounded with enforcement severity, sequencing, repository activity, and learning effects. Rotating treatments on only two repositories over short periods cannot reliably attribute behavior differences, and local execution may be difficult to observe consistently.",
+          "hidden_harm": "The experiment spreads operational complexity across several workflows before establishing that the underlying rule set detects meaningful events. Repeatedly changing enforcement can confuse contributors and make later abandonment reflect experiment fatigue rather than lack of need.",
+          "mission": "Compare developer-local hooks, advisory CI, and blocking merge or release gates to find the best enforcement point."
+        },
+        {
+          "disconfirming_evidence": "Participants agree that purely local or purely central policy is sufficient; realistic cases rarely require exceptions; no one owns exception review; expiry is ignored; or live use produces no repeated cross-repository policy conflicts.",
+          "failure_mode": "This prematurely assumes that authority conflict and exceptions are the core unmet need. A tabletop exercise measures stated preferences rather than recurring behavior, while implementing precedence semantics through the API adds product surface before central policy demand is established.",
+          "hidden_harm": "Exception machinery can legitimize bypasses, create policy ambiguity, and introduce governance debt around approval, expiry, and precedence. It may turn a simple validator into a policy-management system whose complexity exceeds the demonstrated problem.",
+          "mission": "Test layered central rules with repository-owned additions or time-bounded exceptions."
+        }
+      ],
+      "shared_assumptions": [
+        "Teams modify MCP configurations frequently enough for recurring enforcement to generate meaningful evidence.",
+        "Unauthorized MCP servers are a material team-level risk rather than an occasional individual configuration concern.",
+        "Package names, wildcards, URLs, Docker images, and executable inference provide identities accurate enough to support blocking decisions.",
+        "The existing CLI and GitHub Action are reliable enough that adoption friction will measure product need rather than implementation immaturity.",
+        "Execution counts and configured enforcement indicate value even though required automation can run without encountering relevant changes.",
+        "Teams will tolerate Node.js 20, YAML policy maintenance, and GitHub-centric integration.",
+        "A repository or organization can identify a legitimate policy owner with authority to define allowed and blocked servers.",
+        "Observed remediation represents prevented risk rather than compliance theater or inconvenience-driven edits.",
+        "Short pilots with a few repositories can distinguish sustained recurring value from novelty, researcher prompting, or unusually favorable recruitment.",
+        "The relevant boundary is enforcement or policy authority, not discovery, inventory, identity verification, runtime behavior, or another governance need absent from the repository.",
+        "False positives, bypasses, and disablement can be measured consistently and interpreted without strong organizational confounding.",
+        "Teams can expose sufficiently active repositories and sensitive workflow telemetry for the proposed experiments.",
+        "Feature accumulation should wait, but the current rule set is already sufficient to test the hypothesized team value."
+      ]
+    },
+    "interpreter": {
+      "interpretations": [
+        "Teams may value mcp-policy primarily as a CI pull-request gate because that is where a shared rule can prevent unauthorized configuration changes before merge.",
+        "Alternatively, the unmet need may be centralized policy authority: the existing policy-URL option hints at organization-wide control, but simple remote retrieval may be insufficient without ownership, provenance, review, or availability guarantees.",
+        "The strongest adoption question may concern workflow placement rather than additional policy features: whether teams consistently enforce MCP rules in local hooks, CI required checks, or a centralized platform remains unknown.",
+        "The CLI and library may already satisfy individual developers, while recurring team value would require evidence that multiple repositories or contributors rely on a common policy and respond to violations.",
+        "The GitHub Action could be an adoption wedge, but its presence in documentation does not establish that teams will configure it as a mandatory check or maintain policy over time.",
+        "Demand for more enforcement features, such as SHA pinning, cannot by itself demonstrate recurring team value unless teams first show repeated use of the existing policy boundary."
+      ],
+      "missing_evidence": [
+        "Whether any teams have installed the package or GitHub Action across multiple repositories.",
+        "Whether checks run repeatedly over time rather than during one-time evaluation.",
+        "Who teams expect to own policy: repository maintainers, security teams, platform teams, or individual developers.",
+        "Whether users need centrally published policy, repository-local policy, or a layered combination with explicit precedence.",
+        "Whether policy violations occur often enough in real pull requests to justify a required check.",
+        "Whether teams act on failures, bypass them, or disable enforcement because of false positives or workflow friction.",
+        "Which workflow placement produces the clearest behavior signal: local validation, pre-commit hooks, pull-request CI, deployment gates, or centralized config scanning.",
+        "Whether remote policy retrieval needs authentication, integrity verification, caching, versioning, audit history, or failure-mode controls.",
+        "Whether organizations use configuration formats or hosting platforms beyond the two documented config files and GitHub Actions.",
+        "Whether warnings for unresolved local commands are acceptable or undermine enforcement confidence.",
+        "Whether package-name and wildcard matching accurately represents the identities teams need to govern, especially for URLs, Docker images, and local executables.",
+        "What adoption threshold or retention measure would distinguish recurring team value from curiosity or one-off compliance checks."
+      ],
+      "observations": [
+        "The repository presents mcp-policy as a CLI, GitHub Action, and programmatic API for checking MCP configuration files against a YAML policy.",
+        "The documented workflow supports local policy files and policies fetched from a URL, but it does not define who owns, approves, publishes, or updates organizational policy.",
+        "The GitHub Action is the only documented team-workflow integration; no evidence is provided about actual CI usage, required checks, pull-request feedback, or deployment enforcement.",
+        "The policy schema covers allowlists, blocklists, version constraints, and version-pin requirements, while SHA256 pinning is explicitly marked as future functionality.",
+        "The package is at version 0.1.2 and requires Node.js 20 or newer.",
+        "The supplied artifacts contain product claims and interfaces but no adoption metrics, user interviews, issue history, test results, customer examples, or evidence of repeated team use.",
+        "The README positions the product as avoiding an MCP gateway or enterprise SaaS dependency and suggests pairing it with a separate MCP security linter."
+      ]
+    },
+    "inventor": {
+      "candidate_missions": [
+        {
+          "beneficiary": "Repository maintainers and security/platform teams that need to prevent unauthorized MCP configuration changes before merge.",
+          "falsifier": "Teams decline required-check status, disable or routinely bypass it, or encounter too few actionable violations to justify continued enforcement after the pilot.",
+          "mechanism": "Run a reversible pilot with 3–5 teams: install the existing GitHub Action in one active repository per team, configure it as a required check, and record executions, violations, remediation, bypasses, disablement, and maintainer effort for four weeks without adding policy features.",
+          "mission": "Test whether mcp-policy becomes recurring team infrastructure when enforced as a required pull-request check rather than offered as an optional local script.",
+          "next_probe": "Recruit one team with frequent MCP configuration changes and make the action required on a single repository; measure weekly runs, distinct contributors affected, actionable failures, median remediation time, overrides, and whether the team retains the check."
+        },
+        {
+          "beneficiary": "Security or platform teams responsible for consistent MCP governance across multiple development teams and repositories.",
+          "falsifier": "Teams prefer repository-local autonomy, cannot identify a durable policy owner, rarely propagate policy changes, or abandon the shared policy because outages, trust, or precedence disputes outweigh consistency benefits.",
+          "mechanism": "Pilot the existing policy-URL capability as a centrally published, versioned policy owned by a named security or platform maintainer and consumed by several repositories; use manual publication and a simple changelog to avoid building a policy service prematurely.",
+          "mission": "Test whether the missing product boundary is organization-owned policy authority shared across repositories.",
+          "next_probe": "Ask one organization to nominate a policy owner, publish one shared policy, connect three repositories, and make one controlled policy update; observe adoption latency, disputes, exceptions, failures, and continued use after the update."
+        },
+        {
+          "beneficiary": "Engineering leaders deciding where MCP governance can reduce risk without creating unacceptable developer friction.",
+          "falsifier": "No placement produces repeated checks and acted-upon violations, or blocking placements cause enough bypass and disablement that teams revert permanently to ad hoc local validation.",
+          "mechanism": "Run a matched workflow-placement experiment using the same policy and repositories, rotating enforcement among advisory local checks, non-required CI feedback, and a blocking merge or release gate while measuring executions, caught violations, remediation, bypass, and abandonment.",
+          "mission": "Determine which enforcement point creates repeated team behavior: developer-local hooks, pull-request CI, or a deployment/release gate.",
+          "next_probe": "Select two active repositories and instrument the same rules first as advisory CI and then as a required merge check for two weeks each; compare contributor coverage, fixes, false-positive reports, overrides, and retention intent."
+        },
+        {
+          "beneficiary": "Platform/security policy owners and repository maintainers who need shared guardrails while preserving legitimate project-specific MCP choices.",
+          "falsifier": "Participants can operate with either purely central or purely local policy, cannot agree on exception ownership, or exception handling becomes the dominant activity without producing sustained enforcement.",
+          "mechanism": "Prototype only the minimum precedence contract—central blocked rules plus repository-local additions or time-bounded exceptions—and validate it through policy documents and the programmatic API in a multi-repository pilot, without building dashboards or broader rule types.",
+          "mission": "Test whether teams need a layered policy boundary that combines organization-wide rules with repository-owned exceptions.",
+          "next_probe": "Conduct a tabletop policy exercise with one platform owner and maintainers from three repositories using five realistic server decisions; require them to assign authority, precedence, and exception expiry, then test the agreed model on one live repository."
+        }
+      ]
+    }
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-08-15T16:05:28.578470+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 19756,
+          "output_tokens": 681,
+          "reasoning_output_tokens": 24
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-08-15T16:05:51.856369+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 20443,
+          "output_tokens": 712,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-08-15T16:06:28.949744+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 21215,
+          "output_tokens": 981,
+          "reasoning_output_tokens": 31
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-08-15T16:06:53.996069+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 22291,
+          "output_tokens": 717,
+          "reasoning_output_tokens": 116
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 58368,
+      "input_tokens": 83705,
+      "output_tokens": 3091,
+      "reasoning_output_tokens": 171
+    }
+  }
+}

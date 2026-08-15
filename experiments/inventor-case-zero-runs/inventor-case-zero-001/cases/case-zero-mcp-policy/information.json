@@ -1,0 +1,34 @@
+{
+  "artifact_byte_budget": 24000,
+  "artifact_bytes_included": 4179,
+  "artifacts": [
+    {
+      "declared_path": "README.md",
+      "excerpt": "# mcp-policy\n\nEnforce MCP server allowlists and blocklists against developer configs. Catches unauthorized MCP servers before they reach production.\n\nNo MCP gateway or enterprise SaaS required — just a `policy.yml` and your existing `.mcp.json` or `claude_desktop_config.json`.\n\n## Install\n\n```bash\nnpm install -g mcp-policy\n```\n\n## Usage\n\n### CLI\n\n```bash\n# Check .mcp.json against policy.yml in current directory\nmcp-policy check\n\n# Specify files explicitly\nmcp-policy check .mcp.json claude_desktop_config.json --policy policy.yml\n\n# Fetch policy from URL\nmcp-policy check --policy-url https://example.com/mcp-policy.yml\n\n# JSON output\nmcp-policy check --format json\n```\n\n### GitHub Action\n\n```yaml\n- uses: mattschaller/mcp-policy@v0\n  with:\n    policy-path: policy.yml\n    config-paths: .mcp.json\n```\n\n### Programmatic API\n\n```typescript\nimport { checkPolicy, loadPolicy, parseConfig, extractAllServers, checkServersAgainstPolicy } from 'mcp-policy';\n\n// High-level\nconst { results, pass } = await checkPolicy({\n  policyPath: 'policy.yml',\n  configPaths: ['.mcp.json'],\n});\n\n// Low-level\nconst policy = loadPolicy({ path: 'policy.yml' });\nconst config = parseConfig(fs.readFileSync('.mcp.json', 'utf-8'));\nconst servers = extractAllServers(config);\nconst result = checkServersAgainstPolicy(servers, policy);\n```\n\n## Policy Schema\n\n```yaml\nversion: 1\n\n# Servers that are allowed. Empty list = no restriction.\nallowed:\n  - name: \"@modelcontextprotocol/*\"\n    maxVersion: \"2.0.0\"\n  - name: mcp-server-sqlite\n\n# Servers that are always blocked (takes priority over allowed).\nblocked:\n  - pattern: \"evil-*\"\n\n# Require all servers to pin a version (e.g., @1.2.3)\nrequireVersionPin: false\n\n# Require all servers to pin a SHA256 hash (future)\nrequireSHAPin: false\n```\n\n### Server Name Resolution\n\nmcp-policy extracts the server name from each config entry:\n\n| Command | Extracted Name |\n|---------|---------------|\n| `npx @scope/server@1.0` | `@scope/server` (version: `1.0`) |\n| `npx -y mcp-server` | `mcp-server` |\n| `pnpm dlx mcp-server` | `mcp-server` |\n| `bunx mcp-server` | `mcp-server` |\n| `node ./local.js` | `null` (warning) |\n| `docker run img` | `img` |\n| `/usr/bin/mcp-sqlite` | `mcp-sqlite` |\n| `url: https://...` | URL (SSE transport) |\n\n### Pattern Matching\n\nBoth `allowed[].name` and `blocked[].pattern` support `*` wildcards:\n\n- `@modelcontextprotocol/*` — matches any package in the scope\n- `mcp-*` — matches any package starting with `mcp-`\n- `*-server` — matches any package ending with `-server`\n\n## Exit Codes\n\n| Code | Meaning |\n|------|---------|\n| 0 | All servers pass policy |\n| 1 | One or more violations |\n| 2 | Runtime error (bad config, missing policy) |\n\n## See also\n\nPair with [eslint-plugin-mcp-security](https://github.com/mattschaller/eslint-plugin-mcp-security) to catch vulnerabilities *inside* MCP server code — 13 ESLint rules mapped to the OWASP MCP Top 10 and real CVEs.\n\n## License\n\nMIT\n",
+      "excerpt_truncated": false,
+      "repository_relative_path": "README.md",
+      "sha256": "9954009dad07cbec21e5a4efda9aaa7d295838719130a955ed91452b74ba20f4",
+      "size_bytes": 2935,
+      "source_path": "/tmp/palamedes-inventor-case-zero/mcp-policy/README.md"
+    },
+    {
+      "declared_path": "package.json",
+      "excerpt": "{\n  \"name\": \"mcp-policy\",\n  \"version\": \"0.1.2\",\n  \"description\": \"Enforce MCP server allowlists and blocklists against developer configs. CLI + GitHub Action.\",\n  \"keywords\": [\n    \"mcp\",\n    \"model-context-protocol\",\n    \"security\",\n    \"policy\",\n    \"allowlist\",\n    \"blocklist\",\n    \"cli\",\n    \"github-action\"\n  ],\n  \"license\": \"MIT\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/mattschaller/mcp-policy\"\n  },\n  \"author\": \"Matthew Schaller <matt@mattschaller.com>\",\n  \"type\": \"module\",\n  \"bin\": {\n    \"mcp-policy\": \"./dist/index.js\"\n  },\n  \"exports\": {\n    \".\": {\n      \"import\": \"./dist/index.js\",\n      \"require\": \"./dist/index.cjs\"\n    }\n  },\n  \"main\": \"./dist/index.cjs\",\n  \"module\": \"./dist/index.js\",\n  \"types\": \"./dist/index.d.ts\",\n  \"files\": [\n    \"dist\",\n    \"action.yml\"\n  ],\n  \"scripts\": {\n    \"build\": \"tsup\",\n    \"test\": \"vitest run\",\n    \"prepublishOnly\": \"npm run build && npm run test\"\n  },\n  \"dependencies\": {\n    \"js-yaml\": \"^4.1.0\",\n    \"semver\": \"^7.6.0\"\n  },\n  \"devDependencies\": {\n    \"@types/js-yaml\": \"^4.0.9\",\n    \"@types/node\": \"^25.5.0\",\n    \"@types/semver\": \"^7.5.0\",\n    \"tsup\": \"^8.0.0\",\n    \"typescript\": \"^5.5.0\",\n    \"vitest\": \"^4.1.0\"\n  },\n  \"engines\": {\n    \"node\": \">=20.0.0\"\n  }\n}\n",
+      "excerpt_truncated": false,
+      "repository_relative_path": "package.json",
+      "sha256": "944219dec649b48a560d647833b85efb29e0f924b5962767b8ea2ec79c7ee7c5",
+      "size_bytes": 1244,
+      "source_path": "/tmp/palamedes-inventor-case-zero/mcp-policy/package.json"
+    }
+  ],
+  "case_id": "case-zero-mcp-policy",
+  "declared_artifact_count": 2,
+  "frozen_at": "2026-08-15T15:56:56.344222+00:00",
+  "information_fingerprint": "b79e8a2be8d27686de61b558508525ccb51032ed70702e09a84e83bb51e3d44a",
+  "information_packet_version": "palamedes-proof-information/1",
+  "question": "Based only on the public repository, what product boundary or adoption mechanism should mcp-policy test next to learn whether teams need it beyond a local validation script?",
+  "repository": "/tmp/palamedes-inventor-case-zero/mcp-policy",
+  "repository_revision": "18e4efec40d61dfc4bc739a52f0fc802824ad42c",
+  "represented_declared_artifact_count": 2,
+  "required_decision": "Choose one reversible evidence-producing direction concerning policy authority, workflow placement, or adoption, while rejecting feature accumulation that cannot establish recurring team value."
+}

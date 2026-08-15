@@ -1,0 +1,196 @@
+{
+  "blind_packet_version": "palamedes-proof-blind/1",
+  "cases": [
+    {
+      "case_id": "case-zero-reacher-x",
+      "information_fingerprint": "b76c5398b0dc53536fc608c0725b57eb346356e78cc0a37e97cf0c1ab6ab2492",
+      "missions": {
+        "A": {
+          "beneficiary": "A founder or small operator who can describe a narrow customer profile but lacks specialist prospecting infrastructure and needs a credible, actionable shortlist.",
+          "consequential_choice": "sequence: validate the X prospecting-to-approved-outreach loop before expanding integrations or agent surface",
+          "falsifiers": [
+            "Users reject most activity-derived matches as irrelevant despite clear target descriptions.",
+            "Repeated runs produce materially inconsistent results or unsupported qualification claims.",
+            "Users require extensive external research before trusting prospects or approving outreach.",
+            "Drafts routinely require major rewriting because the gathered context is insufficient.",
+            "Target users do not repeat the workflow after an initial session."
+          ],
+          "interpretation": "The central uncertainty is whether the current agent can reliably turn a plain-English need into relevant, evidence-backed prospects and useful outreach. Testing one existing channel is smaller and more decision-useful than expanding an unvalidated loop across additional surfaces.",
+          "mission": "Prioritize a bounded, benchmarked X-only customer-prospecting loop: produce a reviewable shortlist from activity-based evidence and an approval-ready first-contact draft for each accepted prospect, while capturing explicit user judgments at shortlist and draft stages.",
+          "next_probe": "Create a small frozen benchmark of narrow X prospecting requests, define human rating rubrics for relevance, evidence sufficiency, and draft readiness, and observe target users complete the full loop twice—including whether they voluntarily initiate a second search.",
+          "non_goals": [
+            "Email or calendar integration.",
+            "Cross-platform identity resolution.",
+            "Reddit, Bluesky, Threads, or other channel expansion.",
+            "PDF, document, spreadsheet, or presentation reasoning.",
+            "Sub-agents, swarms, or broader autonomous execution.",
+            "Optimizing every advertised use case before prospecting is validated."
+          ],
+          "rationale": "This direction exercises the product's stated differentiator and complete approval-first workflow using capabilities already available while minimizing platform variance. Repeated evaluations can reveal whether relevance, evidence quality, trust, and draft usefulness improve enough to support reuse. Additional integrations would not resolve that core uncertainty.",
+          "situation": "ReacherX already supports an approval-first X and LinkedIn loop—describe a target, discover and qualify people, build context, draft outreach, and approve action—but the public repository provides no benchmark showing repeatable user value. The roadmap proposes expanding integrations, channels, document support, identity resolution, and agent orchestration.",
+          "success_signal": "Across repeated bounded sessions, target users approve most shortlisted prospects as relevant and evidence-supported, accept or lightly edit most drafts, complete the workflow without recovery help, and voluntarily run another prospecting search."
+        },
+        "B": {
+          "beneficiary": "Founders seeking people who recently expressed a problem relevant to their product.",
+          "consequential_choice": "sequence: freeze roadmap expansion; test the narrow discovery-to-evidence shortlist loop first; continue to the existing approval-first outreach test only if shortlist quality, time savings, downstream use, and repeat behavior survive the predefined falsifiers; otherwise pivot the segment or stop investing in the loop",
+          "falsifiers": [
+            "Accepted-prospect precision, evidence quality, or time saved fails the predefined thresholds.",
+            "Participants accept plausible prospects but do not use the shortlist or repeat the same job after concierge support ends.",
+            "Manual search performs equally well or better on time and quality.",
+            "Results depend on one participant, one atypical task, or intensive researcher intervention.",
+            "Evidence emerges that another listed use case has materially stronger demand than the selected founder segment."
+          ],
+          "interpretation": "The smallest reversible test is the candidate that isolates discovery and qualification: whether one narrow segment can repeatedly obtain accepted, evidence-backed prospect shortlists. This produces foundational evidence before outreach outcomes introduce sender reputation, offer quality, platform risk, and provider reliability as confounders.",
+          "mission": "Prove that one narrowly defined user segment can repeatedly turn a plain-English need into an accepted, evidence-backed prospect shortlist using only existing X and LinkedIn capabilities.",
+          "next_probe": "Conduct 10–15 structured tasks with 5–8 founders, capturing prospect-level acceptance, evidence-quality ratings, completion time, corrections, downstream use of each shortlist, and whether each participant initiates the same task again within two weeks.",
+          "non_goals": [
+            "Proving positive replies, meetings, revenue, or the complete outreach loop.",
+            "Adding email, calendar, identity-resolution, document, platform, or sub-agent capabilities.",
+            "Optimizing media attachments or expanding agent autonomy.",
+            "Treating technical completion, prospect acceptance, or a small cohort as product-market fit.",
+            "Hardening every X and LinkedIn workflow before identifying failures that block this test."
+          ],
+          "rationale": "This candidate has the lowest operational and reputational risk, requires no new integration or agent surface, and yields prospect-level evidence about relevance, evidence quality, time saved, correction burden, and repeat behavior. Acceptance alone is not proof of realized commercial value, so success should justify testing the existing outreach step next rather than declaring the full loop proven.",
+          "situation": "ReacherX already claims an end-to-end discovery-to-outreach loop across X and LinkedIn, but the public repository provides no evidence of a prioritized user segment, repeat use, outcome benchmarks, or which step currently constrains value.",
+          "success_signal": "Across 10–15 structured tasks with 5–8 founders, predefined thresholds are met for accepted prospects per task, precision against human labels, evidence-quality ratings, time saved versus manual search, and initiation of the same job again within two weeks."
+        }
+      },
+      "question": "Based only on the public repository, what smallest evidence-producing product direction should ReacherX prioritize to test a repeatable user-value loop before expanding its integrations and agent surface?",
+      "required_decision": "Choose one bounded positioning or sequencing decision that can be tested without assuming private usage data, and reject roadmap expansion that does not test the selected loop."
+    },
+    {
+      "case_id": "case-zero-mcp-policy",
+      "information_fingerprint": "b79e8a2be8d27686de61b558508525ccb51032ed70702e09a84e83bb51e3d44a",
+      "missions": {
+        "A": {
+          "beneficiary": "Repository maintainers and security or platform teams that need to prevent unauthorized MCP configuration changes before merge.",
+          "consequential_choice": "sequence: run the single-repository required-check probe first; continue to a 3–5-team pilot only if actionable violations and voluntary retention survive, pivot to identity accuracy if false positives dominate, and stop team-infrastructure expansion if relevant configuration changes or retained value are insufficient",
+          "falsifiers": [
+            "The team declines required-check status or removes it when the pilot ends.",
+            "Relevant MCP configuration changes are too rare to evaluate recurring value.",
+            "Failures are mostly caused by unresolved or inaccurate identities for URLs, Docker images, local executables, or package matching.",
+            "Maintainers routinely bypass the check, add blanket exceptions, or experience disproportionate merge delays.",
+            "The check is retained only because the experiment requires it rather than because maintainers judge it useful."
+          ],
+          "interpretation": "The most reversible and behaviorally informative surviving direction is the required pull-request-check candidate, narrowed first to one active repository with frequent MCP configuration changes. This tests workflow placement using existing functionality before adding central authority, precedence, exception, or SHA-pinning features.",
+          "mission": "Test whether mcp-policy becomes recurring team infrastructure when enforced as a required pull-request check rather than offered as an optional local script.",
+          "next_probe": "Recruit one team whose repository has recent, recurring MCP configuration changes; baseline the number of relevant changes, then make the existing GitHub Action required for a bounded pilot and record relevant check opportunities, actionable failures, false positives, remediation time, overrides, contributor coverage, disablement, and post-pilot voluntary retention.",
+          "non_goals": [
+            "Adding SHA256 pinning, dashboards, new rule types, or broader configuration-format support.",
+            "Building centralized policy publication, authentication, audit, caching, or rollback infrastructure.",
+            "Implementing layered policy precedence or exception workflows.",
+            "Comparing multiple enforcement placements before the underlying rules demonstrate actionable value."
+          ],
+          "rationale": "A required-check pilot observes real contributor behavior, remediation, bypass, false positives, and retention at the point where unauthorized configuration can be prevented. Starting with one qualified repository limits coordination cost and blocking harm. Measurements must be normalized by pull requests that actually modify MCP configuration, because total automated executions would otherwise confuse coercion with value.",
+          "situation": "mcp-policy offers local validation, a GitHub Action, and remote policy loading, but the packet contains no evidence of repeated team use, actionable pull-request violations, durable policy ownership, or retained enforcement.",
+          "success_signal": "In one repository with recurring MCP configuration changes, the check encounters multiple genuine decision opportunities, produces actionable failures with acceptable remediation time and low false-positive or override rates, affects more than one contributor, and is voluntarily retained as required after the pilot."
+        },
+        "B": {
+          "beneficiary": "Security or platform maintainers responsible for controlling MCP server usage across repositories, with application teams receiving policy feedback in pull requests.",
+          "consequential_choice": "sequence: test shared policy authority through required multi-repository pull-request enforcement before adding features or centralized infrastructure",
+          "falsifiers": [
+            "No team is willing to require the check at merge time.",
+            "No security or platform maintainer accepts durable ownership of the shared policy.",
+            "Normal pull-request activity produces no actionable findings.",
+            "Developers routinely bypass or disable failures because enforcement creates more friction than value.",
+            "Teams prefer repository-local policies and find no value in shared authority."
+          ],
+          "interpretation": "The most important uncertainty is whether centrally owned policy enforced at the merge boundary creates recurring team value. This tests policy authority, ownership, workflow placement, and willingness to block changes without speculative feature development.",
+          "mission": "Pilot mcp-policy as a required pull-request check across two or three repositories using one remotely hosted policy.yml owned by a designated security or platform maintainer.",
+          "next_probe": "Recruit one security or platform owner and two or three repositories for a time-boxed pilot; configure the existing GitHub Action as a required pull-request check against one organization-hosted policy URL, then record setup friction, policy edits, findings, remediations, bypasses, and retention.",
+          "non_goals": [
+            "Building an MCP gateway, dashboard, or enterprise SaaS control plane.",
+            "Implementing SHA pinning or expanding the policy schema before demand is demonstrated.",
+            "Adding configuration formats, integrations, or security rules solely to broaden the feature set.",
+            "Detecting vulnerabilities inside MCP server implementations."
+          ],
+          "rationale": "The pilot is reversible and appears achievable with documented capabilities. It directly tests whether an owner will maintain shared policy, developers encounter actionable violations, and teams accept repeated merge-time enforcement.",
+          "situation": "mcp-policy already supports local CLI checks, a GitHub Action, remote policy retrieval, and a programmatic API, but the packet provides no evidence that teams need shared, recurring enforcement rather than individual validation.",
+          "success_signal": "A designated owner actively maintains the shared policy, participating repositories retain the required check through the pilot, and actionable failures are remediated rather than routinely bypassed."
+        }
+      },
+      "question": "Based only on the public repository, what product boundary or adoption mechanism should mcp-policy test next to learn whether teams need it beyond a local validation script?",
+      "required_decision": "Choose one reversible evidence-producing direction concerning policy authority, workflow placement, or adoption, while rejecting feature accumulation that cannot establish recurring team value."
+    },
+    {
+      "case_id": "case-zero-proxy",
+      "information_fingerprint": "b1242e72ceb40ad3f24acdba9f6420341417521ae7756fce92764ab39fa43c31",
+      "missions": {
+        "A": {
+          "beneficiary": "A developer or small platform team deciding whether to fork the gateway for a trusted internal AI application or operate it as a production-facing gateway.",
+          "consequential_choice": "sequence: pause the broader production roadmap, evaluate the authenticated timeout-bounded pilot first, and continue toward an operational control layer only if its safety and retry-cost invariants hold and a concrete operator emerges; otherwise position the project as a trusted-network, forkable developer gateway.",
+          "falsifiers": [
+            "Authentication or deadlines cannot be enforced without breaking OpenAI-compatible clients or streaming.",
+            "Retries duplicate non-idempotent work, continue after partial responses, or create uncontrolled provider cost.",
+            "Provider credentials, authorization headers, or sensitive request content leak through responses, metrics, or logs.",
+            "The two-provider failure scenario requires substantial distributed infrastructure beyond the intended small-gateway scope.",
+            "No concrete production-oriented adopter is willing to operate the authenticated gateway even in a trusted internal environment."
+          ],
+          "interpretation": "The pivotal uncertainty is whether the small trusted-network gateway can safely support a narrowly bounded production-like workload and attract an operator, not which advanced production feature should be built next.",
+          "mission": "Run a bounded reference pilot behind mandatory client API-key authentication and request timeouts, using two mock or explicitly trusted upstreams to exercise streaming, routing, retry, and credential isolation under controlled failures.",
+          "next_probe": "Create one executable two-upstream integration scenario: authenticate a client, stream a successful response, force a pre-header upstream failure and verify one bounded fallback within the deadline, then force a post-header failure and verify no retry; record credential exposure, latency, request counts, and operator-visible attribution.",
+          "non_goals": [
+            "Public multi-tenant SaaS exposure.",
+            "Redis-backed rate limiting, billing, quotas, or tenant administration.",
+            "Broad deployment-platform support.",
+            "Enterprise dashboards or governance features.",
+            "Additional providers or routing algorithms before validating the boundary."
+          ],
+          "rationale": "This directly tests the stated exposure blockers and the gateway's core operational invariants while constraining data risk, provider cost, and engineering scope. Circuit breakers, Redis rate limiting, dashboards, and deployment breadth should wait until the pilot establishes both technical viability and concrete operator interest.",
+          "situation": "The repository already presents a coherent forkable developer gateway with routing, weighted balancing, retries, streaming, health checks, metrics, Docker support, and smoke tests. Its roadmap adds production-control capabilities, but the public evidence demonstrates neither production users nor demand for an operated control layer.",
+          "success_signal": "A reproducible pilot rejects unauthorized requests, keeps provider credentials out of clients and logs, enforces request deadlines, preserves streaming, performs only bounded pre-header fallback, attributes failures through metrics or structured records, and attracts at least one concrete production-oriented adopter willing to operate it in a trusted internal environment."
+        },
+        "B": {
+          "beneficiary": "Developers and platform teams that already operate authentication, ingress, monitoring, and secret-management infrastructure but need a small OpenAI-compatible provider-routing component.",
+          "consequential_choice": "sequence: pause production-control-layer feature expansion, run the forkable-component boundary probe first, then continue that boundary only if its documented behavior and distinct beneficiary value survive the falsifiers; otherwise pivot to compatibility conformance or stop expansion",
+          "falsifiers": [
+            "Independent evaluators cannot reproduce the integration from public documentation within a predefined time and intervention budget.",
+            "Documented routing, streaming, retry, header-forwarding, or model-discovery behavior fails under deterministic slow, transient-failure, malformed-response, or interrupted-stream scenarios.",
+            "Most required functionality resides in the external proxy or custom integration, leaving the gateway with no material advantage over established alternatives.",
+            "Evaluators consistently require gateway-native authentication, traffic governance, failure isolation, or diagnostics before the component is useful.",
+            "Retry behavior cannot be bounded safely for supported requests."
+          ],
+          "interpretation": "The highest-information, most reversible surviving candidate is to test the forkable developer-gateway boundary first. A reproducible deployment behind external authentication and TLS can simultaneously test the documented routing contract and reveal whether adopters instead require gateway-native controls, without prematurely creating a partial and potentially misleading production security boundary.",
+          "mission": "Validate the gateway as a forkable routing component deployed behind infrastructure the adopter already controls.",
+          "next_probe": "Create one public, containerized end-to-end fixture with two behaviorally distinct mock upstreams and an external proxy owning authentication and TLS; define acceptance criteria before testing; have independent evaluators use only public documentation; record setup time, completion rate, interventions, gateway changes, failure-case results, and comparative effort against an established proxy or small custom adapter.",
+          "non_goals": [
+            "Claiming public-production readiness.",
+            "Implementing the full authentication, rate-limiting, circuit-breaker, logging, and health-probe roadmap.",
+            "Inferring market demand or broad adoption from a small evaluator set.",
+            "Claiming universal OpenAI-provider compatibility from mock upstream results.",
+            "Moving security, TLS, authorization, or secret-management responsibility into the gateway during this probe."
+          ],
+          "rationale": "This probe tests the boundary most consistently supported by the current documentation, benefits teams already equipped to own ingress and security, and avoids the high cost and hidden liability of building an incomplete production control layer before demand is established. It survives adversarial critique only if the gateway's contribution is measured separately from the reference stack, realistic failure semantics are exercised, and established alternatives are included as a baseline.",
+          "situation": "The public repository positions the gateway both as a forkable routing primitive behind adopter-owned controls and as an emerging production service, but the packet contains no implementation, integration, adoption, threat-model, or operational evidence sufficient to justify the production-control-layer roadmap.",
+          "success_signal": "Independent evaluators can reproduce a containerized two-upstream deployment from public documentation, correctly exercise model-prefix routing, weighted selection, streaming, retry behavior, and merged model discovery, and show a material simplicity or capability advantage over an established proxy or small custom adapter without requiring gateway-native production controls."
+        }
+      },
+      "question": "Based only on the public repository, which product boundary should the OpenAI-compatible API gateway test before continuing its production feature roadmap?",
+      "required_decision": "Choose a bounded probe that distinguishes a forkable developer gateway from a production operational control layer, without assuming private users or demand."
+    }
+  ],
+  "origin_visible": false,
+  "rubric": {
+    "causal_mechanism": {
+      "question": "Does it identify a causal product mechanism rather than rename a familiar feature?",
+      "weight": 20
+    },
+    "decision_usefulness": {
+      "question": "Would it change a continue, stop, position, or sequence decision before roadmap expansion?",
+      "weight": 20
+    },
+    "falsifiability": {
+      "question": "Can the mission be rejected through a bounded public-information probe?",
+      "weight": 20
+    },
+    "opportunity_discovery": {
+      "question": "Does the mission expose a consequential opportunity not already stated as a roadmap item?",
+      "weight": 20
+    },
+    "project_specificity": {
+      "question": "Is it grounded enough that the same mission would not transfer unchanged to an unrelated repository?",
+      "weight": 20
+    }
+  },
+  "run_id": "inventor-case-zero-001"
+}

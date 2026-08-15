@@ -1,0 +1,45 @@
+{
+  "inventor_outreach_version": "palamedes-inventor-outreach/1",
+  "recorded_at": "2026-08-15T15:34:44Z",
+  "status": "withdrawn_before_consent",
+  "proof_cases_admitted": 0,
+  "contacts": [
+    {
+      "candidate_id": "reacher-x",
+      "project": "VecterAI/reacher-x",
+      "channel": "github_issue",
+      "contact_url": "https://github.com/VecterAI/reacher-x/issues/25",
+      "reason": "The contributing guide explicitly requests discussion before product-direction or agent-behavior work.",
+      "consent_received": false,
+      "outreach_status": "closed_by_palamedes_owner_before_response",
+      "case_admitted": false
+    },
+    {
+      "candidate_id": "mcp-policy",
+      "project": "mattschaller/mcp-policy",
+      "channel": "github_issue",
+      "contact_url": "https://github.com/mattschaller/mcp-policy/issues/45",
+      "reason": "The maintainer publicly requested feedback on policy schema and GitHub Action fit.",
+      "consent_received": false,
+      "outreach_status": "closed_by_palamedes_owner_before_response",
+      "case_admitted": false
+    },
+    {
+      "candidate_id": "ml-patron",
+      "project": "ML Patron",
+      "channel": "github_discussion_comment",
+      "contact_url": "https://github.com/karpathy/autoresearch/discussions/452#discussioncomment-18031697",
+      "reason": "The creator described the product as an early working prototype and requested trials and feedback.",
+      "consent_received": false,
+      "outreach_status": "comment_deleted_by_palamedes_owner_before_response",
+      "case_admitted": false
+    }
+  ],
+  "custody_boundary": {
+    "public_contact_is_not_participation_consent": true,
+    "no_repository_is_a_proof_case_before_owner_intake": true,
+    "no_generated_candidate_has_been_shown": true,
+    "no_answer_key_exists": true,
+    "no_external_evidence_has_been_inferred": true
+  }
+}

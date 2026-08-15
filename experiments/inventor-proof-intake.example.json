@@ -1,0 +1,37 @@
+{
+  "inventor_intake_version": "palamedes-inventor-intake/1",
+  "case_id": "replace-project-id",
+  "owner_id": "replace-non-secret-owner-id",
+  "owner_relationship": "independent_external",
+  "palamedes_tuning_exposure": false,
+  "participation_consent": true,
+  "project_repository": "https://github.com/owner/repository",
+  "unresolved_product_question": "What real product decision is still open?",
+  "required_decision": "What continue, stop, pivot, position, or sequence choice must change?",
+  "owner_prior_hypotheses": [
+    "Record prior ideas before seeing either blinded result."
+  ],
+  "approved_public_artifacts": [
+    "README.md"
+  ],
+  "excluded_private_information": [
+    "Credentials, private customer data, and unpublished security details"
+  ],
+  "probe_preregistration": {
+    "decision_to_be_changed": "The exact decision this probe informs",
+    "intervention_window": "1-7 days",
+    "primary_metric": "One observable outcome metric",
+    "success_threshold": "A fixed numeric or categorical pass threshold",
+    "failure_threshold": "A fixed stop or reject threshold",
+    "measurement_source": "An immutable log, survey, analytics view, or external dataset"
+  },
+  "publication": {
+    "project_name_may_be_published": false,
+    "owner_id_may_be_published": false,
+    "raw_artifacts_may_be_published": false,
+    "blind_packet_may_be_published": false,
+    "aggregate_result_may_be_published": true,
+    "additional_restrictions": []
+  },
+  "owner_attestation": "I supplied this unresolved question before seeing generated candidates."
+}

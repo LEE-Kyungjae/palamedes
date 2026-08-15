@@ -1,0 +1,37 @@
+{
+  "blind_key_version": "palamedes-proof-key/1",
+  "cases": [
+    {
+      "case_id": "case-zero-reacher-x",
+      "labels": {
+        "A": "tournament",
+        "B": "palamedes"
+      }
+    },
+    {
+      "case_id": "case-zero-mcp-policy",
+      "labels": {
+        "A": "palamedes",
+        "B": "tournament"
+      }
+    },
+    {
+      "case_id": "case-zero-proxy",
+      "labels": {
+        "A": "tournament",
+        "B": "palamedes"
+      }
+    }
+  ],
+  "comparison_condition": "tournament",
+  "run_id": "inventor-case-zero-001",
+  "seed_sha256": "53762b309e12a234680e13ecd94e9c4ffa5d03c2b71363629106bedf7bacd8fb",
+  "success_gate": {
+    "minimum_attributable_outcomes": 0,
+    "minimum_blinded_reviews_per_case": 3,
+    "minimum_cases": 3,
+    "minimum_labor_retirement_cases": 0,
+    "palamedes_preferred_cases": 2
+  },
+  "treatment_condition": "palamedes"
+}

@@ -51,6 +51,8 @@ py-modules = [
   "palamedes_pursuit",
   "palamedes_workspace",
   "palamedes_proof",
+  "palamedes_inventor_proof",
+  "palamedes_inventor_operator",
   "palamedes_watch",
   "palamedes_server",
   "palamedes_satisfaction",

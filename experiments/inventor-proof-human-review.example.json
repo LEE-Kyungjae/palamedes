@@ -1,0 +1,34 @@
+{
+  "reviewer_id": "replace-independent-reviewer-id",
+  "reviewer_kind": "human",
+  "reviewer_relationship": "independent",
+  "origin_visible": false,
+  "independence_attestation": "I did not see the answer key, authorship, or other reviewers' answers.",
+  "reviews": [
+    {
+      "case_id": "replace-case-id",
+      "review": {
+        "scores": {
+          "A": {
+            "opportunity_discovery": 1,
+            "causal_mechanism": 1,
+            "project_specificity": 1,
+            "falsifiability": 1,
+            "decision_usefulness": 1
+          },
+          "B": {
+            "opportunity_discovery": 1,
+            "causal_mechanism": 1,
+            "project_specificity": 1,
+            "falsifiability": 1,
+            "decision_usefulness": 1
+          }
+        },
+        "preferred": "A",
+        "rationale": "Explain the preference without guessing authorship.",
+        "decision_difference": "State whether and how this would alter a real decision.",
+        "confidence": 60
+      }
+    }
+  ]
+}

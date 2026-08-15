@@ -1,0 +1,173 @@
+{
+  "case_id": "case-zero-reacher-x",
+  "condition": "tournament",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-08-15T15:58:48.300831+00:00",
+  "information_fingerprint": "b76c5398b0dc53536fc608c0725b57eb346356e78cc0a37e97cf0c1ab6ab2492",
+  "mission": {
+    "beneficiary": "A founder or small operator who can describe a narrow customer profile but lacks specialist prospecting infrastructure and needs a credible, actionable shortlist.",
+    "consequential_choice": "sequence: validate the X prospecting-to-approved-outreach loop before expanding integrations or agent surface",
+    "falsifiers": [
+      "Users reject most activity-derived matches as irrelevant despite clear target descriptions.",
+      "Repeated runs produce materially inconsistent results or unsupported qualification claims.",
+      "Users require extensive external research before trusting prospects or approving outreach.",
+      "Drafts routinely require major rewriting because the gathered context is insufficient.",
+      "Target users do not repeat the workflow after an initial session."
+    ],
+    "interpretation": "The central uncertainty is whether the current agent can reliably turn a plain-English need into relevant, evidence-backed prospects and useful outreach. Testing one existing channel is smaller and more decision-useful than expanding an unvalidated loop across additional surfaces.",
+    "mission": "Prioritize a bounded, benchmarked X-only customer-prospecting loop: produce a reviewable shortlist from activity-based evidence and an approval-ready first-contact draft for each accepted prospect, while capturing explicit user judgments at shortlist and draft stages.",
+    "next_probe": "Create a small frozen benchmark of narrow X prospecting requests, define human rating rubrics for relevance, evidence sufficiency, and draft readiness, and observe target users complete the full loop twice—including whether they voluntarily initiate a second search.",
+    "non_goals": [
+      "Email or calendar integration.",
+      "Cross-platform identity resolution.",
+      "Reddit, Bluesky, Threads, or other channel expansion.",
+      "PDF, document, spreadsheet, or presentation reasoning.",
+      "Sub-agents, swarms, or broader autonomous execution.",
+      "Optimizing every advertised use case before prospecting is validated."
+    ],
+    "rationale": "This direction exercises the product's stated differentiator and complete approval-first workflow using capabilities already available while minimizing platform variance. Repeated evaluations can reveal whether relevance, evidence quality, trust, and draft usefulness improve enough to support reuse. Additional integrations would not resolve that core uncertainty.",
+    "situation": "ReacherX already supports an approval-first X and LinkedIn loop—describe a target, discover and qualify people, build context, draft outreach, and approve action—but the public repository provides no benchmark showing repeatable user value. The roadmap proposes expanding integrations, channels, document support, identity resolution, and agent orchestration.",
+    "success_signal": "Across repeated bounded sessions, target users approve most shortlisted prospects as relevant and evidence-supported, accept or lightly edit most drafts, complete the workflow without recovery help, and voluntarily run another prospecting search."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "6d2174707091d231354a8c4495746a0b0952d8303379fb745e59e35794d3007a",
+  "provider": "codex",
+  "role_artifacts": {
+    "candidates": [
+      {
+        "beneficiary": "Founder-led and small go-to-market teams that lack specialist prospecting capacity and repeatedly need qualified potential customers they can credibly contact.",
+        "consequential_choice": "position: narrow ReacherX to a recurring, approval-first customer-prospecting loop and sequence evaluations plus reliability work ahead of every roadmap expansion",
+        "falsifiers": [
+          "Target users do not repeat the workflow after an initial trial.",
+          "Most discovered people are rejected as irrelevant or insufficiently supported by evidence.",
+          "Users routinely abandon the results before approving outreach or must substantially redo qualification and drafts.",
+          "Users report that static lists or manual platform search solve the recurring job with less effort or greater trust."
+        ],
+        "interpretation": "The highest-value uncertainty is not whether ReacherX can add email, calendars, more platforms, richer documents, identity resolution, or sub-agents; it is whether one existing workflow repeatedly helps a specific beneficiary find genuinely relevant people and produce outreach worth approving. Customer prospecting has recurring demand and the clearest measurable beneficiary outcome among the listed use cases.",
+        "mission": "Position and test ReacherX as an approval-first prospecting agent for founders and small go-to-market operators who need a recurring weekly pipeline of people publicly expressing a relevant need on X or LinkedIn.",
+        "next_probe": "Recruit a small cohort of founder-led or small go-to-market users for a multi-week test using only current X and LinkedIn capabilities; instrument each weekly batch from query through prospect acceptance, evidence usefulness, draft approval/editing, action completion, and return usage, then interview users about rejected prospects and abandoned batches.",
+        "non_goals": [
+          "Email or calendar integration before the selected loop demonstrates repeat use.",
+          "Expansion to Reddit, Bluesky, Threads, or additional outreach channels.",
+          "Sub-agents, swarms, or broader autonomous action surfaces.",
+          "General document support or cross-platform identity resolution unless required by observed pilot failures.",
+          "Simultaneously positioning for recruiting, partnerships, investor outreach, research recruitment, and creator growth."
+        ],
+        "rationale": "This mission uses the complete surface already available, concentrates evaluation work on a commercially consequential recurring job, and produces evidence across the entire value chain: match relevance, supporting proof, qualification usefulness, and outreach approval. A narrow weekly prospecting loop can reveal whether users return because the system creates actionable opportunities; adding integrations first would enlarge the surface without resolving that core uncertainty.",
+        "situation": "ReacherX already supports an end-to-end, approval-first loop on X and LinkedIn: describe a target, discover matching people from real activity, enrich and qualify them, then draft outreach. The public packet provides no usage evidence proving which broad use case or planned integration creates repeatable value.",
+        "success_signal": "In a bounded pilot, the same users run the workflow in multiple weeks, judge a meaningful share of surfaced prospects relevant with convincing activity-based proof, approve or lightly edit proposed outreach, and return to generate another batch."
+      },
+      {
+        "beneficiary": "A solo founder or small operator who needs a credible shortlist of relevant prospects and usable first-contact drafts without specialist prospecting expertise.",
+        "consequential_choice": "sequence: prove the repeatable evidence-backed shortlist-to-approved-draft loop on X and LinkedIn before expanding integrations or agent autonomy",
+        "falsifiers": [
+          "Users repeatedly reject shortlisted prospects despite clear target descriptions and evidence-backed qualification.",
+          "Enrichment does not materially improve users' confidence or outreach decisions.",
+          "Drafts require substantial rewriting often enough that the agent saves little effort.",
+          "The bounded workflow's provider and model cost is too high for users' demonstrated willingness to repeat it.",
+          "Users do not return to run another shortlist after completing an initial pilot."
+        ],
+        "interpretation": "The highest-leverage uncertainty is not whether ReacherX can add another integration; it is whether its existing workflow can repeatedly turn a user request into a small set of credible prospects and useful, safe outreach. A narrow evaluation loop is technically feasible with the current product, preserves human control, and avoids new provider, compliance, and operating-cost burdens.",
+        "mission": "Prioritize a benchmarked, approval-first prospect-shortlist pilot on the existing X and LinkedIn surface: for one narrowly defined use case, repeatedly produce a small evidence-backed shortlist and tailored outreach drafts, then capture structured user judgments at qualification and approval.",
+        "next_probe": "Define one concrete prospecting job, a fixed shortlist size, a bounded search budget, and a simple evaluation rubric; run several approval-first sessions and record relevance, evidence usefulness, draft edit distance, repeat intent, latency, and per-run cost.",
+        "non_goals": [
+          "Adding email or calendar execution",
+          "Adding Reddit, Bluesky, Threads, or other discovery channels",
+          "Building cross-platform identity resolution",
+          "Adding document, spreadsheet, presentation, or PDF reasoning",
+          "Introducing sub-agents or swarms",
+          "Optimizing autonomous sending or removing approval gates"
+        ],
+        "rationale": "This is the smallest direction that tests the product's claimed value end to end using capabilities already available. It creates evidence about discovery precision, qualification quality, enrichment usefulness, and draft actionability while keeping consequential actions behind approval. It also limits model, search, and provider spend through bounded runs. Email, calendar, new-platform, document, identity-resolution, and swarm work would increase technical surface, safety exposure, and recurring cost without resolving whether the core loop is valuable.",
+        "situation": "ReacherX already supports an approval-first loop across X and LinkedIn—describe a target, discover and qualify real people, enrich matches, draft outreach, and approve action—but the public repository shows no benchmark proving that this loop produces repeatable user value. The roadmap otherwise expands into email, calendars, identity resolution, documents, more platforms, and agent swarms.",
+        "success_signal": "Across repeated bounded pilot tasks for the chosen use case, users consistently approve most shortlisted prospects as genuinely relevant, accept or lightly edit most drafts, and choose to run the same workflow again."
+      },
+      {
+        "beneficiary": "A founder or small operator who can describe a narrow customer profile but lacks specialist prospecting infrastructure and needs a credible, actionable shortlist.",
+        "consequential_choice": "sequence: validate and benchmark the existing X prospecting-to-approved-outreach loop first; stop integration and agent-surface expansion until that loop shows repeatable relevance, trust, action readiness, and reuse",
+        "falsifiers": [
+          "Users do not consider activity-derived X matches materially relevant even when search and qualification reliability improve.",
+          "Repeated runs on the same requests produce substantially inconsistent shortlists or unsupported qualification claims.",
+          "Users still need extensive external research before trusting a prospect or approving outreach.",
+          "Drafts require major rewriting because the collected context does not support a credible first message.",
+          "The selected beneficiary does not value completing this loop enough to repeat it for another prospecting request."
+        ],
+        "interpretation": "The key uncertainty is not whether ReacherX can add more actions or channels; it is whether its current agent reliably turns a plain-English need into a small set of relevant, evidence-backed prospects and useful outreach. Testing that existing loop is highly reversible, yields more decision-relevant information than an integration, and avoids multiplying an unvalidated experience across additional surfaces.",
+        "mission": "Prioritize a bounded, benchmarked X-only customer-prospecting loop: given a plain-English ideal-customer request, produce a reviewable shortlist of relevant people from recent activity, show evidence for each match, and draft an approval-ready first outreach action. Run the same benchmark cohort repeatedly and capture explicit user judgments at shortlist and draft stages.",
+        "next_probe": "Create a small frozen benchmark of narrow X customer-prospecting requests, define simple human rating rubrics for relevance, evidence sufficiency, and draft readiness, then observe target users complete the full loop twice—including whether they voluntarily start a second search—before authorizing any roadmap expansion.",
+        "non_goals": [
+          "Adding email sending or lifecycle email infrastructure.",
+          "Adding Google Calendar or Outlook Calendar actions.",
+          "Building cross-platform identity resolution.",
+          "Adding Reddit, Bluesky, Threads, or further LinkedIn surface expansion.",
+          "Adding document, spreadsheet, presentation, or PDF ingestion.",
+          "Building sub-agents, swarms, or broader autonomous execution.",
+          "Optimizing every advertised use case before prospecting is validated."
+        ],
+        "rationale": "X-only prospecting minimizes platform variance while exercising ReacherX's claimed differentiator: finding people from real activity and converting that context into controlled action. It uses capabilities already declared available, so it is cheaper and more reversible than building integrations. Structured judgments on match relevance, evidence sufficiency, and draft usefulness reveal where the loop fails and whether reliability work is improving it. If the loop succeeds, expansion gains a validated template; if it fails, the team learns before paying the opportunity cost of email, calendars, more platforms, identity resolution, document ingestion, or agent swarms.",
+        "situation": "ReacherX already supports an end-to-end X and LinkedIn loop—describe a target, discover and qualify real people, build context, draft outreach, and require approval—but the public repository shows no benchmark proving that this loop produces repeatable user value. Meanwhile, the roadmap proposes email, calendars, identity resolution, richer documents, more networks, and sub-agents.",
+        "success_signal": "Across a fixed set of representative prospecting requests and repeated runs, target users consistently approve most shortlisted prospects as relevant and evidence-supported, accept or lightly edit most first-message drafts, and can complete the describe-to-approved-action loop without recovery help; results remain stable enough to improve measurably against a stored baseline."
+      }
+    ]
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-08-15T15:57:26.803618+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 25083,
+          "output_tokens": 627,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-08-15T15:57:56.135076+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 25087,
+          "output_tokens": 645,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-08-15T15:58:27.876851+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 25085,
+          "output_tokens": 768,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-08-15T15:58:48.300772+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 27024,
+          "output_tokens": 656,
+          "reasoning_output_tokens": 155
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 39936,
+      "input_tokens": 102279,
+      "output_tokens": 2696,
+      "reasoning_output_tokens": 155
+    }
+  }
+}

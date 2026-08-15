@@ -1,0 +1,168 @@
+{
+  "case_id": "case-zero-proxy",
+  "condition": "tournament",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-08-15T16:02:30.069238+00:00",
+  "information_fingerprint": "b1242e72ceb40ad3f24acdba9f6420341417521ae7756fce92764ab39fa43c31",
+  "mission": {
+    "beneficiary": "A developer or small platform team deciding whether to fork the gateway for a trusted internal AI application or operate it as a production-facing gateway.",
+    "consequential_choice": "sequence: pause the broader production roadmap, evaluate the authenticated timeout-bounded pilot first, and continue toward an operational control layer only if its safety and retry-cost invariants hold and a concrete operator emerges; otherwise position the project as a trusted-network, forkable developer gateway.",
+    "falsifiers": [
+      "Authentication or deadlines cannot be enforced without breaking OpenAI-compatible clients or streaming.",
+      "Retries duplicate non-idempotent work, continue after partial responses, or create uncontrolled provider cost.",
+      "Provider credentials, authorization headers, or sensitive request content leak through responses, metrics, or logs.",
+      "The two-provider failure scenario requires substantial distributed infrastructure beyond the intended small-gateway scope.",
+      "No concrete production-oriented adopter is willing to operate the authenticated gateway even in a trusted internal environment."
+    ],
+    "interpretation": "The pivotal uncertainty is whether the small trusted-network gateway can safely support a narrowly bounded production-like workload and attract an operator, not which advanced production feature should be built next.",
+    "mission": "Run a bounded reference pilot behind mandatory client API-key authentication and request timeouts, using two mock or explicitly trusted upstreams to exercise streaming, routing, retry, and credential isolation under controlled failures.",
+    "next_probe": "Create one executable two-upstream integration scenario: authenticate a client, stream a successful response, force a pre-header upstream failure and verify one bounded fallback within the deadline, then force a post-header failure and verify no retry; record credential exposure, latency, request counts, and operator-visible attribution.",
+    "non_goals": [
+      "Public multi-tenant SaaS exposure.",
+      "Redis-backed rate limiting, billing, quotas, or tenant administration.",
+      "Broad deployment-platform support.",
+      "Enterprise dashboards or governance features.",
+      "Additional providers or routing algorithms before validating the boundary."
+    ],
+    "rationale": "This directly tests the stated exposure blockers and the gateway's core operational invariants while constraining data risk, provider cost, and engineering scope. Circuit breakers, Redis rate limiting, dashboards, and deployment breadth should wait until the pilot establishes both technical viability and concrete operator interest.",
+    "situation": "The repository already presents a coherent forkable developer gateway with routing, weighted balancing, retries, streaming, health checks, metrics, Docker support, and smoke tests. Its roadmap adds production-control capabilities, but the public evidence demonstrates neither production users nor demand for an operated control layer.",
+    "success_signal": "A reproducible pilot rejects unauthorized requests, keeps provider credentials out of clients and logs, enforces request deadlines, preserves streaming, performs only bounded pre-header fallback, attributes failures through metrics or structured records, and attracts at least one concrete production-oriented adopter willing to operate it in a trusted internal environment."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "226527c441fb1f7d7e6d92a0ee579d6b6de8ce05a010761150c8ac1acc22f2b3",
+  "provider": "codex",
+  "role_artifacts": {
+    "candidates": [
+      {
+        "beneficiary": "Developers or small platform teams running an AI application against multiple OpenAI-compatible hosted or local providers who need one server-side endpoint and must repeatedly control access and diagnose upstream failures.",
+        "consequential_choice": "sequence: pause the broader production roadmap, run the bounded authenticated-operations probe first, and continue into circuit breakers and rate limiting only if repeated operational use is observed; otherwise position PROXY as a forkable developer gateway.",
+        "falsifiers": [
+          "Adopters primarily fork the repository, replace configuration or middleware, and do not retain or use the standardized operational path.",
+          "Interest is concentrated in local experiments or LibreChat setup, with no recurring need to expose the gateway to authenticated clients.",
+          "Users prefer placing the gateway behind an existing API gateway or platform that already supplies authentication, rate limiting, logging, and health management.",
+          "The bounded production path produces setup interest but no evidence of repeated traffic, monitoring, or failure-response use."
+        ],
+        "interpretation": "The pivotal uncertainty is not which production feature to build next, but whether beneficiaries repeatedly want a maintained operational control layer or merely a small codebase they can fork and adapt. Building deeper production infrastructure before resolving that boundary risks serving hypothetical demand.",
+        "mission": "Test whether self-hosting AI application developers have recurring demand for PROXY as an operated, production-facing control layer by offering one narrowly defined production-ready path: authenticated gateway access plus timeout controls, structured request and retry logs, and a documented deployment configuration.",
+        "next_probe": "Publish a single opt-in production profile with gateway client API-key authentication, configurable request timeouts, structured request/provider/retry logs, and one reproducible deployment guide; instrument only privacy-safe aggregate signals or solicit structured adopter reports covering deployment, repeat traffic, operational incidents, retained components, and requested next capability.",
+        "non_goals": [
+          "Implementing the full v1.2 and v1.3 roadmap before the boundary is validated.",
+          "Competing immediately as a comprehensive enterprise API-management platform.",
+          "Adding Redis-backed rate limiting, elaborate dashboards, billing, organizations, or policy administration.",
+          "Optimizing provider-selection sophistication without evidence that beneficiaries operate the gateway repeatedly in production.",
+          "Assuming private users, commercial demand, or production adoption not demonstrated by the public repository."
+        ],
+        "rationale": "Authentication is the clearest boundary test because the current documentation repeatedly identifies it as mandatory before external use. Bundling it with the minimum observability and timeout controls needed to operate the gateway creates a coherent production workflow and tests repeat usage—ongoing traffic management, failure diagnosis, and credential control—rather than superficial interest in additional features. Evidence of sustained use would justify reliability and rate-limiting work; evidence limited to forks and customization would support keeping the product a compact developer scaffold.",
+        "situation": "The repository already delivers a credible forkable gateway core—OpenAI-compatible routing, weighted provider selection, retries, streaming, health, metrics, Docker, and customization guidance—but explicitly lacks authentication and describes itself as unsuitable for direct public exposure. Its roadmap now shifts toward operational features such as circuit breakers, rate limiting, structured logs, health probes, and deployment guidance.",
+        "success_signal": "Multiple independent adopters deploy the bounded production path and repeatedly use authentication, logs, and metrics during real multi-provider traffic or failure events, then request operational improvements such as circuit breaking or rate limiting rather than basic fork customization."
+      },
+      {
+        "beneficiary": "A developer or small platform team deciding whether to fork the project for a trusted internal AI application or adopt it as a production-facing gateway.",
+        "consequential_choice": "sequence: pause the broader production feature roadmap, implement and evaluate the authenticated timeout-bounded reference pilot first, and continue toward a production operational control layer only if its safety and retry-cost invariants hold; otherwise position the project explicitly as a trusted-network, forkable developer gateway.",
+        "falsifiers": [
+          "The gateway cannot enforce authentication and deadlines without breaking OpenAI-compatible clients or streaming.",
+          "Retries can duplicate non-idempotent work, continue after partial responses, or create materially uncontrolled provider cost.",
+          "Provider keys, authorization headers, or sensitive request content leak through responses, metrics, or logs.",
+          "A reproducible two-provider failure test requires substantial distributed state or operational machinery beyond the project's intended small-gateway scope.",
+          "The pilot yields no concrete production-oriented adopter willing to operate the authenticated gateway even in a trusted internal environment."
+        ],
+        "interpretation": "The pivotal uncertainty is product boundary, not whether more reliability features are implementable. A production control layer carries materially greater safety obligations and ongoing operating complexity, while a forkable gateway can remain useful with a smaller trusted-network boundary. The next investment should test whether the current gateway can support a narrowly defined production-like workload safely enough to justify crossing that boundary.",
+        "mission": "Build and run a bounded reference pilot that places the gateway behind mandatory client API-key authentication and request timeouts, connects two mock or explicitly trusted OpenAI-compatible upstreams, and exercises streaming, routing, retry, and credential-isolation behavior under controlled failures.",
+        "next_probe": "Specify one executable integration scenario with two mock upstreams: authenticate a client, stream a successful response, force the selected upstream to fail before headers, verify one bounded fallback within the deadline, then force a post-header failure and verify that no retry occurs; record credential exposure, latency, request counts, and operator-visible attribution.",
+        "non_goals": [
+          "Public multi-tenant SaaS exposure.",
+          "Redis-backed rate limiting, billing, quotas, or tenant administration.",
+          "Broad deployment-platform support.",
+          "A full observability dashboard or enterprise governance suite.",
+          "Adding more providers or routing algorithms before validating the boundary."
+        ],
+        "rationale": "This is the smallest technically feasible probe that tests the boundary directly. Authentication and timeouts address the clearest stated blockers to exposure; mock or trusted upstreams constrain data risk and usage cost; and controlled failure tests reveal whether the existing forwarding and retry design can become an operational control layer. Investing immediately in Redis, dashboards, deployment breadth, and richer resilience would increase build and operating cost before establishing that the core safety boundary is sound.",
+        "situation": "The repository already presents a technically coherent, low-cost, forkable developer gateway with provider routing, weighted balancing, retries, streaming, health checks, metrics, Docker support, and smoke tests. Its production roadmap would add authentication, timeouts, structured logs, circuit breakers, health probes, backoff, Redis rate limiting, and deployment guidance, but the public evidence contains no demonstrated users or demand for operating it as a production control layer.",
+        "success_signal": "In a reproducible pilot, unauthorized requests are rejected, provider credentials never reach clients or logs, every request terminates within a configured deadline, streaming remains intact, retries occur only before response headers are sent, and injected upstream failures produce attributable metrics or structured records without duplicate or unbounded requests."
+      },
+      {
+        "beneficiary": "A developer evaluating whether to fork PROXY for a small production-facing internal AI application.",
+        "consequential_choice": "sequence: pause the broader production feature roadmap, test the optional reference deployment contract first, and continue toward a production control layer only if the probe demonstrates coherent operability without compromising the forkable core",
+        "falsifiers": [
+          "The reference contract cannot be added without tightly coupling authentication and operational policy to the core router.",
+          "The documented production scenario still requires substantial undocumented infrastructure or bespoke code.",
+          "Mock-upstream tests reveal that current streaming or retry semantics cannot support predictable timeout and failure behavior.",
+          "The probe produces no clearer adoption or maintenance advantage over instructing developers to place the gateway behind an existing proxy or API gateway."
+        ],
+        "interpretation": "The highest-value uncertainty is not which hardening feature to build next, but whether the product should remain a composable self-hosted gateway or become an opinionated production control layer. Building the roadmap now is reversible only with meaningful engineering cost and risks obscuring this boundary.",
+        "mission": "Run a bounded production-boundary probe: define and test one reference deployment contract that combines gateway client authentication, request timeouts, structured retry logs, and mock-upstream integration tests, while keeping these capabilities optional and separable from the core router.",
+        "next_probe": "Create a single executable reference scenario with two mock providers: require one static gateway client key, force one provider to timeout or fail, verify bounded fallback, and assert structured logs identify provider, attempt, outcome, and latency; then document the setup as an optional production profile.",
+        "non_goals": [
+          "Building Redis-backed rate limiting.",
+          "Implementing a full API-key management product.",
+          "Adding platform-specific deployment guides.",
+          "Building dashboards, billing, tenancy, quotas, or administrative UI.",
+          "Assuming external demand or declaring the gateway production-ready."
+        ],
+        "rationale": "This probe maximizes information gain by testing whether the four capabilities form a coherent, operable production contract rather than an accumulating feature list. It is reversible because the contract can remain an optional example or module, and it limits opportunity cost by postponing Redis rate limiting, circuit breakers, platform-specific deployment work, and broader operational machinery until the boundary is validated.",
+        "situation": "The repository presents a capable forkable developer gateway—OpenAI-compatible routing, weighted balancing, retries, streaming, health, metrics, Docker, and customization guidance—while its roadmap moves toward authentication, circuit breakers, rate limiting, and production operations without public evidence of users or demand for an operational control layer.",
+        "success_signal": "A fresh operator can configure the reference deployment, authenticate a client, observe a timed-out or failed mock upstream with attributable retry logs, and verify fallback behavior through automated integration tests using documented commands, without modifying the core routing code."
+      }
+    ]
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-08-15T16:01:10.574721+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 21410,
+          "output_tokens": 715,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-08-15T16:01:44.396847+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 21412,
+          "output_tokens": 738,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-08-15T16:02:07.526607+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 21412,
+          "output_tokens": 601,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-08-15T16:02:30.069202+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 23369,
+          "output_tokens": 716,
+          "reasoning_output_tokens": 110
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 46080,
+      "input_tokens": 87603,
+      "output_tokens": 2770,
+      "reasoning_output_tokens": 110
+    }
+  }
+}

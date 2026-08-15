@@ -1,0 +1,200 @@
+{
+  "case_id": "case-zero-proxy",
+  "condition": "palamedes",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-08-15T16:09:09.082340+00:00",
+  "information_fingerprint": "b1242e72ceb40ad3f24acdba9f6420341417521ae7756fce92764ab39fa43c31",
+  "mission": {
+    "beneficiary": "Developers and platform teams that already operate authentication, ingress, monitoring, and secret-management infrastructure but need a small OpenAI-compatible provider-routing component.",
+    "consequential_choice": "sequence: pause production-control-layer feature expansion, run the forkable-component boundary probe first, then continue that boundary only if its documented behavior and distinct beneficiary value survive the falsifiers; otherwise pivot to compatibility conformance or stop expansion",
+    "falsifiers": [
+      "Independent evaluators cannot reproduce the integration from public documentation within a predefined time and intervention budget.",
+      "Documented routing, streaming, retry, header-forwarding, or model-discovery behavior fails under deterministic slow, transient-failure, malformed-response, or interrupted-stream scenarios.",
+      "Most required functionality resides in the external proxy or custom integration, leaving the gateway with no material advantage over established alternatives.",
+      "Evaluators consistently require gateway-native authentication, traffic governance, failure isolation, or diagnostics before the component is useful.",
+      "Retry behavior cannot be bounded safely for supported requests."
+    ],
+    "interpretation": "The highest-information, most reversible surviving candidate is to test the forkable developer-gateway boundary first. A reproducible deployment behind external authentication and TLS can simultaneously test the documented routing contract and reveal whether adopters instead require gateway-native controls, without prematurely creating a partial and potentially misleading production security boundary.",
+    "mission": "Validate the gateway as a forkable routing component deployed behind infrastructure the adopter already controls.",
+    "next_probe": "Create one public, containerized end-to-end fixture with two behaviorally distinct mock upstreams and an external proxy owning authentication and TLS; define acceptance criteria before testing; have independent evaluators use only public documentation; record setup time, completion rate, interventions, gateway changes, failure-case results, and comparative effort against an established proxy or small custom adapter.",
+    "non_goals": [
+      "Claiming public-production readiness.",
+      "Implementing the full authentication, rate-limiting, circuit-breaker, logging, and health-probe roadmap.",
+      "Inferring market demand or broad adoption from a small evaluator set.",
+      "Claiming universal OpenAI-provider compatibility from mock upstream results.",
+      "Moving security, TLS, authorization, or secret-management responsibility into the gateway during this probe."
+    ],
+    "rationale": "This probe tests the boundary most consistently supported by the current documentation, benefits teams already equipped to own ingress and security, and avoids the high cost and hidden liability of building an incomplete production control layer before demand is established. It survives adversarial critique only if the gateway's contribution is measured separately from the reference stack, realistic failure semantics are exercised, and established alternatives are included as a baseline.",
+    "situation": "The public repository positions the gateway both as a forkable routing primitive behind adopter-owned controls and as an emerging production service, but the packet contains no implementation, integration, adoption, threat-model, or operational evidence sufficient to justify the production-control-layer roadmap.",
+    "success_signal": "Independent evaluators can reproduce a containerized two-upstream deployment from public documentation, correctly exercise model-prefix routing, weighted selection, streaming, retry behavior, and merged model discovery, and show a material simplicity or capability advantage over an established proxy or small custom adapter without requiring gateway-native production controls."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "92a4cd42d7e047b93052cd0fd53af0501ca96f212fda564b43aa4c03d5bdebfc",
+  "provider": "codex",
+  "role_artifacts": {
+    "adversary": {
+      "candidate_critiques": [
+        {
+          "disconfirming_evidence": "Independent evaluators cannot reproduce the setup from public documentation; most required changes fall outside the gateway; direct use of established proxies or lightweight application code is simpler; or realistic streaming and retry failures remain unreliable even behind the reference boundary.",
+          "failure_mode": "The probe may validate only a carefully engineered reference stack, not whether the gateway is independently understandable or useful. External auth, TLS, ingress, and monitoring can conceal defects and transfer so much responsibility outward that the gateway contributes little beyond configuration glue. Several evaluators would not establish demand or prove that adopters actually possess the assumed infrastructure.",
+          "hidden_harm": "A successful fixture could freeze a narrow expert-only boundary, normalize unsafe copy-and-modify deployments, and make integration complexity look like an adopter problem. Effort spent polishing external-proxy documentation could distract from defects in routing, streaming, and retry semantics.",
+          "mission": "Validate the gateway as a forkable routing component deployed behind infrastructure the adopter already controls."
+        },
+        {
+          "disconfirming_evidence": "Evaluators already use ingress, API-management, or service-mesh controls; the new features duplicate those systems; threat modeling reveals a much larger safe-exposure scope; stateful circuit behavior fails under multiple replicas; or the slice adds operational complexity without reducing deployment time or incident impact.",
+          "failure_mode": "The proposed slice presumes that authentication, timeouts, logs, and circuit breaking form a coherent minimum production boundary. They do not address TLS termination, authorization scope, credential rotation, tenant isolation, request limits, auditability, secret storage, abuse prevention, durable state, or safe retry semantics. Passing deterministic mock scenarios could create an unjustified production-readiness signal.",
+          "hidden_harm": "This candidate would waste the most effort if wrong: it requires substantial security and distributed-systems implementation, testing, documentation, and long-term maintenance before establishing that users want these controls inside this repository. A partial control layer also increases liability by inviting public exposure while remaining materially incomplete.",
+          "mission": "Validate the gateway as a production-facing operational control layer that directly owns the minimum safe exposure boundary."
+        },
+        {
+          "disconfirming_evidence": "Representative real providers fail cases that mocks pass; compatibility requires numerous provider-specific transformations; retry-safe behavior cannot be defined across streaming and non-idempotent requests; supported endpoints remain too narrow for common clients; or users prefer provider SDKs and explicit adapters over a supposedly uniform interface.",
+          "failure_mode": "A generic conformance suite may impose a fictional common contract on providers that are only superficially OpenAI-compatible. Mock providers can verify the gateway's own assumptions without exposing real provider deviations, endpoint churn, authentication differences, streaming edge cases, or semantic incompatibilities. Compatibility alone may also be too weak a product boundary if routing and operational behavior are the actual differentiators.",
+          "hidden_harm": "Publishing a compatibility matrix can overstate interoperability and encourage applications to depend on lossy lowest-common-denominator behavior. Maintaining provider-specific exceptions may quietly turn the small adapter into a brittle compatibility platform while security and operability gaps remain externalized.",
+          "mission": "Validate compatibility and failure semantics as the product boundary, leaving security and governance explicitly outside the repository."
+        },
+        {
+          "disconfirming_evidence": "Operators cannot consistently identify root causes from emitted signals; conclusions differ between logs and metrics; probes report health while user requests fail; instrumentation materially changes performance; useful attribution requires invasive request capture; or existing proxy and platform telemetry provides equivalent diagnosis.",
+          "failure_mode": "Telemetry may describe symptoms without enabling corrective action. Health probes can disagree with real request paths, metrics can lose per-attempt or streaming outcomes, and structured logs can expose prompts, credentials, or provider details. A scripted fault campaign tests whether operators can read a designed narrative, not whether the signals remain accurate under concurrency, cancellation, partial streams, retries, and multiple replicas.",
+          "hidden_harm": "Added probes and high-cardinality telemetry can increase provider traffic, cost, latency, storage, and sensitive-data exposure. The project could acquire a permanent observability surface and dashboard compatibility burden without evidence that operators need another monitoring layer.",
+          "mission": "Validate an operations-observability companion boundary without taking ownership of authentication or public ingress."
+        }
+      ],
+      "shared_assumptions": [
+        "The documented capabilities accurately represent implemented behavior despite the absence of source and test evidence in the packet.",
+        "A meaningful product boundary can be inferred from repository documentation without public adoption, issue, deployment, or user-interview evidence.",
+        "OpenAI compatibility is stable and sufficiently well defined to support provider-independent routing and conformance claims.",
+        "Mock upstreams reproduce the failures, timing, streaming behavior, and protocol deviations that determine real-world value.",
+        "Retries are safe and useful across supported requests, including streamed or potentially non-idempotent operations.",
+        "The four proposed boundaries are separable, although compatibility, routing, security, reliability, and observability may be inseparable in actual deployments.",
+        "Independent evaluators are representative of intended adopters, and a small evaluation can distinguish usability problems from lack of demand.",
+        "External infrastructure is either reliably available or meaningfully absent for the target beneficiary groups; neither premise has evidence here.",
+        "A bounded technical probe can establish product value without comparing the gateway against existing reverse proxies, API gateways, service meshes, provider SDKs, or small custom adapters.",
+        "The repository should continue toward some expanded product boundary rather than remain a minimal example, be reduced in scope, or be archived.",
+        "Success metrics such as setup time, completion rate, diagnosis accuracy, or safer deployment can be defined without first specifying threat, compatibility, and operational contracts.",
+        "The roadmap's missing controls reflect an unresolved product boundary rather than ordinary backlog accumulation or documentation-driven positioning."
+      ]
+    },
+    "interpreter": {
+      "interpretations": [
+        "The current product may be best understood as forkable developer infrastructure: a compact routing primitive that teams embed behind controls they already operate.",
+        "The roadmap may be attempting to evolve the project into a production operational control layer that directly owns security, reliability, observability, and traffic governance.",
+        "A bounded probe could test whether intended adopters obtain value from configuring and integrating the existing gateway behind their own boundary, versus requiring the gateway itself to provide authentication, rate limiting, failure isolation, and operational diagnostics.",
+        "The repeated security disclaimers may indicate a deliberate boundary rather than merely unfinished work: production exposure could remain an integration responsibility while the project focuses on routing compatibility.",
+        "Conversely, prominent claims about retries, health, metrics, Docker, and production-oriented roadmap items may create expectations that the gateway itself is an operable production service, making missing controls part of the product rather than external prerequisites.",
+        "The most discriminating evaluation would compare two clearly scoped usage contracts—developer-owned deployment behind existing controls and gateway-owned production control—using public, reproducible setup and failure scenarios without inferring private demand."
+      ],
+      "missing_evidence": [
+        "Evidence that external developers can successfully fork, configure, and integrate the gateway with real or mock OpenAI-compatible providers.",
+        "Evidence about which responsibility boundary prospective adopters expect: routing component behind existing infrastructure or independently exposed production gateway.",
+        "Implementation-level confirmation that documented streaming, weighted routing, retry, header forwarding, and merged-model behavior work under realistic conditions.",
+        "Integration tests with mock upstreams covering transient failures, partial streams, malformed responses, slow providers, retry safety, and provider-selection behavior.",
+        "Operational measurements for latency overhead, retry amplification, failure recovery, load behavior, metric usefulness, and resource consumption.",
+        "A defined threat model and explicit trust-boundary contract for client credentials, provider keys, request data, logs, and public network exposure.",
+        "Acceptance criteria distinguishing success for the forkable-gateway boundary from success for the production-control-layer boundary.",
+        "Public adoption signals such as forks, issues, deployment reports, integration examples, or maintainer discussions that reveal actual usage and unmet needs.",
+        "Evidence that authentication, rate limiting, circuit breakers, structured logging, and health probes belong inside this repository rather than in surrounding infrastructure.",
+        "Clarification of compatibility scope across OpenAI-style endpoints, request and response variants, streaming semantics, and provider-specific deviations."
+      ],
+      "observations": [
+        "The repository presents the product as a self-hosted, forkable OpenAI-compatible gateway for routing across multiple upstream providers.",
+        "Implemented or advertised capabilities include model-prefix routing, weighted load balancing, retries, streaming preservation, merged model listing, health checks, metrics, Docker support, and smoke tests.",
+        "The documentation repeatedly warns that the gateway lacks client authentication and should remain behind trusted network controls or external authentication before public exposure.",
+        "The roadmap prioritizes authentication, timeouts, structured logs, circuit breakers, provider probes, retry backoff, integration tests, rate limiting, deployment guides, and metrics documentation.",
+        "The fork guide emphasizes customization and local deployment, while its production checklist delegates authentication, HTTPS, monitoring, and secret handling to the operator.",
+        "The supplied evidence consists primarily of documentation and package metadata; no implementation source, test source, usage data, user feedback, deployment evidence, or operational results are included."
+      ]
+    },
+    "inventor": {
+      "candidate_missions": [
+        {
+          "beneficiary": "Developers and platform teams that already operate authentication, ingress, monitoring, and secret-management infrastructure but need a small provider-routing primitive.",
+          "falsifier": "The reference integration cannot reliably preserve documented behavior, or evaluators consistently cannot deploy it without demanding gateway-native authentication, traffic governance, and operational diagnostics.",
+          "mechanism": "Publish a reproducible reference integration using two mock OpenAI-compatible upstreams plus an external reverse proxy that owns authentication and TLS; test configuration time, model-prefix routing, weighted selection, streaming, retries, and merged model discovery.",
+          "mission": "Validate the gateway as a forkable routing component deployed behind infrastructure the adopter already controls.",
+          "next_probe": "Create one containerized end-to-end fixture with mock upstreams and external auth, then have several independent evaluators follow only the public documentation and record completion rate, setup time, failures, and required gateway changes."
+        },
+        {
+          "beneficiary": "Small teams that want one independently deployable gateway and do not already have an API management or service-mesh layer.",
+          "falsifier": "The vertical slice does not make public deployment meaningfully safer or easier, duplicates controls evaluators already possess, or expands complexity without producing actionable failure isolation and diagnostics.",
+          "mechanism": "Build a narrow vertical slice containing gateway client API-key authentication, request timeouts, structured retry logs, and per-provider circuit breaking; exercise it with deterministic slow, failing, and recovering mock upstreams.",
+          "mission": "Validate the gateway as a production-facing operational control layer that directly owns the minimum safe exposure boundary.",
+          "next_probe": "Implement and test a single protected chat-completions path under invalid credentials, provider timeout, transient failure, circuit-open, and recovery scenarios, with explicit security and operability acceptance criteria."
+        },
+        {
+          "beneficiary": "Tool builders and application developers who need one stable OpenAI-style interface across heterogeneous local and hosted providers.",
+          "falsifier": "Realistic providers require extensive provider-specific policy or operational controls, or the documented endpoints cannot share stable semantics without exposing incompatibilities that overwhelm the generic adapter.",
+          "mechanism": "Turn the gateway into a conformance-tested OpenAI-compatible routing adapter with a documented compatibility matrix and integration tests for streaming, header forwarding, retry safety, malformed responses, model listing, and provider-specific deviations.",
+          "mission": "Validate compatibility and failure semantics as the product boundary, leaving security and governance explicitly outside the repository.",
+          "next_probe": "Construct a public mock-provider conformance suite and run representative request, response, stream-interruption, malformed-payload, and retry cases against the current documented contract."
+        },
+        {
+          "beneficiary": "Operators who can secure the gateway externally but need evidence to diagnose provider quality, routing decisions, and failover behavior.",
+          "falsifier": "Operators cannot make materially better routing or incident decisions from the added telemetry, or the measurements are misleading because health, stream failures, and retry outcomes cannot be attributed accurately.",
+          "mechanism": "Add provider health probes, structured JSON events, retry attribution, latency and outcome metrics, and a minimal dashboard contract while retaining the documented trusted-network deployment model.",
+          "mission": "Validate an operations-observability companion boundary without taking ownership of authentication or public ingress.",
+          "next_probe": "Run a scripted fault campaign across healthy, slow, intermittently failing, and partially streaming mock providers, then test whether an operator can identify the faulty provider and explain each routing or retry decision using only emitted logs and metrics."
+        }
+      ]
+    }
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-08-15T16:07:26.391994+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 21323,
+          "output_tokens": 650,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-08-15T16:07:56.755949+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 22008,
+          "output_tokens": 702,
+          "reasoning_output_tokens": 25
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-08-15T16:08:37.576701+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 22737,
+          "output_tokens": 1153,
+          "reasoning_output_tokens": 28
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-08-15T16:09:09.082276+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 23991,
+          "output_tokens": 678,
+          "reasoning_output_tokens": 0
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 58368,
+      "input_tokens": 90059,
+      "output_tokens": 3183,
+      "reasoning_output_tokens": 53
+    }
+  }
+}
