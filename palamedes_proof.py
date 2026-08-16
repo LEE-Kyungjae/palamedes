@@ -67,6 +67,7 @@ def fingerprint(payload: Any) -> str:
 def validate_portfolio(portfolio: Dict[str, Any]) -> List[str]:
     errors: List[str] = []
     cases = portfolio.get("cases")
+    case_zero = portfolio.get("case_zero") is True
     protocol = portfolio.get("generation_protocol")
     rubric = portfolio.get("rubric")
     gate = portfolio.get("success_gate")
@@ -91,8 +92,13 @@ def validate_portfolio(portfolio: Dict[str, Any]) -> List[str]:
         errors.append("rubric weights must total 100")
     if not isinstance(gate, dict):
         errors.append("success_gate must be an object")
-    if not isinstance(cases, list) or len(cases) < 3:
-        errors.append("at least three cases are required")
+    minimum_cases = 1 if case_zero else 3
+    if not isinstance(cases, list) or len(cases) < minimum_cases:
+        errors.append(
+            "at least one case is required for case-zero calibration"
+            if case_zero
+            else "at least three cases are required"
+        )
     else:
         seen = set()
         for index, case in enumerate(cases):

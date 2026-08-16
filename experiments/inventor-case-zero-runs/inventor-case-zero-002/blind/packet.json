@@ -1,0 +1,84 @@
+{
+  "blind_packet_version": "palamedes-proof-blind/1",
+  "cases": [
+    {
+      "case_id": "case-zero-gahyeon",
+      "information_fingerprint": "fbf5834f384a22315b53db9cf88900a60c26e9e92900a511304f19626c715200",
+      "missions": {
+        "A": {
+          "beneficiary": "Prospective users and contributors who need evidence that Gahyeon behaves as a responsive realtime character rather than only as a collection of source-connected subsystems.",
+          "consequential_choice": "sequence: position the packaged Unreal realtime vertical slice as the next milestone, run its dependency-and-contract probe first, continue only if prerequisites survive, and explicitly defer production migration clearance and character-identity candidate promotion",
+          "falsifiers": [
+            "A usable UE 5.6 and MetaHuman environment, target machine, audio device, or required provider access is unavailable and has no bounded acquisition path.",
+            "The project cannot produce or repeatedly run a packaged build on the declared target.",
+            "Applied listening-pose, speech, or viseme latency misses the predeclared acceptance thresholds.",
+            "Late cognition, STT, TTS, or engine callbacks revive cancelled work or corrupt the active generation.",
+            "Barge-in fails to stop playback and restore a valid conversational state.",
+            "The proposed minimal loop requires substantial Looking Glass, World, NavMesh, character-identity, or production-deployment work to function."
+          ],
+          "interpretation": "Select the packaged Unreal realtime vertical slice as the next cross-project milestone, conditionally sequenced behind a low-cost availability and scope probe. It has greater beneficiary value and integration information gain than another source-level migration check or premature character iteration, while a predeclared stop condition limits exposure if UE, MetaHuman, device, or provider prerequisites are unavailable.",
+          "mission": "Define and prove one minimal packaged Unreal 5.6 conversation loop: voice activity triggers an applied listening pose, Korean speech is recognized, cognition produces interruptible speech with applied visemes, and barge-in returns the character to a valid state without stale callbacks reviving cancelled work. First verify all required tooling and resources; if any essential prerequisite lacks a concrete acquisition path, stop this milestone rather than beginning integration.",
+          "next_probe": "Write a revision-pinned one-page slice contract mapping the exact scenario, repetitions, artifacts, and thresholds to the smallest necessary subset of RT-02, RT-04, RT-05, RT-08, and RT-11; then inventory confirmed access to UE 5.6, compatible MetaHuman assets, a target machine, microphone/audio output, Korean STT, cognition, and TTS. Proceed only if every essential dependency is present or has a bounded owner and acquisition path.",
+          "non_goals": [
+            "Clearing production deployment or claiming migration safety without live Flyway history and representative-scale measurements.",
+            "Promoting v10 or v11 to an identity candidate without authorized canonical references, populated review evidence, and named human approval.",
+            "Validating Looking Glass hardware, broad World or NavMesh behavior, every RT-01–RT-13 row, arm64 publishing, or multi-machine portability.",
+            "Polishing a showcase through demo-specific architectural shortcuts."
+          ],
+          "rationale": "This gate composes the largest body of existing verified work into credible user-facing evidence and tests whether the architecture survives real engine, audio, provider, timing, and cancellation boundaries. It is reversible because the initial slice contract and dependency inventory require little implementation, the scope excludes unrelated engine features, and failure yields specific integration evidence. Migration preflight is deferred because it cannot establish production readiness without authorized live history and scale measurements. Character v11 is deferred because candidate status cannot be credible without authorized references, declared thresholds, and named reviewers.",
+          "situation": "Gahyeon has broad repository-verified Core, transport, Desktop, audio, cancellation, replay, and RuntimeCore evidence, but lacks an end-to-end user-facing proof. Production migration clearance depends on unavailable live database history, and character-candidate promotion depends on unpublished identity references and human approval. Packaged Unreal acceptance also has external dependencies, but it offers the strongest conversion of existing technical breadth into a visible experience if those dependencies are first confirmed.",
+          "success_signal": "On one declared target machine, a packaged Unreal 5.6 build completes the bounded conversation loop repeatedly with recorded audiovisual evidence, UE Automation results, latency traces against predeclared RT-02, RT-04, RT-05, RT-08, and RT-11 thresholds, successful barge-in recovery, and zero stale-callback resurrection across cancellation and reordered provider responses."
+        },
+        "B": {
+          "beneficiary": "Prospective users, contributors, and maintainers who need credible evidence that Gahyeon functions as an embodied realtime AI character rather than only as independently tested subsystems.",
+          "consequential_choice": "sequence: prioritize the packaged Unreal realtime vertical slice; defer production migration clearance until authorized live-history evidence exists, and defer the next character-identity candidate until the realtime loop is credible",
+          "falsifiers": [
+            "The packaged runtime cannot preserve Reflex/Behavior cadence while Cognition is delayed.",
+            "Barge-in or reconnect allows cancelled transcripts, speech, poses, or callbacks to reappear.",
+            "Measured microphone, interruption, or viseme timing fails the applicable acceptance criteria.",
+            "The experiment cannot proceed without substantial new character authoring, production access, or unavailable Unreal hardware and provider infrastructure.",
+            "The packaged build cannot reproduce behavior already established by RuntimeCore and backend tests without major architectural changes."
+          ],
+          "interpretation": "A packaged Unreal realtime vertical slice is the most decision-useful next gate because it tests the project's central promise and converts multiple unresolved integration risks into user-visible evidence. It is bounded and reversible when performed with the current draft avatar and without production deployment.",
+          "mission": "Produce one packaged Unreal 5.6 vertical slice connected to Gahyeon Core that demonstrates live Korean microphone input, streaming speech with visibly applied visemes, barge-in, reconnect recovery, and continued Reflex/Behavior activity during delayed Cognition.",
+          "next_probe": "Package the smallest Unreal Stage build using the draft avatar and run five Korean microphone turns, one 10-second Cognition delay, one barge-in, and one forced reconnect while capturing timestamps, frame/update counters, cancellation generations, stale-event evidence, viseme application, and video.",
+          "non_goals": [
+            "Do not claim production migration readiness or deploy until disposable-PostgreSQL and authorized live-history gates pass.",
+            "Do not promote v10 or a successor to an identity-approved G1 candidate.",
+            "Do not spend this milestone on broad likeness, garment, skin, or groom refinement.",
+            "Do not attempt to close every RT-01 through RT-13 item, validate Looking Glass hardware, or reach AAA visual quality."
+          ],
+          "rationale": "This gate addresses the repository's largest repeated evidence gap: reference-tested behavior has not yet been proven in an actual packaged Unreal runtime. It integrates existing work across speech, animation, cancellation, callback fencing, concurrency, and recovery. Production migration cannot be truthfully cleared without authorized live-history evidence, and further identity authoring would consume scarce effort before the defining realtime experience is validated.",
+          "situation": "Gahyeon has broad, well-tested Core, Desktop, transport, and engine-independent realtime foundations, but its user-facing Unreal claims remain explicitly UE/device-pending. Production migration clearance requires unavailable live database history, while the character is only around pass 8.5 of 40 and is not identity-approved.",
+          "success_signal": "A reproducible packaged Unreal run completes at least 20 Korean microphone interactions, preserves Reflex/Behavior cadence through a 10-second Cognition delay, performs device-level speech interruption, applies visible visemes, and records zero stale callback or presentation revival after barge-in and forced reconnect, with VAD-to-listening and audio-to-viseme p95 results assessed against the applicable RT acceptance criteria."
+        }
+      },
+      "question": "Based only on the current public repository, which single evidence gate should Gahyeon make its next cross-project milestone so that scarce effort converts technical breadth into credible user-facing progress: production migration readiness, a packaged Unreal realtime vertical slice, or the next character-identity candidate?",
+      "required_decision": "Choose one bounded, reversible sequencing decision with a measurable completion signal and explicitly defer the other two fronts; do not assume private production access, unpublished identity references, Unreal hardware, or user demand."
+    }
+  ],
+  "origin_visible": false,
+  "rubric": {
+    "causal_mechanism": {
+      "question": "Does it identify a causal product mechanism rather than rename a familiar feature?",
+      "weight": 20
+    },
+    "decision_usefulness": {
+      "question": "Would it change a continue, stop, position, or sequence decision before roadmap expansion?",
+      "weight": 20
+    },
+    "falsifiability": {
+      "question": "Can the mission be rejected through a bounded public-information probe?",
+      "weight": 20
+    },
+    "opportunity_discovery": {
+      "question": "Does the mission expose a consequential opportunity not already stated as a roadmap item?",
+      "weight": 20
+    },
+    "project_specificity": {
+      "question": "Is it grounded enough that the same mission would not transfer unchanged to an unrelated repository?",
+      "weight": 20
+    }
+  },
+  "run_id": "inventor-case-zero-002"
+}

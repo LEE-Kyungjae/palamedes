@@ -69,6 +69,20 @@ def mission(name: str):
 
 
 class PalamedesProofTests(unittest.TestCase):
+    def test_case_zero_allows_one_case_without_weakening_proof_portfolios(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            candidate = portfolio(Path(tempdir))
+            candidate["cases"] = candidate["cases"][:1]
+
+            self.assertIn(
+                "at least three cases are required",
+                palamedes_proof.validate_portfolio(candidate),
+            )
+
+            candidate["case_zero"] = True
+
+            self.assertEqual(palamedes_proof.validate_portfolio(candidate), [])
+
     def test_tournament_is_a_four_call_strong_comparator(self):
         class Engine:
             def __init__(self):

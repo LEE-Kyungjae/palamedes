@@ -1,0 +1,164 @@
+{
+  "case_id": "case-zero-gahyeon",
+  "condition": "tournament",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-08-16T05:55:51.646274+00:00",
+  "information_fingerprint": "fbf5834f384a22315b53db9cf88900a60c26e9e92900a511304f19626c715200",
+  "mission": {
+    "beneficiary": "Prospective users, contributors, and maintainers who need credible evidence that Gahyeon functions as an embodied realtime AI character rather than only as independently tested subsystems.",
+    "consequential_choice": "sequence: prioritize the packaged Unreal realtime vertical slice; defer production migration clearance until authorized live-history evidence exists, and defer the next character-identity candidate until the realtime loop is credible",
+    "falsifiers": [
+      "The packaged runtime cannot preserve Reflex/Behavior cadence while Cognition is delayed.",
+      "Barge-in or reconnect allows cancelled transcripts, speech, poses, or callbacks to reappear.",
+      "Measured microphone, interruption, or viseme timing fails the applicable acceptance criteria.",
+      "The experiment cannot proceed without substantial new character authoring, production access, or unavailable Unreal hardware and provider infrastructure.",
+      "The packaged build cannot reproduce behavior already established by RuntimeCore and backend tests without major architectural changes."
+    ],
+    "interpretation": "A packaged Unreal realtime vertical slice is the most decision-useful next gate because it tests the project's central promise and converts multiple unresolved integration risks into user-visible evidence. It is bounded and reversible when performed with the current draft avatar and without production deployment.",
+    "mission": "Produce one packaged Unreal 5.6 vertical slice connected to Gahyeon Core that demonstrates live Korean microphone input, streaming speech with visibly applied visemes, barge-in, reconnect recovery, and continued Reflex/Behavior activity during delayed Cognition.",
+    "next_probe": "Package the smallest Unreal Stage build using the draft avatar and run five Korean microphone turns, one 10-second Cognition delay, one barge-in, and one forced reconnect while capturing timestamps, frame/update counters, cancellation generations, stale-event evidence, viseme application, and video.",
+    "non_goals": [
+      "Do not claim production migration readiness or deploy until disposable-PostgreSQL and authorized live-history gates pass.",
+      "Do not promote v10 or a successor to an identity-approved G1 candidate.",
+      "Do not spend this milestone on broad likeness, garment, skin, or groom refinement.",
+      "Do not attempt to close every RT-01 through RT-13 item, validate Looking Glass hardware, or reach AAA visual quality."
+    ],
+    "rationale": "This gate addresses the repository's largest repeated evidence gap: reference-tested behavior has not yet been proven in an actual packaged Unreal runtime. It integrates existing work across speech, animation, cancellation, callback fencing, concurrency, and recovery. Production migration cannot be truthfully cleared without authorized live-history evidence, and further identity authoring would consume scarce effort before the defining realtime experience is validated.",
+    "situation": "Gahyeon has broad, well-tested Core, Desktop, transport, and engine-independent realtime foundations, but its user-facing Unreal claims remain explicitly UE/device-pending. Production migration clearance requires unavailable live database history, while the character is only around pass 8.5 of 40 and is not identity-approved.",
+    "success_signal": "A reproducible packaged Unreal run completes at least 20 Korean microphone interactions, preserves Reflex/Behavior cadence through a 10-second Cognition delay, performs device-level speech interruption, applies visible visemes, and records zero stale callback or presentation revival after barge-in and forced reconnect, with VAD-to-listening and audio-to-viseme p95 results assessed against the applicable RT acceptance criteria."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "3b5d85c918f2b63d0587962f5cd8c994e03c004810fccf01702dd62b0d139140",
+  "provider": "codex",
+  "role_artifacts": {
+    "candidates": [
+      {
+        "beneficiary": "A prospective daily user or evaluator who wants a responsive, persistent embodied AI companion, plus contributors who need one credible reference path for integration work.",
+        "consequential_choice": "sequence: prioritize the packaged Unreal realtime vertical slice; defer production migration clearance until authorized live-history access exists, and defer the next character-identity candidate until the recurring embodied interaction loop is credible",
+        "falsifiers": [
+          "Target Unreal hardware, a compatible MetaHuman setup, or a real Korean STT/TTS provider cannot be obtained for the bounded gate.",
+          "Representative evaluators do not value or repeatedly use the realtime embodied conversation loop even when it works.",
+          "The packaged slice cannot meet acceptable latency, interruption, synchronization, or recovery behavior without a major architectural rewrite.",
+          "The current non-approved character blocks meaningful evaluation of interaction quality despite using a clearly labeled temporary avatar."
+        ],
+        "interpretation": "Beneficiaries repeatedly need a character that can listen, respond, be interrupted, animate, and recover reliably—not merely more source-level capability or a prettier static model. A bounded packaged Unreal vertical slice tests that recurring interaction loop and converts the project's strongest technical breadth into visible, credible value.",
+        "mission": "Make a packaged Unreal realtime conversation vertical slice the next cross-project milestone: one reproducible session demonstrating Korean speech input, response audio, interruption, synchronized visible presentation, and reconnect recovery through the existing Core-to-Unreal path.",
+        "next_probe": "Time-box a hardware-and-provider feasibility run using the current draft avatar: package the smallest Unreal Stage build and execute five Korean microphone turns, one barge-in, and one forced reconnect while capturing latency, stale-event, synchronization, and Game Thread evidence.",
+        "non_goals": [
+          "Do not claim production migration readiness or deploy until live Flyway history and disposable-PostgreSQL gates pass.",
+          "Do not advance G1 to candidate, claim identity likeness, or begin broad AAA character polish.",
+          "Do not complete every RT-01 through RT-13 hardware matrix item before demonstrating the bounded conversation loop.",
+          "Do not validate Looking Glass or add new renderer features."
+        ],
+        "rationale": "This gate directly serves prospective users and contributors by proving the project's defining promise as an embodied realtime character. It integrates many already-built systems, attacks the repository's repeated UE-pending evidence gap, and can reveal whether latency, cancellation, synchronization, and recovery actually cohere. Migration work is essential release hygiene but cannot be completed credibly without private live-history access; advancing the character candidate now risks spending many scarce passes on likeness before the interaction experience is validated.",
+        "situation": "Gahyeon has broad, largely reference-verified infrastructure across Core, Desktop, Discord, and Unreal, but its highest-fidelity user experience remains unproven in a real packaged Unreal environment. Production migration readiness depends partly on unavailable live database evidence, while the character is only around pass 8.5 of 40 and still lacks identity approval.",
+        "success_signal": "A packaged Unreal build completes a recorded, reproducible 10-minute session with at least 20 Korean microphone turns; listening and response presentation work end to end; one barge-in stops stale speech and presentation without revival; one forced disconnect converges without stale callbacks or Game Thread stalls; and measured VAD-to-Listening, speech/viseme synchronization, and cancellation results satisfy the applicable RT acceptance criteria."
+      },
+      {
+        "beneficiary": "Maintainers and eventual users who need Gahyeon releases to preserve persistent conversations, sessions, usage records, and agent state without migration or rollback corruption.",
+        "consequential_choice": "sequence: make production migration readiness the next milestone; explicitly defer the packaged Unreal vertical slice and next character-identity candidate until the release path is proven safe, and stop rather than deploy if live V30–V35 history is present or unavailable.",
+        "falsifiers": [
+          "Any persistent environment contains a V30–V35 Flyway entry.",
+          "Either disposable PostgreSQL path fails migration, checksum, pgvector, backfill, index, physical-mapping, or Hibernate validation checks.",
+          "Representative V29 or V36 measurements show unacceptable locking or write disruption without a safe forward-only alternative.",
+          "Authorized read-only live-history evidence cannot be obtained, preventing a truthful production-readiness claim."
+        ],
+        "interpretation": "The highest-value near-term move is production migration readiness. It is the most bounded and safety-critical option, relies primarily on existing reproducible checks, and prevents credible work from being stranded behind an unsafe release path. A packaged Unreal slice requires unavailable engine/device evidence, while the next identity candidate requires many costly authoring passes and unpublished references.",
+        "mission": "Complete the production migration-readiness evidence gate: pass the disposable PostgreSQL V1–V29,V36 preflight, document representative V29/V36 lock-risk measurements, and prepare the exact read-only live-history query and stop conditions for an authorized operator.",
+        "next_probe": "Run the documented disposable PostgreSQL preflight and inspect its generated evidence; in parallel only at the coordination level, identify whether an authorized operator can return the specified read-only Flyway history without granting broader production access.",
+        "non_goals": [
+          "Do not build or claim a packaged Unreal realtime vertical slice.",
+          "Do not advance the character to a new identity candidate or record likeness approval.",
+          "Do not deploy, modify production databases, edit applied migrations, reuse V30–V35, or claim production clearance from disposable evidence alone.",
+          "Do not add linux/arm64 publishing."
+        ],
+        "rationale": "This mission has the strongest combination of technical feasibility, safety, and operating cost. Most evidence is deterministic and repository-controlled; failure is reversible and reveals concrete schema risks. It avoids spending scarce effort polishing an Unreal presentation or character asset that cannot yet be safely released. Because private production access cannot be assumed, the mission must not claim deployment clearance without independently supplied live-history evidence.",
+        "situation": "Gahyeon has broad automated Core, Desktop, transport, and RuntimeCore evidence, but user-facing Unreal claims remain largely UE/device-pending, the character is only at pass 8.5 of 40, and deployment is explicitly blocked by unresolved live migration history plus PostgreSQL preflight gates.",
+        "success_signal": "The reproducible PostgreSQL gate reports exact successful history V1–V29,V36 with no V30–V35 entries, application schema validation passes on both empty and authoritative-V24 upgrade paths, representative V29/V36 operational risks are recorded, and an authorized operator supplies evidence that every persistent environment has no V30–V35 history."
+      },
+      {
+        "beneficiary": "A prospective user, contributor, or maintainer who needs credible evidence that Gahyeon is a functioning realtime AI character platform rather than a collection of independently tested subsystems and unfinished visual assets.",
+        "consequential_choice": "sequence: make the packaged Unreal realtime vertical slice the next cross-project milestone; defer production migration clearance until live-history access exists and defer the next character-identity candidate until the realtime loop has passed.",
+        "falsifiers": [
+          "The packaged slice cannot maintain Reflex/Behavior cadence while Cognition is delayed.",
+          "Barge-in or reconnect permits cancelled transcripts, speech, poses, or callbacks to reappear.",
+          "Real microphone-to-response or viseme timing materially misses the documented acceptance budgets.",
+          "The slice requires substantial new character authoring or production deployment access before it can demonstrate the realtime loop.",
+          "A packaged build cannot reproduce the behavior already established by RuntimeCore and backend tests."
+        ],
+        "interpretation": "The highest-value next milestone is the packaged Unreal realtime vertical slice. It tests the project’s central promise—one low-latency autonomous character expressed through Unreal—while collapsing many documented uncertainties into user-visible evidence. It is bounded and reversible because it can use the current draft character and a narrow acceptance scenario without promoting the model or deploying production changes.",
+        "mission": "Produce one packaged Unreal 5.6 vertical slice that connects to Gahyeon Core and demonstrates live Korean microphone input, barge-in, streaming speech with applied visemes, and continued Reflex/Behavior activity during delayed Cognition, with captured acceptance evidence from the actual packaged runtime.",
+        "next_probe": "Run the smallest packaged Unreal experiment that simultaneously exercises delayed Cognition, microphone STT, streaming TTS/visemes, and barge-in; capture timestamps, frame/update counters, cancellation generations, and video so the first failure identifies whether the next investment belongs in runtime integration, provider transport, or presentation.",
+        "non_goals": [
+          "Do not deploy the current release or claim production migration readiness; preserve the migration blocker and run disposable PostgreSQL evidence only when it directly supports later release work.",
+          "Do not promote v10 or its successor to an identity-approved G1 candidate, and do not spend this milestone on broad likeness, garment, skin, or groom refinement.",
+          "Do not attempt to close all RT-01 through RT-13, Looking Glass hardware validation, AAA visual quality, or production-scale performance.",
+          "Do not treat reference-test success as packaged Unreal acceptance."
+        ],
+        "rationale": "This gate has the greatest information gain per unit of scarce effort: it validates integration boundaries that reference tests cannot prove, converts backend breadth into something a user can directly experience, and exposes whether latency, callback fencing, audio interruption, animation application, and packaged-build behavior hold together. Migration work is necessary but currently blocked from full clearance without live-history access and yields little new user-facing evidence. Advancing character identity now has high opportunity cost because likeness work is early, reference-dependent, and can proceed far before revealing whether the realtime product experience works.",
+        "situation": "Gahyeon has broad, well-tested Core, Desktop, transport, and engine-independent realtime foundations, but its most visible Unreal claims remain explicitly UE-pending. Production migration readiness depends partly on unavailable live database history, while the character is only around pass 8.5 of 40 and still lacks identity approval.",
+        "success_signal": "A reproducible packaged Unreal run completes at least 20 Korean microphone interactions with zero stale callbacks after barge-in or reconnect, zero frozen behavior during a 10-second Cognition delay, working device-level speech stop, visibly applied visemes, and measured VAD-to-listening and audio-to-viseme p95 results recorded against the relevant RT acceptance criteria."
+      }
+    ]
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-08-16T05:54:39.324686+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 24707,
+          "output_tokens": 708,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-08-16T05:55:06.519549+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 24707,
+          "output_tokens": 917,
+          "reasoning_output_tokens": 239
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-08-16T05:55:30.755484+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 24707,
+          "output_tokens": 788,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-08-16T05:55:51.646230+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 26791,
+          "output_tokens": 762,
+          "reasoning_output_tokens": 58
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 39936,
+      "input_tokens": 100912,
+      "output_tokens": 3175,
+      "reasoning_output_tokens": 297
+    }
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "case_id": "case-zero-gahyeon",
+  "condition": "palamedes",
+  "condition_output_version": "palamedes-proof-condition/1",
+  "generated_at": "2026-08-16T05:58:05.862413+00:00",
+  "information_fingerprint": "fbf5834f384a22315b53db9cf88900a60c26e9e92900a511304f19626c715200",
+  "mission": {
+    "beneficiary": "Prospective users and contributors who need evidence that Gahyeon behaves as a responsive realtime character rather than only as a collection of source-connected subsystems.",
+    "consequential_choice": "sequence: position the packaged Unreal realtime vertical slice as the next milestone, run its dependency-and-contract probe first, continue only if prerequisites survive, and explicitly defer production migration clearance and character-identity candidate promotion",
+    "falsifiers": [
+      "A usable UE 5.6 and MetaHuman environment, target machine, audio device, or required provider access is unavailable and has no bounded acquisition path.",
+      "The project cannot produce or repeatedly run a packaged build on the declared target.",
+      "Applied listening-pose, speech, or viseme latency misses the predeclared acceptance thresholds.",
+      "Late cognition, STT, TTS, or engine callbacks revive cancelled work or corrupt the active generation.",
+      "Barge-in fails to stop playback and restore a valid conversational state.",
+      "The proposed minimal loop requires substantial Looking Glass, World, NavMesh, character-identity, or production-deployment work to function."
+    ],
+    "interpretation": "Select the packaged Unreal realtime vertical slice as the next cross-project milestone, conditionally sequenced behind a low-cost availability and scope probe. It has greater beneficiary value and integration information gain than another source-level migration check or premature character iteration, while a predeclared stop condition limits exposure if UE, MetaHuman, device, or provider prerequisites are unavailable.",
+    "mission": "Define and prove one minimal packaged Unreal 5.6 conversation loop: voice activity triggers an applied listening pose, Korean speech is recognized, cognition produces interruptible speech with applied visemes, and barge-in returns the character to a valid state without stale callbacks reviving cancelled work. First verify all required tooling and resources; if any essential prerequisite lacks a concrete acquisition path, stop this milestone rather than beginning integration.",
+    "next_probe": "Write a revision-pinned one-page slice contract mapping the exact scenario, repetitions, artifacts, and thresholds to the smallest necessary subset of RT-02, RT-04, RT-05, RT-08, and RT-11; then inventory confirmed access to UE 5.6, compatible MetaHuman assets, a target machine, microphone/audio output, Korean STT, cognition, and TTS. Proceed only if every essential dependency is present or has a bounded owner and acquisition path.",
+    "non_goals": [
+      "Clearing production deployment or claiming migration safety without live Flyway history and representative-scale measurements.",
+      "Promoting v10 or v11 to an identity candidate without authorized canonical references, populated review evidence, and named human approval.",
+      "Validating Looking Glass hardware, broad World or NavMesh behavior, every RT-01–RT-13 row, arm64 publishing, or multi-machine portability.",
+      "Polishing a showcase through demo-specific architectural shortcuts."
+    ],
+    "rationale": "This gate composes the largest body of existing verified work into credible user-facing evidence and tests whether the architecture survives real engine, audio, provider, timing, and cancellation boundaries. It is reversible because the initial slice contract and dependency inventory require little implementation, the scope excludes unrelated engine features, and failure yields specific integration evidence. Migration preflight is deferred because it cannot establish production readiness without authorized live history and scale measurements. Character v11 is deferred because candidate status cannot be credible without authorized references, declared thresholds, and named reviewers.",
+    "situation": "Gahyeon has broad repository-verified Core, transport, Desktop, audio, cancellation, replay, and RuntimeCore evidence, but lacks an end-to-end user-facing proof. Production migration clearance depends on unavailable live database history, and character-candidate promotion depends on unpublished identity references and human approval. Packaged Unreal acceptance also has external dependencies, but it offers the strongest conversion of existing technical breadth into a visible experience if those dependencies are first confirmed.",
+    "success_signal": "On one declared target machine, a packaged Unreal 5.6 build completes the bounded conversation loop repeatedly with recorded audiovisual evidence, UE Automation results, latency traces against predeclared RT-02, RT-04, RT-05, RT-08, and RT-11 thresholds, successful barge-in recovery, and zero stale-callback resurrection across cancellation and reordered provider responses."
+  },
+  "model": "configured-default",
+  "output_fingerprint": "acb0f325f8636781de5ddba2a2de652a74ddc0a18b54e69f3b8137e5028410ac",
+  "provider": "codex",
+  "role_artifacts": {
+    "adversary": {
+      "candidate_critiques": [
+        {
+          "disconfirming_evidence": "A failed or irreproducible preflight; any V30–V35 history; mismatch from V1–V29,V36; invalid V24 mappings; failed pgvector, V29, V36, or Hibernate validation; live histories showing renamed migrations were applied; or representative-volume tests revealing unacceptable blocking.",
+          "failure_mode": "The disposable PostgreSQL preflight may pass while leaving the decisive release question unanswered: unknown live Flyway history, production-scale locks, extension privileges, and rollback compatibility. It risks turning a supporting check into a milestone that cannot itself demonstrate production readiness or visible user progress.",
+          "hidden_harm": "Scarce effort could be spent polishing reproducible source-level evidence that operators already understand is insufficient, while the product remains neither deployable nor more tangible to users. Calling this migration 'readiness' may also invite stakeholders to blur the explicit boundary between disposable-database compatibility and production clearance.",
+          "mission": "Establish repository-verifiable migration preflight readiness while explicitly deferring live production clearance, packaged Unreal validation, and character promotion."
+        },
+        {
+          "disconfirming_evidence": "No usable UE 5.6/MetaHuman environment or target machine; failure to package or run repeatedly; missing provider or Korean-audio access; latency thresholds that cannot be met; incorrect applied-pose or viseme confirmations; stale callbacks reviving cancelled work; failed barge-in; or evidence that the declared slice omits failures users encounter in ordinary use.",
+          "failure_mode": "The proposed 'minimal' slice still bundles UE 5.6 packaging, MetaHuman integration, Korean microphone/STT, cognition, TTS, visemes, barge-in, provider behavior, latency instrumentation, and stale-callback fencing. Any unavailable tool, asset, provider, device, or integration defect can prevent completion, and a demo on one machine may not establish repeatable product viability.",
+          "hidden_harm": "This candidate would waste the most effort if its availability assumptions are wrong: it concentrates many unresolved external dependencies into the most integration-heavy gate, encouraging extensive debugging and demo-specific glue before confirming that the required engine, target machine, MetaHuman assets, audio device, and providers exist. It could also distort architecture toward a recorded showcase while migration safety and character identity remain unresolved.",
+          "mission": "Define and prove a minimal packaged Unreal realtime vertical slice while explicitly deferring production migration clearance and the next identity-candidate promotion."
+        },
+        {
+          "disconfirming_evidence": "References are unavailable, unpublished, or unauthorized; reviewers or thresholds cannot be named; v11 remains generically older-looking; neutral gains fail in profile or animation; topology, rig, groom coverage, or provenance regress; g1-review.json lacks valid evidence; or reviewers withhold approval.",
+          "failure_mode": "The mission depends on authorized canonical references, defensible comparison criteria, and named reviewers that the public repository does not establish. Localized v11 edits may improve measured ratios without improving perceived likeness, while major blockers in eyes, groom, garments, skin, and facial rig make candidate status premature at roughly pass 8.5 of 40.",
+          "hidden_harm": "Iteration may overfit a few 2D overlays or Vision-derived ratios, damage profile or deformation quality, and consume scarce art effort on an approval process that cannot run. Labeling the package a 'candidate' even conditionally may create status pressure inconsistent with the checkpoint's explicit instruction not to promote the artifact yet.",
+          "mission": "Produce a reviewable v11 character-identity candidate package without promoting it prematurely, while explicitly deferring migration clearance and packaged Unreal validation."
+        },
+        {
+          "disconfirming_evidence": "Existing documents already contain equivalent completion signals and stop conditions; no owner can secure the external dependencies; local probes do not change feasibility estimates; the new matrix conflicts with authoritative status files; or stakeholders still cannot commit resources after the availability questions are documented.",
+          "failure_mode": "This is a meta-process substitute for the required cross-project milestone rather than one of the three requested evidence gates. The repository already distinguishes reference evidence from production, packaged UE, and identity acceptance, so another matrix may restate known blockers without producing user-facing proof.",
+          "hidden_harm": "Documentation can become a low-risk refuge that consumes coordination effort, adds a competing source of truth, and creates false confidence through increasingly precise gate language unsupported by owners, resource access, or demand evidence. Running one local probe per front also fragments scarce effort instead of testing the single most decision-relevant uncertainty.",
+          "mission": "Create a public evidence-readiness contract that converts the three blocked fronts into independently executable gates, while explicitly deferring claims of completion on migration, Unreal packaging, and identity approval."
+        }
+      ],
+      "shared_assumptions": [
+        "The four truncated excerpts accurately represent the current public repository and omit no newer contradictory evidence or existing milestone commitment.",
+        "Technical breadth is the main bottleneck, rather than unclear product demand, interaction design, reliability in the existing Discord/Desktop clients, or maintainer capacity.",
+        "One of the three named fronts is necessarily the best next cross-project milestone even though they measure operational safety, experiential integration, and visual identity rather than comparable outcomes.",
+        "A measurable evidence gate will translate into credible user-facing progress without direct user research or stakeholder priority evidence.",
+        "The required external dependencies have plausible acquisition paths despite no permission to assume production access, Unreal hardware/tooling, providers, unpublished identity references, or reviewers.",
+        "Completion criteria can be fixed before availability, cost, schedule, licensing, and ownership are known.",
+        "Repository-local evidence can meaningfully reduce the dominant risk on each front, even where final acceptance is inherently external.",
+        "Explicitly deferring two fronts will not allow migration risk, engine drift, or character rework to compound while the selected front proceeds.",
+        "The existing architecture and reference tests are sound enough that the remaining work is predominantly evidence collection and integration rather than discovery of fundamental design defects.",
+        "A single-machine Unreal demonstration, disposable-database migration run, or reviewer-approved character package would be credible beyond its narrowly declared environment.",
+        "Scarce effort is interchangeable across database operations, Unreal engineering, provider integration, and character art, despite likely requiring different specialists and resources.",
+        "The documented acceptance thresholds and identity authority order are complete and valid even though their full definitions and underlying references are not present in the bounded packet."
+      ]
+    },
+    "interpreter": {
+      "interpretations": [
+        "Production migration readiness is an operational credibility gate with clear controls, but its decisive completion signal is partly external to the public repository and cannot be established without authorized live-history access.",
+        "A packaged Unreal realtime vertical slice could integrate the largest amount of already-built technical breadth into a visible user experience, but its credible acceptance signal requires engine and hardware evidence that the bounded context forbids assuming.",
+        "The next character-identity candidate is the most locally reversible artifact sequence because v11 can preserve v10, yet candidate status depends on canonical identity comparison and human approval evidence that may rely on unpublished references.",
+        "The repository shows stronger breadth than end-to-end user-facing proof: many components are source-connected or reference-verified, while final deployment, packaged-engine, and likeness gates remain open.",
+        "The three options measure different kinds of progress: operational safety for migration readiness, integrated experiential proof for Unreal, and visual identity fidelity for the character candidate.",
+        "A milestone chosen solely for repository-local executability may differ from one chosen for maximum user-facing impact.",
+        "The strongest bounded milestone definition would need to separate evidence producible from public source from evidence requiring production access, identity authority, licensed tooling, providers, or physical hardware.",
+        "Because the prompt forbids selecting a mission, the evidence supports comparison of feasibility and credibility constraints but not a justified single sequencing choice."
+      ],
+      "missing_evidence": [
+        "Actual flyway_schema_history output for every persistent environment, including whether V30–V35 or V36 were ever applied.",
+        "Results and artifacts from scripts/preflight_postgres_migrations.sh at the stated repository revision.",
+        "Representative production-scale measurements for V29 backfill and constraint locks and V36 index-build blocking.",
+        "A packaged Unreal build result, UE Automation output, target-platform frame and latency traces, and confirmation that required UE 5.6 and MetaHuman tooling are available.",
+        "End-to-end Korean microphone, STT, LLM, Piper TTS, MetaHuman viseme, barge-in, reconnect, stale-callback, and NavMesh evidence on real devices.",
+        "Evidence defining the smallest acceptable Unreal vertical-slice scenario and its measurable user-facing completion signal.",
+        "Access status and licensing or publication status of the canonical identity references used for character comparison.",
+        "A v11 render set, overlay measurements, profile comparisons, expression or facial-rig evidence, and populated g1-review.json evidence.",
+        "Named human reviewers, approval criteria, and the threshold that promotes a character artifact from draft to identity candidate.",
+        "User research, demand signals, or stakeholder priorities indicating whether deployment safety, realtime embodiment, or character likeness currently delivers the most valuable progress.",
+        "Effort, dependency, schedule, and risk estimates for completing each gate with currently available people and hardware.",
+        "The truncated portions of the four supplied artifacts and any other public repository files that may contain newer evidence, contradictory status, or existing milestone commitments."
+      ],
+      "observations": [
+        "The repository presents Gahyeon Core as the central product architecture, with Discord, Desktop, and Unreal as interchangeable clients; low-latency concurrent Reflex, Behavior, and Cognition are stated priorities.",
+        "The project already spans Core, headless operation, Discord, Desktop, Unreal connectivity, a C++20 RuntimeCore, Looking Glass adapters, voice production, and character production.",
+        "The migration document says source compatibility is resolved, but deployment remains blocked on read-only live Flyway history from every persistent environment and a disposable PostgreSQL preflight.",
+        "The required live migration evidence is unavailable from the public repository alone; absence of V30–V35 in source control does not prove those migrations were never applied to persistent databases.",
+        "The disposable PostgreSQL gate is reproducible from the repository and tests clean migration and V24-upgrade paths, but it explicitly cannot replace live-production history or production-scale lock measurements.",
+        "Image publishing is restricted to linux/amd64 pending an arm64 native artifact and a Discord-enabled activation smoke.",
+        "The realtime matrix reports extensive deterministic RuntimeCore, backend, desktop, protocol, audio, cancellation, replay, and safety evidence across RT-01–RT-13.",
+        "Every realtime acceptance row still has Unreal-engine, packaged-build, provider, hardware, or physical-device evidence pending; reference success is explicitly not equivalent to packaged Unreal acceptance.",
+        "A packaged Unreal vertical slice would depend on unavailable or unproven conditions such as UE execution, target GPU measurement, real audio devices, providers, MetaHuman curves, NavMesh behavior, TLS interruption, or Looking Glass hardware.",
+        "The current character artifact is a real 172 cm rigged humanoid with a functioning groom and recorded provenance, but it is only approximately pass 8.5 of a planned 40 passes.",
+        "Character v10 is explicitly marked draft-for-human-review, has zero approval evidence, and must not be registered or promoted to candidate.",
+        "The character checkpoint identifies blocking likeness, eyes, hair, garments, skin, and facial-rig defects, while prescribing a reversible v11 workflow that preserves v10.",
+        "The supplied packet is capped at 24,000 included bytes, and all four excerpts are truncated, so some repository evidence is not represented."
+      ]
+    },
+    "inventor": {
+      "candidate_missions": [
+        {
+          "beneficiary": "Operators and maintainers gain reproducible evidence that the current source and physical V24 schema are compatible without overstating production safety.",
+          "falsifier": "Either migration path fails; Flyway history differs from V1–V29,V36; V30–V35 appears; pgvector, V29/V36 behavior, Hibernate validation, or V24 mappings fail; or the evidence cannot be reproduced at the stated revision.",
+          "mechanism": "Run the disposable PostgreSQL 16 preflight at the frozen revision, preserve its report artifacts, verify exact successful Flyway history V1–V29,V36 with no V30–V35, validate both empty-database and authoritative V24-upgrade paths, and document that production release remains blocked on authorized live-history and scale measurements.",
+          "mission": "Establish repository-verifiable migration preflight readiness while explicitly deferring live production clearance, packaged Unreal validation, and character promotion.",
+          "next_probe": "Execute scripts/preflight_postgres_migrations.sh in a clean supported environment and inspect the complete build/reports/postgres-migration-preflight artifacts."
+        },
+        {
+          "beneficiary": "Prospective users and contributors receive a visible end-to-end demonstration that the already broad Core, transport, audio, cancellation, and Unreal work composes into a responsive character experience.",
+          "falsifier": "No packaged build runs; required tooling or provider access is unavailable; the loop cannot complete repeatedly; stale callbacks revive cancelled work; barge-in fails; or measured pose/audio/viseme latency misses predeclared RT acceptance thresholds.",
+          "mechanism": "Bound the slice to one conversation loop—voice activity to listening pose, Korean speech recognition, cognition, interruptible speech playback with applied visemes, and barge-in recovery—then require a packaged UE 5.6 build with Automation results, generation/epoch stale-callback rejection, latency traces, and recorded audiovisual evidence on one declared target machine; exclude Looking Glass and broader World/NavMesh scope unless essential.",
+          "mission": "Define and prove a minimal packaged Unreal realtime vertical slice while explicitly deferring production migration clearance and the next identity-candidate promotion.",
+          "next_probe": "Write a one-page slice contract mapping its exact scenario and completion metrics to the smallest subset of RT-02, RT-04, RT-05, RT-08, and RT-11, then inventory whether the required UE installation, target machine, audio device, MetaHuman asset, and providers are actually available."
+        },
+        {
+          "beneficiary": "Users and art reviewers gain a materially more recognizable hero-character artifact and an auditable path from generic humanoid to approved identity.",
+          "falsifier": "Canonical references are unavailable or unauthorized; v11 regresses topology, rig, groom coverage, or provenance; overlay/profile measurements fail the declared thresholds; blocking likeness defects remain; or required reviewers withhold approval.",
+          "mechanism": "Preserve v10; create a hair-hidden neutral overlay against the authorized canonical face master; make localized eye, lip, jaw, and profile corrections; retain the verified groom unit fixes while reshaping guides; render consistent neutral and profile evidence; populate provenance and comparison evidence in g1-review.json; promote only if named human reviewers apply predeclared identity thresholds.",
+          "mission": "Produce a reviewable v11 character-identity candidate package without promoting it prematurely, while explicitly deferring migration clearance and packaged Unreal validation.",
+          "next_probe": "Confirm authorized access to the canonical references and define quantitative comparison tolerances plus named human approval criteria before authoring v11."
+        },
+        {
+          "beneficiary": "Maintainers and contributors gain a credible sequencing foundation that exposes which scarce resources unlock genuine user-facing proof and prevents source-level progress from being mislabeled as production, packaged, or identity acceptance.",
+          "falsifier": "The matrix cannot specify measurable completion signals; dependencies lack identifiable acquisition paths; repository-local probes contradict documented status; or stakeholders cannot distinguish provisional evidence from final acceptance.",
+          "mechanism": "Publish a revision-pinned matrix separating repository-local evidence from evidence requiring production access, licensed tooling, providers, unpublished references, reviewers, or hardware; assign each front a minimal completion signal, required artifacts, dependency owner, and stop condition; validate one repository-local probe per front without asserting the external gate passed.",
+          "mission": "Create a public evidence-readiness contract that converts the three blocked fronts into independently executable gates, while explicitly deferring claims of completion on migration, Unreal packaging, and identity approval.",
+          "next_probe": "Draft the three gate contracts from the supplied documents and request only the missing availability facts: authorized live-history access, UE/target-device availability, and canonical-reference/reviewer availability."
+        }
+      ]
+    }
+  },
+  "usage": {
+    "call_count": 4,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-08-16T05:56:32.544141+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 24622,
+          "output_tokens": 1033,
+          "reasoning_output_tokens": 22
+        }
+      },
+      {
+        "call_index": 2,
+        "completed_at": "2026-08-16T05:56:59.865254+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 25673,
+          "output_tokens": 915,
+          "reasoning_output_tokens": 0
+        }
+      },
+      {
+        "call_index": 3,
+        "completed_at": "2026-08-16T05:57:38.429010+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 26646,
+          "output_tokens": 1294,
+          "reasoning_output_tokens": 41
+        }
+      },
+      {
+        "call_index": 4,
+        "completed_at": "2026-08-16T05:58:05.862376+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 28024,
+          "output_tokens": 972,
+          "reasoning_output_tokens": 73
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 46080,
+      "input_tokens": 104965,
+      "output_tokens": 4214,
+      "reasoning_output_tokens": 136
+    }
+  }
+}

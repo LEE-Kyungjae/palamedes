@@ -1,0 +1,60 @@
+{
+  "blind_review_version": "palamedes-proof-review/1",
+  "review_fingerprint": "1099cb9a253fa84bd9da03ebc1b245605af7f21250acd3c6dc78739d26d87802",
+  "reviewed_at": "2026-08-16T05:58:44.754252+00:00",
+  "reviewer_id": "codex-case-zero-002-blind-1",
+  "reviews": [
+    {
+      "case_id": "case-zero-gahyeon",
+      "origin_visible": false,
+      "review": {
+        "confidence": 0.94,
+        "decision_difference": "A makes the vertical slice conditional on a revision-pinned contract and prerequisite inventory, allowing an early stop before scarce effort is committed; B commits directly to building and exercising the slice, so missing external prerequisites or unexpectedly large integration work may be discovered later.",
+        "preferred": "A",
+        "rationale": "Both missions identify the same strong causal mechanism: an end-to-end packaged Unreal loop tests whether Gahyeon's independently verified realtime, cancellation, speech, animation, and recovery subsystems compose into a credible embodied experience. A is more useful for the required decision because it sequences a low-cost dependency-and-scope probe before integration and supplies an explicit stop rule when Unreal, MetaHuman, device, or provider prerequisites lack bounded acquisition paths. B is measurable and project-specific, but its next probe begins packaging despite the instruction not to assume those resources, making it less reversible and slightly less falsifiable from currently available information. Neither gains full opportunity-discovery credit because the vertical slice is already one of the stated candidate fronts, although both expose consequential integration evidence beyond individual roadmap checks.",
+        "scores": {
+          "A": {
+            "causal_mechanism": 5,
+            "decision_usefulness": 5,
+            "falsifiability": 5,
+            "opportunity_discovery": 4,
+            "project_specificity": 5
+          },
+          "B": {
+            "causal_mechanism": 5,
+            "decision_usefulness": 4,
+            "falsifiability": 4,
+            "opportunity_discovery": 4,
+            "project_specificity": 5
+          }
+        }
+      },
+      "reviewer_id": "codex-case-zero-002-blind-1",
+      "usage": {
+        "call_count": 1,
+        "calls": [
+          {
+            "call_index": 1,
+            "completed_at": "2026-08-16T05:58:44.754037+00:00",
+            "model": "configured-default",
+            "token_usage": {
+              "cache_write_input_tokens": 0,
+              "cached_input_tokens": 16128,
+              "input_tokens": 19767,
+              "output_tokens": 418,
+              "reasoning_output_tokens": 117
+            }
+          }
+        ],
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 16128,
+          "input_tokens": 19767,
+          "output_tokens": 418,
+          "reasoning_output_tokens": 117
+        }
+      }
+    }
+  ],
+  "run_id": "inventor-case-zero-002"
+}

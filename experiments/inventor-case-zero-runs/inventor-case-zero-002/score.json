@@ -1,0 +1,87 @@
+{
+  "attributable_outcomes": 0,
+  "case_results": [
+    {
+      "case_id": "case-zero-gahyeon",
+      "decision": null,
+      "labor": null,
+      "outcome": null,
+      "review_count": 3,
+      "unanimous": true,
+      "vote_counts": {
+        "palamedes": 3,
+        "tie": 0,
+        "tournament": 0
+      },
+      "votes": [
+        {
+          "decision_difference": "A makes the vertical slice conditional on a revision-pinned contract and prerequisite inventory, allowing an early stop before scarce effort is committed; B commits directly to building and exercising the slice, so missing external prerequisites or unexpectedly large integration work may be discovered later.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "Both missions identify the same strong causal mechanism: an end-to-end packaged Unreal loop tests whether Gahyeon's independently verified realtime, cancellation, speech, animation, and recovery subsystems compose into a credible embodied experience. A is more useful for the required decision because it sequences a low-cost dependency-and-scope probe before integration and supplies an explicit stop rule when Unreal, MetaHuman, device, or provider prerequisites lack bounded acquisition paths. B is measurable and project-specific, but its next probe begins packaging despite the instruction not to assume those resources, making it less reversible and slightly less falsifiable from currently available information. Neither gains full opportunity-discovery credit because the vertical slice is already one of the stated candidate fronts, although both expose consequential integration evidence beyond individual roadmap checks.",
+          "reviewer_id": "codex-case-zero-002-blind-1",
+          "weighted_scores": {
+            "A": 4.8,
+            "B": 4.4
+          }
+        },
+        {
+          "decision_difference": "Choose A because it makes feasibility verification part of the gate itself: continue into the packaged slice only when every essential dependency is available or has a bounded acquisition path; otherwise stop without diverting scarce effort. B chooses the same milestone but exposes the project to premature integration work before resolving those prerequisites.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "Both missions identify the same project-specific integration mechanism: proving that Gahyeon's independently validated speech, animation, concurrency, cancellation, and recovery behavior survives a packaged Unreal runtime. Both clearly sequence the vertical slice ahead of migration and identity work. A is stronger because it begins with a bounded prerequisite-and-scope probe, honors the prohibition against assuming Unreal, device, provider, or asset access, and supplies explicit stop conditions before costly integration. B is readily testable but its immediate packaging probe presumes resources that the case says must not be assumed, and its five-turn probe does not fully align with its twenty-interaction completion signal.",
+          "reviewer_id": "codex-case-zero-002-blind-2",
+          "weighted_scores": {
+            "A": 4.8,
+            "B": 4.6
+          }
+        },
+        {
+          "decision_difference": "A can change the immediate sequence from implementation to stop or proceed based on a bounded dependency-and-contract probe; B largely presupposes proceeding with the vertical slice and therefore offers less protection against unavailable prerequisites or scope expansion.",
+          "preferred_label": "A",
+          "preferred_system": "palamedes",
+          "rationale": "Both missions specifically test whether Gahyeon's independently verified speech, animation, cancellation, and concurrency mechanisms survive a packaged Unreal runtime. A is stronger because it makes prerequisite availability and scope a cheap stop gate before integration, defines explicit failure conditions for stale callbacks and barge-in recovery, and clearly defers migration and identity work. B remains useful but commits directly to packaging despite prohibited assumptions about Unreal resources, and its five-turn next probe does not align cleanly with its twenty-interaction completion signal.",
+          "reviewer_id": "codex-case-zero-002-blind-3",
+          "weighted_scores": {
+            "A": 4.8,
+            "B": 4.4
+          }
+        }
+      ],
+      "winner": "palamedes"
+    }
+  ],
+  "claim_boundary": "Repeat-project calibration only. Gahyeon appeared in earlier Palamedes development, the question is researcher-authored from public artifacts, owner relevance is unverified, no human review or real outcome is claimed, and this run cannot satisfy the external Inventor gate.",
+  "claim_demonstrated": true,
+  "condition_usage": {
+    "input_token_ratio_treatment_to_comparison": 1.04,
+    "palamedes": {
+      "call_count": 4,
+      "input_tokens": 104965,
+      "output_tokens": 4214,
+      "reasoning_output_tokens": 136
+    },
+    "tournament": {
+      "call_count": 4,
+      "input_tokens": 100912,
+      "output_tokens": 3175,
+      "reasoning_output_tokens": 297
+    }
+  },
+  "labor_retirement_cases": 0,
+  "mission_quality_gate_passed": true,
+  "outcome_gate_applicable": false,
+  "outcome_gate_passed": null,
+  "preference_summary": {
+    "comparison_condition": "tournament",
+    "comparison_votes": 0,
+    "tie_votes": 0,
+    "total_votes": 3,
+    "treatment_condition": "palamedes",
+    "treatment_votes": 3,
+    "unanimous_cases": 1
+  },
+  "proof_score_version": "palamedes-proof-score/1",
+  "run_id": "inventor-case-zero-002",
+  "scored_at": "2026-08-16T05:58:50.887398+00:00"
+}

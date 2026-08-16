@@ -1,0 +1,83 @@
+{
+  "claim_status": "unproven",
+  "frozen_cases": [
+    {
+      "case_id": "case-zero-gahyeon",
+      "information_fingerprint": "fbf5834f384a22315b53db9cf88900a60c26e9e92900a511304f19626c715200",
+      "repository_revision": "15e390d0b7ab4fff00903baea7efdc6f396b3e1a"
+    }
+  ],
+  "manifest_fingerprint": "61a52494d7ace3dc82a801b2a3c95ab916973a34bba8f6da120a78e77e6e409f",
+  "portfolio": {
+    "case_zero": true,
+    "cases": [
+      {
+        "artifacts": [
+          "README.md",
+          "docs/DEPLOYMENT_MIGRATION_BLOCKER.md",
+          "docs/unreal/ACCEPTANCE_STATUS.md",
+          "docs/GAHYEON_G1_RESUME_2026-08-13.md"
+        ],
+        "case_id": "case-zero-gahyeon",
+        "question": "Based only on the current public repository, which single evidence gate should Gahyeon make its next cross-project milestone so that scarce effort converts technical breadth into credible user-facing progress: production migration readiness, a packaged Unreal realtime vertical slice, or the next character-identity candidate?",
+        "repository": "/tmp/palamedes-inventor-case-zero/gahyeon",
+        "required_decision": "Choose one bounded, reversible sequencing decision with a measurable completion signal and explicitly defer the other two fronts; do not assume private production access, unpublished identity references, Unreal hardware, or user demand."
+      }
+    ],
+    "claim": "On the current public Gahyeon repository, the Palamedes four-call sequence produces a more decision-useful opportunity mission than a same-model four-call tournament.",
+    "claim_boundary": "Repeat-project calibration only. Gahyeon appeared in earlier Palamedes development, the question is researcher-authored from public artifacts, owner relevance is unverified, no human review or real outcome is claimed, and this run cannot satisfy the external Inventor gate.",
+    "generation_protocol": {
+      "comparison_condition": "tournament",
+      "compute_is_not_equal": true,
+      "compute_tradeoff_must_be_reported": true,
+      "fresh_session_per_call": true,
+      "maximum_artifact_bytes": 24000,
+      "model": "configured-default",
+      "palamedes_calls": 4,
+      "provider": "codex",
+      "same_information_packet_required": true,
+      "same_model_required": true,
+      "tournament_calls": 4,
+      "treatment_condition": "palamedes"
+    },
+    "owner_relevance_verified": false,
+    "portfolio_id": "public-oss-inventor-case-zero-002",
+    "preregistered_at": "2026-08-16T05:53:40Z",
+    "prior_palamedes_exposure": true,
+    "proof_portfolio_version": "palamedes-proof-portfolio/1",
+    "rubric": {
+      "causal_mechanism": {
+        "question": "Does it identify a causal product mechanism rather than rename a familiar feature?",
+        "weight": 20
+      },
+      "decision_usefulness": {
+        "question": "Would it change a continue, stop, position, or sequence decision before roadmap expansion?",
+        "weight": 20
+      },
+      "falsifiability": {
+        "question": "Can the mission be rejected through a bounded public-information probe?",
+        "weight": 20
+      },
+      "opportunity_discovery": {
+        "question": "Does the mission expose a consequential opportunity not already stated as a roadmap item?",
+        "weight": 20
+      },
+      "project_specificity": {
+        "question": "Is it grounded enough that the same mission would not transfer unchanged to an unrelated repository?",
+        "weight": 20
+      }
+    },
+    "success_gate": {
+      "minimum_attributable_outcomes": 0,
+      "minimum_blinded_reviews_per_case": 3,
+      "minimum_cases": 1,
+      "minimum_labor_retirement_cases": 0,
+      "palamedes_preferred_cases": 1
+    }
+  },
+  "portfolio_fingerprint": "ebf143910fb319ee108101950795598eacc123e55c589372cafc3655c0b71710",
+  "prepared_at": "2026-08-16T05:54:12.820302+00:00",
+  "proof_run_version": "palamedes-proof-run/1",
+  "run_id": "inventor-case-zero-002",
+  "status": "prepared"
+}

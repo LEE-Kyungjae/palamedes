@@ -1,0 +1,23 @@
+{
+  "blind_key_version": "palamedes-proof-key/1",
+  "cases": [
+    {
+      "case_id": "case-zero-gahyeon",
+      "labels": {
+        "A": "palamedes",
+        "B": "tournament"
+      }
+    }
+  ],
+  "comparison_condition": "tournament",
+  "run_id": "inventor-case-zero-002",
+  "seed_sha256": "c940b1630236d48d8fad0dd365eca76cfef46a706ec2982a9743419307762b20",
+  "success_gate": {
+    "minimum_attributable_outcomes": 0,
+    "minimum_blinded_reviews_per_case": 3,
+    "minimum_cases": 1,
+    "minimum_labor_retirement_cases": 0,
+    "palamedes_preferred_cases": 1
+  },
+  "treatment_condition": "palamedes"
+}
