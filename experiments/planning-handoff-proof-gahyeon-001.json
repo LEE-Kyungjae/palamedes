@@ -1,0 +1,9 @@
+{
+  "run_id": "planning-handoff-gahyeon-001",
+  "claim": "For the frozen Gahyeon mission and public evidence, an identical downstream planner given a validated scale-adaptive planning brief produces a more actionable plan with lower reconstruction burden than the same planner given only the mission and evidence.",
+  "claim_boundary": "Single repeated-project model calibration only. The planning brief received two additional model calls, reviewers use the same configured model family, no owner or independent human review is present, and no Unreal implementation or beneficiary outcome is measured.",
+  "mission_path": "experiments/inventor-case-zero-runs/inventor-case-zero-002/cases/case-zero-gahyeon/palamedes.json",
+  "information_path": "experiments/inventor-case-zero-runs/inventor-case-zero-002/cases/case-zero-gahyeon/information.json",
+  "planning_brief_path": "experiments/inventor-case-zero-runs/inventor-case-zero-002/planning/gahyeon-service-approval.json",
+  "reviewer_count": 3
+}

@@ -1,0 +1,52 @@
+{
+  "review": {
+    "confidence": 0.96,
+    "preferred": "A",
+    "rationale": "Both plans faithfully select the gated packaged Unreal vertical slice and explicitly defer migration clearance and identity promotion. A is stronger because it separates prerequisite readiness, packaged-boundary proof, loop composition, adversarial verification, and evidence review into clearer gates; defines ownership, cost, time, integrity, diagnostic, and approval controls more completely; and maps assertions to concrete artifacts and stop conditions. B remains strong but partially conflates the dependency probe with repeatedly producing and running the packaged build, which overlaps its later implementation phase, and leaves more evidence-governance and resource-envelope details for the downstream planner to reconstruct.",
+    "reconstruction_burden": {
+      "A": 1,
+      "B": 2
+    },
+    "scores": {
+      "A": {
+        "dependency_and_sequence_coherence": 5,
+        "downstream_actionability": 5,
+        "experience_and_scope_completeness": 5,
+        "mission_fidelity": 5,
+        "uncertainty_honesty": 5
+      },
+      "B": {
+        "dependency_and_sequence_coherence": 4,
+        "downstream_actionability": 4,
+        "experience_and_scope_completeness": 4,
+        "mission_fidelity": 5,
+        "uncertainty_honesty": 5
+      }
+    }
+  },
+  "reviewer_id": "codex-planning-blind-2",
+  "usage": {
+    "call_count": 1,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-08-18T07:12:26.300945+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 24913,
+          "output_tokens": 394,
+          "reasoning_output_tokens": 157
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 9984,
+      "input_tokens": 24913,
+      "output_tokens": 394,
+      "reasoning_output_tokens": 157
+    }
+  }
+}

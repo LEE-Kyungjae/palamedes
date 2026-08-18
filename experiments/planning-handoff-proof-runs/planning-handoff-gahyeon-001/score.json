@@ -1,0 +1,152 @@
+{
+  "claim_boundary": "Single repeated-project model calibration only. The planning brief received two additional model calls, reviewers use the same configured model family, no owner or independent human review is present, and no Unreal implementation or beneficiary outcome is measured.",
+  "claim_demonstrated": true,
+  "condition_usage": {
+    "mission_only": {
+      "call_count": 1,
+      "calls": [
+        {
+          "call_index": 1,
+          "completed_at": "2026-08-18T07:10:38.921744+00:00",
+          "model": "configured-default",
+          "token_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 9984,
+            "input_tokens": 25485,
+            "output_tokens": 3282,
+            "reasoning_output_tokens": 70
+          }
+        }
+      ],
+      "token_usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 9984,
+        "input_tokens": 25485,
+        "output_tokens": 3282,
+        "reasoning_output_tokens": 70
+      }
+    },
+    "planning_brief": {
+      "call_count": 1,
+      "calls": [
+        {
+          "call_index": 1,
+          "completed_at": "2026-08-18T07:11:56.051213+00:00",
+          "model": "configured-default",
+          "token_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 9984,
+            "input_tokens": 31481,
+            "output_tokens": 3499,
+            "reasoning_output_tokens": 25
+          }
+        }
+      ],
+      "token_usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 9984,
+        "input_tokens": 31481,
+        "output_tokens": 3499,
+        "reasoning_output_tokens": 25
+      }
+    }
+  },
+  "mean_reconstruction_burden": {
+    "mission_only": 2.0,
+    "planning_brief": 1.0
+  },
+  "planning_handoff_score_version": "palamedes-planning-handoff-score/1",
+  "review_usage": [
+    {
+      "call_count": 1,
+      "calls": [
+        {
+          "call_index": 1,
+          "completed_at": "2026-08-18T07:12:09.886549+00:00",
+          "model": "configured-default",
+          "token_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 9984,
+            "input_tokens": 25181,
+            "output_tokens": 396,
+            "reasoning_output_tokens": 137
+          }
+        }
+      ],
+      "token_usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 9984,
+        "input_tokens": 25181,
+        "output_tokens": 396,
+        "reasoning_output_tokens": 137
+      }
+    },
+    {
+      "call_count": 1,
+      "calls": [
+        {
+          "call_index": 1,
+          "completed_at": "2026-08-18T07:12:26.300945+00:00",
+          "model": "configured-default",
+          "token_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 9984,
+            "input_tokens": 24913,
+            "output_tokens": 394,
+            "reasoning_output_tokens": 157
+          }
+        }
+      ],
+      "token_usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 9984,
+        "input_tokens": 24913,
+        "output_tokens": 394,
+        "reasoning_output_tokens": 157
+      }
+    },
+    {
+      "call_count": 1,
+      "calls": [
+        {
+          "call_index": 1,
+          "completed_at": "2026-08-18T07:12:41.974366+00:00",
+          "model": "configured-default",
+          "token_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 15104,
+            "input_tokens": 24911,
+            "output_tokens": 366,
+            "reasoning_output_tokens": 127
+          }
+        }
+      ],
+      "token_usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 15104,
+        "input_tokens": 24911,
+        "output_tokens": 366,
+        "reasoning_output_tokens": 127
+      }
+    }
+  ],
+  "run_id": "planning-handoff-gahyeon-001",
+  "scored_at": "2026-08-18T07:12:41.977164+00:00",
+  "votes": {
+    "mission_only": 0,
+    "planning_brief": 3,
+    "tie": 0
+  },
+  "weighted_scores": {
+    "mission_only": [
+      4.2,
+      4.4,
+      4.4
+    ],
+    "planning_brief": [
+      5.0,
+      5.0,
+      5.0
+    ]
+  }
+}

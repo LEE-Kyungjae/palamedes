@@ -1,0 +1,52 @@
+{
+  "review": {
+    "confidence": 0.96,
+    "preferred": "A",
+    "rationale": "Both plans faithfully select the gated packaged Unreal vertical slice and explicitly defer migration clearance and identity promotion. A is stronger because it separates contract, prerequisite, packaged-boundary, loop, adversarial verification, and evidence review into clearer gates; specifies authority, resource ceilings, evidence integrity, diagnostic allowances, and presentation-boundary proof more completely; and maps unresolved assumptions to concrete probes without implying authorization. B remains highly faithful and actionable but compresses packaging feasibility into the availability gate, provides less explicit evidence-governance and resource-control detail, and leaves slightly more reconstruction around approvals, review disposition, and phase boundaries.",
+    "reconstruction_burden": {
+      "A": 1,
+      "B": 2
+    },
+    "scores": {
+      "A": {
+        "dependency_and_sequence_coherence": 5,
+        "downstream_actionability": 5,
+        "experience_and_scope_completeness": 5,
+        "mission_fidelity": 5,
+        "uncertainty_honesty": 5
+      },
+      "B": {
+        "dependency_and_sequence_coherence": 4,
+        "downstream_actionability": 4,
+        "experience_and_scope_completeness": 4,
+        "mission_fidelity": 5,
+        "uncertainty_honesty": 5
+      }
+    }
+  },
+  "reviewer_id": "codex-planning-blind-3",
+  "usage": {
+    "call_count": 1,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-08-18T07:12:41.974366+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 15104,
+          "input_tokens": 24911,
+          "output_tokens": 366,
+          "reasoning_output_tokens": 127
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 15104,
+      "input_tokens": 24911,
+      "output_tokens": 366,
+      "reasoning_output_tokens": 127
+    }
+  }
+}

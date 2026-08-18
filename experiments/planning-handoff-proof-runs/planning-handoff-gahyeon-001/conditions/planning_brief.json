@@ -1,0 +1,276 @@
+{
+  "condition": "planning_brief",
+  "generated_at": "2026-08-18T07:11:56.051571+00:00",
+  "plan": {
+    "acceptance_tests": [
+      "The approved contract identifies the repository revision, contract version, one target configuration, packaged-build configuration, Korean scenario, repetition count, numeric thresholds, correlation rules, diagnostic allowance, required artifacts, exclusions, and stop rules.",
+      "Every essential prerequisite is verified available or has an approved bounded acquisition owner, path, decision date, cost cap, and time ceiling; otherwise the milestone stops before integration.",
+      "The same identified packaged Unreal 5.6 build can be produced, launched, and instrumented repeatedly on the declared target.",
+      "For every contracted repetition, VAD leads to a listening pose confirmed as actually applied by the Unreal presentation boundary and satisfies the frozen RT-02 threshold.",
+      "Korean microphone input is recognized across the frozen RT-11 sample count and satisfies the contracted latency and recognition-quality thresholds.",
+      "Cognition produces audible, interruptible speech whose audio, generation, epoch, and state transitions remain correlated.",
+      "Visemes derived from qualifying exact timing evidence are confirmed as actually applied by the Unreal presentation boundary and satisfy the frozen RT-08 synchronization threshold; heuristic-only or cursor-only evidence does not pass.",
+      "Barge-in stops device playback within the frozen RT-05 threshold, cancels active work, resets mouth and presentation state, and returns the character to the contractually defined valid recovered state.",
+      "Deliberately late or reordered cognition, STT, TTS, transport, and engine callbacks never replace the active generation, revive cancelled audio or work, or corrupt presentation state.",
+      "The contracted RT-04 adversarial cases report zero stale-callback resurrection.",
+      "Each assertion has audiovisual evidence, UE Automation results where applicable, correlated traces, artifact and target identities, integrity checks, and an explicit pass or fail.",
+      "The final reviewer confirms evidence completeness without asserting production migration readiness, identity approval, broader Unreal acceptance, portability, or general release readiness."
+    ],
+    "assumptions": [
+      {
+        "evidence_or_probe": "The repository documents broad Core, transport, Desktop, audio, cancellation, replay, RuntimeCore, and Unreal connection evidence while the Unreal acceptance matrix identifies the remaining packaged presentation, provider, device, and timing boundaries.",
+        "statement": "The packaged Unreal realtime vertical slice offers the highest beneficiary-visible integration value among the three alternatives.",
+        "status": "evidenced"
+      },
+      {
+        "evidence_or_probe": "docs/DEPLOYMENT_MIGRATION_BLOCKER.md states that deployment is not cleared without authorized live Flyway history, disposable PostgreSQL preflight, and representative-scale measurements.",
+        "statement": "Production migration readiness must remain deferred.",
+        "status": "evidenced"
+      },
+      {
+        "evidence_or_probe": "docs/GAHYEON_G1_RESUME_2026-08-13.md records the current artifact as draft-for-human-review with no approval evidence and explicitly prohibits candidate promotion.",
+        "statement": "Character-identity candidate promotion must remain deferred.",
+        "status": "evidenced"
+      },
+      {
+        "evidence_or_probe": "Extract the complete criteria from that revision, resolve conflicts, and record the selected values, repetitions, correlation rules, and diagnostic allowance in the slice contract.",
+        "statement": "The exact numeric thresholds and repetition count for RT-02, RT-04, RT-05, RT-08, and RT-11 can be frozen from authoritative criteria at repository revision 15e390d0b7ab4fff00903baea7efdc6f396b3e1a.",
+        "status": "unresolved"
+      },
+      {
+        "evidence_or_probe": "Record versions, access and licensing status, compatibility results, presentation-asset capabilities, and either a bounded package attempt or an approved owner and decision date for acquisition.",
+        "statement": "A usable Unreal Engine 5.6 environment, compatible MetaHuman assets and plugins, and a suitable non-candidate presentation asset are available or have bounded acquisition paths.",
+        "status": "unresolved"
+      },
+      {
+        "evidence_or_probe": "Declare one target configuration and demonstrate engine launch, microphone capture, playback, audiovisual recording, clock correlation, and trace collection.",
+        "statement": "One suitable target machine, microphone, audio output path, synchronized capture facility, and latency instrumentation are available.",
+        "status": "unresolved"
+      },
+      {
+        "evidence_or_probe": "An authorized credential holder must run non-secret connectivity and cancellation checks and record service identifiers, quota limits, cost estimate, credential owner, and acquisition decisions.",
+        "statement": "Korean STT, cognition, and TTS services have usable credentials, quota, cancellation behavior, and an acceptable capped cost.",
+        "status": "unresolved"
+      },
+      {
+        "evidence_or_probe": "Before the prerequisite gate, name the slice, Unreal, and Core/provider owners plus the reviewer; freeze phase ceilings, an overall stop date or effort ceiling, and a spending cap.",
+        "statement": "Named accountable owners, an acceptance reviewer, a sufficient timebox, and permitted spend can be established.",
+        "status": "unresolved"
+      },
+      {
+        "evidence_or_probe": "Confirm during contract review that the asset supports the required applied-presentation confirmations and that its use creates no identity-candidate claim.",
+        "statement": "An existing diagnostic or draft character asset can expose the required listening-pose and viseme channels without receiving identity approval.",
+        "status": "assumed"
+      }
+    ],
+    "execution_authority_issued": false,
+    "first_authorized_action": "No execution action is authorized by this handoff. The first action to seek authorization for is drafting the revision-pinned one-page slice contract and performing read-only prerequisite and resource inventory checks for G0 and G1; packaging, integration, credential use, reservations, and spending remain unauthorized until the project's normal approval process permits them.",
+    "plan_summary": "Make the packaged Unreal Engine 5.6 realtime vertical slice the next cross-project milestone, conditionally gated by a revision-pinned slice contract and prerequisite inventory. Freeze the smallest necessary RT-02, RT-04, RT-05, RT-08, and RT-11 assertions and thresholds; proceed through packaged-boundary, bounded-loop, and adversarial-acceptance gates only when each prior gate passes. Explicitly defer production migration clearance and character-identity candidate promotion.",
+    "risk_controls": [
+      "Stop at G1 if any essential engine, asset, machine, audio, provider, credential, capture, reviewer, timebox, or budget prerequisite lacks an approved bounded acquisition path.",
+      "Use separate phase ceilings plus an overall stop date or effort ceiling; reaching any ceiling before contracted acceptance causes stop or explicit rescope.",
+      "Require a capped spending approval before incurring provider, hardware, engine, plugin, asset, or capture costs.",
+      "Pin the repository revision, contract version, packaged artifact identity, engine and plugin versions, target metadata, and non-secret provider configuration identifiers in all evidence.",
+      "Measure pose, viseme, playback, recovery, and state at the packaged Unreal presentation boundary; do not substitute source-level, reference, Desktop, heuristic-only, or cursor-only evidence.",
+      "Fence all provider, transport, and engine callbacks by active generation and runtime epoch and test deliberate cancellation and response reordering.",
+      "Permit only the contract's bounded diagnostic allowance after a failed packaging or loop assertion; require a new rescope decision for broader work.",
+      "Stop if the minimal loop requires substantial Looking Glass, World, NavMesh, character-identity, production-deployment, or showcase-specific work.",
+      "Keep migration clearance and identity-candidate promotion explicitly deferred and prevent the slice disposition from implying either approval.",
+      "Use a non-candidate presentation asset only after confirming the required pose and viseme channels and recording that technical acceptance conveys no identity approval.",
+      "Retain failed or superseded evidence with provenance, mark it non-authoritative, and require a new contract version for reruns after material changes."
+    ],
+    "sequence": [
+      {
+        "entry_gate": "G0-MISSION-ALIGNMENT: the draft contract preserves the selected mission and explicitly excludes migration clearance, identity promotion, Looking Glass, broad World or NavMesh work, general-release claims, and architectural shortcuts.",
+        "exit_gate": "G1-PREREQUISITE-GO: acceptance values are frozen and every essential dependency and resource is verified available or covered by an approved bounded acquisition path; otherwise stop.",
+        "phase": "P0-CONTRACT-AND-INVENTORY",
+        "workstream_ids": [
+          "WS-CONTRACT",
+          "WS-PREREQUISITES"
+        ]
+      },
+      {
+        "entry_gate": "G1-PREREQUISITE-GO has passed through the project's normal approval process.",
+        "exit_gate": "G2-PACKAGED-BOUNDARY: the identified build is repeatedly produced, launched, captured, and instrumented on the declared target, including presentation-boundary pose and viseme confirmation capability.",
+        "phase": "P1-PACKAGE-BOUNDARY",
+        "workstream_ids": [
+          "WS-PACKAGED-BOUNDARY"
+        ]
+      },
+      {
+        "entry_gate": "G2-PACKAGED-BOUNDARY has passed.",
+        "exit_gate": "G3-LOOP-READINESS: one end-to-end loop demonstrates applied listening pose, Korean recognition, interruptible TTS, applied visemes, valid barge-in recovery, and active-generation correlation without excluded work.",
+        "phase": "P2-BOUNDED-LOOP",
+        "workstream_ids": [
+          "WS-CONVERSATION-LOOP"
+        ]
+      },
+      {
+        "entry_gate": "G3-LOOP-READINESS has passed.",
+        "exit_gate": "G4-MILESTONE-DISPOSITION: the complete evidence bundle gives every contracted assertion a traceable pass or fail and supports only a passed, stopped, or explicitly rescoped packaged-slice disposition.",
+        "phase": "P3-ADVERSARIAL-ACCEPTANCE",
+        "workstream_ids": [
+          "WS-ADVERSARIAL-VERIFICATION",
+          "WS-EVIDENCE-REVIEW"
+        ]
+      }
+    ],
+    "unresolved_questions": [
+      "What are the authoritative numeric thresholds, repetition count, Korean utterances, recognition-quality measure, and diagnostic allowance for the selected RT assertions?",
+      "Is a licensed and compatible Unreal Engine 5.6 and MetaHuman environment available, and can the repository project package successfully within a bounded probe?",
+      "Which existing non-candidate presentation asset will be used, and does it expose the required listening-pose and viseme application channels?",
+      "What exact target machine, operating system, GPU, microphone, output device, packaged-build configuration, and capture setup will be declared?",
+      "Which Korean STT, cognition, and TTS services will be used, and what are their credential owners, quotas, cancellation semantics, identifiers, and capped costs?",
+      "How will clocks and correlation identifiers be synchronized across VAD, STT, cognition, TTS, audio playback, Unreal state, generation, epoch, and callback traces?",
+      "Who are the named slice owner, Unreal owner, Core/provider owner, and acceptance reviewer, and when are they available?",
+      "What are the phase timeboxes, overall stop date or effort ceiling, spending cap, and authorized acquisition paths?",
+      "What exact ready and recovered presentation states must be observed before and after each repetition and barge-in?",
+      "What project approval is required after each gate before any implementation, reservation, credential use, provider spending, or acceptance run begins?"
+    ],
+    "user_outcome": "Prospective users and contributors receive reviewable evidence that, on one declared target, a packaged Unreal build responds to Korean speech with an actually applied listening pose, recognized input, interruptible spoken cognition, actually applied visemes, successful barge-in recovery, and no resurrection of cancelled work by late or reordered callbacks.",
+    "workstreams": [
+      {
+        "dependencies": [],
+        "inputs": [
+          "Repository revision 15e390d0b7ab4fff00903baea7efdc6f396b3e1a",
+          "Authoritative RT-02, RT-04, RT-05, RT-08, and RT-11 criteria",
+          "Mission, scope, falsifiers, and deferred-front decisions"
+        ],
+        "objective": "Create and approve a revision-pinned one-page slice contract defining the exact scenario, target, repetitions, thresholds, correlations, artifacts, diagnostic allowance, exclusions, non-claims, and stop rules.",
+        "outputs": [
+          "Approved slice contract",
+          "Frozen acceptance matrix",
+          "Evidence manifest schema"
+        ],
+        "workstream_id": "WS-CONTRACT"
+      },
+      {
+        "dependencies": [
+          "WS-CONTRACT"
+        ],
+        "inputs": [
+          "Dependency declarations",
+          "Access and compatibility checks",
+          "Resource and cost declarations",
+          "Draft slice contract"
+        ],
+        "objective": "Determine whether every essential tool, asset, machine, audio path, provider, credential, capture facility, owner, reviewer, timebox, and spending allowance is available or has an approved bounded acquisition path.",
+        "outputs": [
+          "Dependency readiness result",
+          "Acquisition-path register",
+          "Named accountability register",
+          "Resource-envelope go or stop decision"
+        ],
+        "workstream_id": "WS-PREREQUISITES"
+      },
+      {
+        "dependencies": [
+          "WS-CONTRACT",
+          "WS-PREREQUISITES"
+        ],
+        "inputs": [
+          "Approved slice contract",
+          "Passed prerequisite gate",
+          "Unreal Engine 5.6 and compatible plugins",
+          "Target machine",
+          "Non-candidate presentation asset",
+          "Core and Unreal protocol endpoint",
+          "Capture and latency instrumentation"
+        ],
+        "objective": "Repeatedly build, launch, and instrument the minimal packaged Unreal 5.6 stage on the declared target, with pose and viseme confirmations originating at the presentation boundary.",
+        "outputs": [
+          "Identified packaged build",
+          "Repeated build and launch evidence",
+          "Target and engine metadata",
+          "Applied-presentation instrumentation check"
+        ],
+        "workstream_id": "WS-PACKAGED-BOUNDARY"
+      },
+      {
+        "dependencies": [
+          "WS-PACKAGED-BOUNDARY"
+        ],
+        "inputs": [
+          "Passed packaged-boundary gate",
+          "Microphone and audio output",
+          "Korean STT, cognition, and TTS access",
+          "Provider credentials and quota",
+          "Generation-correlated Core and Unreal protocol path"
+        ],
+        "objective": "Compose the bounded Korean VAD, STT, cognition, TTS, generation-cancellation, viseme, and barge-in path in the packaged presentation.",
+        "outputs": [
+          "Bounded Korean conversation loop",
+          "Applied listening-pose result",
+          "Interruptible speech and applied-viseme result",
+          "Valid barge-in recovery result",
+          "Preliminary correlated traces"
+        ],
+        "workstream_id": "WS-CONVERSATION-LOOP"
+      },
+      {
+        "dependencies": [
+          "WS-CONVERSATION-LOOP"
+        ],
+        "inputs": [
+          "Loop-readiness result",
+          "Frozen acceptance matrix",
+          "Generation and runtime-epoch correlations",
+          "Late and reordered callback harness"
+        ],
+        "objective": "Run the frozen repetitions and deliberate cancellation, delay, and response-reordering cases across cognition, STT, TTS, transport, and engine callbacks.",
+        "outputs": [
+          "Cancellation and reordering results",
+          "Stale-callback resurrection count",
+          "Barge-in recovery evaluations",
+          "UE Automation results"
+        ],
+        "workstream_id": "WS-ADVERSARIAL-VERIFICATION"
+      },
+      {
+        "dependencies": [
+          "WS-ADVERSARIAL-VERIFICATION"
+        ],
+        "inputs": [
+          "Packaged artifact and target identities",
+          "Audiovisual captures",
+          "Automation results",
+          "Correlated latency traces",
+          "Assertion-level evaluations",
+          "Named reviewer"
+        ],
+        "objective": "Assemble an integrity-checked evidence bundle and issue only a passed, stopped, or explicitly rescoped disposition for the contracted slice.",
+        "outputs": [
+          "Reviewable evidence bundle",
+          "Threshold evaluation",
+          "Traceable assertion-level report",
+          "Bounded milestone disposition"
+        ],
+        "workstream_id": "WS-EVIDENCE-REVIEW"
+      }
+    ]
+  },
+  "usage": {
+    "call_count": 1,
+    "calls": [
+      {
+        "call_index": 1,
+        "completed_at": "2026-08-18T07:11:56.051213+00:00",
+        "model": "configured-default",
+        "token_usage": {
+          "cache_write_input_tokens": 0,
+          "cached_input_tokens": 9984,
+          "input_tokens": 31481,
+          "output_tokens": 3499,
+          "reasoning_output_tokens": 25
+        }
+      }
+    ],
+    "token_usage": {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 9984,
+      "input_tokens": 31481,
+      "output_tokens": 3499,
+      "reasoning_output_tokens": 25
+    }
+  }
+}
