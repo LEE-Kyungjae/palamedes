@@ -288,6 +288,7 @@ from palamedes_mission import (
     build_five_bounded_artifact_conclusion,
     validate_five_bounded_artifact_conclusion,
     validate_reference_treatment_packet_gate,
+    validate_scale_adaptive_planning_brief,
     validate_incomparable_next_action,
     validate_independent_mission_generation,
     validate_independent_verification_status,
@@ -20434,6 +20435,132 @@ class ReferenceTreatmentPacketGateTests(unittest.TestCase):
             "guidance_evidence_not_selected:create-once",
             report["blocking_reasons"],
         )
+
+
+class ScaleAdaptivePlanningBriefTests(unittest.TestCase):
+    def _brief(self):
+        return {
+            "planning_brief_id": "brief-gahyeon-unreal-v1",
+            "mission_contract_id": "mission-gahyeon-realtime",
+            "mission_contract_fingerprint": "sha256:mission",
+            "planning_brief_fingerprint": "sha256:brief",
+            "plan_scale": "service",
+            "planning_stage": "approval",
+            "outcome": "Prove one credible packaged realtime character conversation.",
+            "beneficiary": "A user who wants to speak naturally with a living character.",
+            "value_proposition": "A responsive embodied interaction instead of disconnected subsystem demos.",
+            "resolution_basis": {
+                "uncertainty": "high", "irreversibility": "medium",
+                "coordination_cost": "high", "harm_potential": "low",
+                "resolution_rationale": "Engine, voice, character, and provider boundaries must compose.",
+            },
+            "in_scope": ["one Korean voice loop", "barge-in"],
+            "out_of_scope": ["production migration", "identity approval"],
+            "success_signals": ["twenty bounded conversations pass", "stale resurrection is zero"],
+            "stop_conditions": ["an essential dependency lacks a bounded acquisition path"],
+            "knowledge_ledger": [
+                {
+                    "item_id": "runtime-evidence", "status": "observed",
+                    "statement": "RuntimeCore has deterministic reference evidence.",
+                    "evidence_ids": ["acceptance-status"], "validation_probe": "",
+                },
+                {
+                    "item_id": "ue-access", "status": "unresolved",
+                    "statement": "A usable UE target may not be available.",
+                    "evidence_ids": [], "validation_probe": "Inventory exact engine and machine access.",
+                },
+            ],
+            "experience_contract": {
+                "context": "A short after-work conversation.",
+                "entry_state": "Gahyeon is idle and responds to microphone activity.",
+                "core_loop": "Listen, respond with speech and visemes, accept interruption.",
+                "exit_state": "The turn ends without stale speech or presentation state.",
+                "experience_principles": ["interruptible", "state-coherent", "embodied"],
+            },
+            "alternatives": [
+                {"alternative_id": "unreal", "concept": "Packaged Unreal slice.",
+                 "selection_reason": "Retires the largest user-facing uncertainty.", "selected": True},
+                {"alternative_id": "desktop", "concept": "Desktop-only slice.",
+                 "selection_reason": "Cheaper but leaves Unreal uncertainty intact.", "selected": False},
+            ],
+            "components": [
+                {"component_id": "dependency-gate", "kind": "gate",
+                 "purpose": "Verify engine, hardware, character, and provider access.",
+                 "requires": ["repository-evidence"], "provides": ["prerequisites-verified"],
+                 "maturity": "new"},
+                {"component_id": "voice-loop", "kind": "experience",
+                 "purpose": "Connect microphone, cognition, speech, viseme, and interruption.",
+                 "requires": ["prerequisites-verified"], "provides": ["packaged-evidence"],
+                 "maturity": "adapt"},
+            ],
+            "external_dependencies": ["repository-evidence"],
+            "effects": [
+                {"effect_id": "engine-probe", "description": "Create run-scoped build artifacts.",
+                 "reversibility": "reversible", "rollback": "Remove only run-scoped artifacts.",
+                 "compensation": "", "approval_required": False},
+            ],
+            "phases": [
+                {"phase_id": "feasibility", "objective": "Decide whether execution is bounded.",
+                 "component_ids": ["dependency-gate"], "entry_gate": "Evidence is frozen.",
+                 "exit_gate": "Every prerequisite has a bounded path.",
+                 "outputs": ["dependency-manifest", "proceed-or-stop"]},
+                {"phase_id": "slice", "objective": "Produce packaged conversation evidence.",
+                 "component_ids": ["voice-loop"], "entry_gate": "Feasibility passes.",
+                 "exit_gate": "Declared success signals pass.",
+                 "outputs": ["packaged-build", "latency-report"]},
+            ],
+            "decision_gates": [
+                {"gate_id": "feasibility", "question": "Are prerequisites obtainable?",
+                 "evidence_required": "A revision-pinned dependency manifest.",
+                 "on_pass": "Prepare a separately authorized delivery plan.",
+                 "on_fail": "Stop and return the mission boundary.",
+                 "authorizes_irreversible_effects": False},
+            ],
+            "resource_envelope": {
+                "people": "One integrator and named asset owners.", "timebox": "One bounded iteration.",
+                "budget": "No production spend before feasibility.",
+                "critical_assets": "UE, target GPU, microphone, character, STT, and TTS.",
+            },
+            "execution_authority_issued": False,
+            "mission_semantics_preserved": True,
+            "planning_rationale": "Concrete enough for approval without inventing unavailable resources.",
+        }
+
+    def test_accepts_large_service_program_with_dependency_and_effect_lifecycle(self):
+        report = validate_scale_adaptive_planning_brief(self._brief())
+        self.assertTrue(report["valid"], report["errors"])
+        self.assertEqual(report["required_resolution"], "program")
+
+    def test_rejects_mission_shaped_advice_as_large_approval_plan(self):
+        payload = self._brief()
+        payload.update({"experience_contract": {}, "alternatives": [], "components": [],
+                        "effects": [], "phases": []})
+        report = validate_scale_adaptive_planning_brief(payload)
+        self.assertFalse(report["valid"])
+        self.assertIn("large concept plans require components", report["errors"])
+        self.assertIn("large approval or delivery plans require phases", report["errors"])
+
+    def test_rejects_false_certainty_and_unmanaged_irreversible_effect(self):
+        payload = self._brief()
+        payload["knowledge_ledger"][1].update({"status": "decided", "validation_probe": ""})
+        payload["effects"][0] = {
+            "effect_id": "public-launch", "description": "Publish publicly.",
+            "reversibility": "irreversible", "rollback": "", "compensation": "",
+            "approval_required": False,
+        }
+        report = validate_scale_adaptive_planning_brief(payload)
+        self.assertFalse(report["valid"])
+        self.assertIn("knowledge_ledger[1] observed or decided knowledge requires evidence", report["errors"])
+        self.assertIn("irreversible effects require an explicit authorizing decision gate", report["errors"])
+
+    def test_direction_stage_does_not_force_premature_concept_detail(self):
+        payload = self._brief()
+        payload.update({"planning_stage": "direction", "experience_contract": None,
+                        "alternatives": [], "components": [], "external_dependencies": [],
+                        "effects": [], "phases": [], "resource_envelope": None})
+        report = validate_scale_adaptive_planning_brief(payload)
+        self.assertTrue(report["valid"], report["errors"])
+        self.assertEqual(report["required_resolution"], "direction")
 
 
 if __name__ == "__main__":

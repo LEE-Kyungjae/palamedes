@@ -22,3 +22,4 @@ from ._13_evidence_context import *  # noqa: F401,F403
 from ._14_planner_proof import *  # noqa: F401,F403
 from ._15_report_semantic import *  # noqa: F401,F403
 from ._16_provider_schema import *  # noqa: F401,F403
+from ._17_scale_adaptive_plan import *  # noqa: F401,F403
