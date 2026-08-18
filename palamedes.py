@@ -3808,6 +3808,21 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--agent-role", type=str, default="strategist")
     s.set_defaults(func=cmd_chat)
 
+    s = sub.add_parser(
+        "planning-brief",
+        help="Expand a selected mission into a validated scale-adaptive planning brief.",
+    )
+    s.add_argument("--mission", required=True, help="JSON mission contract or condition output.")
+    s.add_argument("--output", required=True, help="New JSON output path; existing files are preserved.")
+    s.add_argument("--context-file", default="", help="Optional bounded project evidence text.")
+    s.add_argument("--plan-scale", choices=("auto", "decision", "feature", "content", "service", "platform"), default="auto")
+    s.add_argument("--planning-stage", choices=("direction", "concept", "approval", "delivery"), default="approval")
+    s.add_argument("--provider", choices=available_providers, default="codex")
+    s.add_argument("--model", default="")
+    s.add_argument("--provider-base-url", default="")
+    s.add_argument("--provider-api-key-env", default="")
+    s.set_defaults(func=cmd_planning_brief)
+
     s = sub.add_parser("team", help="Read or update shared 1:N team cognition state.")
     s.add_argument(
         "team_action",
@@ -4129,6 +4144,12 @@ def cmd_chat(args: argparse.Namespace) -> None:
     from palamedes_chat import cmd_chat as run_chat_command
 
     run_chat_command(args, sys.modules[__name__])
+
+
+def cmd_planning_brief(args: argparse.Namespace) -> None:
+    from palamedes_planning_brief import cmd_planning_brief as run_planning_brief
+
+    run_planning_brief(args)
 
 
 def cmd_workspace(args: argparse.Namespace) -> None:

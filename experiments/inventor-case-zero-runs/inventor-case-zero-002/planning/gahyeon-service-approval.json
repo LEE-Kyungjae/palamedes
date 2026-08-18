@@ -1,0 +1,1239 @@
+{
+  "call_count": 2,
+  "draft": {
+    "alternatives": [
+      {
+        "alternative_id": "ALT-UNREAL-SLICE",
+        "description": "Probe prerequisites, then prove the minimal Korean voice, applied listening pose, interruptible speech, applied viseme, barge-in, and stale-callback-safe loop in a packaged Unreal 5.6 build.",
+        "name": "Packaged Unreal realtime vertical slice",
+        "selected": true,
+        "selection_basis": "It offers the highest user-facing integration value and information gain from the broad existing repository evidence while remaining bounded by an early reversible stop gate."
+      },
+      {
+        "alternative_id": "ALT-MIGRATION",
+        "description": "Prioritize live Flyway-history inspection, disposable PostgreSQL preflight, and representative-scale migration measurements.",
+        "name": "Production migration readiness",
+        "selected": false,
+        "selection_basis": "Deferred because public repository evidence cannot establish live production history or representative production-scale behavior, so it cannot currently convert effort into the requested user-facing proof."
+      },
+      {
+        "alternative_id": "ALT-IDENTITY",
+        "description": "Prioritize v11 character iteration and candidate review.",
+        "name": "Next character-identity candidate",
+        "selected": false,
+        "selection_basis": "Deferred because the current artifact is explicitly draft-only and credible candidate promotion requires authorized canonical references, populated evidence, and named human approval not established here."
+      }
+    ],
+    "beneficiary": "Prospective users and contributors who need evidence that Gahyeon behaves as a responsive realtime character rather than only as a collection of source-connected subsystems.",
+    "components": [
+      {
+        "component_id": "C-SLICE-CONTRACT",
+        "kind": "decision artifact",
+        "maturity": "adapt",
+        "provides": [
+          "approved slice contract",
+          "acceptance matrix",
+          "evidence manifest schema"
+        ],
+        "purpose": "Freeze the exact scenario, repetition count, thresholds, correlations, artifacts, target, diagnostic allowance, and stop rules.",
+        "requires": [
+          "authoritative acceptance criteria",
+          "repository revision"
+        ]
+      },
+      {
+        "component_id": "C-DEPENDENCY-INVENTORY",
+        "kind": "readiness control",
+        "maturity": "new",
+        "provides": [
+          "dependency readiness result",
+          "acquisition-path register",
+          "resource-envelope decision"
+        ],
+        "purpose": "Verify availability or bounded acquisition paths for all essential tooling, assets, hardware, audio, providers, people, and budget.",
+        "requires": [
+          "dependency declarations",
+          "access checks",
+          "resource declarations"
+        ]
+      },
+      {
+        "component_id": "C-PACKAGED-STAGE",
+        "kind": "Unreal presentation",
+        "maturity": "adapt",
+        "provides": [
+          "packaged build",
+          "applied listening-pose confirmation",
+          "applied viseme confirmation",
+          "presentation-state evidence"
+        ],
+        "purpose": "Host and package the minimal Unreal 5.6 character interaction and expose actual pose, audio, viseme, and state application evidence.",
+        "requires": [
+          "approved slice contract",
+          "Unreal Engine 5.6 environment",
+          "compatible MetaHuman assets and plugins",
+          "target machine",
+          "existing non-candidate character presentation asset",
+          "Core and Unreal protocol endpoint"
+        ]
+      },
+      {
+        "component_id": "C-CONVERSATION-PATH",
+        "kind": "service integration",
+        "maturity": "adapt",
+        "provides": [
+          "bounded Korean conversation loop",
+          "interruptible speech",
+          "generation-correlated state transitions"
+        ],
+        "purpose": "Connect VAD, Korean STT, cognition, TTS, generation cancellation, and barge-in for the bounded scenario.",
+        "requires": [
+          "approved slice contract",
+          "microphone input",
+          "audio output",
+          "Korean STT service",
+          "cognition service",
+          "TTS service",
+          "provider credentials and quota",
+          "Core and Unreal protocol endpoint"
+        ]
+      },
+      {
+        "component_id": "C-STALE-CALLBACK-HARNESS",
+        "kind": "verification harness",
+        "maturity": "adapt",
+        "provides": [
+          "reordering evidence",
+          "stale-callback count",
+          "barge-in recovery result"
+        ],
+        "purpose": "Exercise cancellation and late or reordered cognition, STT, TTS, transport, and engine callbacks.",
+        "requires": [
+          "approved slice contract",
+          "bounded Korean conversation loop",
+          "generation-correlated state transitions"
+        ]
+      },
+      {
+        "component_id": "C-EVIDENCE-CAPTURE",
+        "kind": "measurement and evidence",
+        "maturity": "adapt",
+        "provides": [
+          "reviewable evidence bundle",
+          "threshold evaluation",
+          "traceable pass-fail report"
+        ],
+        "purpose": "Capture audiovisual output, UE Automation results, latency traces, correlation data, target metadata, and artifact identity.",
+        "requires": [
+          "evidence manifest schema",
+          "packaged build",
+          "applied listening-pose confirmation",
+          "applied viseme confirmation",
+          "generation-correlated state transitions",
+          "audiovisual capture capability",
+          "latency instrumentation"
+        ]
+      },
+      {
+        "component_id": "C-ACCEPTANCE-REVIEW",
+        "kind": "decision control",
+        "maturity": "new",
+        "provides": [
+          "milestone disposition",
+          "bounded follow-up decision"
+        ],
+        "purpose": "Determine passed, stopped, or explicitly rescoped without promoting the result into deployment or identity approval.",
+        "requires": [
+          "approved slice contract",
+          "dependency readiness result",
+          "reviewable evidence bundle",
+          "threshold evaluation",
+          "traceable pass-fail report",
+          "named acceptance reviewer"
+        ]
+      }
+    ],
+    "decision_gates": [
+      {
+        "authorizes_irreversible_effects": false,
+        "evidence_required": [
+          "Draft slice contract",
+          "Scope-to-mission mapping",
+          "Explicit exclusion list"
+        ],
+        "gate_id": "G0-MISSION-ALIGNMENT",
+        "on_fail": "Revise the contract; do not begin integration.",
+        "on_pass": "Allow prerequisite and resource resolution only.",
+        "question": "Does the proposed contract preserve the selected mission and exclude migration clearance, identity promotion, Looking Glass, broad World or NavMesh work, and architectural shortcuts?"
+      },
+      {
+        "authorizes_irreversible_effects": false,
+        "evidence_required": [
+          "Revision-pinned approved slice contract",
+          "Completed dependency inventory",
+          "Credential-safe connectivity results",
+          "Target and audio checks",
+          "Named accountable roles and reviewer",
+          "Approved bounded resource envelope"
+        ],
+        "gate_id": "G1-PREREQUISITE-GO",
+        "on_fail": "Stop the milestone and record missing prerequisites and acquisition decisions; do not begin integration.",
+        "on_pass": "Authorize the bounded packaged-slice phases within the approved envelope; this is planning approval, not execution authority from this brief.",
+        "question": "Are the exact thresholds frozen, and is every essential tool, asset, machine, audio path, provider, reviewer, timebox, and permitted spend available or covered by a bounded acquisition path?"
+      },
+      {
+        "authorizes_irreversible_effects": false,
+        "evidence_required": [
+          "Packaged artifact identity",
+          "Repeated build and launch results",
+          "Target metadata",
+          "Applied-presentation instrumentation check"
+        ],
+        "gate_id": "G2-PACKAGED-BOUNDARY",
+        "on_fail": "Stop or return to a strictly bounded packaging diagnostic; do not expand into unrelated Unreal work.",
+        "on_pass": "Proceed to the bounded provider-backed conversation loop.",
+        "question": "Can the project repeatedly produce, launch, and instrument the packaged Unreal 5.6 build on the declared target?"
+      },
+      {
+        "authorizes_irreversible_effects": false,
+        "evidence_required": [
+          "Applied listening-pose evidence",
+          "Korean STT result",
+          "Interruptible TTS result",
+          "Applied viseme evidence",
+          "Barge-in recovery result",
+          "Preliminary correlated trace"
+        ],
+        "gate_id": "G3-LOOP-READINESS",
+        "on_fail": "Use only the contract's bounded diagnostic allowance; otherwise stop or explicitly rescope through a new decision.",
+        "on_pass": "Run the predeclared acceptance and reordering cases.",
+        "question": "Does the minimal loop function end to end without requiring excluded work, and is it ready for contracted repetition and adversarial callback testing?"
+      },
+      {
+        "authorizes_irreversible_effects": false,
+        "evidence_required": [
+          "Recorded audiovisual evidence",
+          "UE Automation results",
+          "Latency traces and threshold evaluation",
+          "Cancellation and reordering results",
+          "Zero stale-callback resurrection result",
+          "Artifact and target identities",
+          "Reviewer sign-off on evidence completeness"
+        ],
+        "gate_id": "G4-MILESTONE-DISPOSITION",
+        "on_fail": "Record stopped or rescoped with failed assertions; make no production-readiness, identity-approval, or broader Unreal-acceptance claim.",
+        "on_pass": "Record the packaged Unreal vertical slice milestone as passed only for the declared target and contract version.",
+        "question": "Does the evidence bundle prove every contracted RT-02, RT-04, RT-05, RT-08, and RT-11 assertion for the declared packaged target?"
+      }
+    ],
+    "effects": [
+      {
+        "approval_required": false,
+        "compensation": null,
+        "description": "Scarce cross-project effort is focused on the packaged Unreal vertical slice while migration clearance and identity-candidate promotion are deferred.",
+        "effect_id": "EF-FOCUS",
+        "reversibility": "reversible",
+        "rollback": "At Gate G1 or any stop gate, close the slice as stopped and return prioritization to a new sequencing decision using the captured dependency evidence."
+      },
+      {
+        "approval_required": false,
+        "compensation": null,
+        "description": "A bounded amount of engine, target-machine, provider, audio, capture, and reviewer capacity may be reserved after prerequisite approval.",
+        "effect_id": "EF-RESOURCE-USE",
+        "reversibility": "reversible",
+        "rollback": "Cancel uncommitted reservations and revoke temporary test access when the gate fails or the timebox ends."
+      },
+      {
+        "approval_required": false,
+        "compensation": null,
+        "description": "A revision-pinned evidence bundle and explicit pass, stop, or rescope disposition are created.",
+        "effect_id": "EF-EVIDENCE",
+        "reversibility": "reversible",
+        "rollback": "Mark superseded evidence as non-authoritative while retaining provenance; issue a new contract version for any later run."
+      },
+      {
+        "approval_required": false,
+        "compensation": null,
+        "description": "The milestone does not clear production deployment, approve character identity, or validate excluded Unreal and hardware capabilities.",
+        "effect_id": "EF-NONCLAIMS",
+        "reversibility": "reversible",
+        "rollback": "A later independently evidenced approval process may supersede each deferred status."
+      }
+    ],
+    "execution_authority_issued": false,
+    "experience_contract": {
+      "beneficiary_promise": "A reviewer can see and measure one coherent responsive-character interaction rather than infer it from isolated subsystem tests.",
+      "evidence_contract": [
+        "Applied-pose and applied-viseme confirmations must come from the Unreal presentation boundary.",
+        "Audio, state, generation or epoch, and latency observations must share a correlation scheme sufficient to reconstruct each repetition.",
+        "Reordered and late responses must be injected or otherwise demonstrated under a predeclared procedure.",
+        "Each repetition must produce an unambiguous pass or fail without relying on subjective showcase quality.",
+        "The final bundle must identify the repository revision, packaged artifact, target configuration, acceptance-contract version, and evidence integrity checks."
+      ],
+      "failure_experience": "If a prerequisite or acceptance assertion fails, the milestone records the exact failed boundary and stops or returns to a bounded diagnostic phase; it does not substitute source-level evidence or presentation polish for the missing proof.",
+      "required_states": [
+        "ready",
+        "listening-pose-applied",
+        "recognizing",
+        "cognition-active",
+        "speaking-with-visemes-applied",
+        "barge-in-cancelling",
+        "valid-recovered-state"
+      ],
+      "scenario": "On one declared target machine, launch the packaged Unreal 5.6 build. A user speaks Korean into the declared microphone. Voice activity causes the character to visibly apply its listening pose. Recognized speech starts cognition. The character produces audible, interruptible speech with visemes confirmed as applied by the Unreal presentation. During speech, the user interrupts; playback stops, cancelled work remains cancelled, and the character returns to the contractually defined valid state."
+    },
+    "external_dependencies": [
+      {
+        "dependency_id": "ED-ACCEPTANCE-CRITERIA",
+        "probe": "Retrieve and freeze the full criteria for RT-02, RT-04, RT-05, RT-08, and RT-11 from the pinned public revision.",
+        "provides": [
+          "authoritative acceptance criteria"
+        ],
+        "status": "unresolved"
+      },
+      {
+        "dependency_id": "ED-REVISION",
+        "evidence_ids": [
+          "repository_revision:15e390d0b7ab4fff00903baea7efdc6f396b3e1a"
+        ],
+        "provides": [
+          "repository revision"
+        ],
+        "status": "observed"
+      },
+      {
+        "dependency_id": "ED-DECLARATIONS",
+        "probe": "Collect accountable declarations for access, roles, review availability, timebox, and budget.",
+        "provides": [
+          "dependency declarations",
+          "resource declarations"
+        ],
+        "status": "unresolved"
+      },
+      {
+        "dependency_id": "ED-ACCESS-CHECKS",
+        "probe": "Run bounded non-production checks for engine, assets, hardware, audio, provider connectivity, quotas, and capture.",
+        "provides": [
+          "access checks"
+        ],
+        "status": "unresolved"
+      },
+      {
+        "dependency_id": "ED-UE56",
+        "probe": "Confirm installation, project compatibility, required toolchain, and ability to build a minimal packaged target.",
+        "provides": [
+          "Unreal Engine 5.6 environment"
+        ],
+        "status": "unresolved"
+      },
+      {
+        "dependency_id": "ED-METAHUMAN",
+        "probe": "Confirm an accessible compatible asset and plugin set without asserting identity-candidate status.",
+        "provides": [
+          "compatible MetaHuman assets and plugins"
+        ],
+        "status": "unresolved"
+      },
+      {
+        "dependency_id": "ED-TARGET",
+        "probe": "Declare one machine and record OS, CPU, GPU, memory, audio devices, and packaging compatibility.",
+        "provides": [
+          "target machine"
+        ],
+        "status": "unresolved"
+      },
+      {
+        "dependency_id": "ED-PRESENTATION-ASSET",
+        "probe": "Confirm that an existing diagnostic or draft asset can support pose and viseme verification without identity approval.",
+        "provides": [
+          "existing non-candidate character presentation asset"
+        ],
+        "status": "unresolved"
+      },
+      {
+        "dependency_id": "ED-CORE-ENDPOINT",
+        "evidence_ids": [
+          "README.md@sha256:37957c7f2722d5fe74815659d6e57859fca23d32eb453bf34cc38d6054cf02f3",
+          "docs/unreal/ACCEPTANCE_STATUS.md@sha256:13608bb68d87277d8b00432e08be317fc75b18049da4fd890422dc2b792f9754"
+        ],
+        "provides": [
+          "Core and Unreal protocol endpoint"
+        ],
+        "status": "observed"
+      },
+      {
+        "dependency_id": "ED-AUDIO",
+        "probe": "Verify stable capture and playback on the declared target.",
+        "provides": [
+          "microphone input",
+          "audio output"
+        ],
+        "status": "unresolved"
+      },
+      {
+        "dependency_id": "ED-STT",
+        "probe": "Confirm provider access and run a bounded Korean utterance connectivity check.",
+        "provides": [
+          "Korean STT service"
+        ],
+        "status": "unresolved"
+      },
+      {
+        "dependency_id": "ED-COGNITION",
+        "probe": "Confirm provider access, cancellation behavior available for testing, and bounded quota.",
+        "provides": [
+          "cognition service"
+        ],
+        "status": "unresolved"
+      },
+      {
+        "dependency_id": "ED-TTS",
+        "probe": "Confirm provider access, Korean output, cancellation behavior available for testing, and bounded quota.",
+        "provides": [
+          "TTS service"
+        ],
+        "status": "unresolved"
+      },
+      {
+        "dependency_id": "ED-PROVIDER-AUTH",
+        "probe": "Have an authorized holder perform credential-safe checks and state the permitted test envelope without exposing secrets.",
+        "provides": [
+          "provider credentials and quota"
+        ],
+        "status": "unresolved"
+      },
+      {
+        "dependency_id": "ED-CAPTURE",
+        "probe": "Demonstrate synchronized audiovisual recording and trace capture sufficient to evaluate applied-presentation latency.",
+        "provides": [
+          "audiovisual capture capability",
+          "latency instrumentation"
+        ],
+        "status": "unresolved"
+      },
+      {
+        "dependency_id": "ED-REVIEWER",
+        "probe": "Name an accountable reviewer before evidence collection begins.",
+        "provides": [
+          "named acceptance reviewer"
+        ],
+        "status": "unresolved"
+      }
+    ],
+    "in_scope": [
+      "A revision-pinned, one-page vertical-slice contract defining the exact scenario, repetitions, target, artifacts, and thresholds.",
+      "A dependency inventory covering Unreal Engine 5.6, compatible MetaHuman assets and plugins, one target machine, microphone, audio output, Korean STT, cognition, TTS, and required credentials or access.",
+      "The smallest necessary acceptance subset: RT-02, RT-04, RT-05, RT-08, and RT-11.",
+      "A packaged Unreal 5.6 build of the minimal conversation loop on one declared target machine.",
+      "Recorded audiovisual evidence, UE Automation results, latency traces, cancellation and provider-response reordering evidence, barge-in recovery evidence, and stale-callback counts.",
+      "A final milestone disposition of passed, stopped, or explicitly rescoped."
+    ],
+    "knowledge_ledger": [
+      {
+        "evidence_ids": [
+          "README.md@sha256:37957c7f2722d5fe74815659d6e57859fca23d32eb453bf34cc38d6054cf02f3"
+        ],
+        "item_id": "KL-001",
+        "statement": "The repository describes Core, Discord, Desktop, Unreal, and RuntimeCore as replaceable or separated layers, with Core responsible for conversation, memory, emotion, behavior, tools, and session state.",
+        "status": "observed",
+        "validation_probe": null
+      },
+      {
+        "evidence_ids": [
+          "docs/unreal/ACCEPTANCE_STATUS.md@sha256:13608bb68d87277d8b00432e08be317fc75b18049da4fd890422dc2b792f9754"
+        ],
+        "item_id": "KL-002",
+        "statement": "RT-02, RT-04, RT-05, RT-08, and RT-11 have repository-level or backend/desktop/reference evidence, but still require Unreal, provider, applied-presentation, or physical-device evidence.",
+        "status": "observed",
+        "validation_probe": null
+      },
+      {
+        "evidence_ids": [
+          "docs/DEPLOYMENT_MIGRATION_BLOCKER.md@sha256:beffc2d10ccd0ea1ce0a474332b4ee2c97aa39a907f965312a6036a6684acf94"
+        ],
+        "item_id": "KL-003",
+        "statement": "Production migration deployment is not cleared: live Flyway history, disposable PostgreSQL preflight, and representative-scale operational measurements remain required.",
+        "status": "observed",
+        "validation_probe": null
+      },
+      {
+        "evidence_ids": [
+          "docs/GAHYEON_G1_RESUME_2026-08-13.md@sha256:348c7fd1a09859dbff7c806ef17185395d529d183553cda8da20c7bce64632dc"
+        ],
+        "item_id": "KL-004",
+        "statement": "The current character artifact is draft-for-human-review, is not likeness-approved, has no recorded approval evidence, and must not be promoted to candidate status.",
+        "status": "observed",
+        "validation_probe": null
+      },
+      {
+        "evidence_ids": [
+          "mission:consequential_choice",
+          "mission:interpretation",
+          "mission:rationale"
+        ],
+        "item_id": "KL-005",
+        "statement": "The packaged Unreal realtime vertical slice is the next cross-project milestone, conditionally sequenced behind a dependency-and-contract gate; migration clearance and identity-candidate promotion are deferred.",
+        "status": "decided",
+        "validation_probe": null
+      },
+      {
+        "evidence_ids": [],
+        "item_id": "KL-006",
+        "statement": "Access to a usable Unreal Engine 5.6 environment and compatible MetaHuman assets or plugins is not established by the supplied evidence.",
+        "status": "unresolved",
+        "validation_probe": "Record versions, licensing or access status, installation health, asset compatibility, and the accountable acquisition owner and deadline before Gate G1."
+      },
+      {
+        "evidence_ids": [],
+        "item_id": "KL-007",
+        "statement": "A suitable target machine, microphone, audio output path, and capture capability are not established.",
+        "status": "unresolved",
+        "validation_probe": "Identify one target configuration and run a bounded engine launch, microphone capture, audio playback, and audiovisual recording check."
+      },
+      {
+        "evidence_ids": [],
+        "item_id": "KL-008",
+        "statement": "Korean STT, cognition, and TTS provider access, credentials, quotas, and expected test cost are not established.",
+        "status": "unresolved",
+        "validation_probe": "Execute credential-safe connectivity checks for each provider, record model or service identifiers, quota limits, expected bounded-run cost, and an owner for any missing access."
+      },
+      {
+        "evidence_ids": [],
+        "item_id": "KL-009",
+        "statement": "The exact numeric thresholds and repetition count for the packaged slice are not fully present in the supplied excerpts.",
+        "status": "unresolved",
+        "validation_probe": "Extract the authoritative RT-02, RT-04, RT-05, RT-08, and RT-11 criteria from revision 15e390d0b7ab4fff00903baea7efdc6f396b3e1a, resolve conflicts explicitly, and freeze the selected values in the slice contract before Gate G1."
+      },
+      {
+        "evidence_ids": [],
+        "item_id": "KL-010",
+        "statement": "Named people, reviewer availability, calendar time, and budget are not supplied.",
+        "status": "unresolved",
+        "validation_probe": "At Gate G1, identify the minimum accountable roles, reviewer, available timebox, and permitted provider or infrastructure spend; stop if the accepted envelope cannot support the contracted run."
+      },
+      {
+        "evidence_ids": [],
+        "item_id": "KL-011",
+        "statement": "A neutral or draft character presentation can exercise listening pose and viseme application without promoting the character to an identity candidate.",
+        "status": "assumed",
+        "validation_probe": "Confirm during contract review that the packaged slice can use an existing non-candidate presentation asset and that no identity approval is required for technical acceptance."
+      }
+    ],
+    "mission_contract_fingerprint": "acb0f325f8636781de5ddba2a2de652a74ddc0a18b54e69f3b8137e5028410ac",
+    "mission_contract_id": "mission-acb0f325f863",
+    "mission_semantics_preserved": true,
+    "out_of_scope": [
+      "Production deployment clearance or migration-safety claims without live Flyway history and representative-scale measurements.",
+      "Promotion of v10, v11, or another model to an identity candidate without authorized canonical references, populated review evidence, and named human approval.",
+      "Looking Glass hardware validation.",
+      "Broad World, NavMesh, or montage acceptance beyond what the minimal conversation loop strictly requires.",
+      "Completion of every RT-01 through RT-13 acceptance row.",
+      "Linux arm64 publishing or multi-machine portability.",
+      "Demo-specific shortcuts that violate Core, renderer, callback, persistence, or acknowledgement boundaries."
+    ],
+    "outcome": "Reach a go, stop, or rescope decision for—and, only after prerequisite approval, prove—a minimal packaged Unreal Engine 5.6 conversation loop on one declared target machine. The loop must apply a listening pose after voice activity, recognize Korean speech, produce interruptible spoken cognition with applied visemes, recover through barge-in, and prevent cancelled or reordered callbacks from reviving stale work.",
+    "phases": [
+      {
+        "component_ids": [
+          "C-SLICE-CONTRACT",
+          "C-DEPENDENCY-INVENTORY"
+        ],
+        "entry_gate": "G0-MISSION-ALIGNMENT",
+        "exit_gate": "G1-PREREQUISITE-GO",
+        "objective": "Freeze the minimal slice contract and resolve whether every essential dependency has a bounded path.",
+        "outputs": [
+          "approved slice contract",
+          "acceptance matrix",
+          "dependency readiness result",
+          "acquisition-path register",
+          "resource-envelope decision"
+        ],
+        "phase_id": "P0-CONTRACT-AND-INVENTORY"
+      },
+      {
+        "component_ids": [
+          "C-PACKAGED-STAGE",
+          "C-EVIDENCE-CAPTURE"
+        ],
+        "entry_gate": "G1-PREREQUISITE-GO",
+        "exit_gate": "G2-PACKAGED-BOUNDARY",
+        "objective": "Prove that the declared target can repeatedly build, launch, and instrument the minimal packaged Unreal stage before provider integration expands.",
+        "outputs": [
+          "packaged build",
+          "launch evidence",
+          "applied-presentation instrumentation check"
+        ],
+        "phase_id": "P1-PACKAGE-SKELETON"
+      },
+      {
+        "component_ids": [
+          "C-PACKAGED-STAGE",
+          "C-CONVERSATION-PATH",
+          "C-EVIDENCE-CAPTURE"
+        ],
+        "entry_gate": "G2-PACKAGED-BOUNDARY",
+        "exit_gate": "G3-LOOP-READINESS",
+        "objective": "Connect the Korean conversation path and demonstrate applied listening pose, interruptible speech, applied visemes, and valid barge-in recovery.",
+        "outputs": [
+          "bounded Korean conversation loop",
+          "preliminary latency traces",
+          "barge-in recovery evidence"
+        ],
+        "phase_id": "P2-BOUNDED-LOOP"
+      },
+      {
+        "component_ids": [
+          "C-STALE-CALLBACK-HARNESS",
+          "C-EVIDENCE-CAPTURE",
+          "C-ACCEPTANCE-REVIEW"
+        ],
+        "entry_gate": "G3-LOOP-READINESS",
+        "exit_gate": "G4-MILESTONE-DISPOSITION",
+        "objective": "Run the contracted repetitions, cancellation and reordering cases, capture complete evidence, and decide the milestone disposition.",
+        "outputs": [
+          "reviewable evidence bundle",
+          "traceable pass-fail report",
+          "milestone disposition",
+          "bounded follow-up decision"
+        ],
+        "phase_id": "P3-ADVERSARIAL-ACCEPTANCE"
+      }
+    ],
+    "plan_scale": "service",
+    "planning_brief_fingerprint": "b1068b1bffa9f49b107e4b0f48107ce78a00eb77cbe277d145ea827ec279d7c6",
+    "planning_brief_id": "planning-brief-b1068b1bffa9",
+    "planning_rationale": "The plan preserves the mission's conditional sequence: first freeze the evidence contract and verify prerequisites, then proceed only through bounded gates. It selects the packaged Unreal slice because that milestone composes existing technical evidence into the clearest beneficiary-visible proof while exposing the most consequential remaining integration boundaries. Production migration readiness remains deferred because public evidence cannot replace live Flyway history or representative-scale measurements. Character-candidate promotion remains deferred because the supplied evidence explicitly withholds likeness approval and records missing review evidence. No private access, named staff, cost, date, target hardware, provider availability, or identity authority is treated as fact.",
+    "planning_stage": "approval",
+    "resolution_basis": {
+      "coordination_cost": "medium",
+      "harm_potential": "medium",
+      "irreversibility": "low",
+      "resolution_rationale": "Repository evidence covers many underlying contracts, but the packaged Unreal, target-device, provider, applied-pose, applied-viseme, and barge-in boundaries remain unverified. The contract-and-access probe is reversible and inexpensive relative to integration. Coordination is required across engine assets, hardware, audio, providers, evidence capture, and acceptance review. Harm is bounded primarily to scarce effort and misleading public claims; predeclared gates prevent either from becoming an implicit release claim.",
+      "uncertainty": "high"
+    },
+    "resource_envelope": {
+      "budget": {
+        "constraint": "No provider, hardware, engine, plugin, or capture spend is assumed.",
+        "probe": "Identify expected provider-run, asset, hardware, and tooling costs; obtain approval for a capped amount before Gate G1.",
+        "status": "unresolved"
+      },
+      "critical_assets": {
+        "confirmed": [
+          "Public repository revision 15e390d0b7ab4fff00903baea7efdc6f396b3e1a",
+          "Repository-documented Core, Unreal connection, RuntimeCore, and acceptance evidence"
+        ],
+        "probe": "Complete the dependency inventory and attach evidence or a bounded owner-and-acquisition path for each unresolved asset.",
+        "unresolved": [
+          "Usable Unreal Engine 5.6 environment",
+          "Compatible MetaHuman assets and plugins",
+          "One declared target machine",
+          "Existing non-candidate presentation asset suitable for pose and viseme validation",
+          "Microphone and audio output",
+          "Korean STT access",
+          "Cognition-provider access",
+          "Korean TTS access",
+          "Provider credentials and quota",
+          "Synchronized audiovisual capture and latency instrumentation"
+        ]
+      },
+      "people": {
+        "minimum_roles": [
+          "Accountable slice owner",
+          "Unreal packaging and presentation owner",
+          "Core/provider integration owner",
+          "Evidence and acceptance reviewer"
+        ],
+        "probe": "Name accountable people, confirm availability, and resolve whether roles may be combined without compromising evidence review.",
+        "status": "unresolved"
+      },
+      "timebox": {
+        "constraint": "Must be bounded before Gate G1 and separated into prerequisite, packaged-boundary, loop, and acceptance allowances.",
+        "probe": "Estimate each phase from confirmed availability and set an explicit stop date or effort ceiling before integration.",
+        "status": "unresolved"
+      }
+    },
+    "stop_conditions": [
+      "An essential Unreal Engine 5.6, MetaHuman, target-machine, audio-device, Korean STT, cognition, TTS, or provider prerequisite is unavailable and lacks a bounded acquisition path.",
+      "The project cannot produce or repeatedly run the packaged build on the declared target.",
+      "The minimal loop expands to require substantial Looking Glass, World, NavMesh, character-identity, or production-deployment work.",
+      "Applied listening-pose, speech, barge-in, or viseme latency misses a predeclared threshold after the bounded diagnostic allowance defined in the slice contract.",
+      "Late cognition, STT, TTS, transport, or engine callbacks revive cancelled work or corrupt the active generation.",
+      "Barge-in cannot stop playback and restore a valid conversational state.",
+      "Required evidence cannot distinguish RuntimeCore or source-connected behavior from behavior actually applied in the packaged Unreal presentation."
+    ],
+    "success_signals": [
+      "The slice contract names one target machine, one packaged-build configuration, the exact interaction script, repetition count, evidence artifacts, and numeric acceptance thresholds before integration begins.",
+      "Every essential dependency is confirmed available or has a bounded acquisition path with an accountable owner and decision date; otherwise the milestone stops at the prerequisite gate.",
+      "The packaged Unreal 5.6 build can be produced and repeatedly launched on the declared target.",
+      "The bounded loop repeatedly moves from voice activity to an actually applied listening pose, Korean recognition, interruptible spoken cognition, actually applied visemes, and a valid post-barge-in state.",
+      "Latency traces satisfy the predeclared RT-02, RT-05, RT-08, and RT-11 thresholds; reference-only, cursor-only, or heuristic-only observations are not counted as applied-presentation evidence.",
+      "Cancellation and deliberately reordered cognition, STT, TTS, and engine callbacks produce zero stale-callback resurrection under the RT-04 contract.",
+      "The evidence bundle contains recorded audiovisual evidence, UE Automation results, trace data, packaged-build identity, target description, provider configuration identifiers that disclose no secrets, and a pass/fail result for every contracted assertion."
+    ],
+    "value_proposition": "Convert the repository's existing Core, transport, audio, cancellation, replay, Desktop, and RuntimeCore breadth into bounded user-facing evidence at the real engine, device, provider, timing, and cancellation boundaries. The prerequisite probe limits wasted integration effort when essential Unreal, MetaHuman, hardware, audio, or provider resources are unavailable."
+  },
+  "draft_validation": {
+    "component_count": 7,
+    "errors": [
+      "experience_contract.context must be a non-empty string",
+      "experience_contract.entry_state must be a non-empty string",
+      "experience_contract.core_loop must be a non-empty string",
+      "experience_contract.exit_state must be a non-empty string",
+      "experience_contract.experience_principles must be non-empty and unique",
+      "external_dependencies must be a unique string list",
+      "component requirements lack a provider or external dependency: Core and Unreal protocol endpoint, Korean STT service, TTS service, Unreal Engine 5.6 environment, access checks, audio output, audiovisual capture capability, authoritative acceptance criteria, cognition service, compatible MetaHuman assets and plugins, dependency declarations, existing non-candidate character presentation asset, latency instrumentation, microphone input, named acceptance reviewer, provider credentials and quota, repository revision, resource declarations, target machine",
+      "decision_gates[0].evidence_required must be a non-empty string",
+      "decision_gates[1].evidence_required must be a non-empty string",
+      "decision_gates[2].evidence_required must be a non-empty string",
+      "decision_gates[3].evidence_required must be a non-empty string",
+      "decision_gates[4].evidence_required must be a non-empty string",
+      "resource_envelope.people must be non-empty",
+      "resource_envelope.timebox must be non-empty",
+      "resource_envelope.budget must be non-empty",
+      "resource_envelope.critical_assets must be non-empty"
+    ],
+    "irreversible_effect_present": false,
+    "phase_count": 4,
+    "plan_scale": "service",
+    "planning_stage": "approval",
+    "required_resolution": "program",
+    "unresolved_component_requirements": [
+      "Core and Unreal protocol endpoint",
+      "Korean STT service",
+      "TTS service",
+      "Unreal Engine 5.6 environment",
+      "access checks",
+      "audio output",
+      "audiovisual capture capability",
+      "authoritative acceptance criteria",
+      "cognition service",
+      "compatible MetaHuman assets and plugins",
+      "dependency declarations",
+      "existing non-candidate character presentation asset",
+      "latency instrumentation",
+      "microphone input",
+      "named acceptance reviewer",
+      "provider credentials and quota",
+      "repository revision",
+      "resource declarations",
+      "target machine"
+    ],
+    "valid": false
+  },
+  "execution_authority_issued": false,
+  "final_validation": {
+    "component_count": 7,
+    "errors": [],
+    "irreversible_effect_present": false,
+    "phase_count": 4,
+    "plan_scale": "service",
+    "planning_stage": "approval",
+    "required_resolution": "program",
+    "unresolved_component_requirements": [],
+    "valid": true
+  },
+  "generated_at": "2026-08-18T03:58:54.718353+00:00",
+  "mission_contract_fingerprint": "acb0f325f8636781de5ddba2a2de652a74ddc0a18b54e69f3b8137e5028410ac",
+  "mission_contract_id": "mission-acb0f325f863",
+  "planning_brief": {
+    "alternatives": [
+      {
+        "alternative_id": "ALT-UNREAL-SLICE",
+        "description": "Probe prerequisites, then prove the minimal Korean voice, applied listening pose, interruptible speech, applied visime, barge-in, and stale-callback-safe loop in a packaged Unreal 5.6 build.",
+        "name": "Packaged Unreal realtime vertical slice",
+        "selected": true,
+        "selection_basis": "This alternative has the highest beneficiary-visible integration value and information gain from the existing repository evidence, while an early prerequisite gate and bounded acceptance contract limit exposure."
+      },
+      {
+        "alternative_id": "ALT-MIGRATION",
+        "description": "Prioritize live Flyway-history inspection, disposable PostgreSQL preflight, and representative-scale migration measurements.",
+        "name": "Production migration readiness",
+        "selected": false,
+        "selection_basis": "Deferred because the public repository cannot establish live database history or representative production-scale behavior, and migration readiness would not provide the requested user-facing proof."
+      },
+      {
+        "alternative_id": "ALT-IDENTITY",
+        "description": "Prioritize the next character iteration and candidate review.",
+        "name": "Next character-identity candidate",
+        "selected": false,
+        "selection_basis": "Deferred because the current artifact is explicitly draft-only and credible promotion requires authorized canonical references, populated review evidence, and named human approval not established in the bounded context."
+      }
+    ],
+    "beneficiary": "Prospective users and contributors who need evidence that Gahyeon behaves as a responsive realtime character rather than only as a collection of source-connected subsystems.",
+    "components": [
+      {
+        "component_id": "C-SLICE-CONTRACT",
+        "kind": "decision artifact",
+        "maturity": "adapt",
+        "provides": [
+          "approved slice contract",
+          "acceptance matrix",
+          "evidence manifest schema"
+        ],
+        "purpose": "Freeze the scenario, target, repetitions, thresholds, correlations, artifacts, diagnostic allowance, exclusions, and stop rules.",
+        "requires": [
+          "repository revision",
+          "authoritative acceptance criteria"
+        ]
+      },
+      {
+        "component_id": "C-DEPENDENCY-INVENTORY",
+        "kind": "readiness control",
+        "maturity": "new",
+        "provides": [
+          "dependency readiness result",
+          "acquisition-path register",
+          "resource-envelope decision"
+        ],
+        "purpose": "Resolve the availability or bounded acquisition path for tooling, assets, hardware, audio, providers, credentials, capture, people, time, and budget.",
+        "requires": [
+          "dependency declarations",
+          "access checks",
+          "resource declarations"
+        ]
+      },
+      {
+        "component_id": "C-PACKAGED-STAGE",
+        "kind": "Unreal presentation",
+        "maturity": "adapt",
+        "provides": [
+          "packaged build",
+          "applied listening-pose confirmation",
+          "applied viseme confirmation",
+          "presentation-state evidence"
+        ],
+        "purpose": "Package the minimal Unreal 5.6 interaction and expose confirmations for actual pose, viseme, audio, and presentation-state application.",
+        "requires": [
+          "approved slice contract",
+          "Unreal Engine 5.6 environment",
+          "compatible MetaHuman assets and plugins",
+          "target machine",
+          "existing non-candidate character presentation asset",
+          "Core and Unreal protocol endpoint"
+        ]
+      },
+      {
+        "component_id": "C-CONVERSATION-PATH",
+        "kind": "service integration",
+        "maturity": "adapt",
+        "provides": [
+          "bounded Korean conversation loop",
+          "interruptible speech",
+          "generation-correlated state transitions"
+        ],
+        "purpose": "Compose VAD, Korean STT, cognition, TTS, generation cancellation, and barge-in for the bounded scenario.",
+        "requires": [
+          "approved slice contract",
+          "microphone input",
+          "audio output",
+          "Korean STT service",
+          "cognition service",
+          "TTS service",
+          "provider credentials and quota",
+          "Core and Unreal protocol endpoint"
+        ]
+      },
+      {
+        "component_id": "C-STALE-CALLBACK-HARNESS",
+        "kind": "verification harness",
+        "maturity": "adapt",
+        "provides": [
+          "reordering evidence",
+          "stale-callback count",
+          "barge-in recovery result"
+        ],
+        "purpose": "Exercise cancellation and late or reordered cognition, STT, TTS, transport, and engine callbacks.",
+        "requires": [
+          "approved slice contract",
+          "bounded Korean conversation loop",
+          "generation-correlated state transitions"
+        ]
+      },
+      {
+        "component_id": "C-EVIDENCE-CAPTURE",
+        "kind": "measurement and evidence",
+        "maturity": "adapt",
+        "provides": [
+          "reviewable evidence bundle",
+          "threshold evaluation",
+          "traceable pass-fail report"
+        ],
+        "purpose": "Capture audiovisual output, automation results, correlated traces, target metadata, artifact identity, and assertion-level evaluations.",
+        "requires": [
+          "evidence manifest schema",
+          "packaged build",
+          "applied listening-pose confirmation",
+          "applied viseme confirmation",
+          "generation-correlated state transitions",
+          "audiovisual capture capability",
+          "latency instrumentation"
+        ]
+      },
+      {
+        "component_id": "C-ACCEPTANCE-REVIEW",
+        "kind": "decision control",
+        "maturity": "new",
+        "provides": [
+          "milestone disposition",
+          "bounded follow-up decision"
+        ],
+        "purpose": "Issue a bounded milestone disposition without converting it into deployment authority, identity approval, or broader Unreal acceptance.",
+        "requires": [
+          "approved slice contract",
+          "dependency readiness result",
+          "reviewable evidence bundle",
+          "threshold evaluation",
+          "traceable pass-fail report",
+          "named acceptance reviewer"
+        ]
+      }
+    ],
+    "decision_gates": [
+      {
+        "authorizes_irreversible_effects": false,
+        "evidence_required": "A draft revision-pinned slice contract containing a mission mapping, beneficiary promise, exact exclusions, non-claims, planned acceptance subset, and explicit confirmation that a non-candidate presentation asset is sufficient.",
+        "gate_id": "G0-MISSION-ALIGNMENT",
+        "on_fail": "Revise or reject the contract; do not begin packaging or integration.",
+        "on_pass": "Permit prerequisite, resource, and contract resolution only.",
+        "question": "Does the proposed contract preserve the selected mission and explicitly exclude migration clearance, identity promotion, Looking Glass, broad World or NavMesh work, general release claims, and architectural shortcuts?"
+      },
+      {
+        "authorizes_irreversible_effects": false,
+        "evidence_required": "The approved slice contract, completed dependency inventory, credential-safe connectivity results, engine and asset compatibility checks, target and audio checks, capture and correlation checks, named accountable roles and reviewer, phase ceilings, spending cap, and owner-and-decision-date records for any bounded acquisition path.",
+        "gate_id": "G1-PREREQUISITE-GO",
+        "on_fail": "Stop the milestone and record the missing prerequisites and acquisition decisions; do not begin integration.",
+        "on_pass": "Record planning approval to consider the bounded packaged-slice phases under the declared envelope; this brief itself issues no execution authority.",
+        "question": "Are the acceptance values frozen, and is every essential tool, asset, machine, audio path, provider, credential holder, capture facility, owner, reviewer, timebox, and permitted spend available or covered by an approved bounded acquisition path?"
+      },
+      {
+        "authorizes_irreversible_effects": false,
+        "evidence_required": "Packaged artifact identity, repeated build and launch results, target metadata, engine and plugin versions, capture health, and checks showing that listening-pose and viseme confirmations can originate at the Unreal presentation boundary.",
+        "gate_id": "G2-PACKAGED-BOUNDARY",
+        "on_fail": "Stop or use only the contract's packaging diagnostic allowance; do not expand into unrelated Unreal work.",
+        "on_pass": "Permit progression to the bounded provider-backed conversation loop through the project's normal authorization process.",
+        "question": "Can the project repeatedly produce, launch, and instrument the packaged Unreal 5.6 build on the declared target without relying on excluded work?"
+      },
+      {
+        "authorizes_irreversible_effects": false,
+        "evidence_required": "An applied listening-pose result, Korean STT result, interruptible TTS result, applied-viseme result, valid barge-in recovery result, preliminary correlated trace, and confirmation that each observation is tied to the active generation and packaged presentation.",
+        "gate_id": "G3-LOOP-READINESS",
+        "on_fail": "Use only the bounded diagnostic allowance; otherwise stop or submit a new rescope decision.",
+        "on_pass": "Permit the predeclared acceptance repetitions and cancellation or reordering cases through the project's normal authorization process.",
+        "question": "Does the minimal loop work end to end without excluded work, and is it ready for the frozen repetition and adversarial callback cases?"
+      },
+      {
+        "authorizes_irreversible_effects": false,
+        "evidence_required": "Recorded audiovisual evidence, UE Automation results, correlated latency traces with threshold evaluations, cancellation and response-reordering results, a zero stale-callback-resurrection result, artifact and target identities, evidence integrity checks, assertion-level pass or fail results, and reviewer confirmation of completeness.",
+        "gate_id": "G4-MILESTONE-DISPOSITION",
+        "on_fail": "Record the milestone as stopped or rescoped with failed assertions; make no deployment-readiness, identity-approval, general-release, or broader Unreal-acceptance claim.",
+        "on_pass": "Record only the declared packaged Unreal vertical-slice milestone as passed.",
+        "question": "Does the complete evidence bundle prove every contracted RT-02, RT-04, RT-05, RT-08, and RT-11 assertion for the declared target, artifact, and contract version?"
+      }
+    ],
+    "effects": [
+      {
+        "approval_required": false,
+        "compensation": null,
+        "description": "Cross-project planning focus moves to the packaged Unreal vertical slice while migration clearance and identity-candidate promotion remain deferred.",
+        "effect_id": "EF-FOCUS",
+        "reversibility": "reversible",
+        "rollback": "At any failed gate, record the slice as stopped and return prioritization to a new sequencing decision using the captured evidence."
+      },
+      {
+        "approval_required": false,
+        "compensation": null,
+        "description": "A bounded amount of engine, target-machine, provider, audio, capture, and reviewer capacity may be reserved only after the prerequisite gate passes through the project's normal approval process.",
+        "effect_id": "EF-RESERVATION",
+        "reversibility": "reversible",
+        "rollback": "Cancel uncommitted reservations and revoke temporary test access when a gate fails or the approved envelope expires."
+      },
+      {
+        "approval_required": false,
+        "compensation": null,
+        "description": "A revision-pinned evidence bundle and a passed, stopped, or rescoped disposition are created.",
+        "effect_id": "EF-EVIDENCE",
+        "reversibility": "reversible",
+        "rollback": "Retain provenance but mark superseded evidence non-authoritative and require a new contract version for a later run."
+      },
+      {
+        "approval_required": false,
+        "compensation": null,
+        "description": "The milestone leaves production deployment, character identity, Looking Glass, broad World behavior, arm64 publishing, and general release readiness unapproved.",
+        "effect_id": "EF-NONCLAIMS",
+        "reversibility": "reversible",
+        "rollback": "A later independent evidence and approval process may supersede each deferred status."
+      }
+    ],
+    "execution_authority_issued": false,
+    "experience_contract": {
+      "context": "A reviewer needs one coherent, measurable interaction showing that Gahyeon's existing subsystems compose into a responsive character inside a packaged Unreal build on one declared target.",
+      "core_loop": "The user speaks the contracted Korean utterance; voice activity leads to an applied listening pose; recognized speech starts cognition; the character produces audible speech with visemes confirmed as applied at the Unreal presentation boundary; the user interrupts during playback; active audio and work are cancelled; deliberately late or reordered callbacks are rejected; and the character returns to a valid recovered state. The scenario is repeated exactly as specified by the approved contract.",
+      "entry_state": "The packaged build is launched on the declared target, the Core and Unreal protocol path is healthy, the microphone and audio output are ready, provider checks have passed, correlation identifiers and capture are active, and the character is in the contractually defined ready state.",
+      "exit_state": "Every repetition has an assertion-level pass or fail, playback is stopped, no cancelled generation has revived, the character is in the defined valid recovered state, and the evidence bundle can be traced to the contract, repository revision, packaged artifact, and target.",
+      "experience_principles": [
+        "Measure behavior at the packaged presentation boundary.",
+        "Correlate audio, state, generation, epoch, callback, and latency evidence.",
+        "Treat interruption and recovery as part of the primary experience.",
+        "Prefer explicit failure over substituted source-level or showcase evidence.",
+        "Do not imply deployment readiness or identity approval."
+      ]
+    },
+    "external_dependencies": [
+      "Core and Unreal protocol endpoint",
+      "Korean STT service",
+      "TTS service",
+      "Unreal Engine 5.6 environment",
+      "access checks",
+      "audio output",
+      "audiovisual capture capability",
+      "authoritative acceptance criteria",
+      "cognition service",
+      "compatible MetaHuman assets and plugins",
+      "dependency declarations",
+      "existing non-candidate character presentation asset",
+      "latency instrumentation",
+      "microphone input",
+      "named acceptance reviewer",
+      "provider credentials and quota",
+      "repository revision",
+      "resource declarations",
+      "target machine"
+    ],
+    "in_scope": [
+      "A revision-pinned slice contract for the smallest necessary subset of RT-02, RT-04, RT-05, RT-08, and RT-11.",
+      "A prerequisite inventory covering acceptance criteria, Unreal Engine 5.6, compatible MetaHuman assets and plugins, one target machine, a non-candidate presentation asset, microphone and audio output, Korean STT, cognition, TTS, credentials and quota, capture capability, accountable roles, reviewer, timebox, and permitted spend.",
+      "A repeatedly buildable and launchable packaged Unreal 5.6 target.",
+      "One bounded Korean conversation loop with applied listening-pose and viseme confirmations from the Unreal presentation boundary.",
+      "Barge-in, cancellation, and deliberately late or reordered callback cases.",
+      "Recorded audiovisual evidence, UE Automation results, correlated latency traces, artifact identity, target metadata, and an assertion-level pass or fail report.",
+      "A final disposition of passed, stopped, or explicitly rescoped."
+    ],
+    "knowledge_ledger": [
+      {
+        "evidence_ids": [
+          "README.md@sha256:37957c7f2722d5fe74815659d6e57859fca23d32eb453bf34cc38d6054cf02f3"
+        ],
+        "item_id": "KL-001",
+        "statement": "The repository describes Core, Discord, Desktop, Unreal, and RuntimeCore as separated layers, with Core responsible for conversation, memory, emotion, behavior, tools, and session state.",
+        "status": "observed",
+        "validation_probe": null
+      },
+      {
+        "evidence_ids": [
+          "docs/unreal/ACCEPTANCE_STATUS.md@sha256:13608bb68d87277d8b00432e08be317fc75b18049da4fd890422dc2b792f9754"
+        ],
+        "item_id": "KL-002",
+        "statement": "RT-02, RT-04, RT-05, RT-08, and RT-11 have repository-level, reference, backend, or Desktop evidence, but still require some combination of packaged Unreal, provider, device, or applied-presentation evidence.",
+        "status": "observed",
+        "validation_probe": null
+      },
+      {
+        "evidence_ids": [
+          "docs/DEPLOYMENT_MIGRATION_BLOCKER.md@sha256:beffc2d10ccd0ea1ce0a474332b4ee2c97aa39a907f965312a6036a6684acf94"
+        ],
+        "item_id": "KL-003",
+        "statement": "Production migration deployment is not cleared because live Flyway history, disposable PostgreSQL preflight, and representative-scale operational measurements remain required.",
+        "status": "observed",
+        "validation_probe": null
+      },
+      {
+        "evidence_ids": [
+          "docs/GAHYEON_G1_RESUME_2026-08-13.md@sha256:348c7fd1a09859dbff7c806ef17185395d529d183553cda8da20c7bce64632dc"
+        ],
+        "item_id": "KL-004",
+        "statement": "The current character artifact is draft-for-human-review, is not likeness-approved, has no recorded approval evidence, and must not be promoted to candidate status.",
+        "status": "observed",
+        "validation_probe": null
+      },
+      {
+        "evidence_ids": [
+          "mission:consequential_choice",
+          "mission:interpretation",
+          "mission:rationale"
+        ],
+        "item_id": "KL-005",
+        "statement": "The packaged Unreal realtime vertical slice is the next cross-project milestone, conditionally sequenced behind a contract-and-prerequisite gate; migration clearance and identity-candidate promotion are deferred.",
+        "status": "decided",
+        "validation_probe": null
+      },
+      {
+        "evidence_ids": [],
+        "item_id": "KL-006",
+        "statement": "The exact numeric thresholds and repetition count for the selected RT subset are not fully present in the supplied excerpts.",
+        "status": "unresolved",
+        "validation_probe": "Extract the complete criteria for RT-02, RT-04, RT-05, RT-08, and RT-11 from repository revision 15e390d0b7ab4fff00903baea7efdc6f396b3e1a, resolve conflicts, and freeze the selected values in the slice contract."
+      },
+      {
+        "evidence_ids": [],
+        "item_id": "KL-007",
+        "statement": "Access to a usable Unreal Engine 5.6 environment, compatible MetaHuman assets and plugins, and a presentation asset suitable for technical validation is not established.",
+        "status": "unresolved",
+        "validation_probe": "Record engine and plugin versions, licensing or access status, project compatibility, presentation-asset status, and a successful bounded package attempt or a bounded acquisition owner and decision date."
+      },
+      {
+        "evidence_ids": [],
+        "item_id": "KL-008",
+        "statement": "A suitable target machine, microphone, audio output path, and synchronized capture and latency instrumentation are not established.",
+        "status": "unresolved",
+        "validation_probe": "Declare one target configuration and demonstrate engine launch, microphone capture, audio playback, audiovisual recording, clock correlation, and trace collection."
+      },
+      {
+        "evidence_ids": [],
+        "item_id": "KL-009",
+        "statement": "Korean STT, cognition, and Korean TTS access, credentials, quotas, cancellation behavior, and expected bounded-run cost are not established.",
+        "status": "unresolved",
+        "validation_probe": "Have an authorized credential holder perform non-secret connectivity and cancellation checks, record service identifiers, quota limits, estimated capped cost, and owners for missing access."
+      },
+      {
+        "evidence_ids": [],
+        "item_id": "KL-010",
+        "statement": "Named accountable people, independent evidence review, calendar availability, and permitted spend are not supplied.",
+        "status": "unresolved",
+        "validation_probe": "Before the prerequisite gate, name the slice owner, Unreal owner, Core/provider owner, evidence reviewer, available timebox, and spending cap; stop if the envelope cannot support the contract."
+      },
+      {
+        "evidence_ids": [],
+        "item_id": "KL-011",
+        "statement": "An existing diagnostic or draft character asset can exercise listening-pose and viseme application without receiving identity-candidate status.",
+        "status": "assumed",
+        "validation_probe": "Confirm in the contract review that an accessible non-candidate asset supports the required pose and viseme channels and that technical acceptance carries no identity approval."
+      }
+    ],
+    "mission_contract_fingerprint": "acb0f325f8636781de5ddba2a2de652a74ddc0a18b54e69f3b8137e5028410ac",
+    "mission_contract_id": "mission-acb0f325f863",
+    "mission_semantics_preserved": true,
+    "out_of_scope": [
+      "Production deployment clearance or migration-safety claims without live Flyway history and representative-scale measurements.",
+      "Promotion of v10, v11, or another character artifact to an identity candidate.",
+      "Looking Glass hardware validation.",
+      "Broad World, NavMesh, montage, or environment interaction work beyond the minimal conversation loop.",
+      "Completion of every RT-01 through RT-13 acceptance row.",
+      "Linux arm64 publishing, multi-machine portability, or general release readiness.",
+      "Showcase polish or architectural shortcuts used to conceal missing acceptance evidence."
+    ],
+    "outcome": "Reach a gated go, stop, or rescope decision for a minimal packaged Unreal Engine 5.6 conversation loop on one declared target machine and, only after prerequisite approval, prove that voice activity causes an applied listening pose, Korean speech is recognized, cognition produces interruptible speech with applied visemes, barge-in restores a valid state, and cancelled or reordered callbacks do not revive stale work.",
+    "phases": [
+      {
+        "component_ids": [
+          "C-SLICE-CONTRACT",
+          "C-DEPENDENCY-INVENTORY"
+        ],
+        "entry_gate": "G0-MISSION-ALIGNMENT",
+        "exit_gate": "G1-PREREQUISITE-GO",
+        "objective": "Freeze the minimum evidence contract and determine whether every essential dependency and resource has an acceptable bounded path.",
+        "outputs": [
+          "approved slice contract",
+          "acceptance matrix",
+          "dependency readiness result",
+          "acquisition-path register",
+          "resource-envelope decision"
+        ],
+        "phase_id": "P0-CONTRACT-AND-INVENTORY"
+      },
+      {
+        "component_ids": [
+          "C-PACKAGED-STAGE",
+          "C-EVIDENCE-CAPTURE"
+        ],
+        "entry_gate": "G1-PREREQUISITE-GO",
+        "exit_gate": "G2-PACKAGED-BOUNDARY",
+        "objective": "Determine whether the declared target can repeatedly build, launch, and instrument the minimal packaged Unreal stage before provider-backed integration expands.",
+        "outputs": [
+          "packaged build",
+          "repeated launch evidence",
+          "applied-presentation instrumentation check"
+        ],
+        "phase_id": "P1-PACKAGE-BOUNDARY"
+      },
+      {
+        "component_ids": [
+          "C-PACKAGED-STAGE",
+          "C-CONVERSATION-PATH",
+          "C-EVIDENCE-CAPTURE"
+        ],
+        "entry_gate": "G2-PACKAGED-BOUNDARY",
+        "exit_gate": "G3-LOOP-READINESS",
+        "objective": "Compose the Korean conversation path and demonstrate applied listening pose, interruptible speech, applied visemes, and valid barge-in recovery.",
+        "outputs": [
+          "bounded Korean conversation loop",
+          "preliminary correlated traces",
+          "barge-in recovery result"
+        ],
+        "phase_id": "P2-BOUNDED-LOOP"
+      },
+      {
+        "component_ids": [
+          "C-STALE-CALLBACK-HARNESS",
+          "C-EVIDENCE-CAPTURE",
+          "C-ACCEPTANCE-REVIEW"
+        ],
+        "entry_gate": "G3-LOOP-READINESS",
+        "exit_gate": "G4-MILESTONE-DISPOSITION",
+        "objective": "Run the contracted repetitions and callback-reordering cases, capture complete evidence, and determine the bounded milestone disposition.",
+        "outputs": [
+          "reviewable evidence bundle",
+          "threshold evaluation",
+          "traceable pass-fail report",
+          "milestone disposition",
+          "bounded follow-up decision"
+        ],
+        "phase_id": "P3-ADVERSARIAL-ACCEPTANCE"
+      }
+    ],
+    "plan_scale": "service",
+    "planning_brief_fingerprint": "bf49da06b5755c60b13b22e8f8ea5475156310b859e24ec9534f384e6ab68e59",
+    "planning_brief_id": "planning-brief-bf49da06b575",
+    "planning_rationale": "The brief preserves the mission's conditional sequence: first freeze the evidence contract and verify prerequisites, then consider bounded progression through packaging, loop integration, and adversarial acceptance. The packaged Unreal slice remains selected because it composes the largest body of existing technical evidence into the clearest beneficiary-visible proof while testing the most consequential remaining engine, audio, provider, timing, and cancellation boundaries. Production migration readiness remains deferred because public evidence cannot replace authorized live Flyway history or representative-scale measurements. Character-candidate promotion remains deferred because the supplied evidence explicitly withholds likeness approval and records missing review evidence. Missing access, assets, people, time, and cost are kept unresolved with probes rather than represented as facts, and no phase or gate in this brief grants execution authority.",
+    "planning_stage": "approval",
+    "resolution_basis": {
+      "coordination_cost": "medium",
+      "harm_potential": "medium",
+      "irreversibility": "low",
+      "resolution_rationale": "The repository supports the architectural path and several underlying acceptance behaviors, but it does not establish access to Unreal Engine 5.6, compatible MetaHuman assets, a target machine, audio devices, provider services, credentials, capture tooling, a reviewer, a budget, or a timebox. Selecting the slice is reversible because work must stop at the prerequisite gate when those conditions lack bounded acquisition paths. Coordination spans engine presentation, Core and providers, hardware, evidence capture, and review. The main harms are wasted scarce effort and overstated public claims, both limited by explicit gates and non-claims.",
+      "uncertainty": "high"
+    },
+    "resource_envelope": {
+      "budget": "Unresolved before G1. No provider, hardware, engine, plugin, asset, or capture spend is assumed. Estimate required costs and approve a capped amount before integration; failure to establish an adequate permitted cap is a stop condition.",
+      "critical_assets": "Confirmed assets are public repository revision 15e390d0b7ab4fff00903baea7efdc6f396b3e1a and the repository-documented Core, Unreal connection, RuntimeCore, transport, audio, cancellation, and acceptance evidence. Unresolved assets are the complete acceptance criteria, usable Unreal Engine 5.6 environment, compatible MetaHuman assets and plugins, declared target machine, suitable non-candidate presentation asset, microphone, audio output, Korean STT, cognition, Korean TTS, credential and quota access, synchronized audiovisual capture, latency instrumentation, accountable owners, and named reviewer. Each unresolved asset requires availability evidence or an approved bounded acquisition path before G1 passes.",
+      "people": "Unresolved before G1. Minimum accountable functions are a slice owner, an Unreal packaging and presentation owner, a Core and provider integration owner, and an evidence acceptance reviewer. Named people and availability must be recorded; roles may be combined only if the review remains sufficiently independent to evaluate evidence.",
+      "timebox": "Unresolved before G1. Establish separate bounded effort or calendar ceilings for contract and inventory, packaged-boundary proof, bounded-loop integration, and adversarial acceptance, plus an overall stop date or effort ceiling. No duration is assumed from the supplied evidence."
+    },
+    "stop_conditions": [
+      "An essential engine, asset, target-machine, audio, provider, credential, capture, reviewer, timebox, or budget prerequisite is unavailable and lacks an approved bounded acquisition path.",
+      "The project cannot repeatedly produce and launch the packaged build on the declared target.",
+      "The minimal loop requires substantial Looking Glass, World, NavMesh, character-identity, or production-deployment work.",
+      "An applied-pose, speech, viseme, recognition, or barge-in threshold remains unmet after the contract's bounded diagnostic allowance.",
+      "A late or reordered cognition, STT, TTS, transport, or engine callback revives cancelled work or corrupts the active generation.",
+      "Barge-in cannot stop playback and restore the contractually defined valid state.",
+      "The captured evidence cannot distinguish reference or source-connected behavior from behavior actually applied in the packaged Unreal presentation.",
+      "The agreed resource or calendar ceiling is reached before all contracted assertions pass."
+    ],
+    "success_signals": [
+      "Before integration, the approved contract identifies the pinned repository revision, one target configuration, packaged-build configuration, interaction scenario, repetition count, numeric thresholds, correlation rules, diagnostic allowance, evidence artifacts, and stop rules.",
+      "Every essential dependency is either verified available or has an approved bounded acquisition path; otherwise the milestone stops at the prerequisite gate.",
+      "The packaged Unreal 5.6 build can be produced, launched, and instrumented repeatedly on the declared target.",
+      "Each contracted repetition reaches an actually applied listening pose, Korean recognition, interruptible spoken cognition, actually applied visemes, and a valid post-barge-in state.",
+      "Correlated traces meet the frozen RT-02, RT-05, RT-08, and RT-11 thresholds; source-level, cursor-only, or heuristic-only observations do not count as presentation-boundary evidence.",
+      "The contracted RT-04 cancellation and response-reordering cases record zero stale-callback resurrection.",
+      "The final evidence bundle identifies the repository revision, packaged artifact, target configuration, contract version, non-secret provider configuration identifiers, audiovisual capture, automation results, traces, integrity checks, and a pass or fail for every assertion."
+    ],
+    "value_proposition": "Convert the repository's broad Core, transport, audio, cancellation, replay, Desktop, and RuntimeCore evidence into one bounded, reviewable user-facing proof at the actual engine, audio, provider, timing, and cancellation boundaries. An initial dependency-and-contract gate prevents unavailable tooling, hardware, providers, or reviewers from turning the milestone into open-ended integration work."
+  },
+  "planning_generation_version": "palamedes-planning-generation/1",
+  "provider_usage": [
+    {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 9984,
+      "input_tokens": 26590,
+      "output_tokens": 7667,
+      "reasoning_output_tokens": 278
+    },
+    {
+      "cache_write_input_tokens": 0,
+      "cached_input_tokens": 9984,
+      "input_tokens": 34130,
+      "output_tokens": 6724,
+      "reasoning_output_tokens": 122
+    }
+  ]
+}
