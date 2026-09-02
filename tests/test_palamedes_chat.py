@@ -5013,6 +5013,7 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertTrue(
             {
                 "openrouter",
+                "orcarouter",
                 "openai",
                 "openai-compatible",
                 "vllm",
@@ -5031,6 +5032,37 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertEqual(
             capabilities["gemini"]["structured_json_mode"], "prompt_validated"
         )
+
+    def test_orcarouter_provider_uses_dedicated_defaults_and_identity(self):
+        provider = palamedes_chat.provider_from_config("orcarouter")
+        response = FakeHTTPStream(
+            [
+                b'data: {"choices":[{"delta":{"content":"routed"}}]}\n',
+                b'data: {"choices":[],"usage":{"prompt_tokens":3,"completion_tokens":1}}\n',
+                b"data: [DONE]\n",
+            ]
+        )
+
+        with patch.dict(
+            os.environ, {"ORCAROUTER_API_KEY": "secret"}, clear=True
+        ), patch("palamedes_chat._open", return_value=response) as opened:
+            output = "".join(
+                provider.stream([{"role": "user", "content": "route this"}])
+            )
+
+        request = opened.call_args.args[0]
+        payload = json.loads(request.data)
+        health = palamedes_chat.provider_health("orcarouter")
+        self.assertEqual(output, "routed")
+        self.assertEqual(provider.provider_name, "orcarouter")
+        self.assertEqual(payload["model"], "orcarouter/auto")
+        self.assertEqual(
+            request.full_url, "https://api.orcarouter.ai/v1/chat/completions"
+        )
+        self.assertEqual(request.headers["Authorization"], "Bearer secret")
+        self.assertEqual(provider.last_usage["total_tokens"], 4)
+        self.assertEqual(health["api_key_env"], "ORCAROUTER_API_KEY")
+        self.assertNotIn("secret", str(health))
 
     def test_external_provider_can_register_without_cognition_changes(self):
         registry = dict(palamedes_chat._PROVIDER_REGISTRY)
