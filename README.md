@@ -76,8 +76,8 @@ credentials, side effects, and delivery authority.
 
 ## Quick Start
 
-Requirements: Python 3.9+ and one provider: Codex CLI, OpenRouter, OpenAI,
-Anthropic, Gemini, or an OpenAI-compatible endpoint such as vLLM.
+Requirements: Python 3.9+ and one provider: Codex CLI, OpenRouter, OrcaRouter,
+OpenAI, Anthropic, Gemini, or an OpenAI-compatible endpoint such as vLLM.
 
 ```bash
 git clone https://github.com/LEE-Kyungjae/Palamedes.git
