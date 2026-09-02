@@ -8,7 +8,7 @@
 
 - Python 3.9 or newer
 - A local repository or project directory
-- One provider: Codex CLI, OpenRouter, OpenAI, Anthropic, Gemini, or an
+- One provider: Codex CLI, OpenRouter, OrcaRouter, OpenAI, Anthropic, Gemini, or an
   OpenAI-compatible local/hosted endpoint
 
 ## Install
@@ -38,6 +38,17 @@ palamedes chat --provider openrouter
 ```
 
 Set `PALAMEDES_OPENROUTER_MODEL` to override the default model.
+
+## Start with OrcaRouter
+
+```bash
+export ORCAROUTER_API_KEY="..."
+palamedes chat --provider orcarouter --model orcarouter/auto
+```
+
+Palamedes sends streaming OpenAI Chat Completions requests to
+`https://api.orcarouter.ai/v1`. Set `PALAMEDES_ORCAROUTER_MODEL` or
+`PALAMEDES_ORCAROUTER_BASE_URL` to override the defaults.
 
 ## Start with the OpenAI Responses API
 

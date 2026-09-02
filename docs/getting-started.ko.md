@@ -8,7 +8,7 @@
 
 - Python 3.9 이상
 - 로컬 저장소 또는 프로젝트 디렉터리
-- Codex CLI, OpenRouter, OpenAI, Anthropic, Gemini 또는 OpenAI-compatible
+- Codex CLI, OpenRouter, OrcaRouter, OpenAI, Anthropic, Gemini 또는 OpenAI-compatible
   로컬·호스팅 endpoint 중 하나
 
 ## 설치
@@ -38,6 +38,17 @@ palamedes chat --provider openrouter
 ```
 
 기본 모델은 `PALAMEDES_OPENROUTER_MODEL`로 변경할 수 있습니다.
+
+## OrcaRouter로 시작
+
+```bash
+export ORCAROUTER_API_KEY="..."
+palamedes chat --provider orcarouter --model orcarouter/auto
+```
+
+Palamedes는 `https://api.orcarouter.ai/v1`로 streaming OpenAI Chat Completions
+요청을 보냅니다. 기본값은 `PALAMEDES_ORCAROUTER_MODEL` 또는
+`PALAMEDES_ORCAROUTER_BASE_URL`로 변경할 수 있습니다.
 
 ## OpenAI Responses API로 시작
 

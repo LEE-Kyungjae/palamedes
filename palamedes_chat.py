@@ -24,6 +24,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Protocol, Text
 
 DEFAULT_OPENAI_MODEL = "gpt-5.6"
 DEFAULT_OPENROUTER_MODEL = "openai/gpt-5.1"
+DEFAULT_ORCAROUTER_MODEL = "orcarouter/auto"
 DEFAULT_OPENAI_COMPATIBLE_MODEL = "local-model"
 DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-5"
 DEFAULT_GEMINI_MODEL = "gemini-2.5-pro"
@@ -743,6 +744,39 @@ def _register_builtin_chat_providers() -> None:
             default_key_env="OPENROUTER_API_KEY",
             default_base_url=os.environ.get(
                 "PALAMEDES_OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
+            ),
+            key_required=True,
+        ),
+    )
+    registration(
+        ProviderCapability(
+            name="orcarouter",
+            transport="openai-chat-completions",
+            default_model=DEFAULT_ORCAROUTER_MODEL,
+            supports_streaming=True,
+            supports_usage=True,
+            structured_json_mode="prompt_validated",
+            credential_kind="api_key",
+        ),
+        lambda config: OpenAICompatibleChatProvider(
+            model=config.model
+            or os.environ.get("PALAMEDES_ORCAROUTER_MODEL", DEFAULT_ORCAROUTER_MODEL),
+            base_url=_validated_provider_base_url(
+                config.base_url,
+                os.environ.get(
+                    "PALAMEDES_ORCAROUTER_BASE_URL", "https://api.orcarouter.ai/v1"
+                ),
+            ),
+            api_key_env=_validated_api_key_env(
+                config.api_key_env, "ORCAROUTER_API_KEY"
+            ),
+            provider_name="orcarouter",
+        ),
+        lambda config: _api_health(
+            config,
+            default_key_env="ORCAROUTER_API_KEY",
+            default_base_url=os.environ.get(
+                "PALAMEDES_ORCAROUTER_BASE_URL", "https://api.orcarouter.ai/v1"
             ),
             key_required=True,
         ),

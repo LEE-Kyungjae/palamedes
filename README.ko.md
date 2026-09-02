@@ -109,8 +109,8 @@ Palamedes는 범용 실행 runtime, 자동 배포 도구, 창의성이나 사업
 
 ## 빠른 시작
 
-Python 3.9 이상과 Codex CLI, OpenRouter, OpenAI, Anthropic, Gemini 또는 vLLM 같은
-OpenAI-compatible endpoint 중 하나가 필요합니다.
+Python 3.9 이상과 Codex CLI, OpenRouter, OrcaRouter, OpenAI, Anthropic, Gemini 또는
+vLLM 같은 OpenAI-compatible endpoint 중 하나가 필요합니다.
 
 ```bash
 git clone https://github.com/LEE-Kyungjae/Palamedes.git
