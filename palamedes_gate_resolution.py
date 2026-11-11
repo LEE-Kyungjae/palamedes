@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Two-phase, evidence-bound closure for outcome follow-up gates."""
 from __future__ import annotations
-import fcntl, hashlib, json, os
+import hashlib, json, os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List
+
+from palamedes_filelock import exclusive_lock
 
 RESOLUTION_VERSION = "palamedes-gate-evidence-resolution/1"
 
@@ -103,8 +105,7 @@ def propose_gate_resolution(
 
 def _append_once(path: Path, row: Dict[str, Any], identity_field: str) -> bool:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a+", encoding="utf-8") as handle:
-        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+    with path.open("a+", encoding="utf-8") as handle, exclusive_lock(handle):
         handle.seek(0)
         for line in handle:
             try:

@@ -6,11 +6,11 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import fcntl
 import re
 from pathlib import Path
 from typing import Any, Callable, Dict, List
 
+from palamedes_filelock import exclusive_lock
 from palamedes_observe import utc_now
 
 
@@ -437,8 +437,7 @@ class ProductInventionStore:
 
     def _append_observation_event(self, event: Dict[str, Any]) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
-        with self.observation_events.open("a+", encoding="utf-8") as handle:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        with self.observation_events.open("a+", encoding="utf-8") as handle, exclusive_lock(handle):
             handle.seek(0, os.SEEK_END)
             handle.write(json.dumps(event, ensure_ascii=False, sort_keys=True) + "\n")
             handle.flush()

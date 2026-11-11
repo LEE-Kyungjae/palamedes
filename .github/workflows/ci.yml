@@ -40,6 +40,24 @@ jobs:
       - run: make check
       - run: make schema-check
 
+  # Windows has no fcntl and defaults text I/O to the ANSI code page, so a
+  # POSIX-only import or an implicit encoding would otherwise only surface for
+  # Windows users at runtime.
+  test-windows:
+    name: test (windows)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Ensure make is available
+        run: command -v make || choco install make --no-progress -y
+      - run: make test scaffold-test PYTHON=python PYCACHE_PREFIX="$RUNNER_TEMP/pycache"
+
   lint:
     name: lint
     runs-on: ubuntu-latest

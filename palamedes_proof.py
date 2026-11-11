@@ -119,6 +119,8 @@ def repository_revision(repository: Path) -> str:
         cwd=repository,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=10,
         check=False,
     )
@@ -187,7 +189,7 @@ def freeze_case(
                     "declared_path": str(declared),
                     "source_path": str(path),
                     "repository_relative_path": (
-                        str(path.relative_to(repository))
+                        path.relative_to(repository).as_posix()
                         if path.is_relative_to(repository)
                         else str(path)
                     ),

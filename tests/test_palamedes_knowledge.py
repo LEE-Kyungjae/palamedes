@@ -318,7 +318,7 @@ class PalamedesKnowledgeTests(unittest.TestCase):
             )["claims"][0]
             old_record = (
                 store.claims_root / f"{first['knowledge_id']}.json"
-            ).read_text()
+            ).read_text(encoding="utf-8")
 
         self.assertIn('"status": "superseded"', old_record)
         self.assertIn('"valid_to": "2026-08-01T00:00:00+00:00"', old_record)

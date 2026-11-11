@@ -32,6 +32,7 @@ setup(
         "palamedes_architecture_transfer",
         "palamedes_cognition_v3",
         "palamedes_evidence_bundle",
+        "palamedes_filelock",
         "palamedes_opportunity",
         "palamedes_invention",
         "palamedes_pursuit",
