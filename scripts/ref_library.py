@@ -30,6 +30,8 @@ def run_git(repo: Path, *args: str, check: bool = False) -> subprocess.Completed
         check=check,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
     )
 
 
@@ -148,7 +150,7 @@ def catalog_repo(state: RepoState) -> dict[str, object]:
             text = document.read_text(encoding="utf-8", errors="ignore").lower()
         except OSError:
             continue
-        relative = str(document.relative_to(repo))
+        relative = document.relative_to(repo).as_posix()
         for category, keywords in PATTERN_KEYWORDS.items():
             if any(keyword in text for keyword in keywords):
                 matches[category].append(relative)
@@ -158,7 +160,7 @@ def catalog_repo(state: RepoState) -> dict[str, object]:
         "remote": state.remote,
         "head": state.head,
         "patterns": {key: value for key, value in matches.items() if value},
-        "documents_scanned": [str(path.relative_to(repo)) for path in docs],
+        "documents_scanned": [path.relative_to(repo).as_posix() for path in docs],
     }
 
 

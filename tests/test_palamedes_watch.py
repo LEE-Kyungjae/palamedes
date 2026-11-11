@@ -301,7 +301,7 @@ class PalamedesWatchTests(unittest.TestCase):
             discovery_files = list(
                 (root / ".palamedes" / "thoughts" / "discoveries").glob("*.json")
             )
-            discovery = json.loads(discovery_files[0].read_text())
+            discovery = json.loads(discovery_files[0].read_text(encoding="utf-8"))
 
         self.assertEqual(wake["model_call_count"], 2)
         self.assertEqual(
@@ -374,7 +374,7 @@ class PalamedesWatchTests(unittest.TestCase):
             contract_path = next(
                 (fake.STATE_DIR / "missions").glob("mission-*.json")
             )
-            contract = json.loads(contract_path.read_text())
+            contract = json.loads(contract_path.read_text(encoding="utf-8"))
 
         self.assertTrue(wake["mission_draft_issued"])
         self.assertEqual(
@@ -407,7 +407,7 @@ class PalamedesWatchTests(unittest.TestCase):
             thought = json.loads(
                 next(
                     (fake.STATE_DIR / "thoughts" / "thoughts").glob("*.json")
-                ).read_text()
+                ).read_text(encoding="utf-8")
             )
 
         self.assertEqual(thought["status"], "reinforced")

@@ -63,7 +63,7 @@ class ContentAddressedStore:
             "size_bytes": len(data),
             "media_type": media_type,
             "source_ids": sorted(set(source_ids)),
-            "relative_path": str(path.relative_to(self.root.parent.parent)),
+            "relative_path": path.relative_to(self.root.parent.parent).as_posix(),
         }
 
     def verify(self, reference: Dict[str, Any]) -> Dict[str, Any]:
@@ -100,7 +100,7 @@ def inventory_storage(state_dir: Path) -> Dict[str, Any]:
                 data = path.read_bytes()
             except OSError:
                 continue
-            relative = str(path.relative_to(state_dir))
+            relative = path.relative_to(state_dir).as_posix()
             digest = hashlib.sha256(data).hexdigest()
             classification = _classification(relative)
             row = {

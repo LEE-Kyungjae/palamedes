@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import fcntl
 import hashlib
 import json
 import os
@@ -11,6 +10,8 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
+
+from palamedes_filelock import exclusive_lock
 
 
 LIFECYCLE_VERSION = "palamedes-lifecycle-event/1"
@@ -93,8 +94,7 @@ class LifecycleStore:
     def append(self, event: Dict[str, Any]) -> bool:
         validated = validate_event(event)
         self.events_path.parent.mkdir(parents=True, exist_ok=True)
-        with self.events_path.open("a+", encoding="utf-8") as handle:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        with self.events_path.open("a+", encoding="utf-8") as handle, exclusive_lock(handle):
             handle.seek(0)
             existing_ids = set()
             for line in handle:

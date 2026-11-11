@@ -16,7 +16,9 @@ jobs:
   # here would otherwise break `palamedes chat` for anyone on 3.9.
   compile:
     name: compile (${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    # Pinned: actions/python-versions ships no Python 3.9 build for the
+    # Ubuntu 26.04 image that ubuntu-latest now resolves to.
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -39,6 +41,24 @@ jobs:
           python-version: "3.11"
       - run: make check
       - run: make schema-check
+
+  # Windows has no fcntl and defaults text I/O to the ANSI code page, so a
+  # POSIX-only import or an implicit encoding would otherwise only surface for
+  # Windows users at runtime.
+  test-windows:
+    name: test (windows)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Ensure make is available
+        run: command -v make || choco install make --no-progress -y
+      - run: make test scaffold-test PYTHON=python PYCACHE_PREFIX="$RUNNER_TEMP/pycache"
 
   lint:
     name: lint

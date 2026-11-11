@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import fcntl
 import hashlib
 import json
 import os
@@ -13,6 +12,8 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional
+
+from ._filelock import exclusive_lock
 
 
 SCHEMA_VERSION = "palamedes-team-cognition/v1"
@@ -58,12 +59,8 @@ class TeamCognitionStore:
     @contextmanager
     def _locked(self) -> Iterator[None]:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with self.lock_path.open("a+", encoding="utf-8") as handle:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
-            try:
-                yield
-            finally:
-                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+        with self.lock_path.open("a+", encoding="utf-8") as handle, exclusive_lock(handle):
+            yield
 
     def _load_unlocked(self) -> Dict[str, Any]:
         if not self.path.exists():

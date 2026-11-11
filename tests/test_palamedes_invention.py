@@ -339,7 +339,7 @@ class ProductInventionTests(unittest.TestCase):
             self.assertEqual(resolved["evidence_status"], "human_report")
             self.assertFalse(resolved["authority_granted"])
             self.assertEqual(store.open_observation_requirements(), [])
-            rows = (store.root / "observation-requirements.jsonl").read_text().splitlines()
+            rows = (store.root / "observation-requirements.jsonl").read_text(encoding="utf-8").splitlines()
             self.assertEqual(len(rows), 2)
 
     def test_redundant_candidate_variants_are_pruned_before_adversary(self):

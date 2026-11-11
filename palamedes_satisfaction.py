@@ -39,6 +39,8 @@ def _run_git(workspace: Path, *args: str) -> str:
     result = subprocess.run(
         ["git", "-C", str(workspace), *args],
         text=True,
+        encoding="utf-8",
+        errors="replace",
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         check=False,
@@ -60,7 +62,7 @@ def workspace_snapshot(workspace: Path) -> Dict[str, Any]:
     )
     if not head:
         untracked = sorted(
-            str(path.relative_to(workspace))
+            path.relative_to(workspace).as_posix()
             for path in workspace.rglob("*")
             if path.is_file()
             and not path.is_symlink()

@@ -90,6 +90,8 @@ def run_command(
             cwd=str(cwd),
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             check=False,
             env={**os.environ, "NO_COLOR": "1"},
@@ -180,7 +182,7 @@ def observe_documents(workspace: Path) -> Dict[str, Any]:
             if line.lstrip().startswith("#")
         ][:30]
         item = {
-            "path": str(path.relative_to(workspace)),
+            "path": path.relative_to(workspace).as_posix(),
             "source_type": "workspace_document",
             "size_bytes": len(raw),
             "content_sha256": hashlib.sha256(raw).hexdigest(),
@@ -269,7 +271,7 @@ def observe_todos(workspace: Path) -> Dict[str, Any]:
                 continue
             items.append(
                 {
-                    "path": str(path.relative_to(workspace)),
+                    "path": path.relative_to(workspace).as_posix(),
                     "line": number,
                     "marker": match.group(1).upper(),
                     "text": redact(match.group(2).strip())[:500],
@@ -296,7 +298,7 @@ def observe_palamedes_state(workspace: Path) -> Dict[str, Any]:
         raw = path.read_bytes()
         item: Dict[str, Any] = {
             "available": True,
-            "path": str(path.relative_to(workspace)),
+            "path": path.relative_to(workspace).as_posix(),
             "size_bytes": len(raw),
             "content_sha256": hashlib.sha256(raw).hexdigest(),
         }

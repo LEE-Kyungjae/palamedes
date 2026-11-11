@@ -31,10 +31,12 @@ class StrategyBenchmarkTests(unittest.TestCase):
 
     def test_dataset_rejects_missing_case_repository(self):
         dataset = copy.deepcopy(self.dataset)
-        dataset["cases"][0]["repository"] = "/definitely/missing/palamedes-benchmark-case"
+        missing = "/definitely/missing/palamedes-benchmark-case"
+        dataset["cases"][0]["repository"] = missing
 
+        # The validator reports the path in the platform's native form.
         self.assertIn(
-            "case repository does not exist: /definitely/missing/palamedes-benchmark-case",
+            f"case repository does not exist: {Path(missing)}",
             validate_dataset(dataset),
         )
 
