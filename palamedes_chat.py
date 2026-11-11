@@ -2116,19 +2116,26 @@ Adversary:
 Host-owned authority boundaries and citation allowlists. Do not invent a new source ID:
 {json.dumps(evidence_views.get("selector", {}), ensure_ascii=False)}"""
         selector = invoke("selector", 5, selector_prompt)
+        # Collect every structural violation, plus the mission contract's own
+        # errors, before rejecting. The schema retry runs once, so feedback that
+        # names only the first violation leaves the others unfixed.
+        selector_errors: List[str] = []
         decision = selector.get("decision")
         if decision not in {"select", "defer", "reject"}:
-            raise ValueError("selector decision must be select, defer, or reject")
-        _non_empty_string_array(selector, "decisive_assumptions")
-        _non_empty_string_array(selector, "reversal_triggers")
+            selector_errors.append("selector decision must be select, defer, or reject")
+        for field in ("decisive_assumptions", "reversal_triggers"):
+            try:
+                _non_empty_string_array(selector, field)
+            except ValueError as exc:
+                selector_errors.append(str(exc))
         selected_id = str(selector.get("selected_candidate_id", "")).strip()
         if decision == "select" and selected_id not in candidate_ids:
-            raise ValueError("selector must select a frozen candidate ID")
-        if decision != "select" and selected_id:
-            raise ValueError("defer or reject cannot name a selected candidate")
+            selector_errors.append("selector must select a frozen candidate ID")
+        if decision in {"defer", "reject"} and selected_id:
+            selector_errors.append("defer or reject cannot name a selected candidate")
         causal_role = selector.get("causal_role")
         if causal_role not in {"originated", "selected", "constrained", "audited"}:
-            raise ValueError("selector requires a valid causal_role")
+            selector_errors.append("selector requires a valid causal_role")
         decision_scope = selector.get("decision_scope")
         if decision_scope not in {
             "strategic_open",
@@ -2136,7 +2143,7 @@ Host-owned authority boundaries and citation allowlists. Do not invent a new sou
             "audit_only",
             "integration",
         }:
-            raise ValueError("selector requires a valid decision_scope")
+            selector_errors.append("selector requires a valid decision_scope")
         implementation_state = selector.get("implementation_state_at_start")
         if implementation_state not in {
             "not_started",
@@ -2144,15 +2151,15 @@ Host-owned authority boundaries and citation allowlists. Do not invent a new sou
             "completed",
             "unknown",
         }:
-            raise ValueError("selector requires implementation_state_at_start")
+            selector_errors.append("selector requires implementation_state_at_start")
         if implementation_state == "completed" and (
             causal_role != "audited" or decision_scope != "audit_only"
         ):
-            raise ValueError(
+            selector_errors.append(
                 "completed work must be classified as audited with audit_only scope"
             )
-        if causal_role == "audited" and decision_scope != "audit_only":
-            raise ValueError("audited cycles require audit_only scope")
+        elif causal_role == "audited" and decision_scope != "audit_only":
+            selector_errors.append("audited cycles require audit_only scope")
         selection_type = selector.get("selection_type")
         if selection_type not in {
             "exclusive",
@@ -2161,53 +2168,78 @@ Host-owned authority boundaries and citation allowlists. Do not invent a new sou
             "portfolio",
             "probe",
         }:
-            raise ValueError("selector requires a valid selection_type")
+            selector_errors.append("selector requires a valid selection_type")
         source_discovery_ids = selector.get("source_discovery_ids", [])
         if not isinstance(source_discovery_ids, list) or not all(
             isinstance(item, str) and item.strip() for item in source_discovery_ids
         ):
-            raise ValueError("selector source_discovery_ids must be a string array")
-        unavailable_discovery_ids = sorted(
-            set(source_discovery_ids) - set(available_discovery_ids)
-        )
-        if unavailable_discovery_ids:
-            raise ValueError(
-                "selector cited an unavailable discovery ID: "
-                f"{json.dumps(unavailable_discovery_ids, ensure_ascii=False)}; "
-                "available: "
-                f"{json.dumps(sorted(available_discovery_ids), ensure_ascii=False)}"
+            selector_errors.append("selector source_discovery_ids must be a string array")
+        else:
+            unavailable_discovery_ids = sorted(
+                set(source_discovery_ids) - set(available_discovery_ids)
             )
+            if unavailable_discovery_ids:
+                selector_errors.append(
+                    "selector cited an unavailable discovery ID: "
+                    f"{json.dumps(unavailable_discovery_ids, ensure_ascii=False)}; "
+                    "available: "
+                    f"{json.dumps(sorted(available_discovery_ids), ensure_ascii=False)}"
+                )
         candidate_fates = selector.get("candidate_fates")
         if not isinstance(candidate_fates, list):
-            raise ValueError("selector candidate_fates must be an array")
-        fate_ids = []
-        for fate in candidate_fates:
-            if not isinstance(fate, dict):
-                raise ValueError("each candidate fate must be an object")
-            candidate_id = str(fate.get("candidate_id", "")).strip()
-            if fate.get("fate") not in {
-                "selected",
-                "rejected",
-                "deferred",
-                "conditional",
-                "queued",
-            }:
-                raise ValueError(f"candidate {candidate_id or '?'} has invalid fate")
-            if not str(fate.get("reason", "")).strip():
-                raise ValueError(f"candidate {candidate_id or '?'} fate requires reason")
-            fate_ids.append(candidate_id)
-        if sorted(fate_ids) != sorted(candidate_ids) or len(fate_ids) != len(set(fate_ids)):
-            raise ValueError("selector must preserve exactly one fate for every candidate")
-        selected_fates = [
-            item for item in candidate_fates if item.get("fate") == "selected"
-        ]
-        if decision == "select" and (
-            len(selected_fates) != 1
-            or selected_fates[0].get("candidate_id") != selected_id
-        ):
-            raise ValueError("selected candidate must have the sole selected fate")
-        if decision != "select" and selected_fates:
-            raise ValueError("defer or reject cannot contain a selected fate")
+            selector_errors.append("selector candidate_fates must be an array")
+        else:
+            fate_ids = []
+            for fate in candidate_fates:
+                if not isinstance(fate, dict):
+                    selector_errors.append("each candidate fate must be an object")
+                    continue
+                candidate_id = str(fate.get("candidate_id", "")).strip()
+                if fate.get("fate") not in {
+                    "selected",
+                    "rejected",
+                    "deferred",
+                    "conditional",
+                    "queued",
+                }:
+                    selector_errors.append(
+                        f"candidate {candidate_id or '?'} has invalid fate"
+                    )
+                if not str(fate.get("reason", "")).strip():
+                    selector_errors.append(
+                        f"candidate {candidate_id or '?'} fate requires reason"
+                    )
+                fate_ids.append(candidate_id)
+            if sorted(fate_ids) != sorted(candidate_ids) or len(fate_ids) != len(set(fate_ids)):
+                selector_errors.append(
+                    "selector must preserve exactly one fate for every candidate"
+                )
+            selected_fates = [
+                item
+                for item in candidate_fates
+                if isinstance(item, dict) and item.get("fate") == "selected"
+            ]
+            if decision == "select" and (
+                len(selected_fates) != 1
+                or selected_fates[0].get("candidate_id") != selected_id
+            ):
+                selector_errors.append(
+                    "selected candidate must have the sole selected fate"
+                )
+            if decision in {"defer", "reject"} and selected_fates:
+                selector_errors.append("defer or reject cannot contain a selected fate")
+        draft = None
+        if decision == "select":
+            raw_contract = selector.get("mission_contract")
+            if not isinstance(raw_contract, dict):
+                selector_errors.append("selected cycle requires mission_contract")
+            else:
+                try:
+                    draft = validate_mission_draft(raw_contract)
+                except ValueError as exc:
+                    selector_errors.append(str(exc))
+        if selector_errors:
+            raise ValueError("; ".join(selector_errors))
         cycle["decision"] = decision
         cycle["selected_candidate_id"] = selected_id
         cycle["causal_role"] = causal_role
@@ -2227,10 +2259,7 @@ Host-owned authority boundaries and citation allowlists. Do not invent a new sou
         )
         contract = None
         if decision == "select":
-            raw_contract = selector.get("mission_contract")
-            if not isinstance(raw_contract, dict):
-                raise ValueError("selected cycle requires mission_contract")
-            contract = validate_mission_draft(raw_contract)
+            contract = draft
             contract["cognition_cycle_id"] = cycle_id
             contract["selected_candidate_id"] = selected_id
             contract["causal_role"] = causal_role
@@ -4410,7 +4439,7 @@ Required shape:
   "rationale": "why this mission now",
   "success_metric": "observable outcome and threshold",
   "deadline": "optional date or review horizon",
-  "evidence": [{{"claim": "...", "source": "user|plan|path|URL", "confidence": 0}}],
+  "evidence": [{{"claim": "...", "source": "user|plan|path|URL", "confidence": 60}}],
   "hypotheses": [{{"hypothesis": "...", "metric": "...", "target": "...", "window": "..."}}],
   "falsifiers": ["observable reason to reject or reopen the mission"],
   "non_goals": ["work explicitly excluded"],
@@ -4444,6 +4473,8 @@ Required shape:
     "rationale": "why the next mission resolves, is independent from, or consciously carries the evidence debt; independent and accept_debt do not close required follow-up"
   }}
 }}
+Every evidence confidence and the uncertainty field are integers from 0 to 100
+(60 means 60 percent), never fractions such as 0.6 or percentage strings.
 
 The prompt_agenda_response field is optional. Omit it entirely unless the user
 context supplies one or more concrete IDs beginning with "prompt-agenda-" from

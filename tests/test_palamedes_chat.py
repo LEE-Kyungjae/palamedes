@@ -5541,6 +5541,81 @@ class PalamedesChatTests(unittest.TestCase):
         ))
         self.assertTrue(any("retrying only that role once" in row for row in progress))
 
+    def test_selector_rejection_reports_every_violation_for_the_single_retry(self):
+        # A structural violation used to hide the mission draft's confidence
+        # error, so the one retry fixed the scope and failed on confidence.
+        class SelectorReturnsTwoViolationsOnce(StaticChatProvider):
+            def __init__(self):
+                super().__init__()
+                self.invalid_returned = False
+                self.retry_prompt = ""
+
+            def stream(self, messages):
+                if messages[-1]["content"].startswith("ROLE: selector"):
+                    if self.invalid_returned:
+                        self.retry_prompt = messages[-1]["content"]
+                    else:
+                        payload = json.loads("".join(super().stream(messages)))
+                        payload["causal_role"] = "audited"
+                        payload["decision_scope"] = "tactical_bounded"
+                        payload["implementation_state_at_start"] = "in_progress"
+                        payload["mission_contract"]["evidence"][0]["confidence"] = 0.8
+                        self.invalid_returned = True
+                        yield json.dumps(payload)
+                        return
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = SelectorReturnsTwoViolationsOnce()
+            result = palamedes_chat.run_cognition_cycle(
+                provider=provider,
+                palamedes_module=fake,
+                context="Choose one bounded mission.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+            )
+
+        reason = result["cycle"]["rejected_artifacts"][0]["rejection_reason"]
+        self.assertIn("audited cycles require audit_only scope", reason)
+        self.assertIn("evidence[0].confidence must be an integer from 0 to 100", reason)
+        self.assertIn("audited cycles require audit_only scope", provider.retry_prompt)
+        self.assertIn("evidence[0].confidence must be an integer", provider.retry_prompt)
+        self.assertEqual(result["cycle"]["status"], "selected")
+        self.assertIsNotNone(result["contract"])
+
+    def test_selector_prompt_states_the_confidence_scale(self):
+        # The selector embeds the mission schema; without the scale rule every
+        # observed first attempt used 0-1 fractions.
+        class RecordsSelectorPrompt(StaticChatProvider):
+            selector_prompt = ""
+
+            def stream(self, messages):
+                if messages[-1]["content"].startswith("ROLE: selector"):
+                    self.selector_prompt = messages[-1]["content"]
+                yield from super().stream(messages)
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            fake = FakePalamedes(Path(tempdir))
+            provider = RecordsSelectorPrompt()
+            palamedes_chat.run_cognition_cycle(
+                provider=provider,
+                palamedes_module=fake,
+                context="Choose one bounded mission.",
+                cycle_store=palamedes_chat.CognitionCycleStore(
+                    fake.STATE_DIR / "missions" / "cognition"
+                ),
+            )
+
+        for prompt in (
+            provider.selector_prompt,
+            palamedes_chat.mission_prompt("context"),
+        ):
+            self.assertIn("integers from 0 to 100", prompt)
+            self.assertIn("never fractions", prompt)
+            self.assertNotIn('"confidence": 0}', prompt)
+
     def test_open_gate_on_another_surface_does_not_block_a_scoped_mission(self):
         class ReviseProvider(StaticChatProvider):
             def stream(self, messages):
