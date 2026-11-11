@@ -16,7 +16,9 @@ jobs:
   # here would otherwise break `palamedes chat` for anyone on 3.9.
   compile:
     name: compile (${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    # Pinned: actions/python-versions ships no Python 3.9 build for the
+    # Ubuntu 26.04 image that ubuntu-latest now resolves to.
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
