@@ -46,6 +46,11 @@ MISSION_REQUIRED_FIELDS = (
     "next_probe",
     "planner_brief",
 )
+# The cognition cycle diverges before it converges: the inventor must label and
+# include unconventional candidates, and the selector must keep a surviving
+# wildcard alive instead of filtering it out for novelty alone.
+REQUESTED_AMBITIONS = ("conservative", "balanced", "inventive")
+CANDIDATE_AMBITIONS = ("conventional", "stretch", "wildcard")
 
 
 def utc_now() -> str:
@@ -1903,9 +1908,13 @@ Return:
     {{"interpretation_id":"frame-1","frame":"...","mechanism":"...","would_lose_if":"..."}}
   ],
   "tensions": ["..."],
-  "missing_evidence": ["..."]
+  "missing_evidence": ["..."],
+  "requested_ambition": "conservative|balanced|inventive"
 }}
 Require at least two interpretations.
+Set requested_ambition from the user's own words: "inventive" when they ask for a
+clever, novel, bold, creative, or unconventional answer; "conservative" when they ask
+for the safest, smallest, or most standard option; otherwise "balanced".
 
 Clean-room brief (reference examples, preferences, prior selections, and local
 implementation artifacts are intentionally unavailable):
@@ -1920,10 +1929,25 @@ a frame relies on them, but do not turn advisory hypotheses into facts or requir
         interpretations = interpreter.get("interpretations")
         if not isinstance(interpretations, list) or len(interpretations) < 2:
             raise ValueError("interpreter requires at least two interpretations")
+        requested_ambition = interpreter.get("requested_ambition")
+        if requested_ambition not in REQUESTED_AMBITIONS:
+            raise ValueError(
+                "interpreter requested_ambition must be conservative, balanced, or inventive"
+            )
+        cycle["requested_ambition"] = requested_ambition
 
         inventor_prompt = f"""ROLE: inventor
 Generate at least three competing outcome-level missions from distinct frames.
 Do not select a winner and do not criticize candidates.
+Diverge before anyone converges. Label each candidate's ambition:
+- "conventional": the answer a strong one-shot assistant would give first. At most one.
+- "stretch": a known mechanism applied further or in an unusual place.
+- "wildcard": a mechanism a competent practitioner would not propose first, built on
+  a reframing, a cross-domain analogy, or an inversion of the problem.
+Include at least one wildcard that still targets the stated problem directly.
+Do not drop an idea for missing precedent or weak evidence; the adversary bounds
+risk later and the selector weighs it. The requested ambition is "{requested_ambition}".
+When it is "inventive", at least two candidates must be wildcards.
 When the context asks for evidence of user or business value, at least two candidates
 must contain a small, reversible action with an observable user or beneficiary response.
 A readiness review, eligibility packet, measurement design, or request for another
@@ -1942,7 +1966,8 @@ Return:
       "causal_thesis":"...",
       "success_metric":"...",
       "early_falsifier":"...",
-      "next_probe":"..."
+      "next_probe":"...",
+      "ambition":"conventional|stretch|wildcard"
     }}
   ]
 }}
@@ -1969,9 +1994,26 @@ Interpreter artifact:
             ):
                 if not str(item.get(field, "")).strip():
                     raise ValueError(f"candidate {candidate_id or '?'} missing {field}")
+            if item.get("ambition") not in CANDIDATE_AMBITIONS:
+                raise ValueError(
+                    f"candidate {candidate_id or '?'} ambition must be "
+                    "conventional, stretch, or wildcard"
+                )
             candidate_ids.append(candidate_id)
         if len(set(candidate_ids)) != len(candidate_ids) or not all(candidate_ids):
             raise ValueError("candidate IDs must be non-empty and unique")
+        ambitions = [item["ambition"] for item in candidates]
+        if "wildcard" not in ambitions:
+            raise ValueError("inventor requires at least one wildcard candidate")
+        if ambitions.count("conventional") > 1:
+            raise ValueError("inventor allows at most one conventional candidate")
+        if requested_ambition == "inventive" and ambitions.count("wildcard") < 2:
+            raise ValueError("an inventive request requires at least two wildcard candidates")
+        wildcard_ids = [
+            item["candidate_id"].strip()
+            for item in candidates
+            if item["ambition"] == "wildcard"
+        ]
 
         adversary_prompt = f"""ROLE: adversary
 Attack every candidate, shared assumptions, proxy risks, hidden harms, owner bias,
@@ -1981,10 +2023,15 @@ candidate's action smaller, reversible, time-boxed, explicitly consented, or mor
 in its causal claim. Missing perfect attribution, full instrumentation, large samples, or
 publication-grade evidence is normally repairable for an exploratory probe. Distinguish
 "cannot safely learn" from "cannot yet prove a broad claim."
+Novelty, unfamiliarity, and missing precedent are not fatal risks by themselves.
+Repair as well as attack: for every candidate, write strongest_version, the smallest
+change that keeps its core mechanism while bounding the risks you found. For a
+stretch or wildcard candidate, keep what makes it unusual instead of sanding it
+into the conventional answer.
 Return:
 {{
   "critiques": [
-    {{"candidate_id":"candidate-1","fatal_risks":["..."],"repairable_risks":["..."],"disqualifying":false}}
+    {{"candidate_id":"candidate-1","fatal_risks":["..."],"repairable_risks":["..."],"disqualifying":false,"strongest_version":"..."}}
   ],
   "shared_assumptions": ["..."],
   "missing_opposition": ["..."],
@@ -2026,6 +2073,15 @@ invalidate a candidate but cannot mutate one or grant authority:
         ]
         if sorted(critiqued_ids) != sorted(candidate_ids):
             raise ValueError("adversary must critique every candidate exactly once")
+        for item in critiques:
+            if not str(item.get("strongest_version", "")).strip():
+                raise ValueError(
+                    f"adversary critique of {item.get('candidate_id')} "
+                    "requires strongest_version"
+                )
+        critique_by_id = {
+            str(item["candidate_id"]).strip(): item for item in critiques
+        }
         _non_empty_string_array(adversary, "shared_assumptions")
         _non_empty_string_array(adversary, "missing_opposition")
         if not str(adversary.get("minimum_disconfirming_probe", "")).strip():
@@ -2067,8 +2123,16 @@ invalidate a candidate but cannot mutate one or grant authority:
             )
         selector_prompt = f"""ROLE: selector
 Select, defer, or reject from the frozen candidates and critiques. You may not
-invent a new candidate. Then compile the selected candidate into the exact
-mission draft shape below. If evidence is weak, select an information-producing
+invent a new candidate. Judge each candidate in the strongest_version the adversary
+wrote for it, and compile the selected candidate, in that form, into the exact
+mission draft shape below.
+Novelty and missing precedent are not costs; weigh only concrete risks and expected
+learning. The requested ambition is "{requested_ambition}". When it is "inventive"
+and a non-disqualified stretch or wildcard candidate carries no more concrete risk
+than a conventional one, prefer the unconventional candidate. Choosing a conventional
+candidate over a surviving wildcard requires selection_reason to say what the wildcard
+would have to show to win. Never reject a non-disqualified wildcard: defer, queue, or
+make it conditional with a concrete reopen_condition so the idea survives this cycle. If evidence is weak, select an information-producing
 probe and preserve uncertainty. Prefer a small, reversible action that creates an
 observable user or beneficiary response over a mission whose output is only another
 eligibility packet, readiness review, measurement plan, reviewer judgment, or protocol.
@@ -2228,6 +2292,25 @@ Host-owned authority boundaries and citation allowlists. Do not invent a new sou
                 )
             if decision in {"defer", "reject"} and selected_fates:
                 selector_errors.append("defer or reject cannot contain a selected fate")
+            for fate in candidate_fates:
+                if not isinstance(fate, dict):
+                    continue
+                candidate_id = str(fate.get("candidate_id", "")).strip()
+                if (
+                    candidate_id not in wildcard_ids
+                    or fate.get("fate") == "selected"
+                    or critique_by_id.get(candidate_id, {}).get("disqualifying") is True
+                ):
+                    continue
+                if fate.get("fate") == "rejected":
+                    selector_errors.append(
+                        f"wildcard {candidate_id} was not disqualified and cannot be "
+                        "rejected; defer, queue, or make it conditional"
+                    )
+                if not str(fate.get("reopen_condition", "")).strip():
+                    selector_errors.append(
+                        f"surviving wildcard {candidate_id} requires a reopen_condition"
+                    )
         draft = None
         if decision == "select":
             raw_contract = selector.get("mission_contract")
@@ -2248,6 +2331,28 @@ Host-owned authority boundaries and citation allowlists. Do not invent a new sou
         cycle["selection_type"] = selection_type
         cycle["source_discovery_ids"] = source_discovery_ids
         cycle["candidate_fates"] = candidate_fates
+        fate_by_id = {
+            str(item.get("candidate_id", "")).strip(): item for item in candidate_fates
+        }
+        cycle["wildcards"] = []
+        for item in candidates:
+            candidate_id = str(item.get("candidate_id", "")).strip()
+            if candidate_id not in wildcard_ids:
+                continue
+            critique = critique_by_id[candidate_id]
+            fate = fate_by_id[candidate_id]
+            cycle["wildcards"].append(
+                {
+                    "candidate_id": candidate_id,
+                    "mission": str(item.get("mission", "")).strip(),
+                    "strongest_version": str(
+                        critique.get("strongest_version", "")
+                    ).strip(),
+                    "disqualifying": critique.get("disqualifying") is True,
+                    "fate": fate.get("fate"),
+                    "reopen_condition": str(fate.get("reopen_condition", "")).strip(),
+                }
+            )
         cycle["status"] = "selected" if decision == "select" else decision
         cycle["completed_at"] = utc_now()
         cycle["live_model_call_count"] = fresh_call_count
@@ -4497,6 +4602,19 @@ open outcome evidence gates.
 
 User context:
 {context}"""
+
+
+def render_wildcards(cycle: Dict[str, Any]) -> str:
+    """Show wildcards the selector did not pick, so a bold idea is not lost silently."""
+    lines = []
+    for item in cycle.get("wildcards", []):
+        if item.get("fate") == "selected":
+            continue
+        lines.append(f"Wildcard kept: {item['candidate_id']} ({item.get('fate')})")
+        lines.append(f"  idea: {item.get('strongest_version') or item.get('mission')}")
+        if item.get("reopen_condition"):
+            lines.append(f"  reopen when: {item['reopen_condition']}")
+    return "\n".join(lines)
 
 
 def render_mission(contract: Dict[str, Any]) -> str:
@@ -8308,6 +8426,8 @@ def run_chat(
                     f"Cycle {cycle['cognition_cycle_id']} ended with "
                     f"{cycle['decision']}; no mission draft was issued.\n"
                 )
+                if render_wildcards(cycle):
+                    output.write(render_wildcards(cycle) + "\n")
                 continue
             if active_vision:
                 investment = active_vision.get("investment_judgment", {})
@@ -8367,6 +8487,11 @@ def run_chat(
                     else ""
                 )
                 + render_mission(contract)
+                + (
+                    "\n" + render_wildcards(cycle)
+                    if render_wildcards(cycle)
+                    else ""
+                )
             )
             store.append(
                 active_session,
