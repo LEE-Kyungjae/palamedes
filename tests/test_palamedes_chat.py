@@ -595,6 +595,7 @@ class StaticChatProvider:
                     ],
                     "tensions": ["Quality and autonomy may diverge"],
                     "missing_evidence": ["Equal-budget outcome comparison"],
+                    "requested_ambition": "balanced",
                 }
             )
             return
@@ -670,6 +671,9 @@ class StaticChatProvider:
                             "success_metric": f"Action quality threshold {index}",
                             "early_falsifier": f"No decision change in arm {index}",
                             "next_probe": f"Run paired probe {index}",
+                            "ambition": {
+                                1: "conventional", 2: "wildcard", 3: "stretch"
+                            }[index],
                         }
                         for index in range(1, 4)
                     ]
@@ -685,6 +689,7 @@ class StaticChatProvider:
                             "fatal_risks": [f"Hidden confound {index}"],
                             "repairable_risks": ["Blind the evaluator"],
                             "disqualifying": False,
+                            "strongest_version": f"Bounded version of mechanism {index}",
                         }
                         for index in range(1, 4)
                     ],
@@ -5615,6 +5620,167 @@ class PalamedesChatTests(unittest.TestCase):
             self.assertIn("integers from 0 to 100", prompt)
             self.assertIn("never fractions", prompt)
             self.assertNotIn('"confidence": 0}', prompt)
+
+    @staticmethod
+    def _run_cycle_with_patches(tempdir, patches):
+        """Run a cognition cycle whose role outputs pass through ``patches``."""
+
+        class PatchedRoles(StaticChatProvider):
+            prompts = {}
+
+            def stream(self, messages):
+                content = messages[-1]["content"]
+                role = content.splitlines()[0].replace("ROLE: ", "")
+                self.prompts[role] = content
+                if role in patches:
+                    payload = json.loads("".join(super().stream(messages)))
+                    patches[role](payload)
+                    yield json.dumps(payload)
+                    return
+                yield from super().stream(messages)
+
+        fake = FakePalamedes(Path(tempdir))
+        provider = PatchedRoles()
+        result = palamedes_chat.run_cognition_cycle(
+            provider=provider,
+            palamedes_module=fake,
+            context="Choose one bounded mission.",
+            cycle_store=palamedes_chat.CognitionCycleStore(
+                fake.STATE_DIR / "missions" / "cognition"
+            ),
+        )
+        return result, provider
+
+    def test_cycle_keeps_and_renders_a_surviving_wildcard(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            result, provider = self._run_cycle_with_patches(tempdir, {})
+
+        cycle = result["cycle"]
+        self.assertEqual(cycle["requested_ambition"], "balanced")
+        self.assertEqual(
+            cycle["wildcards"],
+            [
+                {
+                    "candidate_id": "candidate-2",
+                    "mission": "Test mission mechanism 2",
+                    "strongest_version": "Bounded version of mechanism 2",
+                    "disqualifying": False,
+                    "fate": "deferred",
+                    "reopen_condition": "Probe one fails",
+                }
+            ],
+        )
+        rendered = palamedes_chat.render_wildcards(cycle)
+        self.assertIn("Wildcard kept: candidate-2 (deferred)", rendered)
+        self.assertIn("idea: Bounded version of mechanism 2", rendered)
+        self.assertIn("reopen when: Probe one fails", rendered)
+        self.assertIn('The requested ambition is "balanced"', provider.prompts["inventor"])
+        self.assertIn("strongest_version", provider.prompts["adversary"])
+        self.assertIn(
+            "Novelty and missing precedent are not costs", provider.prompts["selector"]
+        )
+
+    def test_selected_wildcard_is_not_rendered_as_kept(self):
+        self.assertEqual(
+            palamedes_chat.render_wildcards(
+                {"wildcards": [{"candidate_id": "candidate-2", "fate": "selected"}]}
+            ),
+            "",
+        )
+
+    def test_inventor_must_include_a_wildcard(self):
+        def all_stretch(payload):
+            for item in payload["candidates"]:
+                item["ambition"] = "stretch"
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            with self.assertRaisesRegex(ValueError, "at least one wildcard"):
+                self._run_cycle_with_patches(
+                    tempdir, {"inventor": all_stretch}
+                )
+
+    def test_inventor_allows_only_one_conventional_candidate(self):
+        def two_conventional(payload):
+            payload["candidates"][2]["ambition"] = "conventional"
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            with self.assertRaisesRegex(ValueError, "at most one conventional"):
+                self._run_cycle_with_patches(tempdir, {"inventor": two_conventional})
+
+    def test_inventive_request_requires_two_wildcards(self):
+        def inventive(payload):
+            payload["requested_ambition"] = "inventive"
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            with self.assertRaisesRegex(ValueError, "at least two wildcard"):
+                self._run_cycle_with_patches(tempdir, {"interpreter": inventive})
+
+        def second_wildcard(payload):
+            payload["candidates"][2]["ambition"] = "wildcard"
+
+        def keep_second_wildcard(payload):
+            payload["candidate_fates"][2]["fate"] = "queued"
+            payload["candidate_fates"][2]["reopen_condition"] = "The deferred idea stalls"
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            result, provider = self._run_cycle_with_patches(
+                tempdir,
+                {
+                    "interpreter": inventive,
+                    "inventor": second_wildcard,
+                    "selector": keep_second_wildcard,
+                },
+            )
+        self.assertEqual(result["cycle"]["requested_ambition"], "inventive")
+        self.assertEqual(len(result["cycle"]["wildcards"]), 2)
+        self.assertIn('The requested ambition is "inventive"', provider.prompts["selector"])
+
+    def test_interpreter_requires_a_known_requested_ambition(self):
+        def unknown(payload):
+            payload["requested_ambition"] = "wild"
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            with self.assertRaisesRegex(ValueError, "requested_ambition must be"):
+                self._run_cycle_with_patches(tempdir, {"interpreter": unknown})
+
+    def test_adversary_must_write_a_strongest_version(self):
+        def no_repair(payload):
+            payload["critiques"][1]["strongest_version"] = " "
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            with self.assertRaisesRegex(
+                ValueError, "critique of candidate-2 requires strongest_version"
+            ):
+                self._run_cycle_with_patches(tempdir, {"adversary": no_repair})
+
+    def test_selector_cannot_reject_a_surviving_wildcard(self):
+        def reject_wildcard(payload):
+            payload["candidate_fates"][1]["fate"] = "rejected"
+            payload["candidate_fates"][1]["reopen_condition"] = ""
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            with self.assertRaisesRegex(ValueError, "wildcard candidate-2 was not disqualified") as caught:
+                self._run_cycle_with_patches(tempdir, {"selector": reject_wildcard})
+        self.assertIn(
+            "surviving wildcard candidate-2 requires a reopen_condition",
+            str(caught.exception),
+        )
+
+    def test_selector_may_reject_a_disqualified_wildcard(self):
+        def disqualify_wildcard(payload):
+            payload["critiques"][1]["disqualifying"] = True
+
+        def reject_wildcard(payload):
+            payload["candidate_fates"][1]["fate"] = "rejected"
+            payload["candidate_fates"][1]["reopen_condition"] = ""
+
+        with tempfile.TemporaryDirectory() as tempdir:
+            result, _ = self._run_cycle_with_patches(
+                tempdir,
+                {"adversary": disqualify_wildcard, "selector": reject_wildcard},
+            )
+        self.assertEqual(result["cycle"]["status"], "selected")
+        self.assertTrue(result["cycle"]["wildcards"][0]["disqualifying"])
 
     def test_open_gate_on_another_surface_does_not_block_a_scoped_mission(self):
         class ReviseProvider(StaticChatProvider):
