@@ -5,11 +5,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-import fcntl
 import os
 from pathlib import Path
 from typing import Any, Dict, List
 
+from palamedes_filelock import exclusive_lock
 from palamedes_observe import utc_now
 
 
@@ -49,8 +49,7 @@ class ProductAlignmentStore:
             "event_id", f"alignment-event-{self._fingerprint(identity)[:16]}"
         )
         self.root.mkdir(parents=True, exist_ok=True)
-        with self.events_path.open("a+", encoding="utf-8") as handle:
-            fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        with self.events_path.open("a+", encoding="utf-8") as handle, exclusive_lock(handle):
             handle.seek(0)
             for line in handle:
                 try:
