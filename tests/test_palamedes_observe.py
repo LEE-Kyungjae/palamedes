@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import json
+import shlex
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -123,7 +125,7 @@ class PalamedesObserveTests(unittest.TestCase):
             snapshot = palamedes_observe.collect_observation(
                 workspace,
                 ref_root=None,
-                test_command='python3 -c "raise SystemExit(7)"',
+                test_command=f'{shlex.quote(sys.executable)} -c "raise SystemExit(7)"',
             )
 
         test = snapshot["signals"]["test"]
@@ -131,7 +133,7 @@ class PalamedesObserveTests(unittest.TestCase):
         self.assertFalse(test["passed"])
         self.assertEqual(test["returncode"], 7)
         self.assertIn("test_failed", snapshot["change"]["reasons"])
-        self.assertEqual(test["command"][0], "python3")
+        self.assertEqual(test["command"][0], sys.executable)
 
     def test_observation_context_excludes_full_internal_snapshot_metadata(self):
         with tempfile.TemporaryDirectory() as tempdir:

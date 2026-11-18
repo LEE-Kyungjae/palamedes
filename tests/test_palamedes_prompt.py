@@ -167,7 +167,7 @@ class PalamedesPromptTests(unittest.TestCase):
             store = PromptAgendaStore(Path(tempdir) / "prompt-intelligence")
             result = record_design_hypothesis(store=store, interpretation=item)
             saved = json.loads(
-                next(store.hypotheses_root.glob("*.json")).read_text()
+                next(store.hypotheses_root.glob("*.json")).read_text(encoding="utf-8")
             )
 
         self.assertEqual(result["status"], "recorded")
@@ -218,7 +218,7 @@ class PalamedesPromptTests(unittest.TestCase):
                 limit=1,
             )
             saved = json.loads(
-                next(store.backfill_root.glob("*.json")).read_text()
+                next(store.backfill_root.glob("*.json")).read_text(encoding="utf-8")
             )
 
         self.assertEqual(result["status"], "completed")
