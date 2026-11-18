@@ -229,6 +229,7 @@ Runner = Callable[..., Any]
 def _default_runner(args: Sequence[str], *, cwd: Path, timeout: int) -> CommandResult:
     completed = subprocess.run(
         list(args), cwd=str(cwd), capture_output=True, text=True,
+        encoding="utf-8", errors="replace",
         timeout=timeout, check=False,
     )
     return CommandResult(completed.returncode, completed.stdout, completed.stderr)
