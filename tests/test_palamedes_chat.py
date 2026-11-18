@@ -2033,10 +2033,10 @@ class PalamedesChatTests(unittest.TestCase):
                 judge_identity="static:generator",
             )
             review_packet = json.loads(
-                next((root / "benchmarks" / "human-review").glob("*.json")).read_text()
+                next((root / "benchmarks" / "human-review").glob("*.json")).read_text(encoding="utf-8")
             )
             review_key = json.loads(
-                next((root / "benchmarks" / "answer-keys").glob("*.json")).read_text()
+                next((root / "benchmarks" / "answer-keys").glob("*.json")).read_text(encoding="utf-8")
             )
             scores = {axis: 80 for axis in review_packet["axes"]}
             scores_reference = {axis: 70 for axis in review_packet["axes"]}
@@ -3675,7 +3675,7 @@ class PalamedesChatTests(unittest.TestCase):
                     isolated, mission_store, product, "zoom-test"
                 )
                 saved_agenda = json.loads(
-                    (prompt_store.agendas_root / f"{agenda['prompt_agenda_id']}.json").read_text()
+                    (prompt_store.agendas_root / f"{agenda['prompt_agenda_id']}.json").read_text(encoding="utf-8")
                 )
 
         self.assertEqual(approved["contract"]["status"], "approved")
@@ -4103,7 +4103,7 @@ class PalamedesChatTests(unittest.TestCase):
                     evidence_bundle=bundle,
                     schema_retry_limit=0,
                 )
-            failed = json.loads(next(store.root.glob("cycle-*.json")).read_text())
+            failed = json.loads(next(store.root.glob("cycle-*.json")).read_text(encoding="utf-8"))
             resumed = InvalidCandidateOnce(CognitionFixture())
             resumed.invalid = False
             result = palamedes_chat.run_partitioned_product_cycle(
@@ -4158,7 +4158,7 @@ class PalamedesChatTests(unittest.TestCase):
                     evidence_bundle=bundle,
                     schema_retry_limit=0,
                 )
-            failed = json.loads(next(store.root.glob("cycle-*.json")).read_text())
+            failed = json.loads(next(store.root.glob("cycle-*.json")).read_text(encoding="utf-8"))
 
             with self.assertRaisesRegex(ValueError, "execution identity changed"):
                 palamedes_chat.run_partitioned_product_cycle(
@@ -4195,7 +4195,7 @@ class PalamedesChatTests(unittest.TestCase):
                     evidence_bundle=bundle,
                     budget=budget,
                 )
-            failed = json.loads(next(store.root.glob("cycle-*.json")).read_text())
+            failed = json.loads(next(store.root.glob("cycle-*.json")).read_text(encoding="utf-8"))
             self.assertEqual(failed["budget_accounting"]["status"], "overrun")
             self.assertIn("tokens 120>50", failed["budget_accounting"]["overrun_message"])
             with self.assertRaisesRegex(ValueError, "exactly match"):
@@ -4224,7 +4224,7 @@ class PalamedesChatTests(unittest.TestCase):
                     evidence_bundle=bundle,
                     budget={"provider_calls_max": 10, "token_budget_high": 100000},
                 )
-            cycle = json.loads(next(store.root.glob("cycle-*.json")).read_text())
+            cycle = json.loads(next(store.root.glob("cycle-*.json")).read_text(encoding="utf-8"))
             cycle["evidence_bundle"] = frozen_v1_bundle(bundle)
             cycle["evidence_bundle_id"] = cycle["evidence_bundle"]["bundle_id"]
             store.save(cycle)
@@ -4497,7 +4497,7 @@ class PalamedesChatTests(unittest.TestCase):
                     cycle_store=store,
                 )
 
-            cycle = json.loads(next(store.root.glob("*.json")).read_text())
+            cycle = json.loads(next(store.root.glob("*.json")).read_text(encoding="utf-8"))
 
         self.assertEqual(cycle["status"], "failed")
         self.assertEqual(cycle["live_model_call_count"], 4)
@@ -5260,7 +5260,7 @@ class PalamedesChatTests(unittest.TestCase):
         self.assertIn("read-only", command)
         self.assertIn("--skip-git-repo-check", command)
         self.assertIn("--json", command)
-        self.assertTrue(run.call_args.kwargs["cwd"].startswith("/"))
+        self.assertTrue(os.path.isabs(run.call_args.kwargs["cwd"]))
         self.assertIn(
             "Do not inspect the filesystem", run.call_args.kwargs["input"]
         )
@@ -5899,7 +5899,7 @@ class PalamedesChatTests(unittest.TestCase):
                     cycle_store=store,
                     schema_retry_limit=0,
                 )
-            failed = json.loads(next(store.root.glob("cycle-*.json")).read_text())
+            failed = json.loads(next(store.root.glob("cycle-*.json")).read_text(encoding="utf-8"))
             fake.goal = "changed after the failed run"
             provider = StaticChatProvider()
             result = palamedes_chat.run_cognition_cycle(
