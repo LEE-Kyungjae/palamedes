@@ -83,7 +83,7 @@ class SatisfactionTests(unittest.TestCase):
             self.repo(root)
             request = self.request(root)
             (root / "feature.py").write_text(
-                (root / "feature.py").read_text() + "\n# drift\n"
+                (root / "feature.py").read_text(encoding="utf-8") + "\n# drift\n"
             )
             result = assess_satisfaction(
                 root, request, now=datetime(2026, 7, 30, tzinfo=timezone.utc)

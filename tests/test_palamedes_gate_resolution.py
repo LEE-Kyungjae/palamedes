@@ -59,7 +59,7 @@ class PalamedesGateResolutionTests(unittest.TestCase):
             )
             rows = [
                 json.loads(x)
-                for x in (missions / "outcome-gates.jsonl").read_text().splitlines()
+                for x in (missions / "outcome-gates.jsonl").read_text(encoding="utf-8").splitlines()
             ]
         self.assertEqual(rows[0]["status"], "open")
         self.assertEqual(rows[-1]["status"], "responded")
